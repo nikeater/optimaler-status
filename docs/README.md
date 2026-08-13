@@ -4,7 +4,7 @@
 | --- | --- |
 | [`technical-spec.md`](technical-spec.md) | **Start here.** The consolidated specification: the whole system as built, every measured number, and the caveats that go with them |
 | [`BUILD.md`](BUILD.md) | Build, run, test, seed, containerise, deploy. The specification the CI workflow implements |
-| [`adr/`](adr/) | 29 architecture decision records. ADR-001 (two planes), ADR-004 (the one-way valve) and ADR-017 (seal at ingest) are the load-bearing three |
+| [`adr/`](adr/) | 30 architecture decision records. ADR-001 (two planes), ADR-004 (the one-way valve) and ADR-017 (seal at ingest) are the load-bearing three |
 | [`DESIGN_DECISIONS.md`](DESIGN_DECISIONS.md) | The ADR index, one line each |
 | [`technical-design.md`](technical-design.md) | The design as it stood before the build, kept for the diff against what was actually built |
 | [`notifications.md`](notifications.md) | The notification catalogue: which message a case owes, when, and why each one is a Realakt |
@@ -12,7 +12,7 @@
 | [`KNOWN-ERRORS.md`](KNOWN-ERRORS.md) | The failure modes that are known and not fixed, with what each one costs |
 | [`vault-dpia-input.md`](vault-dpia-input.md) | Input for a data-protection impact assessment: what the vault holds, what production storage has to be, retention and erasure |
 | [`ai-act-scoping-memo.md`](ai-act-scoping-memo.md) | Where this system sits under the EU AI Act, and what would move it |
-| [`accessibility-selfcheck.md`](accessibility-selfcheck.md) | EN 301 549 / WCAG 2.1 AA SELF-assessment of the review UI and of the two citizen-facing demo pages. Not an audit |
+| [`accessibility-selfcheck.md`](accessibility-selfcheck.md) | EN 301 549 / WCAG 2.1 AA SELF-assessment of every page, with the measured contrast ratios of the design system. Not an audit |
 | [`PUBLISHING.md`](PUBLISHING.md) | How to publish this repository and host the demonstration instance |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | How to work on this, and the rules that are not negotiable |
 

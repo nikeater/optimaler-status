@@ -16,7 +16,12 @@
   {% include "_demo_banner.html" %}
   <header>
     <h1>{% block heading %}EingangsLotse - Rundgang{% endblock %}</h1>
+    {# The three-phase indicator marks WHERE a visitor is. The tour page is the
+       map rather than a position on it and passes no phase, so the indicator
+       stays off exactly there and nowhere else. #}
+    {% if view.phase %}
     {% include "_demo_steps.html" %}
+    {% endif %}
     <nav aria-label="Bereiche">
       <ul class="navbar">
         <li><a href="/">Start</a></li>

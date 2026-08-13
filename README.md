@@ -11,9 +11,11 @@ Built as a complete S1-S10 sequence and measured on a frozen synthetic corpus
 of 101 items: **1294 tests, 98.91% coverage over the gated packages, four eval
 gates green, zero false clears.**
 
-> **Live demo:** `DEMO URL` - a public instance over synthetic data only.
-> Submissions are disabled and the state resets on every restart. On a free
-> plan the first load after an idle period can take about a minute.
+> **Live demo:** `DEMO URL` - a public instance over synthetic data only. Start
+> at **`/demo/rundgang`**, the guided tour: the whole system from the first
+> submission to the closed loop in six steps, each one linking to the page
+> where it actually happens. The state resets on every restart. On a free plan
+> the first load after an idle period can take about a minute.
 
 Licensed under the [EUPL-1.2](#license). Contracts in `schemas/`,
 agency-editable policy in `config/`, decisions in
@@ -102,9 +104,9 @@ python -m uvicorn api.app:app --reload
 
 Then `http://127.0.0.1:8000/review` for the caseworker surface,
 `/metrics` for the numbers, `/inbox` for what an applicant would have received,
-`/docs` for the OpenAPI page. For the guided three-phase tour, set
+`/docs` for the OpenAPI page. For the guided tour, set
 `EINGANGSLOTSE_DEMO_MODE=1` and `EINGANGSLOTSE_INGEST_TOKEN` to any non-empty
-string and start at `/demo/antrag`.
+string and start at `/demo/rundgang`.
 
 ### With Docker
 
@@ -133,8 +135,18 @@ config/     what an agency edits: taxonomy, routing rules, requirements,
             version cannot change without a supersession
 corpus/     the synthetic gold sets and the generator that builds them
 eval/       the harness that produces the numbers above
-ui/         server-rendered templates and plain CSS. No build step
+ui/         server-rendered templates and one plain-CSS design system.
+            No build step, and nothing fetched from anywhere
 ```
+
+The interface is plain CSS with custom properties for the palette, the type
+scale and the spacing ladder, applied to every page from one stylesheet
+([ADR-030](docs/adr/ADR-030-design-system-and-the-tour.md)). There is no build
+chain and **no external fetch of any kind** - no CDN, no web font, no remote
+icon: a data-protection demonstration must not phone anywhere, so the type
+stack is the operating system's own. Every colour pair that ships was computed
+against the WCAG contrast formula before it was used, and the ratios are in
+[`docs/accessibility-selfcheck.md`](docs/accessibility-selfcheck.md).
 
 Three procedures are configured (Altersrente, Erwerbsminderungsrente, and the
 Statusfeststellung under par. 7a SGB IV). The last of them ships no clear-cut
@@ -143,8 +155,17 @@ formally complete application still ends at tier 3, by design.
 
 ## The guided showcase
 
+**Start at `/demo/rundgang`.** The tour tells the whole system in six steps for
+somebody who has never seen it - the problem and the two-plane answer, what
+happens when you submit, what the machine made of it, how a caseworker decides,
+what the applicant receives, and why any of it can be trusted. German leads and
+every step carries a short English aside. Each step links to the page where it
+actually happens, and step 3 points at a case from the frozen gold set, so the
+seven stages of the glass pipeline are walkable before you have submitted
+anything - including on an instance that accepts no submissions at all.
+
 With `EINGANGSLOTSE_DEMO_MODE=1` and an ingest token set, `/demo/antrag` opens
-a three-phase tour that is the architecture told as a story. **Phase 1:** you
+a three-phase journey that is the architecture told as a story. **Phase 1:** you
 pick one of four unmistakably fictional applicants, edit or deliberately break
 their prefilled application (delete the Versicherungsnummer, set a Rentenbeginn
 twenty years out, flip `auslandsbezug` to `ja`), and send it as a form or as a

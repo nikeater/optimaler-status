@@ -619,6 +619,26 @@ def _mount_demo_journey(
         return
     personas = demo_personas()
 
+    @app.get("/demo/rundgang", response_class=HTMLResponse)
+    def demo_tour() -> HTMLResponse:
+        """The tour: the whole system in six steps, for a first-time visitor.
+
+        Registered with the rest of the demo surface and therefore absent -
+        route table and OpenAPI document alike - whenever the flag is off. It
+        reads the journal once, for the seeded case it points at, and derives
+        nothing else.
+        """
+        return HTMLResponse(
+            demo_view.render_tour(
+                demo_view.build_tour_view(
+                    journal,
+                    config=bundle,
+                    posture=posture,
+                    gold_dir=str(DEFAULT_GOLD_DIR),
+                )
+            )
+        )
+
     @app.get("/demo/antrag", response_class=HTMLResponse)
     def demo_intake(
         persona: str | None = None, kanal: str | None = None

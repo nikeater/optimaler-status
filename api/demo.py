@@ -1,6 +1,17 @@
 """The guided showcase: a citizen submits, watches the machine, becomes the clerk.
 
-Two pages, both demo-mode-only, both server-rendered like everything else here.
+Three pages, all demo-mode-only, all server-rendered like everything else here.
+
+``/demo/rundgang``
+    The tour. The whole system told from beginning to end in six steps for a
+    visitor who has never seen it, each step linking to the page where that
+    step actually happens. German leads and every step carries a short English
+    aside. **It derives nothing.** Every sentence is either static prose or a
+    fact read off the same projections the other pages read: whether this
+    deployment accepts submissions at all, and - for the seeded case the tour
+    points at - the unit and tier the journal already recorded. When the state
+    was not seeded from the frozen corpus, the tour says so and links the
+    caseworker surface instead of a case that is not there.
 
 ``/demo/antrag``
     The intake surface. A persona picker over ``config/demo/personas_v1.yaml``,
@@ -43,6 +54,7 @@ from typing import Any
 from api.metrics import environment
 from api.review import (
     KIND_LABELS,
+    PICKER_NOTE,
     TIER_LABELS,
     ReasonLine,
     anomaly_reason_lines,
@@ -61,6 +73,7 @@ from engine.demo.personas import (
     PersonaSet,
 )
 from engine.demo.store import DemoStore, DemoSubmission, TypedValue
+from engine.ingest.envelope import case_id_for
 from engine.journal.store import JournalStore
 from engine.notify.outbox import Outbox, OutboxEntry
 from engine.redact.placeholders import PLACEHOLDER_RE
@@ -135,6 +148,153 @@ EXPIRED_NOTE = (
     "im Arbeitsspeicher; alles Uebrige auf dieser Seite kommt aus dem Journal "
     "und bleibt lesbar."
 )
+
+
+# ------------------------------------------------------------------ the tour ---
+
+#: The gold item the tour points at for step (c). Deliberately a SEEDED case
+#: rather than a fresh submission: the seven stages have to be walkable before a
+#: visitor has submitted anything, and on an instance with no ingest token they
+#: are the only way to walk them at all.
+#:
+#: Why this one, out of a hundred and one. It is a Regelaltersrente form that
+#: arrived without its Rentenbeginn, so every stage of the pipeline view has
+#: something in it: sealed identity fields with their kinds, extracted values
+#: with verified character offsets, ONE gap carrying the procedure's own
+#: Nachforderung wording, a routing rule that fired, a tier the decision table
+#: can justify line by line, and two delivered notifications. A complete case
+#: would show an empty gap table; a Statusfeststellung would end at tier 3
+#: without demonstrating that the tiers differ.
+TOUR_ITEM_ID = "ar-0011-ohne-rentenbeginn"
+
+#: What the tour says about phase 1 when this deployment cannot accept anything.
+#: Not an apology: an unset ingest token is the safe state (ADR-027), and the
+#: tour is walkable end to end without it because the state is seeded.
+TOUR_CLOSED_NOTE = (
+    "Diese Bereitstellung nimmt zurzeit keine Antraege entgegen: ohne "
+    "konfiguriertes Ingest-Token ist der Eingang fuer jeden Aufrufer gesperrt, "
+    "auch fuer die Antragsseite selbst. Der Rundgang funktioniert trotzdem "
+    "vollstaendig - die Schritte 3 bis 6 laufen ueber den eingefrorenen "
+    "Goldsatz, der beim Start eingespielt wurde."
+)
+
+#: And when the deployment did configure one.
+TOUR_OPEN_NOTE = (
+    "Diese Bereitstellung nimmt Antraege entgegen: Sie koennen den Rundgang "
+    "mit Ihrem EIGENEN Vorgang laufen, von der Einreichung bis zur "
+    "Eingangsbestaetigung im Postfach."
+)
+
+#: The step (c) caveat, said out loud rather than left to be noticed. A seeded
+#: case has no working copy in the demo store - that compartment holds what a
+#: VISITOR typed, for half an hour, and nobody typed this one.
+TOUR_SEEDED_NOTE = (
+    "Der Vorgang, auf den dieser Schritt zeigt, stammt aus dem eingefrorenen "
+    "Goldsatz und nicht aus einer Eingabe von Ihnen. Deshalb fehlt dort die "
+    "Gegenueberstellung von eingegebenem Wert und Arbeitskopie: dieser "
+    "Zwischenspeicher haelt ausschliesslich, was eine Besucherin oder ein "
+    "Besucher selbst getippt hat, und zwar nur fuer kurze Zeit im "
+    "Arbeitsspeicher. Alles Uebrige - Versiegelung, Fundstellen, Luecken, "
+    "Zuordnung, Entscheidung, Nachrichten - kommt aus dem Journal und steht "
+    "vollstaendig da."
+)
+
+#: What step (c) says when nothing was seeded at all (a developer who started
+#: the app on an empty state directory). Honest, and not a dead link.
+TOUR_UNSEEDED_NOTE = (
+    "Auf dieser Instanz ist kein Goldsatz eingespielt, deshalb gibt es hier "
+    "keinen vorbereiteten Vorgang zum Mitlaufen. Stellen Sie einen Antrag "
+    "(Schritt 2) oder spielen Sie den Bestand mit dem Befehl "
+    "python -m engine.demo.seed ein; die Bearbeitungsoberflaeche ist in beiden "
+    "Faellen erreichbar."
+)
+
+
+@dataclass(frozen=True)
+class TourView:
+    """Everything the tour renders, and not one derived fact of its own.
+
+    Three things here are read rather than written: whether this deployment
+    accepts submissions (the posture), which gold set it was seeded from, and -
+    when the seeded case is present - the unit and tier the journal recorded
+    for it. Everything else on the page is prose.
+    """
+
+    ingest_open: bool
+    ingest_note: str
+    gold_dir: str
+    repo_url: str
+    case_id: str
+    case_present: bool
+    unit_id: str
+    unit_label: str
+    queue_id: str
+    tier_label: str
+    seeded_note: str = TOUR_SEEDED_NOTE
+    unseeded_note: str = TOUR_UNSEEDED_NOTE
+    picker_note: str = PICKER_NOTE
+    #: No phase is current here: the tour is the map, not a position on it, so
+    #: the three-phase indicator stays off this one page (``demo_base.html``).
+    phase: str = ""
+    phases: tuple[tuple[str, str], ...] = PHASES
+
+    @property
+    def pipeline_href(self) -> str:
+        return f"/demo/case/{self.case_id}/pipeline"
+
+    @property
+    def queue_href(self) -> str:
+        return f"/review/queue/{self.queue_id}?unit={self.unit_id}"
+
+    @property
+    def case_href(self) -> str:
+        return f"/review/case/{self.case_id}?unit={self.unit_id}"
+
+
+def build_tour_view(
+    journal: JournalStore,
+    *,
+    config: ConfigBundle,
+    posture: DemoPosture,
+    gold_dir: str,
+) -> TourView:
+    """The tour for this deployment, in whichever of its two states it is in.
+
+    ``journal.read`` on the seeded case is the only lookup: a page that linked
+    a case id it had not checked would hand a visitor a 404 on the one screen
+    that exists to make a first impression. Where the case IS present, its unit
+    and tier come from ``review_state`` - the same projection the caseworker UI
+    and the pipeline view fold - so the tour cannot state a routing answer that
+    differs from the one the system gave.
+    """
+    case_id = case_id_for(TOUR_ITEM_ID)
+    events = journal.read(case_id)
+    state = review_state(case_id, events) if events else None
+    unit_id = state.unit_id if state is not None else None
+    return TourView(
+        ingest_open=posture.ingest_open,
+        ingest_note=TOUR_OPEN_NOTE if posture.ingest_open else TOUR_CLOSED_NOTE,
+        gold_dir=gold_dir,
+        repo_url=posture.repo_url,
+        case_id=case_id,
+        case_present=state is not None,
+        unit_id=unit_id or "",
+        unit_label=(
+            unit_name(config, unit_id)
+            if unit_id
+            else "Zentrale Klaerung (par. 16 Abs. 2 SGB I)"
+        ),
+        queue_id=unit_id or CLEARING_QUEUE,
+        tier_label=(
+            TIER_LABELS.get(state.tier or 0, f"Tier {state.tier}")
+            if state is not None
+            else ""
+        ),
+    )
+
+
+def render_tour(view: TourView) -> str:
+    return environment().get_template("demo_tour.html").render(view=view)
 
 
 # --------------------------------------------------------------- the intake ---

@@ -1021,9 +1021,9 @@ is left over is the `event_id` of each journal event, a uuid4 the store mints;
 backend is plaintext, and a state directory in a public repository publishes
 whatever that instance sealed.
 
-## The guided three-phase journey (from part 13)
+## The guided three-phase journey (from part 13) and the tour (from part 15)
 
-Two more pages behind the same flag. They turn the demo from "read the
+Three more pages behind the same flag. They turn the demo from "read the
 queues" into "submit something and watch it happen to you".
 
 ```powershell
@@ -1031,11 +1031,23 @@ $env:EINGANGSLOTSE_DEMO_MODE = "1"
 $env:EINGANGSLOTSE_INGEST_TOKEN = "any-non-empty-string"   # REQUIRED for phase 1
 $env:EINGANGSLOTSE_TEXT_NER = "0"                          # if [redact] is installed
 python -m uvicorn api.app:app --reload
+# GET  /demo/rundgang                   START HERE: the whole system in six steps
 # GET  /demo/antrag                     phase 1: pick a persona, edit, submit
 # POST /demo/antrag                     -> 303 to the pipeline view
 # GET  /demo/case/{id}/pipeline         phase 2: the seven stages of what happened
 #                                       -> links into phase 3 with ?highlight=<case>
 ```
+
+**`/demo/rundgang` is the page to hand somebody who has never seen this.** It
+tells the whole story from the first submission to the closed loop in six
+steps, German with a short English aside on each, and every step links to the
+page where that step actually happens. It works in both intake postures: with a
+token it invites a visitor to run their own case, without one it states the
+closed posture and walks the seeded corpus instead. Step 3 points at a case
+from the frozen gold set (`ar-0011-ohne-rentenbeginn`), so the seven stages of
+the glass pipeline are walkable before anybody has submitted anything - on an
+instance whose journal was never seeded the page says so and links `/review`
+rather than a case id that is not there. The landing page `/` opens with it.
 
 **The ingest token is not optional here.** The intake page is the authorized
 server-side CALLER of the token-gated ingest, not an exception to it: it

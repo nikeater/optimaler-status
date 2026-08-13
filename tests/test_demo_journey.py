@@ -1,6 +1,6 @@
-"""The three-phase guided showcase, end to end, and the promises around it.
+"""The guided showcase, end to end, and the promises around it.
 
-Six groups, and the first two are the ones that would be prose in a worse
+Seven groups, and the first two are the ones that would be prose in a worse
 repository.
 
 1. **Flag-off identity.** With ``EINGANGSLOTSE_DEMO_MODE`` unset there is no
@@ -19,9 +19,13 @@ repository.
    value.
 5. **The canary sweep** over every new page: a visitor sees their own typed
    values and nobody else's, and the working copy is placeholders throughout.
-6. **Accessibility and reflow** for the two new citizen-facing pages, plus the
-   two lines that must stay true forever: the queue is never reordered and the
+6. **Accessibility and reflow** for the citizen-facing pages, plus the two
+   lines that must stay true forever: the queue is never reordered and the
    inbox never grows a control.
+7. **The tour** (part 15): six steps in order, an English aside on each, the
+   intake posture stated honestly in BOTH of its states, a link into a SEEDED
+   case so the seven stages are walkable before anybody submits, and no dead
+   link on an instance where nothing was seeded.
 
 Every client here injects the DETERMINISTIC detector union. That is the part-10
 precedent (``tests/test_review_no_person.py``) and it is also the shipped demo's
@@ -32,6 +36,7 @@ never runs. See KE-6 for what the model member does to a demo letter.
 
 from __future__ import annotations
 
+import json
 import re
 from collections.abc import Iterator, Mapping
 from datetime import UTC, datetime, timedelta
@@ -80,6 +85,19 @@ ARCS = {
     "musterfrau_statusfeststellung": ("Referat_340_Clearingstelle", "Tier 3"),
     "musterkind_rentenbeginn_2048": ("Referat_312_Renten", "Tier 1"),
 }
+
+#: Every citizen-facing page behind the demo flag. The tour joined in part 15
+#: and is held to the same mechanical bar as the two part-13 pages.
+CITIZEN_PAGES = ("rundgang", "antrag", "pipeline")
+
+
+def citizen_path(page: str, case_id: str) -> str:
+    """The URL for one of :data:`CITIZEN_PAGES`."""
+    if page == "rundgang":
+        return "/demo/rundgang"
+    if page == "antrag":
+        return "/demo/antrag"
+    return f"/demo/case/{case_id}/pipeline"
 
 
 @pytest.fixture(autouse=True)
@@ -183,6 +201,8 @@ def test_with_the_flag_off_there_is_no_demo_route_anywhere(
     assert client.get("/demo/antrag").status_code == 404
     assert client.post("/demo/antrag", data={}).status_code == 404
     assert client.get("/demo/case/anything/pipeline").status_code == 404
+    # Part 15's tour is demo surface like everything else under /demo.
+    assert client.get("/demo/rundgang").status_code == 404
 
 
 def test_with_the_flag_off_no_demo_store_exists(
@@ -733,6 +753,7 @@ def test_no_page_shows_another_visitors_identity(
 
     for path in (
         f"/demo/case/{second}/pipeline",
+        "/demo/rundgang",
         "/review",
         "/review/queue/Referat_312_Renten",
         f"/review/queue/Referat_312_Renten?highlight={first}",
@@ -780,7 +801,8 @@ def test_the_demo_pages_carry_the_synthetic_data_banner(
     """Every page. The one that is missed is the one somebody screenshots."""
     client = build_client(config, monkeypatch=monkeypatch)
     case_id = submit(client, form_data("mustermann_regelaltersrente"))
-    for path in ("/demo/antrag", f"/demo/case/{case_id}/pipeline"):
+    for page in CITIZEN_PAGES:
+        path = citizen_path(page, case_id)
         body = client.get(path).text
         assert 'id="demo-banner"' in body, path
         assert "SYNTHETISCHEN Daten" in body, path
@@ -839,16 +861,14 @@ def test_the_demo_adds_no_control_to_the_inbox(
     assert client.post("/inbox", data={}).status_code in (404, 405)
 
 
-@pytest.mark.parametrize("phase", ["antrag", "pipeline"])
+@pytest.mark.parametrize("phase", CITIZEN_PAGES)
 def test_the_new_pages_meet_the_mechanical_accessibility_bar(
     config: ConfigBundle, monkeypatch: pytest.MonkeyPatch, phase: str
 ) -> None:
-    """The same criteria part 10's suite asserts, on the two citizen pages."""
+    """The same criteria part 10's suite asserts, on the citizen pages."""
     client = build_client(config, monkeypatch=monkeypatch)
     case_id = submit(client, form_data("mustermann_regelaltersrente"))
-    body = client.get(
-        "/demo/antrag" if phase == "antrag" else f"/demo/case/{case_id}/pipeline"
-    ).text
+    body = client.get(citizen_path(phase, case_id)).text
 
     assert '<html lang="de">' in body
     assert body.count("<h1") == 1
@@ -875,13 +895,18 @@ def test_the_landing_page_opens_the_tour_and_reflows_with_it(
 ) -> None:
     """The landing page is the first screen a visitor reads, on their phone.
 
-    It is demo-only like the two tour pages, so it is in the same class: it
-    links into phase 1 and it loads the stylesheet that carries the reflow
-    rules. The part-11 content is untouched.
+    It is demo-only like the tour pages, so it is in the same class: it links
+    into the tour and into phase 1, and it loads the stylesheets that carry the
+    reflow rules. The part-11 content is untouched.
     """
     client = build_client(config, monkeypatch=monkeypatch)
     page = client.get("/").text
+    # The tour is the FIRST thing offered, ahead of the individual pages: a
+    # visitor with ninety seconds should spend them walking the system.
+    assert 'href="/demo/rundgang"' in page
+    assert page.index('href="/demo/rundgang"') < page.index('href="/metrics"')
     assert 'href="/demo/antrag"' in page
+    assert 'href="/static/system.css"' in page
     assert 'href="/static/demo.css"' in page
     assert 'name="viewport" content="width=device-width, initial-scale=1"' in page
     # Part 11's promises are still on it.
@@ -889,22 +914,161 @@ def test_the_landing_page_opens_the_tour_and_reflows_with_it(
     assert review_view.PICKER_NOTE in page
 
 
-@pytest.mark.parametrize("phase", ["antrag", "pipeline"])
+# ---------------------------------------------------------- 7. the tour (P-15) ---
+
+
+def seed_the_tour_case(client: TestClient, config: ConfigBundle, gold_dir: Path) -> str:
+    """Put the tour's gold item into this client's journal, the ingest way.
+
+    The same fold ``engine/demo/seed.py`` runs per item on a real deployment,
+    over one item: this suite has no seeded state directory, and a tour that
+    was only ever tested against an empty journal would never exercise the
+    branch every hosted instance actually renders.
+    """
+    from engine.pipeline import run_pipeline
+
+    payload = json.loads(
+        (gold_dir / f"{demo_view.TOUR_ITEM_ID}.json").read_text(encoding="utf-8")
+    )
+    result = run_pipeline(
+        payload,
+        config=config,
+        journal=client.app.state.journal,  # type: ignore[attr-defined]
+        vault=client.app.state.vault,  # type: ignore[attr-defined]
+        now=BASE_TIME,
+        text_detector=text_seal_detector(with_ner=False),
+    )
+    return result.decision.case_id
+
+
+def test_the_tour_tells_the_whole_story_in_six_steps(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Six steps, in order, each one linking where it actually happens.
+
+    The order is the argument: problem, submission, machine, human, applicant,
+    trust. A tour that opened with the metrics would be a tour of a dashboard.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    page = client.get("/demo/rundgang")
+    assert page.status_code == 200
+    body = page.text
+    assert re.findall(r'id="(schritt-\d)"', body) == [
+        f"schritt-{index}" for index in range(1, 7)
+    ]
+    # German leads; every step carries a short English aside in one treatment.
+    assert body.count('<p class="aside" lang="en">') >= 6
+    assert body.count("In English") >= 6
+    # The six destinations, and no page of this system left out.
+    for href in ('href="/demo/antrag"', 'href="/inbox"', 'href="/metrics"'):
+        assert href in body, href
+    # The claims a judge is asked to check, in words rather than in a badge.
+    for claim in ("Einwegventil", "403", "EUPL-1.2", "synthetisch"):
+        assert claim in body, claim
+    # And the honesty the rest of the project keeps: the accessibility posture
+    # is a self-assessment and the page says so rather than implying an audit.
+    assert "Selbsteinschaetzung" in body
+    assert "BITV 2.0" in body
+
+
+@pytest.mark.parametrize("open_intake", [True, False])
+def test_the_tour_states_the_intake_posture_it_actually_has(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch, open_intake: bool
+) -> None:
+    """Both states, because the hosted demo has one and a local run the other.
+
+    With a token the tour invites a visitor to run their OWN case through; with
+    none it says the ingest is closed, says WHY that is the safe state, and
+    still offers the page - phases 2 and 3 walk the seeded corpus either way.
+    Neither wording is an apology and neither is a promise the instance cannot
+    keep (ADR-027, the part-13 precedent).
+    """
+    client = build_client(
+        config, token=TOKEN if open_intake else None, monkeypatch=monkeypatch
+    )
+    body = client.get("/demo/rundgang").text
+    if open_intake:
+        assert demo_view.TOUR_OPEN_NOTE in body
+        assert 'class="cta" href="/demo/antrag"' in body
+        assert "Eingang gesperrt" not in body
+    else:
+        assert demo_view.TOUR_CLOSED_NOTE in body
+        assert "Eingang gesperrt" in body
+        # The page is still offered, just without the promise of a submission.
+        assert 'href="/demo/antrag"' in body
+        assert 'class="cta" href="/demo/antrag"' not in body
+
+
+def test_the_tour_walks_a_seeded_case_before_anybody_submits(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch, gold_v4_dir: Path
+) -> None:
+    """Step 3 has to be walkable on an instance that accepts nothing.
+
+    So it points at a case from the frozen corpus, and every link it prints
+    resolves. The tier and the unit come from ``review_state`` - the same
+    projection the caseworker UI and the pipeline view fold - so the tour
+    cannot state a routing answer that differs from the one the system gave.
+    """
+    client = build_client(config, token=None, monkeypatch=monkeypatch)
+    case_id = seed_the_tour_case(client, config, gold_v4_dir)
+    body = client.get("/demo/rundgang").text
+
+    state = review_view.build_case_view(
+        client.app.state.journal,  # type: ignore[attr-defined]
+        config=config,
+        case_id=case_id,
+        unit_id=None,
+        now=BASE_TIME,
+    )
+    assert state is not None
+    assert state.tier_label in body
+    assert review_view.unit_name(config, state.state.unit_id) in body
+
+    for path in (
+        f"/demo/case/{case_id}/pipeline",
+        f"/review/queue/{state.state.unit_id}?unit={state.state.unit_id}",
+        f"/review/case/{case_id}?unit={state.state.unit_id}",
+    ):
+        assert f'href="{path}"' in body, path
+        assert client.get(path).status_code == 200, path
+    # And it says out loud why the working-copy panel is missing over there:
+    # that compartment holds what a VISITOR typed, and nobody typed this one.
+    assert demo_view.TOUR_SEEDED_NOTE in body
+
+
+def test_the_tour_links_nothing_dead_when_nothing_was_seeded(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A developer's first run has an empty journal, and the page is honest.
+
+    No fabricated case id, no link into a 404, and a sentence saying which
+    command fills the state. The alternative - printing the id anyway because
+    a seeded deployment would have it - is how a demo greets its first visitor
+    with an error page.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    body = client.get("/demo/rundgang").text
+    assert demo_view.TOUR_UNSEEDED_NOTE in body
+    assert "/demo/case/" not in body
+    assert 'href="/review"' in body
+
+
+@pytest.mark.parametrize("phase", CITIZEN_PAGES)
 def test_the_new_pages_are_built_to_reflow_at_320_css_pixels(
     config: ConfigBundle, monkeypatch: pytest.MonkeyPatch, phase: str
 ) -> None:
-    """1.4.10, which the caseworker UI still has open and these pages do not.
+    """1.4.10 on the citizen pages, closed since part 13 and held here.
 
     A static check cannot measure a viewport, so it checks the three things
     that make reflow possible and whose absence makes it impossible: the
     viewport meta, every wide table inside its own scroll container, and no
-    fixed pixel width anywhere in the stylesheet these pages add.
+    fixed pixel width in the stylesheets these pages load. The caseworker
+    pages get the same three in ``tests/test_review_accessibility.py``, which
+    is what part 15 closed.
     """
     client = build_client(config, monkeypatch=monkeypatch)
     case_id = submit(client, form_data("mustermann_regelaltersrente"))
-    body = client.get(
-        "/demo/antrag" if phase == "antrag" else f"/demo/case/{case_id}/pipeline"
-    ).text
+    body = client.get(citizen_path(phase, case_id)).text
     assert 'name="viewport" content="width=device-width, initial-scale=1"' in body
     assert body.count("<table") == body.count('<div class="scroll-x">')
     assert "width:" not in body and "style=" not in body
