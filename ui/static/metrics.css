@@ -1,91 +1,67 @@
-/* Plain, high-contrast styling for the metrics panel.
-   No framework, no web fonts, no colour-only meaning: every state that colour
-   marks is also spelled out in words. */
+/* The eval-metrics panel, on top of system.css. Page-specific leftovers only:
+   everything structural - cards, tables, scroll containers, the type scale -
+   comes from the design system and is not repeated here.
 
-:root {
-  --ink: #14171a;
-  --muted: #4a5158;
-  --line: #c8cdd2;
-  --ok: #10502c;
-  --alarm: #8a1414;
-  --surface: #ffffff;
+   No state on this page is carried by colour alone. A gate says "bestanden" or
+   "gerissen" in words; the weight and the hue only repeat it. */
+
+/* The gate verdict, at the top of the panel. A sentence first, styled as a
+   banner second. */
+.gate-passed,
+.gate-failed {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  font-weight: 650;
 }
 
-body {
-  margin: 0 auto;
-  max-width: 62rem;
-  padding: 1.5rem 1rem 3rem;
-  background: var(--surface);
-  color: var(--ink);
-  font-family: system-ui, "Segoe UI", sans-serif;
-  line-height: 1.5;
+.gate-passed {
+  border: 1px solid var(--ok);
+  border-left: 4px solid var(--ok);
+  background: var(--tint-ok);
+  color: var(--ok);
 }
 
-h1 { font-size: 1.5rem; }
-h2 { font-size: 1.25rem; margin-top: 2rem; }
-h3 { font-size: 1.05rem; margin-top: 1.75rem; }
-
-code {
-  background: #eef1f3;
-  padding: 0.1em 0.35em;
-  border-radius: 3px;
+.gate-failed {
+  border: 1px solid var(--alarm);
+  border-left: 4px solid var(--alarm);
+  background: var(--tint-alarm);
+  color: var(--alarm);
+  font-weight: 700;
 }
 
-a { color: #0b4f8a; }
-a:focus-visible { outline: 3px solid #0b4f8a; outline-offset: 2px; }
-
-dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; }
-dt { font-weight: 600; }
-dd { margin: 0; }
-
-table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 1rem 0;
+/* A metric that IS a gate is marked in the table by weight and by a rule on
+   its left edge; its "Bedeutung" column says "Gate" in words. */
+.gate-row > th,
+.gate-row > td {
+  background: var(--surface-alt);
+  font-weight: 650;
 }
 
-caption {
-  text-align: left;
+.gate-row > th {
+  border-left: 4px solid var(--accent);
+}
+
+/* The per-case detail list is long and collapsed by default. `details` is a
+   native disclosure widget: keyboard operable, announced as one, no script. */
+details {
+  margin: var(--space-4) 0 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+}
+
+summary {
+  padding: var(--space-3) var(--space-4);
   font-weight: 600;
-  padding-bottom: 0.35rem;
+  cursor: pointer;
 }
 
-th, td {
-  border: 1px solid var(--line);
-  padding: 0.4rem 0.6rem;
-  text-align: left;
-  vertical-align: top;
+details[open] > summary {
+  border-bottom: 1px solid var(--line-strong);
 }
 
-thead th { background: #eef1f3; }
-tbody th { font-weight: 600; }
-td { font-variant-numeric: tabular-nums; }
-
-.gate-row th, .gate-row td { border-width: 2px; }
-.gate-passed { color: var(--ok); font-weight: 600; }
-.gate-failed { color: var(--alarm); font-weight: 700; }
-
-.notice {
-  border-left: 4px solid var(--muted);
-  padding: 0.5rem 0.75rem;
-  background: #f5f7f8;
-}
-
-/* The public-demo banner (part 11). Renders only when EINGANGSLOTSE_DEMO_MODE
-   is on, sits above everything else on every page, and says in words what it
-   means - the border colour carries no meaning of its own. */
-.demo-banner {
-  border: 2px solid var(--alarm);
-  border-left-width: 8px;
-  background: #fdf3f3;
-  padding: 0.6rem 0.9rem;
-  margin: 0 0 1.25rem;
-}
-
-.demo-banner p { margin: 0; }
-
-footer {
-  margin-top: 2.5rem;
-  color: var(--muted);
-  font-size: 0.9rem;
+details > .scroll-x {
+  margin: 0;
+  border: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
 }

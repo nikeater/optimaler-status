@@ -4,9 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>EingangsLotse - Postfach</title>
-  <link rel="stylesheet" href="/static/metrics.css">
+  <link rel="stylesheet" href="/static/system.css">
 </head>
 <body>
+  <a class="skip-link" href="#inhalt">Direkt zum Inhalt</a>
   {% include "_demo_banner.html" %}
   <header>
     <h1>EingangsLotse - simuliertes Postfach</h1>
@@ -23,8 +24,17 @@
       den schriftformgebundenen Weg (par. 36a SGB I) und nicht ueber diese
       Seite.
     </p>
+    {# Deliberately only the two routes that exist on EVERY instance: `/` is a
+       demo-only landing page (part 11) and a nav item that 404s outside demo
+       mode would be a broken link on the page a developer sees first. #}
+    <nav aria-label="Bereiche">
+      <ul class="navbar">
+        <li><a href="/review">Bearbeitung</a></li>
+        <li><a href="/metrics">Eval-Metriken</a></li>
+      </ul>
+    </nav>
   </header>
-  <main>
+  <main id="inhalt">
     <section id="inbox-panel" aria-labelledby="inbox-heading">
       <h2 id="inbox-heading">Nachrichten</h2>
       {% if not view.cases %}

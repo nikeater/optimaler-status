@@ -1,0 +1,747 @@
+/* The design system. One stylesheet, plain CSS, no build step, no network.
+   Every page in this project loads THIS file first and then at most one small
+   page-specific sheet (metrics.css, review.css, demo.css).
+
+   Three rules govern everything below and they are rules rather than taste.
+
+   1. NOTHING IS FETCHED. No CDN, no web font, no remote icon, no `@import` of
+      anything that is not in this directory. This is a data-protection
+      demonstration for German public administration; a page that phoned a
+      third party to look pretty would contradict the product on the product's
+      own screen. The type stack is the operating system's, which is also why
+      it costs zero bytes and cannot fail to load.
+
+   2. CONTRAST IS A FLOOR, NOT A PREFERENCE. Every token pair this file
+      actually ships is measured, and the measurements are written down in
+      `docs/accessibility-selfcheck.md`: body text at or above 4.5:1, and
+      anything that identifies a control - an input border, a button, the focus
+      ring - at or above 3:1. A colour is never the only carrier of a meaning;
+      where a tone appears, words appear with it.
+
+   3. FOCUS IS RESTYLED, NEVER REMOVED. No stylesheet in this project contains
+      the rule that switches a focus outline off, and a test asserts that over
+      every file in this directory rather than over a list somebody maintains.
+
+   Layout model, in one paragraph: `body` is the centred column and paints the
+   page canvas, `header` and every `main > section` is a card on that canvas,
+   and wide content scrolls INSIDE its own `.scroll-x` box so the page body
+   never scrolls sideways at 320 CSS px. That last one is 1.4.10 and it applies
+   to every page now, the caseworker pages included. */
+
+/* ------------------------------------------------------------------ tokens */
+
+:root {
+  color-scheme: light;
+
+  /* Palette. Sober govtech: slate ink, one restrained institutional blue, and
+     three status hues that are only ever a repetition of something written in
+     words. Ratios against white in the comments; the full matrix, including
+     the tinted surfaces, is in the accessibility self-check. */
+  --ink: #101720; /* 18.02:1 */
+  --ink-soft: #3d4757; /* 9.39:1 */
+  --muted: #4d5866; /* 7.23:1 */
+  --accent: #12518c; /* 8.14:1 */
+  --accent-strong: #0d3d6b; /* 11.07:1 */
+  --ok: #0d5730; /* 8.67:1 */
+  --alarm: #8c1616; /* 9.37:1 */
+  --warn: #7a4a06; /* 7.47:1 */
+
+  --surface: #ffffff;
+  --surface-alt: #f4f7fa;
+  --surface-sunken: #e9eef4;
+  --canvas: #eaeef3;
+
+  --tint-accent: #e7eef7;
+  --tint-ok: #eaf3ed;
+  --tint-alarm: #fbeeee;
+  --tint-sample: #eef2fa;
+
+  /* Two border weights on purpose. `--line` separates things inside a card and
+     is decorative; `--line-strong` (3.58:1 on white, 3.07:1 on the tints) is
+     what a control boundary is drawn with, because that one has a floor. */
+  --line: #d7dee6;
+  --line-strong: #78899d;
+  --focus: #0d3d6b;
+
+  /* Type scale, ~1.2 steps, in rem so it follows the reader's root size. */
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-base: 1rem;
+  --text-md: 1.0625rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 1.875rem;
+
+  /* Spacing scale. One ladder, used everywhere, so vertical rhythm is a
+     decision made once rather than per component. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  /* A pill. Deliberately `em` rather than a large pixel value: nothing in this
+     project may carry a fixed pixel length, and the reflow test enforces it. */
+  --radius-pill: 62em;
+
+  --shadow-card: 0 1px 2px rgba(16, 23, 32, 0.06), 0 1px 8px rgba(16, 23, 32, 0.04);
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "Consolas",
+    "Liberation Mono", monospace;
+
+  --measure: 68rem;
+}
+
+/* -------------------------------------------------------------------- base */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0 auto;
+  max-width: var(--measure);
+  padding: var(--space-5) var(--space-4) var(--space-7);
+  background: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: 1.55;
+  /* A case id, a placeholder token or a URL must not be able to push the page
+     wider than the viewport. Part of 1.4.10, and the cheapest part. */
+  overflow-wrap: break-word;
+  text-underline-offset: 0.15em;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  color: var(--ink);
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+
+h1 {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-2xl);
+}
+
+h2 {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-xl);
+}
+
+h3 {
+  margin: var(--space-5) 0 var(--space-2);
+  font-size: var(--text-md);
+}
+
+h4 {
+  margin: var(--space-4) 0 var(--space-1);
+  font-size: var(--text-base);
+}
+
+p {
+  margin: 0 0 var(--space-3);
+  max-width: 62ch;
+}
+
+ul,
+ol {
+  margin: 0 0 var(--space-3);
+  padding-left: var(--space-5);
+}
+
+li {
+  margin-bottom: var(--space-2);
+  max-width: 62ch;
+}
+
+a {
+  color: var(--accent);
+  text-decoration-thickness: 1px;
+}
+
+a:hover {
+  color: var(--accent-strong);
+}
+
+strong {
+  font-weight: 650;
+}
+
+code {
+  background: var(--surface-sunken);
+  border-radius: var(--radius-sm);
+  padding: 0.1em 0.35em;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+pre {
+  margin: 0 0 var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-x: auto;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: var(--space-5) 0;
+}
+
+/* --------------------------------------------------- skip link and focus */
+
+/* The first focusable element on every page. Offscreen until focused, then a
+   solid block at the top-left that no card can hide behind. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 10;
+  padding: var(--space-3) var(--space-4);
+  background: var(--accent-strong);
+  color: #ffffff;
+  font-weight: 600;
+  border-radius: 0 0 var(--radius) 0;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  left: 0;
+}
+
+/* Restyled, never removed. 3px is the visible weight; the offset is what keeps
+   it readable on top of a tinted card. */
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Offscreen but READ. Not display:none, which would take it out of the
+   accessibility tree along with the layout. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ------------------------------------------------------ the page furniture */
+
+header {
+  position: relative;
+  margin-bottom: var(--space-5);
+  padding: var(--space-5) var(--space-5) var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--accent);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+header > p {
+  color: var(--ink-soft);
+  font-size: var(--text-md);
+}
+
+header > p:last-child {
+  margin-bottom: 0;
+}
+
+/* Cards. Every section of every page, without a single template class: the
+   markup was already `main > section`, which is what a card wants to be. */
+main > section {
+  margin-bottom: var(--space-5);
+  padding: var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+main > section > *:last-child {
+  margin-bottom: 0;
+}
+
+/* A bare `div` under `main` is the case view's `aria-live` region and nothing
+   else. Deliberately NOT a card: it is present on every render so a screen
+   reader has something to announce into, and an empty card would be a white
+   box saying nothing. What appears inside it is a `.notice`, which carries its
+   own surface. */
+main > div {
+  margin-bottom: var(--space-4);
+}
+
+main > div > *:last-child {
+  margin-bottom: 0;
+}
+
+/* A nested article is a sub-card: a message in the inbox, a prepared letter. */
+article {
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+article > *:last-child {
+  margin-bottom: 0;
+}
+
+article h3 {
+  margin-top: 0;
+}
+
+/* A letter is read in full, so it gets the letter's own measure rather than a
+   paragraph's - on the case view, in the inbox and on the pipeline page. */
+article > pre {
+  background: var(--surface);
+  max-width: 80ch;
+}
+
+footer {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line-strong);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+footer p {
+  max-width: 72ch;
+}
+
+footer p:last-child {
+  margin-bottom: 0;
+}
+
+/* ------------------------------------------------------------- navigation */
+
+.navbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  list-style: none;
+  padding: 0;
+  margin: var(--space-4) 0 0;
+}
+
+.navbar li {
+  margin: 0;
+}
+
+.navbar a,
+.navbar strong {
+  display: inline-block;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--accent);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.navbar a:hover {
+  background: var(--tint-accent);
+  color: var(--accent-strong);
+}
+
+/* ------------------------------------------------------------ definitions */
+
+dl {
+  display: grid;
+  /* `minmax(0, max-content)` rather than `max-content`: a term like
+     "Versicherungsnummer" may claim the width it needs and must still be
+     allowed to shrink, or the row overflows at 320 px. */
+  grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+  gap: var(--space-2) var(--space-5);
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+dt {
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+dd {
+  margin: 0;
+  min-width: 0;
+}
+
+/* ----------------------------------------------------------------- tables */
+
+/* The reflow rule, and the half a `max-width` alone does not give you: wide
+   content scrolls in its OWN box. Every table on every page lives inside one
+   of these, which is what closes 1.4.10 for the caseworker pages too. */
+.scroll-x {
+  overflow-x: auto;
+  margin: 0 0 var(--space-4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.scroll-x > table {
+  margin: 0;
+  border: 0;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-sm);
+}
+
+caption {
+  text-align: left;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--line-strong);
+  background: var(--surface-alt);
+  color: var(--ink-soft);
+  font-weight: 600;
+  font-size: var(--text-sm);
+}
+
+th,
+td {
+  border-bottom: 1px solid var(--line);
+  padding: var(--space-2) var(--space-4);
+  text-align: left;
+  vertical-align: top;
+}
+
+thead th {
+  background: var(--surface-sunken);
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--ink);
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+tbody th {
+  font-weight: 600;
+}
+
+tbody tr:last-child th,
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+td {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------ forms */
+
+fieldset {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+}
+
+legend {
+  padding: 0 var(--space-2);
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.action-form {
+  margin: var(--space-4) 0;
+}
+
+.field {
+  margin: 0 0 var(--space-3);
+}
+
+.field label {
+  display: inline-block;
+  margin-bottom: var(--space-1);
+  font-weight: 600;
+}
+
+.field input[type="checkbox"] + label {
+  font-weight: 400;
+}
+
+.field input[type="checkbox"] {
+  margin-right: var(--space-2);
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent);
+}
+
+label {
+  color: var(--ink);
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+  font: inherit;
+  width: 100%;
+  max-width: 100%;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+select {
+  width: auto;
+  max-width: 100%;
+}
+
+textarea {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+.help {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--muted);
+  font-size: var(--text-sm);
+  max-width: 62ch;
+}
+
+button {
+  font: inherit;
+  font-weight: 600;
+  padding: var(--space-2) var(--space-5);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+}
+
+/* The unit picker. A demo affordance that every page says is not
+   authentication, so it is deliberately styled as a toolbar and not as a
+   sign-in. */
+.picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-4) 0 var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+}
+
+.picker label {
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------ notes and notices */
+
+.notice {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+  max-width: 72ch;
+}
+
+.notice > *:last-child {
+  margin-bottom: 0;
+}
+
+.ok-note {
+  border-left-color: var(--ok);
+  background: var(--tint-ok);
+}
+
+.alarm-note {
+  border-left-color: var(--alarm);
+  background: var(--tint-alarm);
+}
+
+/* A sampled case gets the calmest surface on the page, deliberately: the whole
+   of ADR-025 is that a random draw must not look like a suspicion. */
+.sample-note {
+  border-left-color: var(--accent);
+  background: var(--tint-sample);
+}
+
+/* The same rule as a table row, and it lives here rather than in one of the
+   two page sheets because ADR-025 is a promise BOTH surfaces make: the citizen
+   reading the pipeline page and the caseworker reading the case view must see
+   a random draw rendered the same calm way. Declared with `tbody` so it wins
+   on the cells rather than fighting the row. */
+tbody .sample-row > th,
+tbody .sample-row > td {
+  background: var(--tint-sample);
+}
+
+.flags {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Every flag says what it is in words; the tone only adds a border and a tint
+   that both keep their contrast. Colour carries nothing on its own. */
+.flag {
+  margin: 0 0 var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-left: 4px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  font-size: var(--text-sm);
+  max-width: 62ch;
+}
+
+.flag:last-child {
+  margin-bottom: 0;
+}
+
+.flag-attention {
+  border-left-color: var(--alarm);
+  background: var(--tint-alarm);
+}
+
+.tag {
+  display: inline-block;
+  padding: 0.05rem var(--space-2);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface-alt);
+  color: var(--ink-soft);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* The public-demo banner (part 11). Above everything on every page, and it
+   says in words what it means - the colour carries none of it. */
+.demo-banner {
+  margin: 0 0 var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--alarm);
+  border-left: 8px solid var(--alarm);
+  border-radius: var(--radius);
+  background: var(--tint-alarm);
+  color: var(--ink);
+}
+
+.demo-banner p {
+  margin: 0;
+  max-width: 78ch;
+}
+
+/* ------------------------------------------------------------- the reflow */
+
+/* 320 CSS px. The tables are handled by `.scroll-x` above; what is left is the
+   two-column definition list, which is precisely what overflows on a narrow
+   viewport, and the horizontal rows that have to become vertical stacks. */
+@media (max-width: 40rem) {
+  body {
+    padding: var(--space-4) var(--space-3) var(--space-6);
+  }
+
+  header,
+  main > section {
+    padding: var(--space-4);
+  }
+
+  dl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  dt {
+    margin-top: var(--space-2);
+  }
+
+  dd {
+    margin-bottom: var(--space-2);
+  }
+
+  .picker {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .picker button {
+    width: 100%;
+  }
+
+  th,
+  td,
+  caption {
+    padding: var(--space-2) var(--space-3);
+  }
+}
+
+/* Somebody who asked their system for less motion gets less motion. There is
+   nothing animated here today; this is the standing guarantee that a future
+   transition cannot ignore the setting. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    transition-duration: 0.01ms;
+  }
+}

@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>EingangsLotse - Demo</title>
-  <link rel="stylesheet" href="/static/metrics.css">
-  <link rel="stylesheet" href="/static/review.css">
-  {# demo.css carries the reflow rules (part 13). This page is demo-only, so
-     it is in the same class as the two tour pages: a public landing page has
-     to work on the phone somebody opened the link on. #}
+  {# system.css carries the reflow rules for every page (part 15); demo.css
+     adds what only a citizen-facing page has. This page is demo-only, so it is
+     in the same class as the tour pages: a public landing page has to work on
+     the phone somebody opened the link on. #}
+  <link rel="stylesheet" href="/static/system.css">
   <link rel="stylesheet" href="/static/demo.css">
 </head>
 <body>
@@ -16,15 +16,83 @@
   {% include "_demo_banner.html" %}
   <header>
     <h1>EingangsLotse</h1>
-    <p>
+    <p class="lead">
       Ein Eingangs-Assistent fuer Massenverfahren der oeffentlichen Verwaltung:
       Er liest einen Eingang, belegt jede Aussage, ordnet ihn einer Einheit zu
       und entscheidet nach einer versionierten Entscheidungstabelle, ob ein
       Mensch ihn sehen muss. Er entscheidet nichts ueber Menschen - er sortiert
       Arbeit und legt offen, warum.
     </p>
+    <p class="aside" lang="en">
+      <span class="aside-label">In English</span>
+      An intake assistant for German public administration that prepares
+      decisions and never takes one. It seals identity data before anything
+      else reads the case, proves every extracted value against the document it
+      came from, and lets a deterministic decision table decide whether a human
+      has to look. Uncertainty can only ever add human review.
+    </p>
+    <nav aria-label="Bereiche">
+      <ul class="navbar">
+        <li><a href="/demo/rundgang">Rundgang</a></li>
+        <li><a href="/demo/antrag">Phase 1: Antrag stellen</a></li>
+        <li><a href="/review">Bearbeitung</a></li>
+        <li><a href="/metrics">Eval-Metriken</a></li>
+        <li><a href="/inbox">Postfach</a></li>
+      </ul>
+    </nav>
   </header>
   <main id="inhalt">
+    {# The tour comes FIRST on this page. A visitor who has ninety seconds
+       should spend them walking the system, not reading about it; the three
+       promises below are what the tour then demonstrates. #}
+    <section aria-labelledby="rundgang-heading">
+      <h2 id="rundgang-heading">Fangen Sie hier an</h2>
+      <p class="lead">
+        Der <strong>Rundgang</strong> erzaehlt das ganze System von der ersten
+        Einreichung bis zum geschlossenen Kreis - in sechs Schritten, jeder mit
+        einem Link auf die Stelle, an der er tatsaechlich passiert. Er ist fuer
+        Besucherinnen und Besucher gedacht, die dieses Projekt noch nie gesehen
+        haben.
+      </p>
+      <p class="aside" lang="en">
+        <span class="aside-label">In English</span>
+        The guided tour walks the whole system end to end in six steps, each one
+        linking to the page where that step really happens. Every step carries a
+        short English note like this one.
+      </p>
+      <p>
+        <a class="cta" href="/demo/rundgang">Zum Rundgang</a>
+      </p>
+      <p>Oder direkt an eine Stelle springen:</p>
+      <ul>
+        <li>
+          <a href="/demo/antrag">Phase 1: Antrag stellen</a> - Sie stellen als
+          erfundene Person einen Antrag und sehen danach Schritt fuer Schritt,
+          was die Anlage damit macht. Es ist derselbe Weg, den jeder andere
+          Eingang nimmt.
+        </li>
+        <li>
+          <a href="/review">Bearbeitung</a> - Warteschlangen je Einheit, die
+          Vorgangsansicht mit allen Belegen und die drei Aktionen
+          (bestaetigen, umsteuern, eskalieren). Jede Aktion schreibt ein
+          Ereignis ins Journal; nichts wird ueberschrieben.
+        </li>
+        <li>
+          <a href="/metrics">Eval-Metriken</a> - die Zahlen des letzten
+          Eval-Laufs ueber dem eingefrorenen Goldsatz, inklusive der vier
+          Gates. Die Seite rechnet nichts selbst.
+        </li>
+        <li>
+          <a href="/inbox">Postfach</a> - was eine antragstellende Person
+          erhalten haette. Nur Ansicht, ohne jede Bedienung.
+        </li>
+        <li>
+          <a href="/health">/health</a> und <a href="/healthz">/healthz</a> -
+          Versionsstempel und Betriebspruefung.
+        </li>
+      </ul>
+    </section>
+
     <section aria-labelledby="garantien-heading">
       <h2 id="garantien-heading">Die drei Zusagen</h2>
       <dl>
@@ -52,38 +120,6 @@
           ist ein Gate.
         </dd>
       </dl>
-    </section>
-
-    <section aria-labelledby="rundgang-heading">
-      <h2 id="rundgang-heading">Rundgang</h2>
-      <p class="handover">
-        <a href="/demo/antrag">Gefuehrter Rundgang in drei Phasen</a> - Sie
-        stellen als erfundene Person einen Antrag, sehen Schritt fuer Schritt,
-        was die Anlage damit macht, und bearbeiten ihn danach selbst als
-        Sachbearbeitung. Es ist derselbe Weg, den jeder andere Eingang nimmt.
-      </p>
-      <p>Oder einzeln:</p>
-      <ul>
-        <li>
-          <a href="/review">Bearbeitung</a> - Warteschlangen je Einheit, die
-          Vorgangsansicht mit allen Belegen und die drei Aktionen
-          (bestaetigen, umsteuern, eskalieren). Jede Aktion schreibt ein
-          Ereignis ins Journal; nichts wird ueberschrieben.
-        </li>
-        <li>
-          <a href="/metrics">Eval-Metriken</a> - die Zahlen des letzten
-          Eval-Laufs ueber dem eingefrorenen Goldsatz, inklusive der vier
-          Gates. Die Seite rechnet nichts selbst.
-        </li>
-        <li>
-          <a href="/inbox">Postfach</a> - was eine antragstellende Person
-          erhalten haette. Nur Ansicht, ohne jede Bedienung.
-        </li>
-        <li>
-          <a href="/health">/health</a> und <a href="/healthz">/healthz</a> -
-          Versionsstempel und Betriebspruefung.
-        </li>
-      </ul>
     </section>
 
     <section aria-labelledby="demo-heading">

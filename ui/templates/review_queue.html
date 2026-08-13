@@ -34,49 +34,51 @@
     sie erhalten hat.
   </p>
   {% endif %}
-  <table>
-    <caption>Warteschlange {{ view.queue.label }}</caption>
-    <thead>
-      <tr>
-        <th scope="col">Vorgang</th>
-        <th scope="col">Tier</th>
-        <th scope="col">Wartet seit</th>
-        <th scope="col">Hinweise</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for row in view.queue.rows %}
-      <tr{% if view.highlight and row.case_id == view.highlight %} class="tour-row"{% endif %}>
-        <th scope="row">
-          <a href="/review/case/{{ row.case_id }}{% if view.unit_id %}?unit={{ view.unit_id }}{% endif %}">{{ row.case_id }}</a>
-          {% if view.highlight and row.case_id == view.highlight %}
-          <span class="tag">Ihr Vorgang</span>
-          <span class="sr-only">Dieser Vorgang stammt aus Ihrem Rundgang. Die Kennzeichnung ist reine Anzeige und veraendert die Reihenfolge nicht.</span>
-          {% endif %}
-        </th>
-        <td>
-          {{ row.tier if row.tier is not none else "-" }}
-          <span class="sr-only">{{ view.tier_labels.get(row.tier, "") }}</span>
-        </td>
-        <td>{{ row.age_label }}</td>
-        <td>
-          {% if row.flags %}
-          <ul class="flags">
-            {% for flag in row.flags %}
-            <li class="flag flag-{{ flag.tone }}">
-              <strong>{{ flag.label }}:</strong> {{ flag.detail }}
-            </li>
-            {% endfor %}
-          </ul>
-          {% else %}
-          <span class="muted">keine</span>
-          {% endif %}
-        </td>
-      </tr>
-      {% else %}
-      <tr><td colspan="4">Kein offener Vorgang in dieser Warteschlange.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="scroll-x">
+    <table>
+      <caption>Warteschlange {{ view.queue.label }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">Vorgang</th>
+          <th scope="col">Tier</th>
+          <th scope="col">Wartet seit</th>
+          <th scope="col">Hinweise</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in view.queue.rows %}
+        <tr{% if view.highlight and row.case_id == view.highlight %} class="tour-row"{% endif %}>
+          <th scope="row">
+            <a href="/review/case/{{ row.case_id }}{% if view.unit_id %}?unit={{ view.unit_id }}{% endif %}">{{ row.case_id }}</a>
+            {% if view.highlight and row.case_id == view.highlight %}
+            <span class="tag">Ihr Vorgang</span>
+            <span class="sr-only">Dieser Vorgang stammt aus Ihrem Rundgang. Die Kennzeichnung ist reine Anzeige und veraendert die Reihenfolge nicht.</span>
+            {% endif %}
+          </th>
+          <td>
+            {{ row.tier if row.tier is not none else "-" }}
+            <span class="sr-only">{{ view.tier_labels.get(row.tier, "") }}</span>
+          </td>
+          <td>{{ row.age_label }}</td>
+          <td>
+            {% if row.flags %}
+            <ul class="flags">
+              {% for flag in row.flags %}
+              <li class="flag flag-{{ flag.tone }}">
+                <strong>{{ flag.label }}:</strong> {{ flag.detail }}
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <span class="muted">keine</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="4">Kein offener Vorgang in dieser Warteschlange.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </section>
 {% endblock %}

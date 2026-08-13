@@ -909,11 +909,17 @@ def test_the_new_pages_are_built_to_reflow_at_320_css_pixels(
     assert body.count("<table") == body.count('<div class="scroll-x">')
     assert "width:" not in body and "style=" not in body
 
-    css = Path("ui/static/demo.css").read_text(encoding="utf-8")
-    assert "@media (max-width: 40rem)" in css
-    assert "overflow-x: auto" in css
-    assert not re.search(r":\s*\d{3,}px", css), "no fixed pixel width"
-    assert "outline: none" not in css and "outline: 0" not in css
+    # Part 15 moved the shared reflow rules into the design system, where every
+    # page gets them; demo.css keeps only the ones that stack a layout these
+    # pages alone have (the persona grid, the before/after panels).
+    system = Path("ui/static/system.css").read_text(encoding="utf-8")
+    assert "@media (max-width: 40rem)" in system
+    assert "overflow-x: auto" in system
+    demo = Path("ui/static/demo.css").read_text(encoding="utf-8")
+    assert "@media (max-width: 40rem)" in demo
+    for css in (system, demo):
+        assert not re.search(r":\s*\d{3,}px", css), "no fixed pixel width"
+        assert "outline: none" not in css and "outline: 0" not in css
 
 
 def _rows(page: str) -> list[str]:

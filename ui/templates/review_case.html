@@ -66,32 +66,36 @@
     </dd>
   </dl>
   {% if view.sealed_kinds %}
-  <table>
-    <caption>Was im Fliesstext versiegelt wurde, nach Art. Werte erscheinen hier nie.</caption>
-    <thead><tr><th scope="col">Art</th><th scope="col">Bedeutung</th><th scope="col">Anzahl</th></tr></thead>
-    <tbody>
-      {% for kind, label, count in view.sealed_kinds %}
-      <tr><th scope="row"><code>{{ kind }}</code></th><td>{{ label }}</td><td>{{ count }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="scroll-x">
+    <table>
+      <caption>Was im Fliesstext versiegelt wurde, nach Art. Werte erscheinen hier nie.</caption>
+      <thead><tr><th scope="col">Art</th><th scope="col">Bedeutung</th><th scope="col">Anzahl</th></tr></thead>
+      <tbody>
+        {% for kind, label, count in view.sealed_kinds %}
+        <tr><th scope="row"><code>{{ kind }}</code></th><td>{{ label }}</td><td>{{ count }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
   {% else %}
   <p class="muted">Im Fliesstext wurde nichts versiegelt (strukturierter Eingang oder kein Identitaetsbezug im Text).</p>
   {% endif %}
   {% if case.text_layer.get("parts") %}
-  <table>
-    <caption>Normalisierte Textteile, gegen die jede Fundstelle geprueft wurde</caption>
-    <thead><tr><th scope="col">Teil</th><th scope="col">Quelle</th><th scope="col">Zeichen</th></tr></thead>
-    <tbody>
-      {% for part in case.text_layer.get("parts", []) %}
-      <tr>
-        <th scope="row"><code>{{ part.get("part_id") }}</code></th>
-        <td>{{ part.get("source_type") }}</td>
-        <td>{{ part.get("normalized_chars") }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="scroll-x">
+    <table>
+      <caption>Normalisierte Textteile, gegen die jede Fundstelle geprueft wurde</caption>
+      <thead><tr><th scope="col">Teil</th><th scope="col">Quelle</th><th scope="col">Zeichen</th></tr></thead>
+      <tbody>
+        {% for part in case.text_layer.get("parts", []) %}
+        <tr>
+          <th scope="row"><code>{{ part.get("part_id") }}</code></th>
+          <td>{{ part.get("source_type") }}</td>
+          <td>{{ part.get("normalized_chars") }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
   {% endif %}
   <p class="notice">
     Der Wortlaut der Arbeitskopie steht bewusst NICHT im Journal: das Journal
@@ -110,42 +114,44 @@
     Teil und Zeichenbereich - und die Pruefart. Der Wert selbst steht nicht im
     Journal.
   </p>
-  <table>
-    <caption>Ausgelesene Felder mit Fundstelle und Pruefart</caption>
-    <thead>
-      <tr>
-        <th scope="col">Feld</th>
-        <th scope="col">Textteil</th>
-        <th scope="col">Zeichenbereich</th>
-        <th scope="col">Pruefart</th>
-        <th scope="col">Konfidenz</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for span in case.spans %}
-      <tr>
-        <th scope="row">{{ span.get("field") }}</th>
-        <td>{{ span.get("part_id") or "strukturiertes Feld" }}</td>
-        <td>
-          {% if span.get("start") is not none %}
-          {{ span.get("start") }}&#8211;{{ span.get("end") }}
-          <span class="sr-only">
-            Zeichen {{ span.get("start") }} bis {{ span.get("end") }} im Teil
-            {{ span.get("part_id") }}
-          </span>
-          {% else %}
-          <span class="muted">ohne Textfundstelle</span>
-          <span class="sr-only">strukturiertes Feld, Herkunft ist der gemeldete Datensatz</span>
-          {% endif %}
-        </td>
-        <td>{{ span.get("match_mode") }}</td>
-        <td>{{ "%.2f"|format(span.get("confidence")) if span.get("confidence") is not none else "-" }}</td>
-      </tr>
-      {% else %}
-      <tr><td colspan="5">Kein Feld ausgelesen.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="scroll-x">
+    <table>
+      <caption>Ausgelesene Felder mit Fundstelle und Pruefart</caption>
+      <thead>
+        <tr>
+          <th scope="col">Feld</th>
+          <th scope="col">Textteil</th>
+          <th scope="col">Zeichenbereich</th>
+          <th scope="col">Pruefart</th>
+          <th scope="col">Konfidenz</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for span in case.spans %}
+        <tr>
+          <th scope="row">{{ span.get("field") }}</th>
+          <td>{{ span.get("part_id") or "strukturiertes Feld" }}</td>
+          <td>
+            {% if span.get("start") is not none %}
+            {{ span.get("start") }}&#8211;{{ span.get("end") }}
+            <span class="sr-only">
+              Zeichen {{ span.get("start") }} bis {{ span.get("end") }} im Teil
+              {{ span.get("part_id") }}
+            </span>
+            {% else %}
+            <span class="muted">ohne Textfundstelle</span>
+            <span class="sr-only">strukturiertes Feld, Herkunft ist der gemeldete Datensatz</span>
+            {% endif %}
+          </td>
+          <td>{{ span.get("match_mode") }}</td>
+          <td>{{ "%.2f"|format(span.get("confidence")) if span.get("confidence") is not none else "-" }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5">Kein Feld ausgelesen.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
   <p>
     Verworfen: {{ case.discarded_count if case.discarded_count is not none else 0 }}.
     Ein verworfener Vorschlag ist ein Wert, dessen Fundstelle die Pruefung nicht
@@ -158,27 +164,29 @@
   <h2 id="gaps-heading">Vollstaendigkeit</h2>
   <p>Verdikt: <strong>{{ case.completeness_verdict or "unbekannt" }}</strong>.</p>
   {% if case.gaps %}
-  <table>
-    <caption>Gemeldete Luecken mit dem Satz, den die Nachforderung dazu stellt</caption>
-    <thead>
-      <tr>
-        <th scope="col">Anforderung</th>
-        <th scope="col">Status</th>
-        <th scope="col">Befund</th>
-        <th scope="col">Formulierung im Schreiben</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for gap in case.gaps %}
-      <tr>
-        <th scope="row"><code>{{ gap.get("requirement_id") }}</code></th>
-        <td>{{ gap.get("status") }}</td>
-        <td>{{ gap.get("detail") or "-" }}</td>
-        <td>{{ gap.get("request_text") or "-" }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="scroll-x">
+    <table>
+      <caption>Gemeldete Luecken mit dem Satz, den die Nachforderung dazu stellt</caption>
+      <thead>
+        <tr>
+          <th scope="col">Anforderung</th>
+          <th scope="col">Status</th>
+          <th scope="col">Befund</th>
+          <th scope="col">Formulierung im Schreiben</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for gap in case.gaps %}
+        <tr>
+          <th scope="row"><code>{{ gap.get("requirement_id") }}</code></th>
+          <td>{{ gap.get("status") }}</td>
+          <td>{{ gap.get("detail") or "-" }}</td>
+          <td>{{ gap.get("request_text") or "-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
   {% else %}
   <p class="muted">Keine Luecke gemeldet.</p>
   {% endif %}
@@ -192,27 +200,29 @@
     tatsaechlich in eine Warteschlange gelegt hat.
   </p>
   {% if case.routing %}
-  <table>
-    <caption>Alle Zuordnungsbelege, mit ihrer Quelle</caption>
-    <thead>
-      <tr>
-        <th scope="col">Einheit</th>
-        <th scope="col">Quelle</th>
-        <th scope="col">Regel</th>
-        <th scope="col">Konfidenz</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for suggestion in case.routing %}
-      <tr>
-        <th scope="row">{{ suggestion.get("unit_id") }}</th>
-        <td>{{ suggestion.get("source") }}</td>
-        <td>{{ suggestion.get("rule_ids") | join(", ") or "-" }}</td>
-        <td>{{ "%.3f"|format(suggestion.get("confidence")) if suggestion.get("confidence") is not none else "-" }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="scroll-x">
+    <table>
+      <caption>Alle Zuordnungsbelege, mit ihrer Quelle</caption>
+      <thead>
+        <tr>
+          <th scope="col">Einheit</th>
+          <th scope="col">Quelle</th>
+          <th scope="col">Regel</th>
+          <th scope="col">Konfidenz</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for suggestion in case.routing %}
+        <tr>
+          <th scope="row">{{ suggestion.get("unit_id") }}</th>
+          <td>{{ suggestion.get("source") }}</td>
+          <td>{{ suggestion.get("rule_ids") | join(", ") or "-" }}</td>
+          <td>{{ "%.3f"|format(suggestion.get("confidence")) if suggestion.get("confidence") is not none else "-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
   {% endif %}
   {% if view.classifier_ranking %}
   <div class="log-only">
@@ -225,40 +235,44 @@
       steht hier, damit sie widersprochen werden kann, nicht damit sie
       mitentscheidet.
     </p>
-    <table>
-      <caption>Rangfolge des Aehnlichkeitsmodells; ohne Wirkung auf diesen Vorgang</caption>
-      <thead><tr><th scope="col">Rang</th><th scope="col">Einheit</th><th scope="col">Wert</th></tr></thead>
-      <tbody>
-        {% for entry in view.classifier_ranking %}
-        <tr>
-          <th scope="row">{{ loop.index }}</th>
-          <td>{{ entry.get("unit_id") }}</td>
-          <td>{{ "%.3f"|format(entry.get("score")) if entry.get("score") is not none else "-" }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="scroll-x">
+      <table>
+        <caption>Rangfolge des Aehnlichkeitsmodells; ohne Wirkung auf diesen Vorgang</caption>
+        <thead><tr><th scope="col">Rang</th><th scope="col">Einheit</th><th scope="col">Wert</th></tr></thead>
+        <tbody>
+          {% for entry in view.classifier_ranking %}
+          <tr>
+            <th scope="row">{{ loop.index }}</th>
+            <td>{{ entry.get("unit_id") }}</td>
+            <td>{{ "%.3f"|format(entry.get("score")) if entry.get("score") is not none else "-" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
   {% endif %}
 </section>
 
 <section aria-labelledby="tier-heading">
   <h2 id="tier-heading">Warum dieses Tier</h2>
-  <table>
-    <caption>Begruendungen der Entscheidungstabelle, in Auswertungsreihenfolge</caption>
-    <thead><tr><th scope="col">Art</th><th scope="col">Zeile</th><th scope="col">Begruendung</th></tr></thead>
-    <tbody>
-      {% for reason in case.reasons %}
-      <tr {% if reason.get("kind") == "sampled" %}class="sample-row"{% endif %}>
-        <th scope="row">{{ reason.get("kind") }}</th>
-        <td><code>{{ reason.get("rule_id") }}</code></td>
-        <td>{{ reason.get("detail") }}</td>
-      </tr>
-      {% else %}
-      <tr><td colspan="3">Keine Begruendung protokolliert.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="scroll-x">
+    <table>
+      <caption>Begruendungen der Entscheidungstabelle, in Auswertungsreihenfolge</caption>
+      <thead><tr><th scope="col">Art</th><th scope="col">Zeile</th><th scope="col">Begruendung</th></tr></thead>
+      <tbody>
+        {% for reason in case.reasons %}
+        <tr {% if reason.get("kind") == "sampled" %}class="sample-row"{% endif %}>
+          <th scope="row">{{ reason.get("kind") }}</th>
+          <td><code>{{ reason.get("rule_id") }}</code></td>
+          <td>{{ reason.get("detail") }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3">Keine Begruendung protokolliert.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </section>
 
 <section aria-labelledby="anomaly-heading">
@@ -440,46 +454,50 @@
     rueckgaengig macht: eine Korrektur nach der Bestaetigung ist eine neue
     Entscheidung und kein Ueberschreiben dieser (ADR-008).
   </p>
-  <table>
-    <caption>Was die Bestaetigung festgehalten hat</caption>
-    <thead><tr><th scope="col">Feld</th><th scope="col">Wert</th></tr></thead>
-    <tbody>
-      {% for key, value in (case.confirmation or {}).items() %}
-      <tr><th scope="row"><code>{{ key }}</code></th><td>{{ value }}</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="scroll-x">
+    <table>
+      <caption>Was die Bestaetigung festgehalten hat</caption>
+      <thead><tr><th scope="col">Feld</th><th scope="col">Wert</th></tr></thead>
+      <tbody>
+        {% for key, value in (case.confirmation or {}).items() %}
+        <tr><th scope="row"><code>{{ key }}</code></th><td>{{ value }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </section>
 {% endif %}
 
 {% if state.overrides %}
 <section aria-labelledby="overrides-heading">
   <h2 id="overrides-heading">Korrekturen</h2>
-  <table>
-    <caption>Manuelle Korrekturen an diesem Vorgang, in Journalreihenfolge</caption>
-    <thead>
-      <tr>
-        <th scope="col">Zeitpunkt</th>
-        <th scope="col">Feld</th>
-        <th scope="col">Von</th>
-        <th scope="col">Auf</th>
-        <th scope="col">Einheit</th>
-        <th scope="col">Begruendung</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for override in state.overrides %}
-      <tr>
-        <th scope="row">{{ override.get("occurred_at") }}</th>
-        <td>{{ override.get("field") }}</td>
-        <td>{{ override.get("from") }}</td>
-        <td>{{ override.get("to") }}</td>
-        <td>{{ override.get("unit_id") }}</td>
-        <td>{{ override.get("reason") }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="scroll-x">
+    <table>
+      <caption>Manuelle Korrekturen an diesem Vorgang, in Journalreihenfolge</caption>
+      <thead>
+        <tr>
+          <th scope="col">Zeitpunkt</th>
+          <th scope="col">Feld</th>
+          <th scope="col">Von</th>
+          <th scope="col">Auf</th>
+          <th scope="col">Einheit</th>
+          <th scope="col">Begruendung</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for override in state.overrides %}
+        <tr>
+          <th scope="row">{{ override.get("occurred_at") }}</th>
+          <td>{{ override.get("field") }}</td>
+          <td>{{ override.get("from") }}</td>
+          <td>{{ override.get("to") }}</td>
+          <td>{{ override.get("unit_id") }}</td>
+          <td>{{ override.get("reason") }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </section>
 {% endif %}
 
@@ -490,29 +508,31 @@
     Diese Liste ist die Quelle aller Angaben oben; keine Seite dieser
     Oberflaeche haelt einen eigenen Zustand.
   </p>
-  <table>
-    <caption>Journalereignisse des Vorgangs {{ state.case_id }}</caption>
-    <thead>
-      <tr>
-        <th scope="col">Nr.</th>
-        <th scope="col">Zeitpunkt</th>
-        <th scope="col">Ereignis</th>
-        <th scope="col">Akteur</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for event in view.events %}
-      <tr>
-        <th scope="row">{{ event.sequence }}</th>
-        <td>{{ event.occurred_at.isoformat() }}</td>
-        <td>{{ event.type.value }}</td>
-        <td>
-          {{ event.actor.kind.value }}{% if event.actor.unit_id %} / {{ event.actor.unit_id }}{% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <div class="scroll-x">
+    <table>
+      <caption>Journalereignisse des Vorgangs {{ state.case_id }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">Nr.</th>
+          <th scope="col">Zeitpunkt</th>
+          <th scope="col">Ereignis</th>
+          <th scope="col">Akteur</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for event in view.events %}
+        <tr>
+          <th scope="row">{{ event.sequence }}</th>
+          <td>{{ event.occurred_at.isoformat() }}</td>
+          <td>{{ event.type.value }}</td>
+          <td>
+            {{ event.actor.kind.value }}{% if event.actor.unit_id %} / {{ event.actor.unit_id }}{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
   <p class="muted">
     Der Akteur ist immer das System oder eine Organisationseinheit. Eine
     natuerliche Person steht in keinem Ereignis - das Journal hat kein Feld

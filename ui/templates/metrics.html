@@ -4,10 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>EingangsLotse - Metriken</title>
+  <link rel="stylesheet" href="/static/system.css">
   <link rel="stylesheet" href="/static/metrics.css">
   <script src="/static/vendor/htmx.min.js" defer></script>
 </head>
 <body>
+  <a class="skip-link" href="#inhalt">Direkt zum Inhalt</a>
   {% include "_demo_banner.html" %}
   <header>
     <h1>EingangsLotse - Eval-Metriken</h1>
@@ -16,14 +18,22 @@
       nichts selbst; sie zeigt, was <code>{{ view.refresh_hint }}</code> zuletzt
       gemessen hat.
     </p>
-    <p>
-      <a href="/metrics"
-         hx-get="/metrics/panel"
-         hx-target="#metrics-panel"
-         hx-swap="outerHTML">Neu laden</a>
-    </p>
+    {# Both routes exist on every instance; `/` is demo-only and therefore not
+       in this list (see inbox.html for the same reasoning). #}
+    <nav aria-label="Bereiche">
+      <ul class="navbar">
+        <li><a href="/review">Bearbeitung</a></li>
+        <li><a href="/inbox">Postfach (nur Ansicht)</a></li>
+        <li>
+          <a href="/metrics"
+             hx-get="/metrics/panel"
+             hx-target="#metrics-panel"
+             hx-swap="outerHTML">Neu laden</a>
+        </li>
+      </ul>
+    </nav>
   </header>
-  <main>
+  <main id="inhalt">
     {% include "_metrics_panel.html" %}
   </main>
   <footer>

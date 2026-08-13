@@ -11,7 +11,7 @@ that is pilot scope.
 
 No pure-python axe-core equivalent exists (axe is a browser engine plus a rule
 set; the Python packages that carry the name drive a real browser through
-Selenium, which is not a dependency this project will take on for four pages).
+Selenium, which is not a dependency this project will take on for six pages).
 So this file tests the MECHANICAL criteria, which are exactly the ones that
 regress silently when somebody adds a form field:
 
@@ -21,7 +21,11 @@ regress silently when somebody adds a form field:
   landmark elements,
 * the document declares a language,
 * no control is pointer-only, and no state is carried by colour alone -
-  checked by asserting that every flag tone also produces words.
+  checked by asserting that every flag tone also produces words,
+* no stylesheet removes a focus outline, and the design system restyles it,
+* 1.4.10 reflow: every wide table scrolls inside its own container so the page
+  body never scrolls sideways at 320 CSS px (part 15; this is the row that was
+  open on the caseworker pages from part 10 until the redesign).
 """
 
 from __future__ import annotations
@@ -49,6 +53,11 @@ from engine.redact import InMemoryVaultStore, text_seal_detector
 UNIT = "Referat_312_Renten"
 ITEM = "ar-0011-ohne-rentenbeginn"
 INGESTED_AT = datetime(2026, 3, 2, 9, 0, tzinfo=UTC)
+
+#: Every page this suite holds to the mechanical bar. The first four are part
+#: 10's caseworker surface; ``metrics`` and ``inbox`` joined in part 15, when
+#: the redesign gave them the same shell as the rest.
+PAGES = ("overview", "queue", "clearing", "case", "metrics", "inbox")
 
 #: Controls that need a label. ``hidden`` carries no user-visible value and
 #: ``submit`` labels itself with its own text.
@@ -147,10 +156,16 @@ def pages(config: ConfigBundle, gold_v4_dir: Path) -> Iterator[dict[str, str]]:
             "queue": client.get(f"/review/queue/{UNIT}").text,
             "clearing": client.get("/review/queue/__clearing__").text,
             "case": client.get(f"/review/case/{case_id}?unit={UNIT}").text,
+            # Part 15: the self-check has always named these two as in scope
+            # (they share the stylesheet), and until the redesign gave them the
+            # same shell - a skip link, a nav landmark, `main id="inhalt"` -
+            # they could not be held to the same bar. Now they can.
+            "metrics": client.get("/metrics").text,
+            "inbox": client.get("/inbox").text,
         }
 
 
-@pytest.mark.parametrize("name", ["overview", "queue", "clearing", "case"])
+@pytest.mark.parametrize("name", PAGES)
 def test_every_form_control_has_an_associated_label(
     name: str, pages: dict[str, str]
 ) -> None:
@@ -169,7 +184,7 @@ def test_every_form_control_has_an_associated_label(
         assert identifier in labelled, f"{name}: no <label for> for {identifier!r}"
 
 
-@pytest.mark.parametrize("name", ["overview", "queue", "clearing", "case"])
+@pytest.mark.parametrize("name", PAGES)
 def test_every_page_has_one_h1_a_skip_link_and_landmarks(
     name: str, pages: dict[str, str]
 ) -> None:
@@ -185,7 +200,7 @@ def test_every_page_has_one_h1_a_skip_link_and_landmarks(
         assert landmark in page.landmarks, f"{name}: no <{landmark}>"
 
 
-@pytest.mark.parametrize("name", ["overview", "queue", "clearing", "case"])
+@pytest.mark.parametrize("name", PAGES)
 def test_no_heading_level_is_skipped(name: str, pages: dict[str, str]) -> None:
     """WCAG 1.3.1: a jump from h1 to h3 tells a reader a section is missing."""
     levels = [int(tag[1]) for tag in _parse(pages[name]).headings]
@@ -193,7 +208,7 @@ def test_no_heading_level_is_skipped(name: str, pages: dict[str, str]) -> None:
         assert current <= previous + 1, f"{name}: {previous} -> {current}"
 
 
-@pytest.mark.parametrize("name", ["overview", "queue", "clearing", "case"])
+@pytest.mark.parametrize("name", PAGES)
 def test_every_table_has_a_caption_and_scoped_headers(
     name: str, pages: dict[str, str]
 ) -> None:
@@ -205,7 +220,7 @@ def test_every_table_has_a_caption_and_scoped_headers(
     assert page.th_with_scope == page.th_total, f"{name}: a th without a scope"
 
 
-@pytest.mark.parametrize("name", ["overview", "queue", "clearing", "case"])
+@pytest.mark.parametrize("name", PAGES)
 def test_nothing_depends_on_a_script_or_a_pointer(
     name: str, pages: dict[str, str]
 ) -> None:
@@ -222,15 +237,27 @@ def test_nothing_depends_on_a_script_or_a_pointer(
     assert not re.search(r"<div[^>]*hx-(get|post)", html)
 
 
-def test_the_stylesheet_never_removes_the_focus_outline() -> None:
-    """WCAG 2.4.7: the one CSS rule that silently breaks keyboard use."""
-    for name in ("metrics.css", "review.css"):
-        css = (Path("ui/static") / name).read_text(encoding="utf-8")
-        assert "outline: none" not in css
-        assert "outline: 0" not in css
-    review = Path("ui/static/review.css").read_text(encoding="utf-8")
-    assert ":focus-visible" in review
-    assert ".skip-link:focus" in review
+def test_no_stylesheet_ever_removes_the_focus_outline() -> None:
+    """WCAG 2.4.7: the one CSS rule that silently breaks keyboard use.
+
+    Swept over EVERY stylesheet in ``ui/static`` rather than over two files
+    named here (part 15). The design system moved the focus ring into
+    ``system.css``, and a check that named its files by hand would have to be
+    edited every time one is added - which is exactly when it stops being run.
+    """
+    sheets = sorted(Path("ui/static").glob("*.css"))
+    assert sheets, "no stylesheet found"
+    for sheet in sheets:
+        css = sheet.read_text(encoding="utf-8")
+        assert "outline: none" not in css, sheet.name
+        assert "outline: 0" not in css, sheet.name
+    system = Path("ui/static/system.css").read_text(encoding="utf-8")
+    assert ":focus-visible" in system
+    assert ".skip-link:focus" in system
+    # And it is RESTYLED rather than merely present: a visible weight and an
+    # offset, so it survives on top of a tinted card.
+    assert "outline: 3px solid var(--focus)" in system
+    assert "outline-offset" in system
 
 
 def test_a_flag_never_carries_its_meaning_in_colour_alone(
@@ -245,3 +272,56 @@ def test_a_flag_never_carries_its_meaning_in_colour_alone(
         for block in re.findall(r'<li class="flag flag-\w+">(.*?)</li>', html, re.S):
             assert "<strong>" in block
             assert len(re.sub(r"<[^>]+>", "", block).strip()) > 30
+
+
+# ---------------------------------------------------- 1.4.10 reflow (part 15) ---
+
+
+@pytest.mark.parametrize("name", PAGES)
+def test_every_page_is_built_to_reflow_at_320_css_pixels(
+    name: str, pages: dict[str, str]
+) -> None:
+    """1.4.10, which stayed open on these pages from part 10 until part 15.
+
+    The gap was never the layout - it is a single column with a `max-width` -
+    but the WIDE TABLES: the case view's span and journal tables, the queue
+    census, the eleven tables of the metrics panel. A table wider than the
+    viewport drags the whole document sideways, and a criterion that says
+    "content can be presented without scrolling in two dimensions" is then
+    simply not met.
+
+    A static check cannot measure a viewport, so it checks the three things
+    that make reflow possible and whose absence makes it impossible: the
+    viewport meta, every wide table inside its OWN scroll container so the
+    container scrolls rather than the body, and no inline width anywhere. The
+    same three the two citizen pages have been held to since part 13; the
+    self-check row says out loud that this is a static check and not a
+    measurement in a browser.
+    """
+    html = pages[name]
+    assert 'name="viewport" content="width=device-width, initial-scale=1"' in html
+    assert html.count("<table") == html.count('<div class="scroll-x">'), (
+        f"{name}: a table outside a scroll container"
+    )
+    assert "style=" not in html, f"{name}: an inline style"
+    assert "width:" not in html, f"{name}: a hard-coded width"
+
+
+def test_the_design_system_carries_the_reflow_rules() -> None:
+    """And they live in ONE place, so every page gets them (part 15).
+
+    Before the redesign the reflow rules were in ``demo.css``, which only the
+    three citizen-facing pages loaded - which is exactly why the caseworker
+    row stayed open. They are in the design system now.
+    """
+    system = Path("ui/static/system.css").read_text(encoding="utf-8")
+    assert "overflow-x: auto" in system
+    assert "@media (max-width: 40rem)" in system
+    # The two-column definition list is what actually overflows at 320 px.
+    assert "grid-template-columns: minmax(0, 1fr)" in system
+    for sheet in sorted(Path("ui/static").glob("*.css")):
+        css = sheet.read_text(encoding="utf-8")
+        assert not re.search(r":\s*\d{3,}px", css), f"{sheet.name}: fixed pixel width"
+        # Every length that scales with the reader's font size, or the "resize
+        # text to 200 percent" criterion (1.4.4) fails with it.
+        assert not re.search(r"font-size:\s*\d+px", css), f"{sheet.name}: px font size"

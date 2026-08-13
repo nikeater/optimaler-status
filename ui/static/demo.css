@@ -1,129 +1,218 @@
-/* The guided showcase (part 13), on top of metrics.css and review.css.
-   Plain CSS, no framework, no build step - the part-10 deviation, unchanged.
+/* The citizen-facing pages - landing, tour, intake, glass pipeline - on top of
+   system.css. Page-specific leftovers only.
 
-   THE ONE THING THIS FILE ADDS THAT THE OTHERS DO NOT: reflow. The caseworker
-   UI's 1.4.10 row has been open since part 10 because its wide tables scroll
-   sideways on a narrow viewport. These pages are for a citizen on a phone, so
-   they are built to work at 320 CSS px and the rules that make that true are
-   here rather than in a media query nobody reads:
+   The reflow rules that used to live here are in the design system now, and
+   they apply to every page rather than to these three: `.scroll-x` around
+   every wide table, a one-column definition list below 40rem, and no fixed
+   pixel width anywhere. What is left here is what only a citizen page has -
+   the phase indicator, the persona cards, the placeholder token, the before
+   and after panels - plus the media query that stacks those. */
 
-   * every wide table lives inside `.scroll-x`, which scrolls ITSELF rather
-     than the page - the body never scrolls horizontally;
-   * `dl` drops from two columns to one below 40rem, because a definition list
-     with a `max-content` first column is exactly what overflows at 320px;
-   * the side-by-side becomes stacked below 52rem;
-   * every input and textarea is `width: 100%` with `box-sizing: border-box`,
-     so a field cannot be wider than its own form.
+/* ---------------------------------------------------------- the tour page */
 
-   The accessibility rules of review.css apply unchanged and are not repeated:
-   no state is carried by colour alone, focus is never removed, nothing depends
-   on hover. */
+/* The lead paragraph of the tour: one size up, so the first thing a visitor
+   reads is visibly the first thing. */
+.lead {
+  font-size: var(--text-md);
+  color: var(--ink-soft);
+  max-width: 66ch;
+}
+
+/* The English aside that rides with every German step (a judge may read either
+   one). Visually consistent by construction: one class, one treatment, always
+   directly under the German paragraph it belongs to, and marked `lang="en"` in
+   the markup so a screen reader switches voice. */
+.aside {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--line-strong);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--surface-alt);
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  max-width: 66ch;
+}
+
+.aside > *:last-child {
+  margin-bottom: 0;
+}
+
+.aside-label {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--muted);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* The step marker on the tour: a numbered chip in front of the heading. The
+   number is decorative repetition - the heading text says which step it is,
+   and the steps are an ordered list of sections in source order. */
+.step-mark {
+  display: inline-block;
+  min-width: 1.9rem;
+  margin-right: var(--space-2);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-pill);
+  background: var(--tint-accent);
+  color: var(--accent-strong);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-align: center;
+}
+
+/* The one call to action per step. A link styled as a button, and still a
+   link: it navigates, it works with scripting off, it is in the tab order
+   exactly once. */
+.cta {
+  display: inline-block;
+  margin: var(--space-2) 0 var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #ffffff;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.cta:hover {
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: #ffffff;
+}
+
+.cta-secondary {
+  background: var(--surface);
+  color: var(--accent);
+}
+
+.cta-secondary:hover {
+  background: var(--tint-accent);
+  color: var(--accent-strong);
+}
+
+/* The list of what to look at inside a step. */
+.watch-for {
+  list-style: none;
+  margin: 0 0 var(--space-3);
+  padding: 0;
+}
+
+.watch-for > li {
+  margin-bottom: var(--space-2);
+  padding-left: var(--space-4);
+  border-left: 2px solid var(--line);
+}
 
 /* ---------------------------------------------------------- step indicator */
 
 .tour-steps ol {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
   list-style: none;
-  margin: 0.75rem 0;
+  margin: var(--space-4) 0 0;
   padding: 0;
-  counter-reset: none;
 }
 
 .tour-step {
-  border: 1px solid var(--line);
-  padding: 0.3rem 0.6rem;
-  background: #f5f7f8;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface-alt);
   color: var(--muted);
+  font-size: var(--text-sm);
 }
 
 /* The current step is bordered AND named: `aria-current="step"` plus the
    offscreen "(aktuelle Phase)" carry the meaning, the weight only repeats it. */
 .tour-step-current {
-  border-color: var(--ink);
-  border-left-width: 4px;
-  background: var(--surface);
-  color: var(--ink);
-  font-weight: 600;
+  border-color: var(--accent);
+  background: var(--tint-accent);
+  color: var(--accent-strong);
+  font-weight: 650;
 }
 
 /* ------------------------------------------------------------ intake page */
 
 .tabs {
-  margin: 0.5rem 0 0.75rem;
+  margin: var(--space-3) 0;
 }
 
 .tab-current {
-  border-bottom: 3px solid var(--ink);
-  padding-bottom: 0.2rem;
+  border-color: var(--accent);
+  background: var(--tint-accent);
+  color: var(--accent-strong);
 }
 
 .persona-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: var(--space-4);
   list-style: none;
-  margin: 0;
+  margin: 0 0 var(--space-4);
   padding: 0;
 }
 
 .persona {
-  border: 1px solid var(--line);
-  border-left-width: 4px;
-  padding: 0.5rem 0.9rem 0.9rem;
-  margin: 0.75rem 0;
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: var(--text-sm);
 }
 
 .persona h3 {
-  margin-top: 0.6rem;
+  margin-top: 0;
 }
 
+/* The chosen persona is named "gewaehlt" in a tag inside its own heading; the
+   accent edge repeats that and carries nothing on its own. */
 .persona-current {
-  border-left-color: var(--ink);
-  background: #f5f7f8;
+  border-color: var(--accent);
+  border-left: 4px solid var(--accent);
+  background: var(--tint-accent);
 }
 
 .hints dt {
-  margin-top: 0.5rem;
-}
-
-textarea {
-  font: inherit;
-  font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
-  width: 100%;
-  box-sizing: border-box;
-  padding: 0.5rem;
-  border: 1px solid var(--muted);
-  background: var(--surface);
-  color: var(--ink);
-  line-height: 1.45;
-}
-
-.field input[type="text"] {
-  width: 100%;
-  box-sizing: border-box;
+  margin-top: var(--space-2);
 }
 
 /* ---------------------------------------------------------- pipeline page */
 
-.stage {
-  border-top: 1px solid var(--line);
-  padding-top: 0.5rem;
+/* One of the seven stages. The rule above the heading is what makes the page
+   read as a sequence rather than as a wall. */
+.stage > h2 {
+  padding-top: var(--space-1);
+  border-top: 3px solid var(--accent);
+  margin-bottom: var(--space-4);
 }
 
 /* A placeholder token is monospaced and boxed so it reads as a MACHINE token
    rather than as text somebody wrote. `mark` keeps its own semantics; the
    border is what survives a monochrome display. */
 .placeholder {
-  border: 1px solid var(--muted);
-  background: #eef1f3;
-  padding: 0 0.2rem;
-  font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--ink);
+  padding: 0 var(--space-1);
+  font-family: var(--font-mono);
+  font-size: 0.9em;
   word-break: break-all;
 }
 
 .side-by-side {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .side-by-side > div {
@@ -132,54 +221,48 @@ textarea {
 }
 
 .side-by-side h4 {
-  margin-bottom: 0.35rem;
+  margin-top: 0;
+  margin-bottom: var(--space-2);
 }
 
+/* The hand-off between two phases. Deliberately the loudest thing on its
+   page: a visitor who loses the thread here loses the tour. */
 .handover {
-  border: 2px solid var(--ink);
-  padding: 0.75rem 1rem;
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--tint-accent);
+  font-size: var(--text-md);
   font-weight: 600;
+  max-width: 66ch;
 }
 
-/* The queue row a visitor was handed to. Display only: the marker is the word
-   "Ihr Vorgang" in the row, this only repeats it (review_queue.html). */
-.tour-row th,
-.tour-row td {
-  background: #f1f7f3;
-  border-top-width: 2px;
-  border-bottom-width: 2px;
+/* The queue row a visitor was handed to. Display only: the marker is the words
+   "Ihr Vorgang" in the row itself, and this only repeats them. */
+tbody .tour-row > th,
+tbody .tour-row > td {
+  background: var(--tint-ok);
+  border-bottom-color: var(--ok);
 }
 
 /* ------------------------------------------------------------- the reflow */
 
-/* Wide content scrolls INSIDE its own box. The page body never scrolls
-   sideways, which is the half of 1.4.10 that a `max-width` alone does not
-   give you. */
-.scroll-x {
-  overflow-x: auto;
-}
-
-pre {
-  overflow-x: auto;
-}
-
 @media (max-width: 40rem) {
-  /* metrics.css sets `grid-template-columns: max-content 1fr`, which is the
-     one rule on these pages that cannot hold at 320px: a term like
-     "Versicherungsnummer" claims the width and the value has nowhere to go. */
-  dl {
-    grid-template-columns: 1fr;
-  }
-
-  dd {
-    margin-bottom: 0.5rem;
-  }
-
-  .navbar {
-    gap: 0.5rem;
-  }
-
   .tour-steps ol {
     flex-direction: column;
+  }
+
+  .persona-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .side-by-side {
+    flex-direction: column;
+  }
+
+  .cta {
+    display: block;
+    text-align: center;
   }
 }
