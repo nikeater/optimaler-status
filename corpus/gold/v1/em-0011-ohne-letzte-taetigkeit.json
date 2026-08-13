@@ -1,0 +1,35 @@
+{
+  "submissionId": "em-0011-ohne-letzte-taetigkeit",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {
+    "antragsteller": {
+      "versicherungsnummer": "17058319E026",
+      "anschrift": {
+        "hausnummer": "2",
+        "strasse": " \tKirchgasse \t",
+        "ort": "Beispielstadt",
+        "plz": "24103"
+      },
+      "geburtsdatum": "1983-05-17"
+    },
+    "antrag": {
+      "gutachten_status": "liegt_nicht_vor",
+      "eintritt_erwerbsminderung": "2026-02-02",
+      "hinweistext": "Sehr geehrte Damen und Herren, hiermit reiche ich den beigefuegten Antrag ein und bitte um Bearbeitung. Fuer Rueckfragen stehe ich Ihnen zur Verfuegung.",
+      "auslandsbezug": " nein \t",
+      "rentenart": "  erwerbsminderungsrente_teilweise \t"
+    },
+    "meta": {
+      "bearbeitungswunsch": "Ich bin ab kommender Woche im Urlaub.",
+      "eingangsdatum": " 2026-08-05 "
+    }
+  },
+  "attachments": [],
+  "procedureHint": "erwerbsminderungsrente"
+}

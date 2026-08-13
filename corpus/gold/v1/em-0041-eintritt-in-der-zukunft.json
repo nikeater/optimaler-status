@@ -1,0 +1,34 @@
+{
+  "submissionId": "em-0041-eintritt-in-der-zukunft",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {
+    "meta": {
+      "eingangsdatum": "  05.08.2026 "
+    },
+    "antrag": {
+      "auslandsbezug": "nein",
+      "eintritt_erwerbsminderung": "2029-01-01",
+      "rentenart": "  erwerbsminderungsrente_teilweise \t",
+      "hinweistext": "Hallo, ich schicke Ihnen hier meinen Antrag. Ich hoffe, so ist alles richtig ausgefuellt. Bitte antworten Sie schriftlich, nicht telefonisch. Vielen Dank vorab.",
+      "gutachten_status": "liegt_nicht_vor"
+    },
+    "antragsteller": {
+      "geburtsdatum": "1988-11-02",
+      "anschrift": {
+        "ort": "  Musterdorf ",
+        "plz": "  70173 ",
+        "hausnummer": "45",
+        "strasse": " Feldstrasse "
+      },
+      "versicherungsnummer": "  02118819N018 \t"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "erwerbsminderungsrente"
+}

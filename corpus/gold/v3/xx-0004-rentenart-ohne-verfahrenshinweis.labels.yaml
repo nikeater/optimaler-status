@@ -1,0 +1,21 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: xx-0004-rentenart-ohne-verfahrenshinweis
+procedure_id: null
+scenario_kind: hint_missing
+expected_unit_id: Referat_312_Renten
+expected_tier: 3
+derived_procedure_id: altersrente
+derivation_source: content
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: 'Das Messitem fuer die Verfahrensableitung. In v1 blieb es ohne Zuordnung und
+  trug eine deklarierte Abweichung; jetzt wird das Verfahren aus dem Inhalt abgeleitet,
+  gepruefte Pflichtangaben inklusive. Tier 3 bleibt trotzdem: ohne Angabe zum Auslandsbezug
+  ist der Klarfall nicht feststellbar. Der Eintrag `procedure_id: null` sagt weiterhin,
+  dass der KANAL kein Verfahren gemeldet hat; `derived_procedure_id` sagt, was das
+  System daraus macht.'

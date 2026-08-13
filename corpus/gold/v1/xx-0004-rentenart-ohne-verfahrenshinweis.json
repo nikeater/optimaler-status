@@ -1,0 +1,32 @@
+{
+  "submissionId": "xx-0004-rentenart-ohne-verfahrenshinweis",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-29T11:37:00+00:00",
+  "serviceType": {
+    "name": "Allgemeines Anliegen",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000009"
+  },
+  "data": {
+    "meta": {
+      "eingangsdatum": "29.07.2026",
+      "bearbeitungswunsch": " Bitte antworten Sie schriftlich, nicht telefonisch. \t"
+    },
+    "antragsteller": {
+      "versicherungsnummer": "22055917S055",
+      "anschrift": {
+        "ort": "Musterdorf",
+        "plz": "70173",
+        "strasse": "Feldstrasse",
+        "hausnummer": " \t45  "
+      },
+      "geburtsdatum": " 1959-05-22 "
+    },
+    "antrag": {
+      "rentenbeginn": "2026-11-01",
+      "rentenart": "regelaltersrente",
+      "hinweistext": "  Hallo, ich schicke Ihnen hier meinen Antrag. Ich hoffe, so ist alles richtig ausgefuellt. Vielen Dank vorab. \t"
+    }
+  },
+  "attachments": []
+}

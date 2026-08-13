@@ -1,0 +1,196 @@
+# Scenario specs for items whose Fachverfahren cannot be determined.
+#
+# These items exist to hold one line of the decision table honest: an unknown
+# procedure is `not_evaluable`, never `complete`. "We could not check" must not
+# look like "we checked and it was fine", so every item here expects tier 3
+# regardless of how tidy its payload looks.
+#
+# In v1 they also exposed a chicken-and-egg problem: the schema mapper only
+# extracts fields a KNOWN procedure declares, so with an unknown procedure
+# nothing was extracted and every routing rule reading `extraction.*` was dead.
+# Part 03 broke the cycle twice over - procedure derivation reads the payload
+# before extraction, and the content routing rules read it too - so xx-0004 now
+# routes correctly. What is left here is the honest residue: items where the
+# content really does not say, says two things at once, or contradicts the
+# channel.
+#
+# Every value is invented (see corpus/gold/v2/README.md).
+description: >-
+  No determinable procedure: an unrelated Leistung, an item without any
+  procedure hint, a Reha request, a rentenart-only item, a Widerspruch that is
+  routed but not evaluable, and three items whose signals contradict each other.
+
+scenarios:
+  - scenario_id: xx-0001-grundsicherung-anfrage
+    kind: unknown_procedure
+    description: >-
+      Anfrage zur Grundsicherung im Alter: ein Verfahren, das dieses System
+      nicht konfiguriert hat.
+    procedure_id: null
+    procedure_hint: grundsicherung
+    facts:
+      geburtsdatum: "1955-03-08"
+      versicherungsnummer: "17080355P027"
+    expected:
+      unit_id: null
+      tier: 3
+      derivation_source: none
+      gaps: []
+
+  - scenario_id: xx-0002-ohne-verfahrenskennung
+    kind: unknown_procedure
+    description: >-
+      Eingang ohne jede Verfahrenskennung: weder Kanalhinweis noch auswertbarer
+      Inhalt.
+    procedure_id: null
+    procedure_hint: null
+    facts:
+      geburtsdatum: "1968-12-19"
+      versicherungsnummer: "18191268Q033"
+    expected:
+      unit_id: null
+      tier: 3
+      derivation_source: none
+      gaps: []
+
+  - scenario_id: xx-0003-reha-antrag
+    kind: unknown_procedure
+    description: >-
+      Reha-Antrag: der Kanalhinweis genuegt fuer die Zuordnung an das
+      Reha-Referat, ein Verfahren dieses Namens ist aber nicht konfiguriert,
+      also ist die Vollstaendigkeit nicht pruefbar.
+    procedure_id: null
+    procedure_hint: reha
+    facts:
+      geburtsdatum: "1976-07-04"
+      versicherungsnummer: "19040776R041"
+    expected:
+      unit_id: Referat_320_Reha
+      tier: 3
+      derivation_source: none
+      gaps: []
+
+  - scenario_id: xx-0004-rentenart-ohne-verfahrenshinweis
+    kind: hint_missing
+    description: >-
+      Im Formular steht eine Regelaltersrente mit Rentenbeginn, der Kanal meldet
+      aber kein Verfahren. Ein Mensch wuerde den Vorgang sofort den Altersrenten
+      zuordnen - seit Teil 03 tut das System das auch.
+    procedure_id: null
+    procedure_hint: null
+    facts:
+      geburtsdatum: "1959-05-22"
+      versicherungsnummer: "17220559S055"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-11-01"
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 3
+      derivation_source: content
+      derived_procedure_id: altersrente
+      gaps: []
+    notes: >-
+      Das Messitem fuer die Verfahrensableitung. In v1 blieb es ohne Zuordnung
+      und trug eine deklarierte Abweichung; jetzt wird das Verfahren aus dem
+      Inhalt abgeleitet, gepruefte Pflichtangaben inklusive. Tier 3 bleibt
+      trotzdem: ohne Angabe zum Auslandsbezug ist der Klarfall nicht
+      feststellbar. Der Eintrag `procedure_id: null` sagt weiterhin, dass der
+      KANAL kein Verfahren gemeldet hat; `derived_procedure_id` sagt, was das
+      System daraus macht.
+
+  - scenario_id: xx-0005-widerspruch
+    kind: unknown_procedure
+    description: >-
+      Widerspruch gegen einen Rentenbescheid: fachlich klar die
+      Widerspruchsstelle, seit Teil 03b auch im Regelwerk.
+    procedure_id: null
+    procedure_hint: widerspruch
+    facts:
+      geburtsdatum: "1962-08-13"
+      versicherungsnummer: "19130862T064"
+    expected:
+      unit_id: Widerspruchsstelle_360
+      tier: 3
+      derivation_source: none
+      gaps: []
+    notes: >-
+      Seit v1 trug dieses Item eine deklarierte Unit-Abweichung: es gab keine
+      Routing-Regel fuer Widersprueche, und sie wurde nicht vorab erfunden, nur
+      damit eine Metrik besser aussieht. Teil 03b schliesst sie (C-9, Config-
+      Haelfte). Die Zuordnung an die Widerspruchsstelle ist eine reine
+      Organisationsentscheidung, ein Realakt: sie sagt nichts ueber
+      Zulaessigkeit oder Fristwahrung, denn darueber entscheidet der
+      Widerspruchsausschuss (par. 85 Abs. 2 Nr. 2 SGG, par. 36a SGB IV). Ein
+      Verfahren "widerspruch" ist weiterhin nicht konfiguriert, also bleibt die
+      Vollstaendigkeit nicht pruefbar und der Vorgang auf Tier 3 - er wartet
+      jetzt nur in der richtigen Warteschlange. Die Aktenzeichen-Extraktion und
+      das Fristen-Flag folgen mit Teil 10.
+
+  - scenario_id: xx-0006-zwei-verfahren-im-formular
+    kind: ambiguous_conflicting
+    description: >-
+      Ein Formular mit angekreuzter Regelaltersrente, gewuenschtem Rentenbeginn
+      UND angegebenem Eintritt der Erwerbsminderung. Zwei Verfahren
+      beanspruchen denselben Vorgang; es wird keines abgeleitet.
+    procedure_id: null
+    procedure_hint: null
+    facts:
+      geburtsdatum: "1963-01-25"
+      versicherungsnummer: "17250163U073"
+      rentenart: regelaltersrente
+      rentenbeginn: "2028-02-01"
+      eintritt_erwerbsminderung: "2026-06-30"
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 3
+      derivation_source: none
+      gaps: []
+    notes: >-
+      Das Item fuer den ungeloesten Arbitrierungskonflikt: zwei Regeln
+      derselben Prioritaet (20) zeigen auf Referat 312 und Referat 316. Die
+      Reihenfolge (priority, rule_id) bestimmt den Gewinner deterministisch,
+      die Confidence sinkt auf 0.6 und beide Zeilen der Entscheidungstabelle
+      fallen aus. Zugeordnet wird trotzdem jemand - ein Vorgang ohne Adressat
+      wartet sonst auf niemanden.
+
+  - scenario_id: xx-0007-kanalhinweis-widerspricht-formular
+    kind: ambiguous_conflicting
+    description: >-
+      Der Kanal meldet eine Erwerbsminderungsrente, das Formular enthaelt
+      ausschliesslich Altersrenten-Angaben. Der Hinweis wird nicht einfach
+      uebernommen: er ist Metadaten, das Formular ist der Antrag.
+    procedure_id: null
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1956-04-11"
+      versicherungsnummer: "17110456V074"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-10-01"
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 3
+      derivation_source: none
+      gaps: []
+    notes: >-
+      Der Gegenbeweis zu "ein gueltiger Hinweis gewinnt immer": widerspricht
+      der Inhalt eindeutig, wird gar kein Verfahren abgeleitet. Die Zuordnung
+      folgt dem Inhalt (Prioritaet 20 vor 50), die Pruefung findet nicht
+      statt.
+
+  - scenario_id: xx-0008-teilhabe-ohne-verfahrenshinweis
+    kind: unknown_procedure
+    description: >-
+      Antrag auf Leistungen zur Teilhabe am Arbeitsleben ohne Kanalhinweis: die
+      Zuordnung an das Reha-Referat traegt der Inhalt, ein Verfahren dieses
+      Namens ist aber nicht konfiguriert.
+    procedure_id: null
+    procedure_hint: null
+    facts:
+      geburtsdatum: "1971-11-08"
+      versicherungsnummer: "18081171W075"
+      rentenart: teilhabe_arbeitsleben
+    expected:
+      unit_id: Referat_320_Reha
+      tier: 3
+      derivation_source: none
+      gaps: []

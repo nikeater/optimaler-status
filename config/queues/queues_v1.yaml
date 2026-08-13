@@ -1,0 +1,73 @@
+# Review-queue settings (config/queues/), part 10.
+#
+# The clocks and budgets the caseworker queues display. Everything here is
+# DISPLAY-ONLY: no number in this file gates anything, changes a tier, changes a
+# routing or fails a build. An overdue item is shown as overdue and stays
+# exactly where it was, because a queue that hid or re-ordered work when a clock
+# ran out would be making a legal decision with a timer.
+#
+# A new, independently versioned file for the frozen-manifest reason (see
+# config/dispatch/dispatch_v1.yaml's header).
+#
+# The three clocks, and what each one actually is:
+#
+#   * `clearing` (C-10, par. 16 Abs. 2 SGB I) - an item that reached no unit
+#     sits in the clearing queue. Par. 16 Abs. 2 S. 1 SGB I obliges the
+#     unzustaendige Stelle to forward an application unverzueglich; "unverzueglich"
+#     is a legal standard, not a number, so the number below is an OPERATIONAL
+#     SLA the agency sets for itself and the UI labels it as one.
+#   * `reha` (C-10, par. 14 Abs. 1 SGB IX) - the Reha queue's two-week
+#     Weiterleitungsfrist is a statutory period and the number IS in the statute:
+#     two weeks after Antragseingang. What the UI must not do is claim the clock
+#     has legal consequences it cannot verify (par. 14 Abs. 2 SGB IX turns
+#     missing it into own responsibility for the case), so the flag names the
+#     norm and stops.
+#   * `widerspruch` (C-9) - a Widerspruch item shows "Frist laeuft" with the
+#     Eingangszeitpunkt and the channel it came in on. NOTHING about
+#     Zulaessigkeit, Fristwahrung or Begruendetheit: routing is a Realakt, and
+#     those questions belong to the Widerspruchsstelle and the
+#     Widerspruchsausschuss (par. 85 Abs. 2 Nr. 2 SGG, par. 36a SGB IV).
+version: queues_v1
+
+# The unit that owns items no rule could route (tier 3, no unit). Must be a
+# taxonomy unit id; the loader refuses one that is not.
+clearing_unit_id: Referat_390_Sonstiges
+
+clearing:
+  sla_hours: 48
+  basis: par. 16 Abs. 2 S. 1 SGB I (Weiterleitung unverzueglich)
+  note: >-
+    Betrieblich gesetzte Kennzahl, keine Rechtsfrist. "Unverzueglich" ist ein
+    Rechtsbegriff ohne Stundenzahl; 48 Stunden sind die Selbstverpflichtung, an
+    der sich die Clearingstelle messen laesst.
+
+reha:
+  unit_ids:
+    - Referat_320_Reha
+  weiterleitung_days: 14
+  basis: par. 14 Abs. 1 S. 1 SGB IX (Zwei-Wochen-Frist ab Antragseingang)
+  note: >-
+    Gesetzliche Frist. Die Anzeige nennt die Norm und den Ablauf und trifft
+    keine Aussage zu par. 14 Abs. 2 SGB IX (Zustaendigkeit nach Fristablauf) -
+    das ist eine Rechtsfolge, die der Fachbereich feststellt, nicht die Queue.
+
+widerspruch:
+  unit_ids:
+    - Widerspruchsstelle_360
+  flag_label: Frist laeuft
+  note: >-
+    Reine Sichtbarmachung: Eingangszeitpunkt und Eingangsweg. Keine Aussage zu
+    Zulaessigkeit, Fristwahrung oder Begruendetheit (par. 84, par. 85 SGG) -
+    die Zuordnung ist ein Realakt.
+
+# P-10's remaining half: a per-tier budget for how long an item may wait for its
+# human. Reported next to the age of the oldest open item per tier; never gated.
+latency_budget_hours:
+  "1": 24
+  "2": 72
+  "3": 120
+latency_note: >-
+  Betriebliche Zielwerte, nicht kalibriert und nicht gemessen an einem echten
+  Betrieb. Sie beschreiben, was die Behoerde sich vornimmt, und dienen der
+  Ausnahmepfad-Beobachtung (P-10): ein Tier-3-Stapel, der aelter wird, ist das
+  Warnzeichen, das dem Robodebt-Muster vorausgeht.

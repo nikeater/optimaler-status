@@ -1,0 +1,33 @@
+description: >-
+  Tier-1 evidence plus a flagged anomaly, scorer enforcing: both downgrade rules
+  fire, the tier moves to 3 and pre_downgrade_tier keeps the deterministic
+  result (1) so the audit trail shows exactly what the scorer changed.
+evidence:
+  routing:
+    - unit_id: Referat_312_Renten
+      source: rule
+      rule_ids: [rule_altersrente_hint]
+      confidence: 1.0
+  completeness:
+    verdict: complete
+    gap_ids: []
+  min_confidence: 1.0
+  discarded_count: 0
+flags:
+  procedure_id: altersrente
+  tier1_enabled: true
+  fully_automated: false
+clear_cut: true
+anomaly:
+  score: 0.93
+  flagged: true
+scorer_mode: enforcing
+expect:
+  tier: 3
+  pre_downgrade_tier: 1
+  routed_unit_id: Referat_312_Renten
+  reason_kinds: [qualified, downgraded, downgraded]
+  reason_rule_ids:
+    - tier1_clear_and_complete
+    - downgrade_anomaly_flagged
+    - downgrade_anomaly_score

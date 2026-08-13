@@ -1,0 +1,42 @@
+{
+  "submissionId": "sf-0021-taetigkeitsbeginn-punktformat",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-27T08:04:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "antrag": {
+      "hinweistext": "Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir.",
+      "honorar_modell": "nach_ergebnis",
+      "arbeitsort": "  wechselnd ",
+      "antragsteller_rolle": "auftraggeber",
+      "antragsart": " \tfeststellung_nach_aufnahme ",
+      "taetigkeit_beginn": "01.03.2026",
+      "taetigkeit_bezeichnung": "  Montage von Photovoltaikanlagen \t",
+      "weitere_auftraggeber": "ja"
+    },
+    "meta": {
+      "bearbeitungswunsch": "  Eine Eingangsbestaetigung waere mir wichtig. ",
+      "eingangsdatum": "27.07.2026"
+    },
+    "auftraggeber": {
+      "firmenname": " Sonnenpark Anlagenbau GmbH ",
+      "betriebsnummer": " 90123456  "
+    },
+    "antragsteller": {
+      "anschrift": {
+        "strasse": " \tAm Hang ",
+        "plz": " 99084 ",
+        "hausnummer": " \t8 \t",
+        "ort": "Musterhausen"
+      },
+      "geburtsdatum": "1972-05-03",
+      "versicherungsnummer": "21030572T012"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "statusfeststellung"
+}

@@ -1,0 +1,28 @@
+{
+  "submissionId": "s1-0002-altersrente-missing-vsnr",
+  "destinationId": "drv-bund-eingang-test",
+  "procedureHint": "altersrente",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-03T10:41:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antragsteller": {
+      "geburtsdatum": "1960-09-02",
+      "anschrift": {
+        "strasse": "Beispielallee",
+        "hausnummer": "17a",
+        "plz": "04109",
+        "ort": "Beispielhausen"
+      }
+    },
+    "antrag": {
+      "rentenart": "regelaltersrente",
+      "rentenbeginn": "2027-01-01",
+      "auslandsbezug": "nein"
+    }
+  },
+  "attachments": []
+}

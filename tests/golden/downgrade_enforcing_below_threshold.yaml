@@ -1,0 +1,29 @@
+description: >-
+  Enforcing mode but an unflagged anomaly below the downgrade threshold: no rule
+  fires, tier 1 stands. The valve adds oversight, it does not add noise.
+evidence:
+  routing:
+    - unit_id: Referat_312_Renten
+      source: rule
+      rule_ids: [rule_altersrente_hint]
+      confidence: 1.0
+  completeness:
+    verdict: complete
+    gap_ids: []
+  min_confidence: 1.0
+  discarded_count: 0
+flags:
+  procedure_id: altersrente
+  tier1_enabled: true
+  fully_automated: false
+clear_cut: true
+anomaly:
+  score: 0.11
+  flagged: false
+scorer_mode: enforcing
+expect:
+  tier: 1
+  pre_downgrade_tier: 1
+  routed_unit_id: Referat_312_Renten
+  reason_kinds: [qualified]
+  reason_rule_ids: [tier1_clear_and_complete]

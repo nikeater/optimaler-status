@@ -1,0 +1,20 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: em-0013-ohne-geburtsdatum-und-taetigkeit
+procedure_id: erwerbsminderungsrente
+scenario_kind: missing_field
+expected_unit_id: Referat_316_Erwerbsminderungsrenten
+expected_tier: 2
+derived_procedure_id: erwerbsminderungsrente
+derivation_source: hint
+expected_gaps:
+- requirement_id: geburtsdatum
+  status: missing
+- requirement_id: letzte_taetigkeit
+  status: missing
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: Antrag ohne Geburtsdatum und ohne letzte Taetigkeit.

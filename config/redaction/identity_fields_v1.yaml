@@ -1,0 +1,111 @@
+# Identity-fields policy v1 (config/redaction/).
+#
+# This file decides what leaves the raw plane at ingest. Every row answers
+# three questions at once, on purpose (ADR-017):
+#
+#   kind      which placeholder kind the working copy carries in its place
+#   subtree   whether a whole sub-object collapses into ONE sealed entry
+#   witness   whether the deterministic plane may compute on the real value
+#             through the request-scoped witness (never through the vault)
+#   reveal    whether the observed value may be quoted in a problem text
+#
+# Splitting those into separate lists is how classification drifts: someone
+# adds a field to the seal list, forgets the visibility list, and an invalid
+# Versicherungsnummer ends up in the journal inside a validation message. One
+# row, one truth.
+#
+# WITNESS, and what it is not. A witness entry lets engine/evidence/completeness
+# validate the value that was actually submitted (Pruefziffer, the birth date
+# encoded in the Versicherungsnummer, date bounds) while the working copy and
+# every artifact derived from it carry only the placeholder. The witness lives
+# in memory for the duration of one request, is never serialized, never
+# journaled, never on the envelope and never in the vault API. It is NOT a vault
+# dereference: ADR-002's rule that the vault is read only at outbound template
+# rendering (part 08) stays intact.
+#
+# A path that is sealed WITHOUT a witness entry and is also mapped by a
+# procedure field_map is refused at config load time, because that combination
+# would validate a random token instead of the applicant's answer and report
+# "valid".
+#
+# Free text is not addressed here. Structured payload paths are the only thing
+# part 04 seals; text parts get the same treatment through the detector when the
+# text layer lands (part 05).
+policy_id: identity_fields_v1
+version: identity_fields_v1
+description: >-
+  Identity-classed payload paths of the DRV demo procedures (Altersrente,
+  Erwerbsminderungsrente, Statusfeststellung nach par. 7a SGB IV).
+
+fields:
+  - path: antragsteller.name
+    kind: NAME
+    witness: true
+    reveal: never
+    note: >-
+      Kein Vorgang der drei Demo-Verfahren traegt dieses Feld heute, die
+      Formulare V0027, R0100 und R0210 aber alle. Der VERIFY-Durchlauf kann
+      einen Namen in einem strukturierten Feld NICHT finden - er ist
+      absichtlich pruefzifferngebunden und ruft kein Modell auf -, also ist
+      diese Zeile die einzige Absicherung fuer Namen im strukturierten Pfad.
+      Aufgenommen, nachdem der Kanarienvogel-Test genau diese Luecke gezeigt
+      hat.
+
+  - path: antragsteller.versicherungsnummer
+    kind: VSNR
+    witness: true
+    reveal: never
+    note: >-
+      Direkt personenbeziehbar und bundesweit eindeutig; traegt zusaetzlich das
+      Geburtsdatum in den Stellen 3 bis 8. Witness, weil Pruefmuster und der
+      Geburtsdatums-Abgleich auf dem echten Wert rechnen muessen.
+
+  - path: antragsteller.geburtsdatum
+    kind: GEBDAT
+    witness: true
+    reveal: never
+    note: >-
+      Witness, weil Kalenderplausibilitaet, absolute Datumsgrenzen und die
+      Mindestaltersregeln (60 Jahre bis Rentenbeginn, 14 Jahre bis
+      Taetigkeitsbeginn) echte Daten brauchen.
+
+  - path: antragsteller.anschrift
+    kind: ADDR
+    subtree: true
+    witness: false
+    reveal: never
+    note: >-
+      Der gesamte Anschrift-Teilbaum wird zu EINEM Eintrag und einem einzigen
+      Platzhalter. Kein Verfahren liest strasse/hausnummer/plz/ort einzeln, und
+      ein Witness-Eintrag waere fuer ein Objekt ohnehin kein Skalar, auf dem ein
+      Validator rechnen koennte.
+
+  - path: auftraggeber.firmenname
+    kind: ORG
+    witness: true
+    reveal: never
+    note: >-
+      Bei Einzelunternehmen und Kleinstauftraggebern ist der Firmenname ein
+      Personenname (par. 7a SGB IV, V0027 Ziffer 2). Witness, weil die
+      Laengenpruefung des Requirements auf dem echten Wert laufen muss.
+
+  - path: auftraggeber.anschrift
+    kind: ADDR
+    subtree: true
+    witness: false
+    reveal: never
+    note: >-
+      Wie die Anschrift der antragstellenden Person: ein Teilbaum, ein Eintrag,
+      ein Platzhalter. V0027 Ziffer 2 verlangt Firmenname UND Anschrift, und die
+      Nachforderungs-Wording fragt beides ab; kein Verfahren liest die Unterkeys
+      einzeln.
+
+  - path: auftraggeber.betriebsnummer
+    kind: BNR
+    witness: true
+    reveal: never
+    note: >-
+      Achtstellige Betriebsnummer der Bundesagentur fuer Arbeit; identifiziert
+      den Auftraggeber eindeutig. Heute in keinem field_map, witness trotzdem
+      true, damit ein spaeteres Requirement darauf nicht stillschweigend gegen
+      einen Platzhalter prueft.

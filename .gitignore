@@ -1,0 +1,49 @@
+# Environments and build output
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+
+# Caches
+__pycache__/
+*.pyc
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+
+# Test and eval artifacts
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+eval/reports/
+
+# Secrets. `.env` was already here; the variants are the ones that get created
+# during a deployment and then forgotten.
+.env
+.env.*
+*.env
+!.env.example
+
+# RUNTIME STATE, and this block is the one that matters before publishing.
+# The five JSONL stores hold a vault. Its demo backend is PLAINTEXT by design
+# (engine/redact/vault.py says so in its own docstring), so a state directory
+# that reached a public repository would publish whatever that instance had
+# sealed. Seeded demo state is synthetic and harmless; a developer's local run
+# over anything else is not, and neither case belongs in git. Keep local state
+# under one of these names - `deploy/state/` is the convention docs/BUILD.md
+# uses - or outside the repository entirely.
+state/
+.state/
+demo-state/
+deploy/state/
+var/
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

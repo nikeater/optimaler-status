@@ -1,0 +1,33 @@
+{
+  "submissionId": "ar-0040-rentenbeginn-weit-in-der-zukunft",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-29T11:37:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antrag": {
+      "rentenart": "regelaltersrente",
+      "hinweistext": "Hallo, ich schicke Ihnen hier meinen Antrag. Ich hoffe, so ist alles richtig ausgefuellt. Eine Eingangsbestaetigung waere mir wichtig. Vielen Dank vorab.",
+      "auslandsbezug": "  nein  ",
+      "rentenbeginn": "2039-01-01"
+    },
+    "meta": {
+      "eingangsdatum": "2026-07-29"
+    },
+    "antragsteller": {
+      "versicherungsnummer": "  19090562T011 \t",
+      "anschrift": {
+        "strasse": "Musterweg",
+        "ort": "Musterstadt",
+        "plz": " 10115 \t",
+        "hausnummer": "3"
+      },
+      "geburtsdatum": " \t1962-05-09 "
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

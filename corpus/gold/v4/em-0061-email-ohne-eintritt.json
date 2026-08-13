@@ -1,0 +1,43 @@
+{
+  "submissionId": "em-0061-email-ohne-eintritt",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "email",
+  "submittedAt": "2026-08-03T09:12:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {},
+  "attachments": [],
+  "bodyText": "Betreff: Antrag auf Erwerbsminderungsrente\n\nSehr geehrte Damen und Herren,\n\nich beantrage eine Erwerbsminderungsrente. Seit wann die Einschraenkung genau besteht, kann ich nicht sagen.\n\nAbsender: Herr Jonas Musterling\nAnschrift: Lindenallee 17, 04109 Beispielau\nGeburtsdatum: 1978-01-30\nVersicherungsnummer: 19300178S085\nRentenart: erwerbsminderungsrente_voll\nLetzte Taetigkeit: Lagerarbeiter\n\nMit freundlichen Gruessen\nHerr Jonas Musterling",
+  "extractionFixture": [
+    {
+      "field": "geburtsdatum",
+      "part_id": "part-text-0",
+      "anchor": "Geburtsdatum:",
+      "mode": "sealed"
+    },
+    {
+      "field": "versicherungsnummer",
+      "part_id": "part-text-0",
+      "anchor": "Versicherungsnummer:",
+      "mode": "sealed"
+    },
+    {
+      "field": "rentenart",
+      "part_id": "part-text-0",
+      "anchor": "Rentenart:",
+      "mode": "literal",
+      "value": "erwerbsminderungsrente_voll",
+      "quote": "Rentenart: erwerbsminderungsrente_voll"
+    },
+    {
+      "field": "letzte_taetigkeit",
+      "part_id": "part-text-0",
+      "anchor": "Letzte Taetigkeit:",
+      "mode": "literal",
+      "value": "Lagerarbeiter",
+      "quote": "Letzte Taetigkeit: Lagerarbeiter"
+    }
+  ]
+}

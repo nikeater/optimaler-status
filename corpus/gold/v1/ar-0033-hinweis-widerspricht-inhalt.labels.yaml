@@ -1,0 +1,24 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: ar-0033-hinweis-widerspricht-inhalt
+procedure_id: altersrente
+scenario_kind: ambiguous_conflicting
+expected_unit_id: Referat_316_Erwerbsminderungsrenten
+expected_tier: 3
+expected_gaps:
+- requirement_id: rentenart
+  status: invalid
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence:
+- unit
+- tier
+divergence_reason: 'Heute gewinnt der Verfahrenshinweis des Kanals: die Regel fuer
+  altersrente feuert zuerst und liefert Referat 312, und weil die Rentenart die Altersrenten-Validierung
+  verletzt, endet der Vorgang als unvollstaendig in Tier 2 statt als widerspruechlich
+  in Tier 3. Der Klassifikator aus Teil 03 soll den Inhalt gegen den Kanalhinweis
+  gewichten; bis dahin bleibt die Abweichung dokumentiert und gemessen.'
+notes: Der Kanal meldet eine Altersrente, der Inhalt ist ein Antrag auf volle Erwerbsminderungsrente.
+  Ein widerspruechlicher Vorgang gehoert fachlich vollstaendig geprueft und inhaltlich
+  zum Erwerbsminderungsreferat.

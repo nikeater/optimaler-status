@@ -1,0 +1,20 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: em-0031-rentenart-widerspricht-verfahren
+procedure_id: erwerbsminderungsrente
+scenario_kind: ambiguous_conflicting
+expected_unit_id: Referat_316_Erwerbsminderungsrenten
+expected_tier: 3
+derived_procedure_id: null
+derivation_source: none
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: 'In v1 eine deklarierte Tier-Abweichung: die Vollstaendigkeitspruefung sah
+  nur eine unzulaessige Rentenart und stufte den Vorgang als unvollstaendig in Tier
+  2 ein. Teil 03 schliesst sie. Rentenart und Eintrittsdatum zeigen auf verschiedene
+  Verfahren, also wird keines abgeleitet; die Zuordnung traegt der Kanalhinweis, gewuerdigt
+  wird vollstaendig.'

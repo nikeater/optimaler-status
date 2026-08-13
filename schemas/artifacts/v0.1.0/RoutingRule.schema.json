@@ -1,0 +1,45 @@
+{
+  "additionalProperties": false,
+  "description": "Declarative routing rule (config/rules/); ships with fixtures.",
+  "properties": {
+    "rule_id": {
+      "title": "Rule Id",
+      "type": "string"
+    },
+    "unit_id": {
+      "title": "Unit Id",
+      "type": "string"
+    },
+    "priority": {
+      "default": 100,
+      "description": "Arbitration precedence, lower wins; total order is (priority, rule_id). ADR-014/ADR-016.",
+      "minimum": 0,
+      "title": "Priority",
+      "type": "integer"
+    },
+    "predicate": {
+      "additionalProperties": true,
+      "description": "Small YAML predicate AST interpreted by engine/evidence",
+      "title": "Predicate",
+      "type": "object"
+    },
+    "fixtures": {
+      "description": "Fixture ids CI runs against this rule",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Fixtures",
+      "type": "array"
+    }
+  },
+  "required": [
+    "rule_id",
+    "unit_id",
+    "predicate",
+    "fixtures"
+  ],
+  "title": "RoutingRule",
+  "type": "object",
+  "$id": "https://opencode.de/eingangslotse/schemas/v0.1.0/RoutingRule.schema.json"
+}

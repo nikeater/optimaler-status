@@ -1,0 +1,75 @@
+# GENERATED expectation for tests/test_corpus_golden.py.
+# Refresh deliberately with: python -m tests.golden.corpus.refresh
+seed: 7
+items:
+  golden-0001-altersrente-klarfall:
+    labels:
+      item_id: golden-0001-altersrente-klarfall
+      procedure_id: altersrente
+      scenario_kind: complete_clear
+      expected_unit_id: Referat_312_Renten
+      expected_tier: 1
+      derived_procedure_id: altersrente
+      derivation_source: hint
+      expected_gaps: []
+      anomaly_expected: false
+      anomaly_pattern: null
+      paraphrase: deterministic
+      known_divergence: []
+      divergence_reason: null
+      notes: Vollstaendiger Regelaltersrentenantrag, Klarfall, Tier 1.
+    payload_sha256: 5e9d99500fc5aec8938d497836ac3951affb22294279891a2f4ffe1317a9113f
+  golden-0002-erwerbsminderung-unvollstaendig:
+    labels:
+      item_id: golden-0002-erwerbsminderung-unvollstaendig
+      procedure_id: erwerbsminderungsrente
+      scenario_kind: missing_field
+      expected_unit_id: Referat_316_Erwerbsminderungsrenten
+      expected_tier: 2
+      derived_procedure_id: erwerbsminderungsrente
+      derivation_source: hint
+      expected_gaps:
+      - requirement_id: letzte_taetigkeit
+        status: missing
+      anomaly_expected: false
+      anomaly_pattern: null
+      paraphrase: deterministic
+      known_divergence: []
+      divergence_reason: null
+      notes: Erwerbsminderungsrente ohne Angabe der letzten Taetigkeit.
+    payload_sha256: 1f8d34bc5d963d4a5e6bd05176f56591c012ab1e7f6969d5b81e7b840fc1d6f4
+  golden-0003-unbekanntes-verfahren:
+    labels:
+      item_id: golden-0003-unbekanntes-verfahren
+      procedure_id: null
+      scenario_kind: unknown_procedure
+      expected_unit_id: null
+      expected_tier: 3
+      derived_procedure_id: null
+      derivation_source: none
+      expected_gaps: []
+      anomaly_expected: false
+      anomaly_pattern: null
+      paraphrase: deterministic
+      known_divergence: []
+      divergence_reason: null
+      notes: Eingang zu einem Verfahren, das nicht konfiguriert ist.
+    payload_sha256: 43c93ab6b0c397ca497da3a001eb132ab6908196e9141ecba5b561ee3b942f75
+  golden-0004-statusfeststellung-vollstaendig:
+    labels:
+      item_id: golden-0004-statusfeststellung-vollstaendig
+      procedure_id: statusfeststellung
+      scenario_kind: complete_clear
+      expected_unit_id: Referat_340_Clearingstelle
+      expected_tier: 3
+      derived_procedure_id: statusfeststellung
+      derivation_source: hint
+      expected_gaps: []
+      anomaly_expected: false
+      anomaly_pattern: null
+      paraphrase: deterministic
+      known_divergence: []
+      divergence_reason: null
+      notes: 'Vollstaendiger Statusantrag nach par. 7a SGB IV: keine Luecke, kein
+        Klarfall-Block, also Tier 3.'
+    payload_sha256: 7740cf9ea71cd3eeb1dfbbea61a07eb71705b8773b1dfccb2d5c0cd5ec6f6845

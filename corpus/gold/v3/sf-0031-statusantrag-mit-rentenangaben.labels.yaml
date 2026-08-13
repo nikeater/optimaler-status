@@ -1,0 +1,22 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: sf-0031-statusantrag-mit-rentenangaben
+procedure_id: statusfeststellung
+scenario_kind: ambiguous_conflicting
+expected_unit_id: Referat_312_Renten
+expected_tier: 3
+derived_procedure_id: null
+derivation_source: none
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: 'Das Spiegelbild von ar-0033 und xx-0006 fuer das dritte Verfahren: die Signale
+  der Altersrente und der Statusfeststellung feuern gleichzeitig, also wird nicht
+  geraten und nichts geprueft ("nicht pruefbar" ist etwas anderes als "unvollstaendig").
+  Zugeordnet wird trotzdem jemand: zwei Regeln der Prioritaet 20 zeigen auf Referat
+  312 und Referat 340, die Ordnung (priority, rule_id) bestimmt den Gewinner deterministisch,
+  die Confidence sinkt auf 0.6 und beide Zeilen der Entscheidungstabelle fallen aus.
+  Ein Vorgang ohne Adressaten wartet sonst auf niemanden.'

@@ -1,0 +1,30 @@
+{
+  "submissionId": "xx-0008-teilhabe-ohne-verfahrenshinweis",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Allgemeines Anliegen",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000009"
+  },
+  "data": {
+    "antragsteller": {
+      "geburtsdatum": "1971-11-08",
+      "versicherungsnummer": " \t18081171W075 ",
+      "anschrift": {
+        "ort": "Beispielau",
+        "plz": " 04109 \t",
+        "hausnummer": " \t17a ",
+        "strasse": "Lindenallee"
+      }
+    },
+    "antrag": {
+      "rentenart": " teilhabe_arbeitsleben ",
+      "hinweistext": " \tSehr geehrte Damen und Herren, hiermit reiche ich den beigefuegten Antrag ein und bitte um Bearbeitung. Ich bin ab kommender Woche im Urlaub. Fuer Rueckfragen stehe ich Ihnen zur Verfuegung.  "
+    },
+    "meta": {
+      "eingangsdatum": " 5. August 2026 \t"
+    }
+  },
+  "attachments": []
+}

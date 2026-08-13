@@ -1,0 +1,17 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: xx-0063-email-kanalhinweis-widerspricht-anschreiben
+procedure_id: null
+scenario_kind: ambiguous_conflicting
+expected_unit_id: Referat_312_Renten
+expected_tier: 3
+derived_procedure_id: null
+derivation_source: none
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: none
+known_divergence: []
+divergence_reason: null
+notes: 'Zugeordnet nach dem Kanalhinweis, aber ohne Verfahren und damit ohne Vollstaendigkeitspruefung:
+  die Zuordnung ist eine Zustelladresse, keine fachliche Aussage.'

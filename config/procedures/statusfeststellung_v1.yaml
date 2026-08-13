@@ -1,0 +1,269 @@
+# Procedure config v1 for "statusfeststellung" (config/procedures/).
+#
+# Feststellung des Erwerbsstatus nach par. 7a SGB IV: the Clearingstelle of the
+# Deutsche Rentenversicherung Bund decides whether an Auftragsverhaeltnis is
+# abhaengige Beschaeftigung or selbststaendige Taetigkeit. Formularpaket V0027
+# (Antrag), V0028 (Erlaeuterungen), C0031/C0032/C0033 (Anlagen).
+#
+# THIS FILE HAS NO clear_cut BLOCK, AND THAT IS THE POINT.
+#
+# Par. 7a Abs. 2 Satz 1 SGB IV orders the decision "auf Grund einer
+# Gesamtwuerdigung aller Umstaende des Einzelfalles". There is no constellation
+# of form fields that makes the outcome klar: since BSG 28.06.2022 (B 12 R 3/20 R,
+# Musikschullehrer II) the gelebte Praxis decides and abstrakte Zuordnungen nach
+# Berufsbildern are excluded, and the legislator's own reasoning says the
+# Statusbeurteilung is "stets im Einzelfall vorzunehmen, nicht abstrakt"
+# (BT-Drs. 20/12811). So unlike erwerbsminderungsrente_v1.yaml, which records
+# inert clear-cut criteria as a documented TARGET state, this procedure records
+# none: there is no target state to document. Omitting the block is the honest
+# shape, not an unfinished one.
+#
+# The consequence is deliberate and is what these scenarios measure: with
+# tier1_enabled false and no clear_cut, a COMPLETE Statusantrag matches no row
+# of the decision table (the tier-2 row requires an incomplete verdict) and
+# lands on default_tier 3. Formally complete, fully routed, and entirely in a
+# caseworker's hands. That is the em-0001 precedent applied to a procedure where
+# it is permanent rather than provisional.
+#
+# fully_automated stays false, permanently: par. 31a SGB X is self-authorizing
+# (it carries no Rechtsvorschrift-Vorbehalt), but its "kein Anlass"-Bedingung
+# can never be met by a Beurteilungsentscheidung with the Beurteilungsspielraum
+# of par. 7a Abs. 2 S. 1, and the Anhoerung of par. 7a Abs. 4 / par. 24 SGB X
+# presupposes a responsible human.
+#
+# PLACEHOLDER: requirement wording, validation bounds and the Nachforderung
+# wording are derived from the public V0027 form and from public law, not from a
+# design partner's Fachverfahren. Review with the Fachbereich before any pilot.
+#
+# TODO(part 04): add `vertrag_kopie` as a `kind: document` requirement
+# ("Saemtliche Vertraege in Kopie", V0027 Ziffer 3.2, par. 7a Abs. 3 SGB IV)
+# once attachment classification exists. Ohne diese Unterlagen kann ueber den
+# Erwerbsstatus nach dem Formular ausdruecklich NICHT entschieden werden, so the
+# requirement is fachlich right - but today engine/evidence/completeness.py
+# reports MISSING for every document requirement, which would make every item
+# incomplete, push every scenario to tier 2, and hide the tier-3-by-design shape
+# above. Activating it is a conscious decision (all complete_* expectations move
+# to tier 2 with the gap `vertrag_kopie: missing`), never an accident. Wording
+# ready for that day:
+#   "Bitte reichen Sie saemtliche Vertraege und Vertragsunterlagen zum
+#    Auftragsverhaeltnis in Kopie ein. Ohne diese Unterlagen kann ueber den
+#    Erwerbsstatus nicht entschieden werden (par. 7a Abs. 3 SGB IV)."
+procedure_id: statusfeststellung
+
+flags:
+  procedure_id: statusfeststellung
+  tier1_enabled: false
+  fully_automated: false
+
+requirements:
+  procedure_id: statusfeststellung
+  version: statusfeststellung_requirements_v1
+  requirements:
+    - requirement_id: versicherungsnummer
+      description: >-
+        Versicherungsnummer (12 Stellen: Bereichsnummer, Geburtsdatum TTMMJJ,
+        Anfangsbuchstabe des Geburtsnamens, Seriennummer, Pruefziffer).
+      kind: field
+      validation:
+        pattern: "^[0-9]{8}[A-Z][0-9]{3}$"
+        cross_field:
+          - kind: birthdate_in_vsnr
+            field: geburtsdatum
+            detail: >-
+              Die Versicherungsnummer traegt an den Stellen 3 bis 8 ein anderes
+              Geburtsdatum als das im Antrag angegebene.
+
+    - requirement_id: geburtsdatum
+      description: >-
+        Geburtsdatum der auftragnehmenden Person (ISO-Datum, V0027 Ziffer 1).
+      kind: field
+      validation:
+        pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        date:
+          min: "1900-01-01"
+          max: "2012-12-31"
+
+    - requirement_id: antragsart
+      description: >-
+        Art des Antrags: Feststellung nach Aufnahme der Taetigkeit
+        (par. 7a Abs. 1 S. 1 SGB IV) oder Prognoseantrag vor Aufnahme
+        (par. 7a Abs. 4a S. 1 SGB IV).
+      kind: field
+      validation:
+        # Ein unbekannter Wert ist eine Rueckfrage, keine Ablehnung: das
+        # Formular kennt die Umdeutung eines unmoeglich gewordenen
+        # Prognoseantrags, und eine Umdeutung ist eine rechtliche Wertung, die
+        # nur ein Mensch vornehmen darf.
+        one_of:
+          - feststellung_nach_aufnahme
+          - prognose_vor_aufnahme
+
+    - requirement_id: antragsteller_rolle
+      description: >-
+        Wer den Antrag stellt (V0027 Ziffer 9.1): Auftragnehmer, Auftraggeber
+        oder beide gemeinsam.
+      kind: field
+      validation:
+        one_of:
+          - auftragnehmer
+          - auftraggeber
+          - gemeinsam
+
+    - requirement_id: taetigkeit_bezeichnung
+      description: >-
+        Bezeichnung der zu beurteilenden Taetigkeit (V0027 Ziffer 3.1).
+      kind: field
+      validation:
+        min_length: 3
+        max_length: 200
+
+    - requirement_id: taetigkeit_beginn
+      description: >-
+        Beginn der zu beurteilenden Taetigkeit (ISO-Datum, V0027 Ziffer 3.1).
+      kind: field
+      validation:
+        pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        # Die Obergrenze liegt bewusst weit in der Zukunft: der Prognoseantrag
+        # nach par. 7a Abs. 4a SGB IV wird VOR Aufnahme der Taetigkeit
+        # gestellt, ein Beginn in der Zukunft ist also der Regelfall dieses
+        # Verfahrens und darf nie als Fehler gelten. Gegen "heute" wird hier
+        # ohnehin nie geprueft (die Vollstaendigkeitspruefung liest keine Uhr).
+        date:
+          min: "1990-01-01"
+          max: "2035-12-31"
+        cross_field:
+          # 14 ist das frueheste Alter, in dem deutsches Recht regulaere
+          # Erwerbstaetigkeit zulaesst (par. 5 JArbSchG). Davor kann es kein
+          # zu beurteilendes Auftragsverhaeltnis geben.
+          - kind: min_years_after
+            field: geburtsdatum
+            years: 14
+            detail: >-
+              Der angegebene Beginn der Taetigkeit liegt vor dem 14. Geburtstag
+              der auftragnehmenden Person.
+
+    - requirement_id: auftraggeber_name
+      description: >-
+        Firmenname des Auftraggebers (V0027 Ziffer 2). Ohne benannten
+        Auftraggeber gibt es kein beurteilbares Auftragsverhaeltnis.
+      kind: field
+      validation:
+        min_length: 3
+        max_length: 200
+
+# Die Indizien der Gesamtwuerdigung (Weisungsgebundenheit, Eingliederung,
+# Arbeitsort, weitere Auftraggeber, Umsatzanteil, Honorarmodell, Rahmenvertrag,
+# Dreiecksverhaeltnis, Betriebsnummer) stehen BEWUSST NICHT im field_map und
+# sind keine Pflichtangaben: sie sind Abwaegungsmaterial, kein Haken auf einer
+# Liste. Sie in Requirements zu verwandeln wuerde eine Checkliste vortaeuschen,
+# wo das Gesetz eine Abwaegung verlangt, und der Vorgang wuerde an einer
+# fehlenden Prozentangabe scheitern statt beim Menschen zu landen. Der Scorer
+# (Teil 06) und die Anomaliemuster der sf-Szenarien lesen sie aus dem Payload.
+field_map:
+  - path: antragsteller.versicherungsnummer
+    field: versicherungsnummer
+  - path: antragsteller.geburtsdatum
+    field: geburtsdatum
+  - path: antrag.antragsart
+    field: antragsart
+  - path: antrag.antragsteller_rolle
+    field: antragsteller_rolle
+  - path: antrag.taetigkeit_bezeichnung
+    field: taetigkeit_bezeichnung
+  - path: antrag.taetigkeit_beginn
+    field: taetigkeit_beginn
+  - path: auftraggeber.firmenname
+    field: auftraggeber_name
+
+derivation:
+  signal_id: statusfeststellung_content_v2
+  description: >-
+    Eine angekreuzte Antragsart nach par. 7a SGB IV ODER die Kombination aus
+    benanntem Auftraggeber und bezeichneter Taetigkeit machen den Vorgang
+    inhaltlich zu einem Statusfeststellungsantrag. Die zweite Signatur ist
+    tragfaehig, weil kein anderes konfiguriertes Verfahren einen
+    `auftraggeber.*`-Namensraum kennt. Hausregel wie ueberall: trifft
+    gleichzeitig ein Signal eines anderen Verfahrens zu, wird NICHT geraten -
+    der Vorgang bleibt ohne Verfahren und damit Tier 3.
+    v2 ergaenzt dieselbe Signatur im Freitext (ADR-020): das Verfahren beim
+    Namen genannt, oder Auftraggeber UND Taetigkeit gemeinsam benannt.
+  predicate:
+    any:
+      - field: payload.antrag.antragsart
+        op: in
+        value:
+          - feststellung_nach_aufnahme
+          - prognose_vor_aufnahme
+      - all:
+          - field: payload.auftraggeber.firmenname
+            op: ne
+            value: null
+          - field: payload.antrag.taetigkeit_bezeichnung
+            op: ne
+            value: null
+      # Freitext, bereits geschwaerzt (ADR-020). Der Firmenname selbst ist im
+      # Text ein Platzhalter - gesucht wird also die BEZEICHNUNG "Auftraggeber",
+      # nicht der Auftraggeber. Das ist kein Behelf, sondern genau richtig: eine
+      # Regel, die einen Firmennamen enthielte, waere eine Personendatenzeile in
+      # einer Konfigurationsdatei, und der Lint verbietet sie.
+      - field: text.normalized
+        op: matches
+        value: 'statusfeststellung|erwerbsstatus|par\. ?7a'
+      - all:
+          - field: text.normalized
+            op: contains
+            value: Auftraggeber
+          - field: text.normalized
+            op: contains
+            value: Taetigkeit
+
+nachforderung:
+  - requirement_id: versicherungsnummer
+    missing: >-
+      Bitte teilen Sie uns Ihre Versicherungsnummer mit. Sie finden sie auf
+      Ihrem Sozialversicherungsausweis und auf jeder Renteninformation.
+    invalid: >-
+      Bitte pruefen Sie Ihre Versicherungsnummer: die Angabe passt nicht zu
+      einer gueltigen Versicherungsnummer ({problem}).
+  - requirement_id: geburtsdatum
+    missing: >-
+      Bitte teilen Sie uns Ihr Geburtsdatum mit (Tag, Monat und Jahr).
+    invalid: >-
+      Bitte pruefen Sie Ihr Geburtsdatum: die Angabe ist so nicht verwertbar
+      ({problem}).
+  - requirement_id: antragsart
+    missing: >-
+      Bitte geben Sie an, ob der Erwerbsstatus fuer eine bereits aufgenommene
+      Taetigkeit oder im Wege der Prognose vor Aufnahme der Taetigkeit
+      festgestellt werden soll.
+    invalid: >-
+      Bitte geben Sie an, ob der Erwerbsstatus fuer eine bereits aufgenommene
+      Taetigkeit oder im Wege der Prognose vor Aufnahme der Taetigkeit
+      festgestellt werden soll ({problem}).
+  - requirement_id: antragsteller_rolle
+    missing: >-
+      Bitte geben Sie an, ob Sie den Antrag als Auftragnehmer, als Auftraggeber
+      oder gemeinsam stellen.
+    invalid: >-
+      Die Angabe zur Antragstellung ist so nicht verwertbar ({problem}). Bitte
+      geben Sie an, ob Sie den Antrag als Auftragnehmer, als Auftraggeber oder
+      gemeinsam stellen.
+  - requirement_id: taetigkeit_bezeichnung
+    missing: >-
+      Bitte bezeichnen Sie die zu beurteilende Taetigkeit genau (V0027,
+      Ziffer 3.1).
+    invalid: >-
+      Bitte beschreiben Sie die zu beurteilende Taetigkeit ausfuehrlicher
+      ({problem}).
+  - requirement_id: taetigkeit_beginn
+    missing: >-
+      Bitte geben Sie an, wann die zu beurteilende Taetigkeit begonnen hat oder
+      beginnen soll.
+    invalid: >-
+      Bitte pruefen Sie die Angabe zum Beginn der Taetigkeit ({problem}).
+  - requirement_id: auftraggeber_name
+    missing: >-
+      Bitte nennen Sie Firmenname und Anschrift Ihres Auftraggebers.
+    invalid: >-
+      Bitte pruefen Sie die Angabe zum Auftraggeber ({problem}). Wir benoetigen
+      Firmenname und Anschrift.

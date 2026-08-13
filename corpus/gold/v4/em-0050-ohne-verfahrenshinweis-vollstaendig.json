@@ -1,0 +1,35 @@
+{
+  "submissionId": "em-0050-ohne-verfahrenshinweis-vollstaendig",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {
+    "meta": {
+      "bearbeitungswunsch": "Ich bin ab kommender Woche im Urlaub.",
+      "eingangsdatum": "2026-08-05"
+    },
+    "antragsteller": {
+      "geburtsdatum": " \t1968-03-27  ",
+      "anschrift": {
+        "hausnummer": "8",
+        "plz": "99084",
+        "ort": "Musterhausen",
+        "strasse": "Am Hang"
+      },
+      "versicherungsnummer": "19270368Q071"
+    },
+    "antrag": {
+      "gutachten_status": "liegt_vor",
+      "eintritt_erwerbsminderung": "2026-01-20",
+      "rentenart": "erwerbsminderungsrente_voll",
+      "auslandsbezug": "nein",
+      "hinweistext": " \tAntrag wie besprochen online eingereicht.  ",
+      "letzte_taetigkeit": "Busfahrerin"
+    }
+  },
+  "attachments": []
+}

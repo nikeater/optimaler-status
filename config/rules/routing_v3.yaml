@@ -1,0 +1,489 @@
+# Routing rules v3 (config/rules/).
+#
+# Each rule carries a small predicate AST interpreted by engine/evidence:
+#   {all: [node, ...]} | {any: [node, ...]} | {field: ..., op: ..., value: ...}
+# Unknown fields make a condition fail (defensive, never raise).
+#
+# Readable fields (engine/evidence/context.py):
+#   procedure_hint          what the channel claimed, may be null
+#   channel                 fit_connect | email | scan
+#   payload.<dotted.path>   scalar leaf of the submission as received
+#   extraction.<field_id>   value that went through the procedure's field_map
+#   procedure_id            the procedure the evidence plane derived
+#   procedure_source        hint | content | none
+#
+# Content rules read `payload.*`, not `extraction.*`. Part 02 measured why: the
+# mapper only extracts fields a KNOWN procedure declares, so with an unknown or
+# ambiguous procedure every `extraction.*` rule was dead and an item nobody
+# could classify was also an item nobody could route (xx-0004). Reading the
+# payload keeps routing alive exactly when the rest of the evidence plane has
+# the least to say. `extraction.*` stays available for rules that deliberately
+# want a value that passed a procedure's field map.
+#
+# ARBITRATION IS EXPLICIT (ADR-014). Every rule carries an integer `priority`,
+# lower wins, ties broken by rule_id: (priority, rule_id) is a
+# total order, so shuffling this file cannot change which unit wins. Two units
+# proposed at all is recorded as a conflict in the evidence_assembled event;
+# when the two best units share a priority the conflict is UNRESOLVED, the
+# winner's confidence drops to 0.6 and both the tier-1 and the tier-2 row of
+# the decision table stop qualifying. A contested item goes to a human.
+#
+# The priority bands, and why they are where they are:
+#   10  Zustaendigkeits-Vorrang. An international element decides the unit
+#       regardless of the Rentenart: Referat 318 keeps the Auslandsfaelle.
+#   20  Content. What the form actually says. Outranks the channel hint,
+#       because the hint is metadata somebody clicked and the form is the
+#       Antrag (ar-0033: channel says Altersrente, form is a full
+#       Erwerbsminderungsrente - it belongs to Referat 316).
+#   50  Channel hint. Correct in the overwhelming majority of cases and the
+#       only signal for procedures whose content this config cannot read yet.
+#
+# NOT every procedure gets a priority-10 rule. Par. 7a SGB IV knows no
+# Auslandssonderzustaendigkeit (BT-Drs. 21/1059, Antwort zu Frage 23): the
+# Clearingstelle is bundesweit exklusiv zustaendig, also bleibt ein
+# Statusfeststellungsfall mit Auslandsbezug bei ihr. The absence of that rule is
+# asserted by a fixture (`fx_auslandsbezug_statusfeststellung`), because "no rule
+# exists" is a claim a test can hold, while a comment is not.
+#
+# `fixtures` lists ids from the `fixtures:` block below; tests/test_routing.py
+# runs every rule against its declared fixtures, so a rule can never ship
+# without a check that it still fires.
+#
+# v2 changes over v1: explicit priorities, content rules moved from
+# `extraction.*` to `payload.*`, the Reha rule split into a hint rule and a
+# content rule (an `any:` over both namespaces cannot carry two priorities),
+# and a second Erwerbsminderungs-Signal on the Eintrittsdatum.
+#
+# v3 changes over v2: `priority` is now a CONTRACT field
+# (`schemas.config.RoutingRule.priority`, ADR-016) instead of a loader-local
+# extension - the YAML is unchanged, the model behind it is not. Four rules for
+# the Statusfeststellung nach par. 7a SGB IV (Referat 340, Clearingstelle), and
+# one rule for Widersprueche (compliance backlog C-9, config half): the
+# Widerspruchsstelle exists in the taxonomy and xx-0005 has been sitting on a
+# declared divergence since v1 for want of two lines of config. Triage may
+# acknowledge, timestamp and route a Widerspruch (Realakt); it must never assess
+# Zulaessigkeit or Fristwahrung, and no rule here does.
+version: routing_v3
+rules:
+  - rule_id: rule_auslandsbezug
+    unit_id: Referat_318_Auslandsrenten
+    priority: 10
+    predicate:
+      all:
+        - field: payload.antrag.auslandsbezug
+          op: eq
+          value: ja
+        - field: payload.antrag.rentenart
+          op: ne
+          value: null
+    fixtures:
+      - fx_auslandsbezug_altersrente
+
+  - rule_id: rule_altersrente_rentenart
+    unit_id: Referat_312_Renten
+    priority: 20
+    predicate:
+      all:
+        - field: payload.antrag.rentenart
+          op: in
+          value:
+            - regelaltersrente
+            - altersrente_langjaehrig
+            - altersrente_schwerbehinderung
+        - field: payload.antrag.rentenbeginn
+          op: ne
+          value: null
+    fixtures:
+      - fx_rentenart_regelaltersrente
+
+  - rule_id: rule_erwerbsminderung_eintritt
+    unit_id: Referat_316_Erwerbsminderungsrenten
+    priority: 20
+    predicate:
+      all:
+        - field: payload.antrag.eintritt_erwerbsminderung
+          op: ne
+          value: null
+    fixtures:
+      - fx_eintritt_erwerbsminderung
+
+  - rule_id: rule_erwerbsminderung_rentenart
+    unit_id: Referat_316_Erwerbsminderungsrenten
+    priority: 20
+    predicate:
+      all:
+        - field: payload.antrag.rentenart
+          op: in
+          value:
+            - erwerbsminderungsrente_voll
+            - erwerbsminderungsrente_teilweise
+    fixtures:
+      - fx_rentenart_erwerbsminderung
+
+  - rule_id: rule_reha_rentenart
+    unit_id: Referat_320_Reha
+    priority: 20
+    predicate:
+      all:
+        - field: payload.antrag.rentenart
+          op: in
+          value:
+            - teilhabe_arbeitsleben
+    fixtures:
+      - fx_rentenart_teilhabe
+
+  - rule_id: rule_statusfeststellung_antragsart
+    unit_id: Referat_340_Clearingstelle
+    priority: 20
+    predicate:
+      all:
+        - field: payload.antrag.antragsart
+          op: in
+          value:
+            - feststellung_nach_aufnahme
+            - prognose_vor_aufnahme
+    fixtures:
+      - fx_antragsart_statusfeststellung
+
+  - rule_id: rule_statusfeststellung_auftraggeber
+    unit_id: Referat_340_Clearingstelle
+    priority: 20
+    # Zweite Inhaltssignatur: ein benannter Auftraggeber zusammen mit einer
+    # bezeichneten Taetigkeit. Kein anderes konfiguriertes Verfahren kennt
+    # einen `auftraggeber.*`-Namensraum, also ist die Kombination eindeutig.
+    predicate:
+      all:
+        - field: payload.auftraggeber.firmenname
+          op: ne
+          value: null
+        - field: payload.antrag.taetigkeit_bezeichnung
+          op: ne
+          value: null
+    fixtures:
+      - fx_auftraggeber_statusfeststellung
+      - fx_auslandsbezug_statusfeststellung
+
+  - rule_id: rule_altersrente_verfahren
+    unit_id: Referat_312_Renten
+    priority: 40
+    predicate:
+      all:
+        - field: procedure_id
+          op: eq
+          value: altersrente
+    fixtures:
+      - fx_verfahren_altersrente
+
+  - rule_id: rule_erwerbsminderung_verfahren
+    unit_id: Referat_316_Erwerbsminderungsrenten
+    priority: 40
+    predicate:
+      all:
+        - field: procedure_id
+          op: eq
+          value: erwerbsminderungsrente
+    fixtures:
+      - fx_verfahren_erwerbsminderung
+
+  - rule_id: rule_statusfeststellung_verfahren
+    unit_id: Referat_340_Clearingstelle
+    priority: 40
+    predicate:
+      all:
+        - field: procedure_id
+          op: eq
+          value: statusfeststellung
+    fixtures:
+      - fx_verfahren_statusfeststellung
+
+  - rule_id: rule_altersrente_hint
+    unit_id: Referat_312_Renten
+    priority: 50
+    predicate:
+      all:
+        - field: procedure_hint
+          op: eq
+          value: altersrente
+    fixtures:
+      - fx_hint_altersrente
+
+  - rule_id: rule_erwerbsminderung_hint
+    unit_id: Referat_316_Erwerbsminderungsrenten
+    priority: 50
+    predicate:
+      all:
+        - field: procedure_hint
+          op: eq
+          value: erwerbsminderungsrente
+    fixtures:
+      - fx_hint_erwerbsminderung
+
+  - rule_id: rule_reha_hint
+    unit_id: Referat_320_Reha
+    priority: 50
+    predicate:
+      all:
+        - field: procedure_hint
+          op: eq
+          value: reha
+    fixtures:
+      - fx_hint_reha
+
+  - rule_id: rule_statusfeststellung_hint
+    unit_id: Referat_340_Clearingstelle
+    priority: 50
+    predicate:
+      all:
+        - field: procedure_hint
+          op: eq
+          value: statusfeststellung
+    fixtures:
+      - fx_hint_statusfeststellung
+
+  - rule_id: rule_widerspruch_hint
+    unit_id: Widerspruchsstelle_360
+    priority: 50
+    # C-9 (config half): ein Widerspruch geht an die Widerspruchsstelle. Das
+    # ist eine reine Organisationsentscheidung (Realakt) und beruehrt weder
+    # Zulaessigkeit noch Frist - beides bleibt beim
+    # Widerspruchsausschuss (par. 85 Abs. 2 Nr. 2 SGG, par. 36a SGB IV). Es
+    # gibt keine Inhaltsregel dazu: "widerspruch" ist heute nur ein
+    # Kanalhinweis, und ein erfundenes Inhaltssignal auf einem Feld, das kein
+    # Eingang traegt, waere eine Regel ohne Wirklichkeit. Die Aktenzeichen-
+    # Extraktion und das Fristen-Flag in der Queue folgen in Teil 10.
+    predicate:
+      all:
+        - field: procedure_hint
+          op: eq
+          value: widerspruch
+    fixtures:
+      - fx_hint_widerspruch
+
+# Rule fixtures: minimal evaluation contexts plus the rules that must fire on
+# them, and (where arbitration is the point) the unit that must win. Not gold
+# items; gold items live in corpus/gold/.
+fixtures:
+  - fixture_id: fx_hint_altersrente
+    description: FIT-Connect submission that declares the altersrente procedure.
+    procedure_hint: altersrente
+    channel: fit_connect
+    expect_rule_ids:
+      - rule_altersrente_hint
+    expect_unit_id: Referat_312_Renten
+
+  - fixture_id: fx_hint_erwerbsminderung
+    description: >-
+      FIT-Connect submission that declares the erwerbsminderungsrente
+      procedure; it belongs to the Fachreferat, not to Reha.
+    procedure_hint: erwerbsminderungsrente
+    channel: fit_connect
+    expect_rule_ids:
+      - rule_erwerbsminderung_hint
+    expect_unit_id: Referat_316_Erwerbsminderungsrenten
+
+  - fixture_id: fx_hint_reha
+    description: Submission that declares the reha procedure.
+    procedure_hint: reha
+    channel: fit_connect
+    expect_rule_ids:
+      - rule_reha_hint
+    expect_unit_id: Referat_320_Reha
+
+  - fixture_id: fx_hint_statusfeststellung
+    description: >-
+      FIT-Connect-Eingang, der das Statusfeststellungsverfahren nach par. 7a
+      SGB IV meldet: zustaendig ist die Clearingstelle.
+    procedure_hint: statusfeststellung
+    channel: fit_connect
+    expect_rule_ids:
+      - rule_statusfeststellung_hint
+    expect_unit_id: Referat_340_Clearingstelle
+
+  - fixture_id: fx_hint_widerspruch
+    description: >-
+      Widerspruch gegen einen Bescheid: die Zuordnung an die
+      Widerspruchsstelle ist ein Realakt und sagt nichts ueber Zulaessigkeit
+      oder Fristwahrung.
+    procedure_hint: widerspruch
+    channel: email
+    expect_rule_ids:
+      - rule_widerspruch_hint
+    expect_unit_id: Widerspruchsstelle_360
+
+  - fixture_id: fx_antragsart_statusfeststellung
+    description: >-
+      Kein Kanalhinweis, aber eine angekreuzte Antragsart nach par. 7a SGB IV:
+      der Inhalt traegt die Zuordnung.
+    procedure_hint: null
+    channel: email
+    payload:
+      antrag.antragsart: prognose_vor_aufnahme
+    expect_rule_ids:
+      - rule_statusfeststellung_antragsart
+    expect_unit_id: Referat_340_Clearingstelle
+
+  - fixture_id: fx_auftraggeber_statusfeststellung
+    description: >-
+      Weder Kanalhinweis noch angekreuzte Antragsart, aber ein benannter
+      Auftraggeber und eine bezeichnete Taetigkeit: die zweite Inhaltssignatur
+      des Verfahrens.
+    procedure_hint: null
+    channel: scan
+    payload:
+      auftraggeber.firmenname: Nordlicht Systemhaus GmbH
+      antrag.taetigkeit_bezeichnung: IT-Beratung und Softwareentwicklung
+    expect_rule_ids:
+      - rule_statusfeststellung_auftraggeber
+    expect_unit_id: Referat_340_Clearingstelle
+
+  - fixture_id: fx_auslandsbezug_statusfeststellung
+    description: >-
+      Statusfeststellung mit Auslandsbezug: der Vorgang BLEIBT bei der
+      Clearingstelle. Par. 7a SGB IV kennt keine Auslandssonderzustaendigkeit
+      (BT-Drs. 21/1059, Antwort zu Frage 23), es gibt fuer dieses Verfahren
+      also bewusst keine Prioritaets-10-Regel. Die Fixture haelt genau diese
+      Abwesenheit fest: kaeme je eine hinzu, faellt der Test.
+    procedure_hint: statusfeststellung
+    channel: fit_connect
+    payload:
+      antrag.antragsart: feststellung_nach_aufnahme
+      antrag.taetigkeit_bezeichnung: Grenzueberschreitende Montagearbeiten
+      antrag.auslandsbezug: ja
+      auftraggeber.firmenname: Grenzwerk Anlagenbau GmbH
+    expect_rule_ids:
+      - rule_statusfeststellung_antragsart
+      - rule_statusfeststellung_auftraggeber
+      - rule_statusfeststellung_hint
+    expect_unit_id: Referat_340_Clearingstelle
+
+  - fixture_id: fx_verfahren_statusfeststellung
+    description: >-
+      Das Verfahren steht fest, im Formular steht aber weder eine Antragsart
+      noch ein Auftraggeber: die Verfahrensregel traegt die Zuordnung.
+    procedure_hint: null
+    procedure_id: statusfeststellung
+    channel: email
+    payload:
+      antrag.taetigkeit_beginn: "2026-02-01"
+    expect_rule_ids:
+      - rule_statusfeststellung_verfahren
+    expect_unit_id: Referat_340_Clearingstelle
+
+  - fixture_id: fx_rentenart_erwerbsminderung
+    description: No procedure hint, but the Rentenart in the form carries the routing.
+    procedure_hint: null
+    channel: email
+    payload:
+      antrag.rentenart: erwerbsminderungsrente_voll
+    expect_rule_ids:
+      - rule_erwerbsminderung_rentenart
+    expect_unit_id: Referat_316_Erwerbsminderungsrenten
+
+  - fixture_id: fx_eintritt_erwerbsminderung
+    description: >-
+      Kein Kanalhinweis und keine Rentenart, aber ein angegebener Eintritt der
+      Erwerbsminderung: das Formular ist erkennbar ein EM-Antrag.
+    procedure_hint: null
+    channel: email
+    payload:
+      antrag.eintritt_erwerbsminderung: "2025-11-04"
+    expect_rule_ids:
+      - rule_erwerbsminderung_eintritt
+    expect_unit_id: Referat_316_Erwerbsminderungsrenten
+
+  - fixture_id: fx_verfahren_altersrente
+    description: >-
+      Das Verfahren steht fest (aus Hinweis oder Inhalt abgeleitet), im
+      Formular steht aber keine Rentenart: die Verfahrensregel traegt die
+      Zuordnung, wo die Inhaltsregel nichts findet.
+    procedure_hint: null
+    procedure_id: altersrente
+    channel: email
+    payload:
+      antrag.rentenbeginn: "2027-03-01"
+    expect_rule_ids:
+      - rule_altersrente_verfahren
+    expect_unit_id: Referat_312_Renten
+
+  - fixture_id: fx_verfahren_erwerbsminderung
+    description: >-
+      Dasselbe fuer die Erwerbsminderungsrenten: abgeleitetes Verfahren, keine
+      auswertbare Rentenart im Formular.
+    procedure_hint: null
+    procedure_id: erwerbsminderungsrente
+    channel: email
+    payload:
+      antrag.rentenart: erwerbsminderungsrente
+    expect_rule_ids:
+      - rule_erwerbsminderung_verfahren
+    expect_unit_id: Referat_316_Erwerbsminderungsrenten
+
+  - fixture_id: fx_rentenart_teilhabe
+    description: Leistungen zur Teilhabe am Arbeitsleben without a procedure hint.
+    procedure_hint: null
+    channel: email
+    payload:
+      antrag.rentenart: teilhabe_arbeitsleben
+    expect_rule_ids:
+      - rule_reha_rentenart
+    expect_unit_id: Referat_320_Reha
+
+  - fixture_id: fx_rentenart_regelaltersrente
+    description: No procedure hint; Rentenart and Rentenbeginn carry the routing.
+    procedure_hint: null
+    channel: email
+    payload:
+      antrag.rentenart: regelaltersrente
+      antrag.rentenbeginn: "2026-11-01"
+    expect_rule_ids:
+      - rule_altersrente_rentenart
+    expect_unit_id: Referat_312_Renten
+
+  - fixture_id: fx_auslandsbezug_altersrente
+    description: >-
+      Altersrente mit Auslandsbezug: Referat 318 gewinnt gegen die
+      Rentenart-Regel und gegen den Kanalhinweis, weil Prioritaet 10 vor 20
+      und 50 kommt. Die unterlegenen Vorschlaege bleiben als Konflikt im
+      Journal stehen.
+    procedure_hint: altersrente
+    channel: fit_connect
+    payload:
+      antrag.rentenart: regelaltersrente
+      antrag.rentenbeginn: "2026-11-01"
+      antrag.auslandsbezug: ja
+    expect_rule_ids:
+      - rule_auslandsbezug
+      - rule_altersrente_rentenart
+      - rule_altersrente_hint
+    expect_unit_id: Referat_318_Auslandsrenten
+
+  - fixture_id: fx_hinweis_widerspricht_inhalt
+    description: >-
+      Kanalhinweis Altersrente, Formular voll erwerbsgemindert: der Inhalt
+      (Prioritaet 20) schlaegt den Hinweis (Prioritaet 50), der Vorgang geht
+      an Referat 316.
+    procedure_hint: altersrente
+    channel: fit_connect
+    payload:
+      antrag.rentenart: erwerbsminderungsrente_voll
+    expect_rule_ids:
+      - rule_erwerbsminderung_rentenart
+      - rule_altersrente_hint
+    expect_unit_id: Referat_316_Erwerbsminderungsrenten
+
+  - fixture_id: fx_gleichrangiger_konflikt
+    description: >-
+      Regelaltersrente mit Rentenbeginn UND Eintritt der Erwerbsminderung:
+      zwei Regeln gleicher Prioritaet zeigen auf verschiedene Referate. Die
+      Prioritaeten loesen den Konflikt nicht auf, die Zuordnung bleibt
+      strittig und die Confidence sinkt.
+    procedure_hint: null
+    channel: email
+    payload:
+      antrag.rentenart: regelaltersrente
+      antrag.rentenbeginn: "2027-03-01"
+      antrag.eintritt_erwerbsminderung: "2025-04-01"
+    expect_rule_ids:
+      - rule_altersrente_rentenart
+      - rule_erwerbsminderung_eintritt
+    expect_unit_id: Referat_312_Renten

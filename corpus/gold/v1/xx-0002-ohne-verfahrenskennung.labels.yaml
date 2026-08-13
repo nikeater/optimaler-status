@@ -1,0 +1,15 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: xx-0002-ohne-verfahrenskennung
+procedure_id: null
+scenario_kind: unknown_procedure
+expected_unit_id: null
+expected_tier: 3
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: 'Eingang ohne jede Verfahrenskennung: weder Kanalhinweis noch auswertbarer
+  Inhalt.'

@@ -1,0 +1,418 @@
+{% extends "demo_base.html" %}
+{% set state = view.state %}
+{% set case = state.case %}
+{% block title %}EingangsLotse - Was mit Ihrem Antrag passiert ist{% endblock %}
+{% block heading %}Phase 2: Was mit Ihrem Antrag passiert ist{% endblock %}
+{% block content %}
+
+<section aria-labelledby="ueberblick-heading">
+  <h2 id="ueberblick-heading">Ueberblick</h2>
+  <p>
+    Sieben Schritte, in der Reihenfolge, in der sie gelaufen sind. Jede Zahl und
+    jeder Satz auf dieser Seite kommt aus dem Journal Ihres Vorgangs oder aus
+    einer Ablage, die es ohnehin gibt. Diese Seite rechnet nichts nach: sie
+    kann dem, was tatsaechlich passiert ist, nicht widersprechen.
+  </p>
+  {% if not view.held %}
+  <p class="notice">{{ view.expired_note }}</p>
+  {% endif %}
+  {% if view.sampled %}
+  <p class="notice sample-note">
+    Dieser Vorgang wurde zufaellig zur Qualitaetssicherung ausgewaehlt. Das ist
+    KEIN Auffaelligkeitsbefund: die Ziehung haengt allein an der
+    Vorgangskennung und sagt nichts ueber Sie oder Ihren Antrag aus.
+  </p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="a-heading" class="stage">
+  <h2 id="a-heading">a) Eingang</h2>
+  <p>
+    Ihr Antrag ist angekommen und hat eine Vorgangskennung bekommen; ab hier ist
+    jeder Schritt einzeln nachlesbar.
+  </p>
+  <dl>
+    <dt>Vorgang</dt><dd><code>{{ view.case_id }}</code></dd>
+    <dt>Weg</dt><dd>{{ view.channel_label }}</dd>
+    <dt>Eingang am</dt>
+    <dd>{{ case.received_at.isoformat() if case.received_at else "unbekannt" }}</dd>
+    <dt>Eingereicht als</dt>
+    <dd>{{ view.persona_label or "erfundene Person" }}</dd>
+    <dt>Ereignisse im Journal</dt><dd>{{ case.event_count }}</dd>
+  </dl>
+</section>
+
+<section aria-labelledby="b-heading" class="stage">
+  <h2 id="b-heading">b) Versiegelung</h2>
+  <p>{{ view.seal_sentence }}</p>
+  <dl>
+    <dt>Versiegelte Werte</dt>
+    <dd>{{ case.sealed_count if case.sealed_count is not none else "-" }}</dd>
+    <dt>Nachpruefung</dt>
+    <dd>
+      {% if case.redaction_verified %}
+      bestanden - ein zweiter, unabhaengiger Erkennerlauf ueber die Arbeitskopie
+      fand nichts mehr
+      {% else %}
+      nicht bestanden oder nicht protokolliert
+      {% endif %}
+    </dd>
+  </dl>
+
+  {% if view.pairings %}
+  <h3>Ihre Eingabe und das, was die Maschine bekommen hat</h3>
+  <p>
+    Links steht, was Sie selbst eingetippt haben. Rechts steht, was an dieser
+    Stelle in der Arbeitskopie steht. Der Klartext wurde nicht aus dem Tresor
+    geholt, um diese Tabelle zu bauen - er stammt aus Ihrer eigenen Eingabe von
+    eben und wird nur fuer kurze Zeit im Arbeitsspeicher gehalten.
+  </p>
+  <div class="scroll-x">
+    <table>
+      <caption>Gegenueberstellung: eingegebener Wert und Platzhalter</caption>
+      <thead>
+        <tr>
+          <th scope="col">Angabe</th>
+          <th scope="col">Von Ihnen eingegeben</th>
+          <th scope="col">In der Arbeitskopie</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pair in view.pairings %}
+        <tr>
+          <th scope="row">{{ pair.label }}</th>
+          <td>{{ pair.typed }}</td>
+          <td>
+            {% if pair.placeholder %}
+            <code class="placeholder">{{ pair.placeholder }}</code>
+            <span class="sr-only">Platzhalter der Art {{ pair.kind_label }}</span>
+            {% else %}
+            <span class="muted">kein Platzhalter dieser Art in der Arbeitskopie</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+
+  {% if view.echo_body %}
+  <h3>Ihr Anschreiben, vorher und nachher</h3>
+  <p>
+    Dieselben Zeichen, einmal wie Sie sie geschrieben haben und einmal wie die
+    Maschine sie bekommen hat. Im Fliesstext wird SPANNE FUER SPANNE versiegelt,
+    nicht der ganze Absatz: ein Brief ohne seine Verben liesse sich nicht
+    triagieren.
+  </p>
+  <div class="side-by-side">
+    <div>
+      <h4>Was Sie geschrieben haben</h4>
+      <pre>{{ view.echo_body }}</pre>
+    </div>
+    <div>
+      <h4>Was die Maschine gelesen hat</h4>
+      {% for part in view.parts %}
+      <pre>{% for segment in part.segments %}{% if segment.placeholder %}<mark class="placeholder">{{ segment.text }}</mark>{% else %}{{ segment.text }}{% endif %}{% endfor %}</pre>
+      {% endfor %}
+    </div>
+  </div>
+  {% elif view.parts %}
+  <h3>Die Arbeitskopie, wie sie weitergereicht wurde</h3>
+  <p>
+    Jede Stelle, an der ein Platzhalter steht, hat vorher eine Ihrer Angaben
+    getragen. Alles danach - Ableitung, Auslesen, Regeln, Entscheidung, Scorer -
+    hat ausschliesslich diese Fassung gelesen.
+  </p>
+  {% for part in view.parts %}
+  <p class="muted"><code>{{ part.part_id }}</code></p>
+  <pre>{% for segment in part.segments %}{% if segment.placeholder %}<mark class="placeholder">{{ segment.text }}</mark>{% else %}{{ segment.text }}{% endif %}{% endfor %}</pre>
+  {% endfor %}
+  {% endif %}
+
+  {% if view.sealed_kinds %}
+  <div class="scroll-x">
+    <table>
+      <caption>Was im Fliesstext versiegelt wurde, nach Art. Werte erscheinen hier nie.</caption>
+      <thead><tr><th scope="col">Art</th><th scope="col">Bedeutung</th><th scope="col">Anzahl</th></tr></thead>
+      <tbody>
+        {% for kind, label, count in view.sealed_kinds %}
+        <tr><th scope="row"><code>{{ kind }}</code></th><td>{{ label }}</td><td>{{ count }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</section>
+
+<section aria-labelledby="c-heading" class="stage">
+  <h2 id="c-heading">c) Extraktion</h2>
+  <p>
+    Jetzt wird gelesen, was in der Arbeitskopie steht - und jede gefundene
+    Angabe muss zweifach belegt sein: das Zitat UND die Zeichenposition,
+    unabhaengig voneinander gegen dieselbe Textfassung geprueft.
+  </p>
+  <dl>
+    <dt>Gefundene Felder</dt>
+    <dd>
+      {% if case.extracted_fields %}
+      {{ case.extracted_fields | join(", ") }}
+      {% else %}
+      keine
+      {% endif %}
+    </dd>
+    <dt>Verworfen</dt>
+    <dd>
+      {{ case.discarded_count if case.discarded_count is not none else 0 }} -
+      ein VERWORFENER Vorschlag ist ein Wert, dessen Fundstelle die Pruefung
+      nicht bestanden hat. Er wird nicht uebernommen und schiebt den Vorgang
+      Richtung Tier 3.
+    </dd>
+  </dl>
+  {% if not case.extracted_fields and case.channel == "email" %}
+  <p class="notice">{{ view.no_extraction_note }}</p>
+  {% endif %}
+  {% if case.spans %}
+  <div class="scroll-x">
+    <table>
+      <caption>Fundstellen: Teil und Zeichenbereich, nie der Wert</caption>
+      <thead>
+        <tr>
+          <th scope="col">Feld</th>
+          <th scope="col">Textteil</th>
+          <th scope="col">Zeichenbereich</th>
+          <th scope="col">Pruefart</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for span in case.spans %}
+        <tr>
+          <th scope="row">{{ span.get("field") }}</th>
+          <td>{{ span.get("part_id") or "strukturiertes Feld" }}</td>
+          <td>
+            {% if span.get("start") is not none %}
+            {{ span.get("start") }} bis {{ span.get("end") }}
+            {% else %}
+            <span class="muted">ohne Textfundstelle</span>
+            {% endif %}
+          </td>
+          <td>{{ span.get("match_mode") }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</section>
+
+<section aria-labelledby="d-heading" class="stage">
+  <h2 id="d-heading">d) Evidenz</h2>
+  <p>
+    Aus den belegten Werten wird die Beweislage: welches Verfahren, was fehlt,
+    wer zustaendig ist. Alles davon ist nachlesbar begruendet - nichts davon ist
+    schon eine Entscheidung.
+  </p>
+  <dl>
+    <dt>Verfahren</dt>
+    <dd>
+      {{ case.procedure_id or "nicht abgeleitet" }}
+      (abgeleitet aus: {{ case.derivation.get("source") or "unbekannt" }};
+      Kanalhinweis: {{ case.procedure_hint or "keiner" }})
+    </dd>
+    <dt>Vollstaendigkeit</dt>
+    <dd>{{ case.completeness_verdict or "unbekannt" }}</dd>
+    <dt>Klarfall</dt>
+    <dd>
+      {% if case.clear_cut %}ja{% elif case.clear_cut is none %}nicht geprueft{% else %}nein{% endif %}
+    </dd>
+  </dl>
+  {% if case.gaps %}
+  <h3>Was fehlt, und was Sie dazu gefragt werden</h3>
+  <div class="scroll-x">
+    <table>
+      <caption>Gemeldete Luecken mit dem Satz, den die Nachforderung dazu stellt</caption>
+      <thead>
+        <tr>
+          <th scope="col">Angabe</th>
+          <th scope="col">Status</th>
+          <th scope="col">Formulierung im Schreiben</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for gap in case.gaps %}
+        <tr>
+          <th scope="row"><code>{{ gap.get("requirement_id") }}</code></th>
+          <td>{{ gap.get("status") }}</td>
+          <td>{{ gap.get("request_text") or gap.get("detail") or "-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+  <h3>Zuordnung</h3>
+  <p>
+    <strong>Zugeordnet wurde: {{ state.machine_unit_id or "keine Einheit" }}.</strong>
+    Das ist die Antwort der Entscheidungsebene und die einzige, die den Vorgang
+    tatsaechlich in eine Warteschlange gelegt hat. Die Tabelle darunter zeigt
+    ALLE Belege, auch die unterlegenen.
+  </p>
+  {% if case.routing %}
+  <div class="scroll-x">
+    <table>
+      <caption>Zuordnungsbelege mit Quelle; die zugeordnete Einheit ist gekennzeichnet</caption>
+      <thead>
+        <tr>
+          <th scope="col">Einheit</th>
+          <th scope="col">Quelle</th>
+          <th scope="col">Regel</th>
+          <th scope="col">Konfidenz</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for suggestion in case.routing %}
+        <tr>
+          <th scope="row">
+            {{ suggestion.get("unit_id") }}
+            {% if suggestion.get("unit_id") == state.machine_unit_id %}
+            <span class="tag">zugeordnet</span>
+            {% endif %}
+          </th>
+          <td>{{ suggestion.get("source") }}</td>
+          <td>{{ suggestion.get("rule_ids") | join(", ") or "-" }}</td>
+          <td>{{ "%.3f"|format(suggestion.get("confidence")) if suggestion.get("confidence") is not none else "-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</section>
+
+<section aria-labelledby="e-heading" class="stage">
+  <h2 id="e-heading">e) Entscheidung</h2>
+  <p>
+    Die Entscheidungsebene liest nur, was belegt ist, und wertet eine
+    versionierte Tabelle Zeile fuer Zeile aus. Sie entscheidet nichts ueber Sie:
+    sie entscheidet, wie genau ein Mensch hinsehen muss.
+  </p>
+  <dl>
+    <dt>Ergebnis</dt><dd>{{ view.tier_label }}</dd>
+    <dt>Zugeordnete Einheit</dt><dd>{{ state.unit_id or "keine (Zentrale Klaerung)" }}</dd>
+  </dl>
+  <div class="scroll-x">
+    <table>
+      <caption>Begruendungen der Entscheidungstabelle, in Auswertungsreihenfolge</caption>
+      <thead><tr><th scope="col">Art</th><th scope="col">Zeile</th><th scope="col">Begruendung</th></tr></thead>
+      <tbody>
+        {% for reason in case.reasons %}
+        <tr {% if reason.get("kind") == "sampled" %}class="sample-row"{% endif %}>
+          <th scope="row">{{ reason.get("kind") }}</th>
+          <td><code>{{ reason.get("rule_id") }}</code></td>
+          <td>{{ reason.get("detail") }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="3">Keine Begruendung protokolliert.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if view.downgraded %}
+  <p class="notice alarm-note">{{ view.valve_note }}</p>
+  {% endif %}
+  <h3>Auffaelligkeitspruefung</h3>
+  {% if case.anomaly %}
+  <dl>
+    <dt>Score</dt>
+    <dd>{{ "%.3f"|format(case.anomaly.get("score")) if case.anomaly.get("score") is not none else "-" }}</dd>
+    <dt>Markiert</dt>
+    <dd>{% if case.anomaly.get("flagged") %}ja{% else %}nein{% endif %}</dd>
+    <dt>Betriebsart</dt><dd>{{ case.anomaly.get("mode") or "-" }}</dd>
+  </dl>
+  {% if view.anomaly_reasons %}
+  <p>
+    Eine Markierung ist eine Beobachtung am VORGANG gegen einen Referenzbestand,
+    kein Befund ueber eine Person. Der Scorer rechnet ausserdem auf nichts, was
+    Sie identifiziert: Geburtsdatum, Versicherungsnummer und Anschrift waren zu
+    diesem Zeitpunkt laengst versiegelt.
+  </p>
+  <ul class="flags">
+    {% for reason in view.anomaly_reasons %}
+    <li class="flag">{{ reason.text }}</li>
+    {% endfor %}
+  </ul>
+  {% if view.flagged_but_log_only %}
+  <p class="notice">{{ view.log_only_note }}</p>
+  {% endif %}
+  {% else %}
+  <p class="muted">Keine Merkmalsbegruendung protokolliert.</p>
+  {% endif %}
+  {% else %}
+  <p class="muted">Keine Auffaelligkeitspruefung protokolliert.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="f-heading" class="stage">
+  <h2 id="f-heading">f) Nachricht</h2>
+  <p>
+    Was Sie als antragstellende Person bekommen haetten. Diese Nachrichten
+    entstehen automatisch aus dem Journal und durchlaufen keine menschliche
+    Pruefung - genau deshalb gibt es hier und im Postfach keine Bedienung, mit
+    der jemand eine davon ausloesen, aendern oder erneut senden koennte.
+  </p>
+  {% if view.notifications %}
+  <div class="scroll-x">
+    <table>
+      <caption>Zugestellte Nachrichten zu diesem Vorgang</caption>
+      <thead>
+        <tr>
+          <th scope="col">Vorlage</th>
+          <th scope="col">Betreff</th>
+          <th scope="col">Zugestellt</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in view.notifications %}
+        <tr>
+          <th scope="row"><code>{{ entry.template_id }}</code></th>
+          <td>{{ entry.subject }}</td>
+          <td>{{ entry.created_at.isoformat() }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Im Postfach nachlesen:
+    <a href="/inbox">Postfach (nur Ansicht)</a> oder
+    <a href="/inbox/{{ view.case_id }}">nur dieser Vorgang als JSON</a>.
+  </p>
+  {% else %}
+  <p class="muted">Zu diesem Vorgang wurde keine Nachricht zugestellt.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="g-heading" class="stage">
+  <h2 id="g-heading">g) Warteschlange</h2>
+  <p>
+    Ihr Vorgang liegt jetzt in der Warteschlange von
+    <strong>{{ view.queue_label }}</strong> und wartet auf einen Menschen. Im
+    naechsten Schritt sind Sie dieser Mensch.
+  </p>
+  <p class="notice">
+    Die Warteschlange ist nach Alter geordnet, aeltester Vorgang zuerst. Ihr
+    Vorgang wird dort gekennzeichnet, damit Sie ihn finden - die Kennzeichnung
+    ist reine Anzeige und veraendert die Reihenfolge nicht.
+  </p>
+  <p class="handover">
+    <a href="{{ view.queue_href }}">Weiter zu Phase 3: Vorgang bearbeiten</a>
+  </p>
+  <p>
+    Dort koennen Sie bestaetigen, umsteuern oder eskalieren. Jede dieser
+    Aktionen schreibt ein neues Journalereignis; keine aendert ein altes. Danach
+    schliesst sich der Kreis im
+    <a href="/inbox/{{ view.case_id }}">Postfach dieses Vorgangs</a>.
+  </p>
+</section>
+
+{% endblock %}

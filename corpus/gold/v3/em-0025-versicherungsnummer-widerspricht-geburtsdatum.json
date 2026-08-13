@@ -1,0 +1,36 @@
+{
+  "submissionId": "em-0025-versicherungsnummer-widerspricht-geburtsdatum",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-06T07:21:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {
+    "meta": {
+      "eingangsdatum": "2026-08-06",
+      "bearbeitungswunsch": "Eine Eingangsbestaetigung waere mir wichtig."
+    },
+    "antrag": {
+      "letzte_taetigkeit": "Dachdecker",
+      "rentenart": "erwerbsminderungsrente_voll",
+      "gutachten_status": "liegt_vor",
+      "hinweistext": "Sehr geehrte Damen und Herren, hiermit reiche ich den beigefuegten Antrag ein und bitte um Bearbeitung. Ich bin ab kommender Woche im Urlaub. Fuer Rueckfragen stehe ich Ihnen zur Verfuegung.",
+      "auslandsbezug": "nein",
+      "eintritt_erwerbsminderung": "2025-03-05"
+    },
+    "antragsteller": {
+      "versicherungsnummer": "  19140977M070 \t",
+      "anschrift": {
+        "hausnummer": "3",
+        "strasse": "Musterweg",
+        "ort": " \tMusterstadt ",
+        "plz": " \t10115  "
+      },
+      "geburtsdatum": "1976-09-14"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "erwerbsminderungsrente"
+}

@@ -1,0 +1,19 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: sf-0064-email-antragsart-gruppenfeststellung
+procedure_id: statusfeststellung
+scenario_kind: invalid_field
+expected_unit_id: Referat_340_Clearingstelle
+expected_tier: 2
+derived_procedure_id: statusfeststellung
+derivation_source: content
+expected_gaps:
+- requirement_id: antragsart
+  status: invalid
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: none
+known_divergence: []
+divergence_reason: null
+notes: Das Anschreiben nennt eine Antragsart, die par. 7a SGB IV in dieser Form nicht
+  kennt.

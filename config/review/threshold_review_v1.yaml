@@ -1,0 +1,41 @@
+# Threshold review register v1 (config/review/, backlog P-5).
+#
+# Par. 88 Abs. 5 Nr. 4 AO requires that the risk-management system a tax
+# authority automates with be reviewed regularly. This project treats that as
+# the general rule it reads like: a number that governs which items a human
+# never sees has to be looked at again on a date somebody wrote down, or
+# "we re-tuned it last quarter" is a memory rather than a claim anyone can
+# check.
+#
+# WHAT THIS FILE IS NOT. It does not restate the thresholds. Every value stays
+# in the file that owns it (config/extraction/, config/decision/,
+# config/thresholds.yaml, config/classifier/), and `python -m eval.run` reads
+# them from there for the threshold-review section, together with a measured
+# operating point on the current gold set. A second copy of a number here would
+# be a second definition, and the two would disagree the first time one moved.
+#
+# WHAT IT IS. One editable home for the review date, assembled by the loader
+# into AgencyRiskConfig.review_due (the ADR-016 contract field), exactly the way
+# ProcedureFlags are assembled out of config/procedures/. thresholds.yaml is
+# refused if it tries to set the same key.
+#
+# The warning is INFORMATIONAL. It reads an injectable clock, it prints in the
+# report and the metrics panel, and it never touches an exit code: gates must
+# not start failing because a calendar page turned.
+version: threshold_review_v1
+
+# First review date. Chosen as the end of the quarter after the one these
+# thresholds were measured in (part 05 froze gold v4 on 2026-08-12), so the
+# review falls after the parts that are meant to calibrate two of them: the
+# anomaly threshold is an uncalibrated placeholder until part 09, and the
+# classifier minimum is meaningless until a calibration block exists.
+review_due: 2026-11-30
+
+note: >-
+  Reviewed against gold v4. Two of the registered thresholds are known not to
+  be calibrated yet and must not be read as measurements: the anomaly threshold
+  0.85 in config/thresholds.yaml (placeholder until the shadow scorer of part
+  09) and the classifier minimum in config/classifier/ (meaningless until a
+  calibration block exists). The span-match minimums and the routing-confidence
+  bound are measured; see the thresholds_review section of the eval report for
+  each one's operating point.

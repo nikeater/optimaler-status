@@ -1,0 +1,18 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: sf-0004-antrag-des-auftraggebers
+procedure_id: statusfeststellung
+scenario_kind: complete_clear
+expected_unit_id: Referat_340_Clearingstelle
+expected_tier: 3
+derived_procedure_id: statusfeststellung
+derivation_source: hint
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: 'Fachlich sieht dieser Vorgang nach abhaengiger Beschaeftigung aus, und genau
+  deshalb steht hier keine Tier-1-Zeile: die Triage sagt nichts zum Ergebnis. Sie
+  stellt fest, dass alles da ist, und legt die Sache dem zustaendigen Referat vor.'

@@ -1,0 +1,52 @@
+{
+  "submissionId": "ar-0061-email-mit-kanalhinweis-vollstaendig",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "email",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {},
+  "attachments": [],
+  "bodyText": "Betreff: Rentenantrag zur Weiterleitung\n\nSehr geehrte Damen und Herren,\n\nich moechte meine Regelaltersrente beantragen und habe alle Angaben unten zusammengestellt.\n\nAbsender: Frau Nadja Musterkamp\nAnschrift: Kirchgasse 2, 24103 Beispielstadt\nGeburtsdatum: 1960-02-29\nVersicherungsnummer: 17290260C043\nRentenart: regelaltersrente\nRentenbeginn: 2026-09-01\nAuslandsbezug: nein\n\nMit freundlichen Gruessen\nFrau Nadja Musterkamp",
+  "extractionFixture": [
+    {
+      "field": "geburtsdatum",
+      "part_id": "part-text-0",
+      "anchor": "Geburtsdatum:",
+      "mode": "sealed"
+    },
+    {
+      "field": "versicherungsnummer",
+      "part_id": "part-text-0",
+      "anchor": "Versicherungsnummer:",
+      "mode": "sealed"
+    },
+    {
+      "field": "rentenart",
+      "part_id": "part-text-0",
+      "anchor": "Rentenart:",
+      "mode": "literal",
+      "value": "regelaltersrente",
+      "quote": "Rentenart: regelaltersrente"
+    },
+    {
+      "field": "rentenbeginn",
+      "part_id": "part-text-0",
+      "anchor": "Rentenbeginn:",
+      "mode": "literal",
+      "value": "2026-09-01",
+      "quote": "Rentenbeginn: 2026-09-01"
+    },
+    {
+      "field": "auslandsbezug",
+      "part_id": "part-text-0",
+      "anchor": "Auslandsbezug:",
+      "mode": "literal",
+      "value": "nein",
+      "quote": "Auslandsbezug: nein"
+    }
+  ],
+  "procedureHint": "altersrente"
+}

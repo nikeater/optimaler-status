@@ -1,0 +1,45 @@
+{
+  "submissionId": "sf-0041-honorar-unter-vergleichslohn",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-29T11:37:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "antragsteller": {
+      "anschrift": {
+        "plz": "99084",
+        "hausnummer": "8",
+        "strasse": "Am Hang",
+        "ort": "Musterhausen"
+      },
+      "geburtsdatum": "1995-11-24",
+      "versicherungsnummer": "29241195Z078"
+    },
+    "antrag": {
+      "taetigkeit_bezeichnung": "Pflegefachkraft im Schichtdienst",
+      "hinweistext": "Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir. Eine Eingangsbestaetigung waere mir wichtig.",
+      "antragsart": "  feststellung_nach_aufnahme ",
+      "honorar_modell": "fest_monatlich",
+      "arbeitsort": "  beim_auftraggeber ",
+      "weisungsgebunden": "nein",
+      "weitere_auftraggeber": "nein",
+      "eingliederung_arbeitsorganisation": "nein",
+      "umsatzanteil_hauptauftraggeber": " \t100 \t",
+      "antragsteller_rolle": "auftragnehmer",
+      "honorar_monatlich": "1150",
+      "taetigkeit_beginn": "2025-12-01"
+    },
+    "auftraggeber": {
+      "firmenname": " \tSeniorenresidenz Lindenhof GmbH ",
+      "betriebsnummer": "77889900"
+    },
+    "meta": {
+      "eingangsdatum": "29. Juli 2026"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "statusfeststellung"
+}

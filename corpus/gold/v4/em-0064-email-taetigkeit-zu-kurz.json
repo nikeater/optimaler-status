@@ -1,0 +1,51 @@
+{
+  "submissionId": "em-0064-email-taetigkeit-zu-kurz",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "email",
+  "submittedAt": "2026-07-27T08:04:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {},
+  "attachments": [],
+  "bodyText": "Betreff: Antrag auf Erwerbsminderungsrente\n\nSehr geehrte Damen und Herren,\n\nich beantrage eine Erwerbsminderungsrente wegen einer dauerhaften Erkrankung.\n\nAbsender: Frau Erika Beispielfrau\nAnschrift: Kirchgasse 2, 24103 Beispielstadt\nGeburtsdatum: 1960-07-08\nVersicherungsnummer: 18080760N047\nRentenart: erwerbsminderungsrente_voll\nEintritt der Erwerbsminderung: 2025-01-20\nLetzte Taetigkeit: IT\n\nMit freundlichen Gruessen\nFrau Erika Beispielfrau",
+  "extractionFixture": [
+    {
+      "field": "geburtsdatum",
+      "part_id": "part-text-0",
+      "anchor": "Geburtsdatum:",
+      "mode": "sealed"
+    },
+    {
+      "field": "versicherungsnummer",
+      "part_id": "part-text-0",
+      "anchor": "Versicherungsnummer:",
+      "mode": "sealed"
+    },
+    {
+      "field": "rentenart",
+      "part_id": "part-text-0",
+      "anchor": "Rentenart:",
+      "mode": "literal",
+      "value": "erwerbsminderungsrente_voll",
+      "quote": "Rentenart: erwerbsminderungsrente_voll"
+    },
+    {
+      "field": "eintritt_erwerbsminderung",
+      "part_id": "part-text-0",
+      "anchor": "Eintritt der Erwerbsminderung:",
+      "mode": "literal",
+      "value": "2025-01-20",
+      "quote": "Eintritt der Erwerbsminderung: 2025-01-20"
+    },
+    {
+      "field": "letzte_taetigkeit",
+      "part_id": "part-text-0",
+      "anchor": "Letzte Taetigkeit:",
+      "mode": "literal",
+      "value": "IT",
+      "quote": "Letzte Taetigkeit: IT"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: xx-0006-zwei-verfahren-im-formular
+procedure_id: null
+scenario_kind: ambiguous_conflicting
+expected_unit_id: Referat_312_Renten
+expected_tier: 3
+derived_procedure_id: null
+derivation_source: none
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: 'Das Item fuer den ungeloesten Arbitrierungskonflikt: zwei Regeln derselben
+  Prioritaet (20) zeigen auf Referat 312 und Referat 316. Die Reihenfolge (priority,
+  rule_id) bestimmt den Gewinner deterministisch, die Confidence sinkt auf 0.6 und
+  beide Zeilen der Entscheidungstabelle fallen aus. Zugeordnet wird trotzdem jemand
+  - ein Vorgang ohne Adressat wartet sonst auf niemanden.'

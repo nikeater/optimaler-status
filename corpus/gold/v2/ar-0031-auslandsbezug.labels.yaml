@@ -1,0 +1,19 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: ar-0031-auslandsbezug
+procedure_id: altersrente
+scenario_kind: ambiguous_conflicting
+expected_unit_id: Referat_318_Auslandsrenten
+expected_tier: 3
+derived_procedure_id: altersrente
+derivation_source: hint
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: 'Vollstaendiger Regelaltersrentenantrag mit Auslandsbezug: die Zuordnung geht
+  an die Auslandsrenten, der Klarfall entfaellt. Die Rentenart-Regel und die Hinweis-Regel
+  schlagen ebenfalls an, verlieren die Arbitrierung aber gegen Prioritaet 10 - der
+  Konflikt steht im Journal, entschieden ist er trotzdem.'

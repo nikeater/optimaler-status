@@ -1,0 +1,34 @@
+{
+  "submissionId": "ar-0033-hinweis-widerspricht-inhalt",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antrag": {
+      "rentenart": "erwerbsminderungsrente_voll",
+      "hinweistext": "Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir. Eine Eingangsbestaetigung waere mir wichtig.",
+      "auslandsbezug": "nein",
+      "rentenbeginn": "2026-11-01"
+    },
+    "antragsteller": {
+      "versicherungsnummer": " \t30017819S085 \t",
+      "geburtsdatum": " 1978-01-30 ",
+      "anschrift": {
+        "ort": "  Beispielstadt  ",
+        "strasse": " Kirchgasse ",
+        "hausnummer": "  2  ",
+        "plz": " 24103 \t"
+      }
+    },
+    "meta": {
+      "bearbeitungswunsch": "Bitte antworten Sie schriftlich, nicht telefonisch.",
+      "eingangsdatum": "2026-08-05"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

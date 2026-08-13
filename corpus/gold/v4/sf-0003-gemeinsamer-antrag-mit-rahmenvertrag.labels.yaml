@@ -1,0 +1,17 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: sf-0003-gemeinsamer-antrag-mit-rahmenvertrag
+procedure_id: statusfeststellung
+scenario_kind: complete_clear
+expected_unit_id: Referat_340_Clearingstelle
+expected_tier: 3
+derived_procedure_id: statusfeststellung
+derivation_source: hint
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: Auftragnehmer und Auftraggeber stellen den Antrag gemeinsam; der Taetigkeit
+  liegt ein Rahmenvertrag zugrunde.

@@ -1,0 +1,65 @@
+# Render Blueprint for the public demonstration instance.
+#
+# The primary hosting target (part 11, ruling 5). Deploy path and the exact
+# click sequence: docs/PUBLISHING.md.
+#
+# HONEST NOTES ABOUT THE FREE PLAN, checked against Render's own docs on
+# 2026-08-13. Free-tier terms change; re-read https://render.com/docs/free
+# before relying on any of this.
+#
+#   * A free web service SPINS DOWN after 15 minutes without inbound traffic,
+#     and spinning back up takes about a minute, during which Render shows a
+#     loading page. The first click on a demo link that has been idle overnight
+#     is slow. That is the deal, and the landing page says so rather than
+#     leaving a visitor to conclude the app is broken.
+#   * Free web services CANNOT attach a persistent disk. This is not a problem
+#     here, it is the design: the entrypoint rebuilds the whole state from the
+#     frozen gold corpus on every boot, so an ephemeral filesystem and a
+#     scheduled restart produce exactly the same thing - a clean demo. Every
+#     spin-down is a reset for free.
+#   * Free instance hours are capped per workspace per calendar month (750 at
+#     the time of writing) and outbound bandwidth and build minutes count
+#     against the workspace's included amounts.
+#   * The image builds in about a minute of CPU work plus the dependency
+#     install, and the build RUNS THE EVAL GATE - a build that would produce a
+#     demo failing its own gate fails instead.
+
+services:
+  - type: web
+    name: eingangslotse-demo
+    runtime: docker
+    plan: free
+    # Frankfurt: the audience is German public administration and the data,
+    # though synthetic, is shaped like personal data. Keeping it inside the EU
+    # is the posture a real deployment would have to have anyway.
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    autoDeployTrigger: commit
+    envVars:
+      # The public posture. Explicit here as well as in the image, so an
+      # operator reading only this file can see what the instance is.
+      - key: EINGANGSLOTSE_DEMO_MODE
+        value: "1"
+      # NO EINGANGSLOTSE_INGEST_TOKEN. Its absence is the setting: POST /ingest
+      # is refused outright, and this instance cannot receive a submission from
+      # anybody. Add it in the Render dashboard ONLY if you have a reason to
+      # keep ingest open, and then treat it as a secret and rotate it.
+      - key: EINGANGSLOTSE_TEXT_NER
+        value: "0"
+      # Replace OWNER once the repository exists (docs/PUBLISHING.md).
+      - key: EINGANGSLOTSE_REPO_URL
+        value: https://github.com/OWNER/eingangslotse
+      # The five state directories, on the container's ephemeral filesystem.
+      # Deliberately NOT a disk: see the note above.
+      - key: EINGANGSLOTSE_JOURNAL_DIR
+        value: /var/lib/eingangslotse/journal
+      - key: EINGANGSLOTSE_VAULT_DIR
+        value: /var/lib/eingangslotse/vault
+      - key: EINGANGSLOTSE_OUTBOX_DIR
+        value: /var/lib/eingangslotse/outbox
+      - key: EINGANGSLOTSE_DRAFTS_DIR
+        value: /var/lib/eingangslotse/drafts
+      - key: EINGANGSLOTSE_DISPATCH_DIR
+        value: /var/lib/eingangslotse/dispatch

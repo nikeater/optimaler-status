@@ -1,0 +1,53 @@
+{# Base for the two citizen-facing tour pages. Deliberately NOT review_base:
+   that template carries the unit picker and the caseworker navigation, and a
+   citizen has neither. Same stylesheets, same skip link, same banner, same
+   footer discipline. #}
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}EingangsLotse - Rundgang{% endblock %}</title>
+  <link rel="stylesheet" href="/static/metrics.css">
+  <link rel="stylesheet" href="/static/review.css">
+  <link rel="stylesheet" href="/static/demo.css">
+</head>
+<body>
+  <a class="skip-link" href="#inhalt">Direkt zum Inhalt</a>
+  {% include "_demo_banner.html" %}
+  <header>
+    <h1>{% block heading %}EingangsLotse - Rundgang{% endblock %}</h1>
+    {% include "_demo_steps.html" %}
+    <nav aria-label="Bereiche">
+      <ul class="navbar">
+        <li><a href="/">Start</a></li>
+        <li><a href="/demo/antrag">Phase 1: Antrag stellen</a></li>
+        <li><a href="/review">Phase 3: Bearbeitung</a></li>
+        <li><a href="/inbox">Postfach (nur Ansicht)</a></li>
+      </ul>
+    </nav>
+  </header>
+  <main id="inhalt">
+    {% block content %}{% endblock %}
+  </main>
+  <footer>
+    <p>
+      Dieser Rundgang laeuft durch die ECHTE Verarbeitung. Es gibt keinen
+      Demo-Pfad neben der Anlage: dieselbe Versiegelung, dieselbe Pruefung,
+      dasselbe Journal. Was Sie hier ausloesen, steht danach genauso in der
+      Bearbeitung wie jeder andere Eingang.
+    </p>
+    <p>
+      Diese Seiten erzeugen keine Nachricht an antragstellende Personen.
+      Eingangsbestaetigung und Zwischenstand entstehen automatisch aus dem
+      Journal und durchlaufen keine Pruefung (ADR-005); <code>/inbox</code> ist
+      und bleibt reine Ansicht, auch hier.
+    </p>
+    <p>
+      Barrierefreiheit: Selbsteinschaetzung nach EN 301 549 / WCAG 2.1 AA in
+      <code>docs/accessibility-selfcheck.md</code>. Eine externe Pruefung nach
+      BITV 2.0 hat nicht stattgefunden und ist Pilotvoraussetzung (P-15).
+    </p>
+  </footer>
+</body>
+</html>

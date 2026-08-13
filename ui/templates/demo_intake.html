@@ -1,0 +1,130 @@
+{% extends "demo_base.html" %}
+{% block title %}EingangsLotse - Antrag stellen (Phase 1){% endblock %}
+{% block heading %}Phase 1: Sie stellen einen Antrag{% endblock %}
+{% block content %}
+
+<section aria-labelledby="einleitung-heading">
+  <h2 id="einleitung-heading">Was hier passiert</h2>
+  <p>{{ view.ingest_note }}</p>
+  <p class="notice">{{ view.note }}</p>
+</section>
+
+{% if view.error %}
+<section aria-labelledby="ablehnung-heading">
+  <h2 id="ablehnung-heading">Der Eingang wurde abgelehnt</h2>
+  <div class="alarm-note flag" role="alert" id="refusal">
+    <p>{{ view.error }}</p>
+    {% if view.error_details %}
+    <ul>
+      {% for detail in view.error_details %}
+      <li>{{ detail }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<section aria-labelledby="personen-heading">
+  <h2 id="personen-heading">Erfundene Person waehlen</h2>
+  <ul class="persona-list">
+    {% for persona in view.personas %}
+    <li class="persona{% if persona.persona_id == view.persona.persona_id %} persona-current{% endif %}">
+      <h3>
+        {% if persona.persona_id == view.persona.persona_id %}
+        {{ persona.display_name }} <span class="tag">gewaehlt</span>
+        {% else %}
+        <a href="/demo/antrag?persona={{ persona.persona_id }}&amp;kanal={{ view.channel }}">{{ persona.display_name }}</a>
+        {% endif %}
+      </h3>
+      <p class="muted">{{ persona.headline }}</p>
+      <p>{{ persona.story }}</p>
+      <p><strong>Erwartetes Ergebnis:</strong> {{ persona.expectation }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<section aria-labelledby="kanal-heading">
+  <h2 id="kanal-heading">Weg waehlen</h2>
+  <ul class="navbar tabs">
+    {% for channel in view.channels %}
+    <li>
+      {% if channel == view.channel %}
+      <strong class="tab-current" aria-current="page">{{ view.channel_labels[channel] }}</strong>
+      {% else %}
+      <a href="/demo/antrag?persona={{ view.persona.persona_id }}&amp;kanal={{ channel }}">{{ view.channel_labels[channel] }}</a>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  <p class="notice">{{ view.channel_notes[view.channel] }}</p>
+</section>
+
+<section aria-labelledby="formular-heading">
+  <h2 id="formular-heading">
+    {% if view.is_email %}Anschreiben bearbeiten und absenden{% else %}Formular bearbeiten und absenden{% endif %}
+  </h2>
+  <form class="action-form" method="post" action="/demo/antrag">
+    <input type="hidden" name="persona" value="{{ view.persona.persona_id }}">
+    <input type="hidden" name="kanal" value="{{ view.channel }}">
+
+    {% if view.is_email %}
+    <div class="field">
+      <label for="body">Ihr Anschreiben</label>
+      <span class="help" id="body-help">
+        Frei bearbeitbar. Alles, was Sie hier hineinschreiben, geht durch die
+        Erkennerunion: was wie eine Versicherungsnummer, ein Name, eine
+        Anschrift oder ein Geburtsdatum aussieht, wird versiegelt, bevor die
+        Arbeitskopie entsteht.
+      </span>
+      <textarea id="body" name="body" rows="20" maxlength="8000" aria-describedby="body-help">{{ view.body }}</textarea>
+    </div>
+    {% else %}
+    <fieldset>
+      <legend>Angaben von {{ view.persona.display_name }}</legend>
+      {% for field in view.fields %}
+      <div class="field">
+        <label for="feld-{{ field.field_id }}">
+          {{ field.label }}
+          {% if field.kind %}
+          <span class="tag">wird versiegelt: {{ field.kind_label }}</span>
+          {% endif %}
+        </label>
+        {% if field.help %}
+        <span class="help" id="hilfe-{{ field.field_id }}">{{ field.help }}</span>
+        {% endif %}
+        <input type="text" id="feld-{{ field.field_id }}" name="{{ field.field_id }}"
+               value="{{ field.value }}" maxlength="200"
+               {% if field.help %}aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
+      </div>
+      {% endfor %}
+    </fieldset>
+    {% endif %}
+
+    {% if view.ingest_open %}
+    <button type="submit">Antrag absenden</button>
+    {% else %}
+    <p class="alarm-note flag">
+      Absenden ist auf dieser Instanz nicht moeglich: der Eingang ist gesperrt.
+    </p>
+    {% endif %}
+  </form>
+</section>
+
+<section aria-labelledby="hinweise-heading">
+  <h2 id="hinweise-heading">Was Sie ausprobieren koennen</h2>
+  <p>
+    Aendern Sie die Angaben ruhig. Jede der folgenden Aenderungen loest ein
+    ANDERES, echtes Verhalten der Anlage aus - und Sie sehen im naechsten
+    Schritt genau, welches.
+  </p>
+  <dl class="hints">
+    {% for label, detail in view.hints %}
+    <dt>{{ label }}</dt>
+    <dd>{{ detail }}</dd>
+    {% endfor %}
+  </dl>
+</section>
+
+{% endblock %}

@@ -1,0 +1,29 @@
+{
+  "submissionId": "xx-0002-ohne-verfahrenskennung",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-06T07:21:00+00:00",
+  "serviceType": {
+    "name": "Allgemeines Anliegen",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000009"
+  },
+  "data": {
+    "meta": {
+      "eingangsdatum": "6. August 2026"
+    },
+    "antragsteller": {
+      "anschrift": {
+        "strasse": "Am Hang",
+        "ort": "Musterhausen",
+        "hausnummer": "8",
+        "plz": " 99084  "
+      },
+      "geburtsdatum": " \t1968-12-19  ",
+      "versicherungsnummer": "19126818Q033"
+    },
+    "antrag": {
+      "hinweistext": "  Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir. Bitte antworten Sie schriftlich, nicht telefonisch.  "
+    }
+  },
+  "attachments": []
+}

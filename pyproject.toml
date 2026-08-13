@@ -1,0 +1,233 @@
+[build-system]
+# >=77 for PEP 639: the SPDX `license` string and `license-files` below are
+# metadata 2.4 fields, and an older setuptools would silently drop them.
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eingangslotse"
+version = "0.1.0"
+description = "EingangsLotse: two-plane triage assistant for inbound public-administration items"
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{ name = "EingangsLotse project" }]
+# ADR-006: EUPL-1.2. The SPDX identifier is the machine-readable half; the
+# authoritative text is LICENSE, the official English version fetched verbatim
+# from the European Commission. The other official language versions (including
+# German) are legally equivalent - see the README license section.
+license = "EUPL-1.2"
+license-files = ["LICENSE"]
+dependencies = [
+    "pydantic>=2.7",
+    "fastapi>=0.111",
+    "uvicorn>=0.30",
+    "PyYAML>=6.0",
+    # Jinja2 renders two things: the corpus generator's free-text cover notes
+    # and the server-rendered metrics panel. No template engine is used
+    # anywhere in the decision path.
+    "Jinja2>=3.1",
+    # Bounded-fuzzy span matching for OCR text (part 05). Runtime, not optional:
+    # a verifier that silently loses its fuzzy half would accept nothing on the
+    # scan channel, and "no extraction" is a quieter failure than a missing
+    # import. The LLM client stays stdlib (urllib), like ADR-012's.
+    "rapidfuzz>=3.9",
+    # The shadow scorer's IsolationForest (part 09, ADR-024). CORE rather than
+    # an extra, unlike [redact] and [classify]: those two carry a model whose
+    # absence degrades a metric, while a missing scorer would silently remove
+    # the system's only source of extra oversight - and the reference
+    # population is a 15 KB matrix of numbers in this repository, not a
+    # gigabyte of weights, so there is no wheel-size reason to make it optional.
+    # numpy comes along as its own hard dependency and is deliberately not
+    # imported anywhere here: the arithmetic around the model stays plain
+    # Python so a reviewer can read it.
+    "scikit-learn>=1.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2",
+    "pytest-cov>=5.0",
+    "hypothesis>=6.100",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "types-PyYAML>=6.0",
+    "httpx>=0.27",
+]
+# The model-backed member of the redaction detector union (part 04). OPTIONAL by
+# design: engine/redact imports and every gate passes without it, on the
+# deterministic recognizers alone. Installing it adds bare person names and
+# context-free place names to the union, which is the half no regular expression
+# can carry. See docs/BUILD.md for the cp313/Windows wheel caveat.
+redact = [
+    "presidio-analyzer>=2.2",
+    "spacy>=3.7",
+]
+# The embedding model behind the zero-shot unit classifier (part 06). OPTIONAL
+# by the same rule as [redact]: engine/evidence imports and every gate passes
+# without it, because the gate's numbers may not depend on which wheels a
+# machine has. Installing it makes the opt-in eval sections runnable - the
+# classifier log-only measurement and the calibration fit. torch is the wheel
+# risk on Windows/cp313; see docs/BUILD.md for what was measured here.
+classify = [
+    "sentence-transformers>=3.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["schemas*", "engine*", "api*", "eval*"]
+exclude = ["tests*", "corpus*", "config*", "deploy*", "ui*", "docs*"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+extend-exclude = [".venv", "schemas/artifacts"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# Contracts change only via ADR. UP042 (StrEnum rewrite) is deliberately
+# deferred: it changes str() behaviour on the enum members, so it needs an
+# ADR-gated contract change, not an autofix. UP037 rides along until then.
+"schemas/*.py" = ["UP042", "UP037"]
+# Tests may shadow names and use assert-heavy, long-ish parametrisations.
+"tests/*.py" = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["schemas", "engine", "api", "eval", "corpus", "tests"]
+plugins = ["pydantic.mypy"]
+warn_redundant_casts = true
+warn_unused_configs = true
+no_implicit_optional = true
+
+# engine.decide is the deterministic decision plane: --strict, spelled out per
+# module because mypy accepts `strict` only in the global section.
+[[tool.mypy.overrides]]
+module = ["engine.decide.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+check_untyped_defs = true
+no_implicit_reexport = true
+warn_return_any = true
+warn_unused_ignores = true
+strict_equality = true
+extra_checks = true
+
+# engine.redact is the privacy boundary: same --strict treatment as the decision
+# plane, for the same reason - a silent Any in either one is a guard that stopped
+# guarding without saying so.
+[[tool.mypy.overrides]]
+module = ["engine.redact.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+check_untyped_defs = true
+no_implicit_reexport = true
+warn_return_any = true
+warn_unused_ignores = true
+strict_equality = true
+extra_checks = true
+
+# engine.textlayer and engine.extract are the third --strict package group: the
+# text layer computes the offsets every span verification rests on, and the
+# verifier is what stands between a model's proposal and an evidence record. An
+# untyped Any in either is a check that quietly stopped checking.
+[[tool.mypy.overrides]]
+module = ["engine.textlayer.*", "engine.extract.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+check_untyped_defs = true
+no_implicit_reexport = true
+warn_return_any = true
+warn_unused_ignores = true
+strict_equality = true
+extra_checks = true
+
+# engine.draft is the fourth --strict group and belongs there for the redaction
+# package's reason: it handles RE-HYDRATED identity data. It is the only module
+# that reads the vault, and a silent Any in it is a check that stopped checking
+# on the one path where a person's data reaches a printable letter.
+[[tool.mypy.overrides]]
+module = ["engine.draft.*"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+disallow_untyped_decorators = true
+disallow_any_generics = true
+disallow_subclassing_any = true
+check_untyped_defs = true
+no_implicit_reexport = true
+warn_return_any = true
+warn_unused_ignores = true
+strict_equality = true
+extra_checks = true
+
+# Presidio and spaCy are the optional [redact] extra; sentence-transformers is
+# the optional [classify] extra. On a core install all three are simply absent,
+# and engine/redact/ner.py and engine/evidence/embedding.py are written to
+# survive that.
+[[tool.mypy.overrides]]
+module = ["presidio_analyzer.*", "spacy.*", "sentence_transformers.*"]
+ignore_missing_imports = true
+
+# scikit-learn is a CORE dependency (part 09) and ships no type information.
+# The wrapper around it (engine/score/model.py) is deliberately thin for
+# exactly that reason: everything typed happens on this side of the call.
+[[tool.mypy.overrides]]
+module = ["sklearn.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=engine.decide --cov=engine.evidence --cov=engine.redact --cov=engine.textlayer --cov=engine.extract --cov=engine.notify --cov=engine.draft --cov=engine.score --cov=engine.review --cov=engine.dispatch --cov=engine.demo --cov=engine.journal.corrections --cov-report=term-missing --cov-fail-under=95 --strict-markers"
+filterwarnings = ["error::DeprecationWarning:engine.*"]
+
+[tool.coverage.run]
+branch = true
+source = [
+    "engine/decide",
+    "engine/evidence",
+    "engine/redact",
+    "engine/textlayer",
+    "engine/extract",
+    # engine/notify carries the "no identity data reaches a citizen" invariant
+    # (part 07), which puts it in the same class as the packages above: a branch
+    # nobody exercises there is a guard nobody knows still works.
+    "engine/notify",
+    # engine/draft is the one package that reads the vault (part 08). Every
+    # branch in it is either a refusal that protects a letter from going out
+    # wrong or the substitution that puts a person's data into one.
+    "engine/draft",
+    # engine/score is the shadow scorer (part 09). Its branches are the guard
+    # that refuses a sealed value, the degradation that keeps a broken scorer
+    # from blocking the pipeline, and the fallback that keeps a flag from
+    # shipping without a reason. Every one of them is a promise ADR-004 makes.
+    "engine/score",
+    # engine/review and engine/dispatch are part 10's half of the append-only
+    # promise. Every branch in them is either a refusal that keeps a past event
+    # from being rewritten, a clock that must not gate anything, or an export
+    # that must not carry a person - the same class as the packages above.
+    "engine/review",
+    "engine/dispatch",
+    # engine/demo is part 11's deployment posture. It is in this list for the
+    # redaction package's reason rather than the review package's: the ingest
+    # gate is the single control that keeps a stranger's real data out of a
+    # public instance whose vault backend is plaintext, and an unexercised
+    # branch there is a lock nobody knows still turns.
+    "engine/demo",
+    "engine/journal/corrections.py",
+]
+
+[tool.coverage.report]
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]

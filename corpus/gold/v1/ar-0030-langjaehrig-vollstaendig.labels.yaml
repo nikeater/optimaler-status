@@ -1,0 +1,15 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: ar-0030-langjaehrig-vollstaendig
+procedure_id: altersrente
+scenario_kind: ambiguous_conflicting
+expected_unit_id: Referat_312_Renten
+expected_tier: 3
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: 'Vollstaendige Altersrente fuer langjaehrig Versicherte: alle Pflichtangaben
+  liegen vor, aber die Wartezeitpruefung ist keine Klarfallkonstellation.'

@@ -1,0 +1,18 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: ar-0060-email-regelaltersrente-vollstaendig
+procedure_id: altersrente
+scenario_kind: hint_missing
+expected_unit_id: Referat_312_Renten
+expected_tier: 1
+derived_procedure_id: altersrente
+derivation_source: content
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: none
+known_divergence: []
+divergence_reason: null
+notes: 'Der Beleg fuer den ganzen Textpfad: ohne strukturierte Daten, ohne Kanalhinweis,
+  und trotzdem Tier 1 - weil jede Angabe eine verifizierte Fundstelle im geschwaerzten
+  Text hat.'

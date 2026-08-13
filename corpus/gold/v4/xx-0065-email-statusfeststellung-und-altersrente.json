@@ -1,0 +1,14 @@
+{
+  "submissionId": "xx-0065-email-statusfeststellung-und-altersrente",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "email",
+  "submittedAt": "2026-07-29T11:37:00+00:00",
+  "serviceType": {
+    "name": "Allgemeines Anliegen",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000009"
+  },
+  "data": {},
+  "attachments": [],
+  "bodyText": "Betreff: Zwei Anliegen in einem Schreiben\n\nSehr geehrte Damen und Herren,\n\nich moechte einerseits meinen Erwerbsstatus feststellen lassen und andererseits meine Altersrente beantragen.\n\nAbsender: Frau Erika Beispielfrau\nAnschrift: Am Hang 8, 99084 Musterhausen\n\nMit freundlichen Gruessen\nFrau Erika Beispielfrau",
+  "extractionFixture": []
+}

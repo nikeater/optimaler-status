@@ -1,0 +1,15 @@
+{
+  "submissionId": "xx-0062-scan-widerspruch",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "scan",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Allgemeines Anliegen",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000009"
+  },
+  "data": {},
+  "attachments": [],
+  "bodyText": "Betreff: Widerspruch gegen Ihren Beschcid\n\nSehr geehrte Darnen und Herren,\n\ngegen den mir zugegangenen Bescheid lege ich hiermit fristgerecht Widerspruch ein und bitte urn Ueberpruefung.\n\nAbsender: Herr Jonas Musterling\nAnschrift: Am Hang 8, 99084 Musterhausen\n\nMit freundlichen Gruessen\nHerr Jonas Musterling",
+  "extractionFixture": [],
+  "procedureHint": "widerspruch"
+}

@@ -1,0 +1,20 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: ar-0024-rentenbeginn-vor-dem-60-lebensjahr
+procedure_id: altersrente
+scenario_kind: invalid_field
+expected_unit_id: Referat_312_Renten
+expected_tier: 2
+derived_procedure_id: altersrente
+derivation_source: hint
+expected_gaps:
+- requirement_id: rentenbeginn
+  status: invalid
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: 'Beide Datumsangaben sind fuer sich gueltig, zusammen nicht: die antragstellende
+  Person waere bei Rentenbeginn 51 Jahre alt. Eine Altersrente ist fruehestens ab
+  60 moeglich, also stimmt eine der beiden Angaben nicht.'

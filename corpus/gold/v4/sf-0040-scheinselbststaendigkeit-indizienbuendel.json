@@ -1,0 +1,46 @@
+{
+  "submissionId": "sf-0040-scheinselbststaendigkeit-indizienbuendel",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-29T11:37:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "auftraggeber": {
+      "firmenname": " \tOstwall Dienstleistungen GmbH ",
+      "betriebsnummer": "  66778899  "
+    },
+    "meta": {
+      "eingangsdatum": "29.07.2026"
+    },
+    "antrag": {
+      "weisungsgebunden": "nein",
+      "hinweistext": " \tHallo, ich schicke Ihnen hier meinen Antrag. Ich hoffe, so ist alles richtig ausgefuellt. Vielen Dank vorab. ",
+      "eingliederung_arbeitsorganisation": "ja",
+      "antragsteller_rolle": "auftragnehmer",
+      "rahmenvertrag": "  ja \t",
+      "honorar_modell": "fest_monatlich",
+      "umsatzanteil_hauptauftraggeber": "100",
+      "antragsart": "feststellung_nach_aufnahme",
+      "taetigkeit_beginn": "2025-02-03",
+      "arbeitsort": "beim_auftraggeber",
+      "weitere_auftraggeber": "nein",
+      "taetigkeit_bezeichnung": "Sachbearbeitung im Kundenservice",
+      "honorar_monatlich": "3200"
+    },
+    "antragsteller": {
+      "anschrift": {
+        "ort": "Musterstadt",
+        "strasse": "Musterweg",
+        "plz": "10115",
+        "hausnummer": " 3 "
+      },
+      "geburtsdatum": "  1984-09-12 \t",
+      "versicherungsnummer": "28120984Y067"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "statusfeststellung"
+}

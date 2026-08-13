@@ -1,0 +1,36 @@
+{
+  "submissionId": "em-0003-gutachten-ausstehend",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-27T08:04:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {
+    "antragsteller": {
+      "anschrift": {
+        "hausnummer": " \t3 \t",
+        "strasse": " Musterweg ",
+        "ort": "Musterstadt",
+        "plz": "10115"
+      },
+      "versicherungsnummer": "23096919C052",
+      "geburtsdatum": "1969-09-23"
+    },
+    "antrag": {
+      "eintritt_erwerbsminderung": "  2025-08-30 \t",
+      "hinweistext": "  Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir. Eine Eingangsbestaetigung waere mir wichtig. ",
+      "gutachten_status": " \tausstehend ",
+      "auslandsbezug": "nein",
+      "rentenart": "erwerbsminderungsrente_voll",
+      "letzte_taetigkeit": "  Pflegehelfer "
+    },
+    "meta": {
+      "bearbeitungswunsch": " Ich bin ab kommender Woche im Urlaub.  ",
+      "eingangsdatum": "2026-07-27"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "erwerbsminderungsrente"
+}

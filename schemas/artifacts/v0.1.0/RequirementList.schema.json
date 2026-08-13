@@ -1,0 +1,74 @@
+{
+  "$defs": {
+    "Requirement": {
+      "additionalProperties": false,
+      "properties": {
+        "requirement_id": {
+          "title": "Requirement Id",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "field",
+            "document"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "validation": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional value constraints (format, range)",
+          "title": "Validation"
+        }
+      },
+      "required": [
+        "requirement_id",
+        "description",
+        "kind"
+      ],
+      "title": "Requirement",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Per-procedure completeness requirements (config/procedures/).",
+  "properties": {
+    "procedure_id": {
+      "title": "Procedure Id",
+      "type": "string"
+    },
+    "version": {
+      "title": "Version",
+      "type": "string"
+    },
+    "requirements": {
+      "items": {
+        "$ref": "#/$defs/Requirement"
+      },
+      "minItems": 1,
+      "title": "Requirements",
+      "type": "array"
+    }
+  },
+  "required": [
+    "procedure_id",
+    "version",
+    "requirements"
+  ],
+  "title": "RequirementList",
+  "type": "object",
+  "$id": "https://opencode.de/eingangslotse/schemas/v0.1.0/RequirementList.schema.json"
+}

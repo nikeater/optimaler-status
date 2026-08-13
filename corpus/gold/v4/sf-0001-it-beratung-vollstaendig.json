@@ -1,0 +1,45 @@
+{
+  "submissionId": "sf-0001-it-beratung-vollstaendig",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-27T08:04:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "antragsteller": {
+      "versicherungsnummer": "12140385K023",
+      "geburtsdatum": "1985-03-14",
+      "anschrift": {
+        "plz": "  24103 \t",
+        "strasse": "Kirchgasse",
+        "ort": "Beispielstadt",
+        "hausnummer": "  2 "
+      }
+    },
+    "antrag": {
+      "umsatzanteil_hauptauftraggeber": "35",
+      "eingliederung_arbeitsorganisation": "nein",
+      "taetigkeit_bezeichnung": "IT-Beratung und Softwareentwicklung",
+      "hinweistext": "Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir. Eine Eingangsbestaetigung waere mir wichtig.",
+      "antragsteller_rolle": "  auftragnehmer \t",
+      "weisungsgebunden": "nein",
+      "honorar_modell": " nach_stunden \t",
+      "weitere_auftraggeber": " \tja  ",
+      "arbeitsort": "eigene_betriebsstaette",
+      "taetigkeit_beginn": "2026-01-15",
+      "antragsart": "feststellung_nach_aufnahme",
+      "rahmenvertrag": "nein"
+    },
+    "auftraggeber": {
+      "firmenname": "  Nordlicht Systemhaus GmbH \t",
+      "betriebsnummer": "12345678"
+    },
+    "meta": {
+      "eingangsdatum": " \t27.07.2026 "
+    }
+  },
+  "attachments": [],
+  "procedureHint": "statusfeststellung"
+}

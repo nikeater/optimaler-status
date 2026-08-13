@@ -1,0 +1,22 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: em-0031-rentenart-widerspricht-verfahren
+procedure_id: erwerbsminderungsrente
+scenario_kind: ambiguous_conflicting
+expected_unit_id: Referat_316_Erwerbsminderungsrenten
+expected_tier: 3
+expected_gaps:
+- requirement_id: rentenart
+  status: invalid
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence:
+- tier
+divergence_reason: Heute sieht die Vollstaendigkeitspruefung nur eine unzulaessige
+  Rentenart und stuft den Vorgang als unvollstaendig in Tier 2 ein. Dass Kanalhinweis
+  und Formularinhalt einander widersprechen, ist heute kein eigenes Evidenzsignal;
+  es wird eines, sobald der Klassifikator aus Teil 03 eine eigene Verfahrensvermutung
+  liefert.
+notes: Der Kanal meldet eine Erwerbsminderungsrente, im Formular ist die Regelaltersrente
+  angekreuzt. Fachlich ist der Vorgang widerspruechlich und gehoert vollstaendig geprueft.

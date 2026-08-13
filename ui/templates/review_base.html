@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}EingangsLotse - Bearbeitung{% endblock %}</title>
+  <link rel="stylesheet" href="/static/metrics.css">
+  <link rel="stylesheet" href="/static/review.css">
+  <script src="/static/vendor/htmx.min.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#inhalt">Direkt zum Inhalt</a>
+  {% include "_demo_banner.html" %}
+  <header>
+    <h1>{% block heading %}EingangsLotse - Bearbeitung{% endblock %}</h1>
+    <nav aria-label="Bereiche">
+      <ul class="navbar">
+        <li><a href="/review{% if view.unit_id %}?unit={{ view.unit_id }}{% endif %}">Uebersicht</a></li>
+        <li><a href="/metrics">Eval-Metriken</a></li>
+        <li><a href="/inbox">Postfach (nur Ansicht)</a></li>
+      </ul>
+    </nav>
+    <form class="picker" method="get" action="{% block picker_action %}/review{% endblock %}">
+      {% block picker_hidden %}{% endblock %}
+      <label for="unit">Bearbeitende Einheit</label>
+      <select id="unit" name="unit">
+        <option value="">-- keine Einheit gewaehlt --</option>
+        {% for unit in view.units %}
+        <option value="{{ unit.unit_id }}" {% if unit.unit_id == view.unit_id %}selected{% endif %}>
+          {{ unit.name }}
+        </option>
+        {% endfor %}
+      </select>
+      <button type="submit">Einheit uebernehmen</button>
+    </form>
+    <p class="notice" id="picker-note">{{ view.picker_note }}</p>
+  </header>
+  <main id="inhalt">
+    {% block content %}{% endblock %}
+  </main>
+  <footer>
+    <p>
+      Jede Aktion auf diesen Seiten schreibt ein neues Journalereignis. Es wird
+      kein vergangenes Ereignis geaendert und keines geloescht: eine Korrektur
+      ist ein Eintrag neben dem alten, nicht an seiner Stelle (ADR-008).
+    </p>
+    <p>
+      Diese Oberflaeche erzeugt keine Nachricht an antragstellende Personen.
+      Eingangsbestaetigung und Zwischenstand entstehen automatisch aus dem
+      Journal und durchlaufen keine Pruefung (ADR-005); <code>/inbox</code> ist
+      und bleibt reine Ansicht.
+    </p>
+    <p>
+      Barrierefreiheit: Selbsteinschaetzung nach EN 301 549 / WCAG 2.1 AA in
+      <code>docs/accessibility-selfcheck.md</code>. Eine externe Pruefung nach
+      BITV 2.0 hat nicht stattgefunden und ist Pilotvoraussetzung (P-15).
+    </p>
+  </footer>
+</body>
+</html>

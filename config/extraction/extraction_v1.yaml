@@ -1,0 +1,99 @@
+# Extraction and span-verification policy (part 05, ADR-020).
+#
+# Agency-editable, like everything else in config/. Two halves:
+#
+#   match / confidence   how hard a proposal has to prove itself before it may
+#                        become an ExtractionRecord. This is a SAFETY knob:
+#                        lowering `ocr.min_score` accepts noisier evidence, and
+#                        the failure it buys is an accepted value that is not
+#                        what the letter says.
+#   live                 the optional LLM extractor. Off by default and never
+#                        part of any gate; see docs/BUILD.md for the Ollama
+#                        setup and `python -m eval.live` for the harness.
+#
+# `prompt_version` is stamped into VersionStamp.prompt_version on every artifact,
+# so a report can always say which wording produced which numbers. Change the
+# prompt, change the version - that is the whole point of having one.
+version: extraction_v1
+prompt_version: extraction_prompt_v1
+
+replay:
+  # Provenance for the deterministic corpus extractor. Never blank: an
+  # ExtractionRecord whose extractor_id said nothing would be a value with no
+  # answer to "where did this come from".
+  extractor_id: replay:v4
+
+match:
+  # Born-digital text is exactly what the sender typed. There is no noise to
+  # tolerate, so tolerating any would only widen what a wrong offset can still
+  # match. `min_score` is stated for symmetry and must stay 1.0.
+  born_digital:
+    mode: exact
+    min_score: 1.0
+  # OCR text is a machine's reading of a scan. rn/m, l/1, O/0 and a stray line
+  # break are the everyday failures, and a verifier that refused them would
+  # discard every scanned letter - which is not caution, it is a system that
+  # cannot read post. The threshold is deliberately high: at 0.86 a twelve
+  # character quote may differ in one character, not in two.
+  ocr:
+    mode: fuzzy
+    min_score: 0.86
+
+confidence:
+  # An EXACT match is proof that those characters stand at that offset. It is
+  # not proof that the sentence means what the extractor thinks, which is why
+  # this is not 1.0 - the deterministic schema mapper reads a JSON key and gets
+  # 1.0, reading prose never does.
+  exact: 0.95
+  # A FUZZY record carries its match score as its confidence, floored here so a
+  # threshold change cannot silently produce records nobody would trust.
+  fuzzy_floor: 0.8
+
+live:
+  # No probe unless an endpoint is configured (ADR-012's rule, unchanged): a
+  # machine that happens to run a local model must not quietly start producing
+  # different evidence than the machine next to it.
+  enabled: false
+  base_url: null
+  model: null
+  timeout_seconds: 30.0
+  # Attempts per part, INCLUDING the first. Every failure mode - timeout, HTTP
+  # error, non-JSON body, a body that does not fit the schema, a refusal - ends
+  # as "no proposals", which the pipeline already treats as discard toward
+  # tier 3. A model that cannot answer never blocks and never invents.
+  attempts: 2
+  # The text is presented to the model in numbered chunks with their start
+  # offsets, because the second lock needs an offset and no language model can
+  # count characters across a page. Small chunks make the arithmetic short.
+  chunk_chars: 96
+
+prompt:
+  # Both blocks are LITERAL scalars (`|-`), not folded ones (`>-`). A folded
+  # scalar turns every single newline into a space, which for the user block
+  # would run "Text:" and the first numbered chunk together on one line - the
+  # model would then be reading a layout nobody wrote, and a reader
+  # reconstructing the offsets from the prompt would silently lose the first
+  # chunk. The layout below is the layout the model sees.
+  system: |-
+    Du liest ein Anschreiben an einen deutschen Rentenversicherungstraeger und
+    traegst nur solche Angaben zusammen, die woertlich im Text stehen. Du
+    erfindest nichts, du rechnest nichts um und du raetst nicht. Steht eine
+    Angabe nicht im Text, dann fehlt sie. Platzhalter der Form
+    [[PII|ART|TOKEN]] sind gueltige Werte: sie stehen fuer geschwaerzte
+    Angaben und werden woertlich uebernommen. Antworte ausschliesslich mit
+    JSON nach dem vorgegebenen Schema.
+  user: |-
+    Der folgende Text ist in nummerierte Abschnitte zerlegt; vor jedem
+    Abschnitt steht die Zeichenposition seines ersten Zeichens im
+    Gesamttext.
+
+    Gesuchte Angaben:
+    {fields}
+
+    Gib fuer jede gefundene Angabe an: das Feld (field), den Wert (value), das
+    woertliche Zitat aus dem Text (quote) und die Zeichenposition des ersten
+    Zeichens des Zitats im Gesamttext (offset). Das Zitat muss zeichengenau im
+    Text stehen; der Wert muss im Zitat enthalten sein.
+
+    Text:
+    {text}

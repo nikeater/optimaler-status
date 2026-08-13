@@ -1,0 +1,14 @@
+{# The three-phase step indicator. Demo pages only (part 13, ruling 5): the
+   caseworker UI never learns that a tour is running. An ordered list with
+   aria-current, because "which step am I on" is a list position and not a
+   colour. #}
+<nav class="tour-steps" aria-label="Rundgang in drei Phasen">
+  <ol>
+    {% for key, label in view.phases %}
+    <li class="tour-step{% if key == view.phase %} tour-step-current{% endif %}"
+        {% if key == view.phase %}aria-current="step"{% endif %}>
+      {{ label }}{% if key == view.phase %} <span class="sr-only">(aktuelle Phase)</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</nav>

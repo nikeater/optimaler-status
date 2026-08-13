@@ -1,0 +1,37 @@
+{
+  "submissionId": "sf-0012-ohne-auftraggeber",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-29T11:37:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "antrag": {
+      "taetigkeit_bezeichnung": "  Buchhaltung und Lohnabrechnung ",
+      "taetigkeit_beginn": "2026-12-01",
+      "honorar_modell": "nach_stunden",
+      "antragsteller_rolle": "  auftragnehmer  ",
+      "antragsart": "prognose_vor_aufnahme",
+      "arbeitsort": "eigene_betriebsstaette",
+      "weitere_auftraggeber": "ja",
+      "hinweistext": "Antrag wie besprochen online eingereicht."
+    },
+    "antragsteller": {
+      "geburtsdatum": "1969-12-11",
+      "anschrift": {
+        "strasse": "Kirchgasse",
+        "hausnummer": "2",
+        "ort": " Beispielstadt \t",
+        "plz": "24103"
+      },
+      "versicherungsnummer": " \t18111269Q078  "
+    },
+    "meta": {
+      "eingangsdatum": "2026-07-29"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "statusfeststellung"
+}

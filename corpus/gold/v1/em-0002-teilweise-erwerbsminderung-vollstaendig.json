@@ -1,0 +1,36 @@
+{
+  "submissionId": "em-0002-teilweise-erwerbsminderung-vollstaendig",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-29T11:37:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {
+    "meta": {
+      "eingangsdatum": "29.07.2026",
+      "bearbeitungswunsch": "Eine Eingangsbestaetigung waere mir wichtig."
+    },
+    "antragsteller": {
+      "anschrift": {
+        "hausnummer": "2",
+        "plz": "24103",
+        "strasse": "Kirchgasse",
+        "ort": " \tBeispielstadt "
+      },
+      "geburtsdatum": " \t1981-03-08 \t",
+      "versicherungsnummer": "  08038119B047 "
+    },
+    "antrag": {
+      "rentenart": "erwerbsminderungsrente_teilweise",
+      "eintritt_erwerbsminderung": " 2026-01-15 ",
+      "letzte_taetigkeit": "Kraftfahrer im Nahverkehr",
+      "gutachten_status": "liegt_nicht_vor",
+      "hinweistext": "  Antrag wie besprochen online eingereicht.  ",
+      "auslandsbezug": " \tnein "
+    }
+  },
+  "attachments": [],
+  "procedureHint": "erwerbsminderungsrente"
+}

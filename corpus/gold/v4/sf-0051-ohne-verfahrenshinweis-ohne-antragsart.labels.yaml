@@ -1,0 +1,20 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: sf-0051-ohne-verfahrenshinweis-ohne-antragsart
+procedure_id: statusfeststellung
+scenario_kind: hint_missing
+expected_unit_id: Referat_340_Clearingstelle
+expected_tier: 2
+derived_procedure_id: statusfeststellung
+derivation_source: content
+expected_gaps:
+- requirement_id: antragsart
+  status: missing
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: 'Kein Kanalhinweis und keine angekreuzte Antragsart, aber ein benannter Auftraggeber
+  und eine bezeichnete Taetigkeit: die zweite Inhaltssignatur traegt die Ableitung,
+  die fehlende Antragsart bleibt als Luecke.'

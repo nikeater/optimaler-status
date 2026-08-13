@@ -1,0 +1,447 @@
+{
+  "$defs": {
+    "CompletenessEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "procedure_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Procedure Id"
+        },
+        "verdict": {
+          "$ref": "#/$defs/CompletenessVerdict"
+        },
+        "gaps": {
+          "items": {
+            "$ref": "#/$defs/GapItem"
+          },
+          "title": "Gaps",
+          "type": "array"
+        },
+        "requirements_version": {
+          "title": "Requirements Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "procedure_id",
+        "verdict",
+        "requirements_version"
+      ],
+      "title": "CompletenessEvidence",
+      "type": "object"
+    },
+    "CompletenessVerdict": {
+      "enum": [
+        "complete",
+        "incomplete",
+        "not_evaluable"
+      ],
+      "title": "CompletenessVerdict",
+      "type": "string"
+    },
+    "DerivationOutcome": {
+      "additionalProperties": false,
+      "description": "How the procedure was identified (ADR-013/ADR-016).",
+      "properties": {
+        "source": {
+          "$ref": "#/$defs/DerivationSource"
+        },
+        "candidates": {
+          "description": "Procedure ids whose signals fired; 2+ means ambiguity",
+          "items": {
+            "type": "string"
+          },
+          "title": "Candidates",
+          "type": "array"
+        },
+        "detail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Refusal reason (ambiguity, hint contradicted)",
+          "title": "Detail"
+        }
+      },
+      "required": [
+        "source"
+      ],
+      "title": "DerivationOutcome",
+      "type": "object"
+    },
+    "DerivationSource": {
+      "enum": [
+        "hint",
+        "content",
+        "none"
+      ],
+      "title": "DerivationSource",
+      "type": "string"
+    },
+    "GapItem": {
+      "additionalProperties": false,
+      "description": "One requirement that is not satisfied.",
+      "properties": {
+        "requirement_id": {
+          "title": "Requirement Id",
+          "type": "string"
+        },
+        "status": {
+          "$ref": "#/$defs/RequirementStatus"
+        },
+        "span": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Span"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Where the invalid value was found, if any"
+        },
+        "detail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Detail"
+        }
+      },
+      "required": [
+        "requirement_id",
+        "status"
+      ],
+      "title": "GapItem",
+      "type": "object"
+    },
+    "RequirementStatus": {
+      "enum": [
+        "present",
+        "missing",
+        "invalid"
+      ],
+      "title": "RequirementStatus",
+      "type": "string"
+    },
+    "RoutingConflict": {
+      "additionalProperties": false,
+      "description": "Two or more units proposed for one item (ADR-014/ADR-016).",
+      "properties": {
+        "unit_ids": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "Unit Ids",
+          "type": "array"
+        },
+        "resolved_by": {
+          "description": "'priority' when the total order resolved it; 'unresolved' drops the winner's confidence",
+          "title": "Resolved By",
+          "type": "string"
+        },
+        "detail": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Detail"
+        }
+      },
+      "required": [
+        "unit_ids",
+        "resolved_by"
+      ],
+      "title": "RoutingConflict",
+      "type": "object"
+    },
+    "RoutingSource": {
+      "enum": [
+        "rule",
+        "classifier"
+      ],
+      "title": "RoutingSource",
+      "type": "string"
+    },
+    "RoutingSuggestion": {
+      "additionalProperties": false,
+      "description": "One candidate organizational unit with its evidence.",
+      "properties": {
+        "unit_id": {
+          "description": "Taxonomy node id, e.g. 'Referat_312_Renten'",
+          "title": "Unit Id",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$defs/RoutingSource"
+        },
+        "rule_ids": {
+          "description": "Rules that fired (source=RULE)",
+          "items": {
+            "type": "string"
+          },
+          "title": "Rule Ids",
+          "type": "array"
+        },
+        "confidence": {
+          "description": "Calibrated confidence (1.0 for rule hits)",
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "evidence_span": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Span"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Passage supporting the suggestion"
+        }
+      },
+      "required": [
+        "unit_id",
+        "source",
+        "confidence"
+      ],
+      "title": "RoutingSuggestion",
+      "type": "object"
+    },
+    "Span": {
+      "additionalProperties": false,
+      "description": "Half-open character range [start, end) in NORMALIZED text coordinates.\n\nTranslate back to original-document coordinates via the part's OffsetMap.",
+      "properties": {
+        "part_id": {
+          "description": "ContentPart this span belongs to",
+          "title": "Part Id",
+          "type": "string"
+        },
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        },
+        "end": {
+          "minimum": 0,
+          "title": "End",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "part_id",
+        "start",
+        "end"
+      ],
+      "title": "Span",
+      "type": "object"
+    },
+    "VersionStamp": {
+      "additionalProperties": false,
+      "description": "Versions of everything that produced an artifact; journal-stamped.",
+      "properties": {
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "taxonomy_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Taxonomy Version"
+        },
+        "rules_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rules Version"
+        },
+        "decision_table_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Decision Table Version"
+        },
+        "thresholds_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Thresholds Version"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Version"
+        },
+        "model_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Id"
+        },
+        "feature_set_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Feature Set Version"
+        }
+      },
+      "required": [
+        "schema_version"
+      ],
+      "title": "VersionStamp",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Assembled evidence for one envelope, input to the decision table.\n\nAnomaly evidence is deliberately NOT part of this record; it travels as\na separate AnomalyEvidence artifact because the decision-table schema\nmay reference it only in downgrade conditions.",
+  "properties": {
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "versions": {
+      "$ref": "#/$defs/VersionStamp"
+    },
+    "envelope_id": {
+      "title": "Envelope Id",
+      "type": "string"
+    },
+    "case_id": {
+      "title": "Case Id",
+      "type": "string"
+    },
+    "routing": {
+      "items": {
+        "$ref": "#/$defs/RoutingSuggestion"
+      },
+      "title": "Routing",
+      "type": "array"
+    },
+    "derivation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/DerivationOutcome"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Procedure derivation outcome, if evaluated"
+    },
+    "conflicts": {
+      "description": "Routing conflicts; losing candidates survive here, not only in the journal",
+      "items": {
+        "$ref": "#/$defs/RoutingConflict"
+      },
+      "title": "Conflicts",
+      "type": "array"
+    },
+    "completeness": {
+      "$ref": "#/$defs/CompletenessEvidence"
+    },
+    "extraction_min_confidence": {
+      "anyOf": [
+        {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Lowest confidence among used extractions",
+      "title": "Extraction Min Confidence"
+    },
+    "extraction_discarded_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Extraction Discarded Count",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "created_at",
+    "versions",
+    "envelope_id",
+    "case_id",
+    "completeness"
+  ],
+  "title": "EvidenceRecord",
+  "type": "object",
+  "$id": "https://opencode.de/eingangslotse/schemas/v0.1.0/EvidenceRecord.schema.json"
+}

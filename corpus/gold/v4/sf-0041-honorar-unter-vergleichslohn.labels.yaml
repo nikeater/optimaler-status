@@ -1,0 +1,20 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: sf-0041-honorar-unter-vergleichslohn
+procedure_id: statusfeststellung
+scenario_kind: anomalous_rule_passing
+expected_unit_id: Referat_340_Clearingstelle
+expected_tier: 3
+derived_procedure_id: statusfeststellung
+derivation_source: hint
+expected_gaps: []
+anomaly_expected: true
+anomaly_pattern: 'honorar_niedrig_vs_taetigkeit: die Honorarhoehe ist nach BSG 31.03.2017
+  (B 12 R 7/15 R) ein gewichtiges Indiz - liegt sie deutlich unter dem Arbeitsentgelt
+  eines vergleichbar Beschaeftigten, spricht das gegen Selbststaendigkeit. Ein Vergleichslohn
+  ist Marktwissen und steht in keiner Konfiguration; deshalb Scorer, nicht Regel.'
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: 'Tier-No-op wie bei sf-0040: der Vorgang steht bereits auf Tier 3. Die Markierung
+  sagt einem Menschen, welche Zahl im Formular die interessante ist.'

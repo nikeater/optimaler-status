@@ -1,0 +1,20 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: ar-0022-rentenart-nicht-zulaessig
+procedure_id: altersrente
+scenario_kind: invalid_field
+expected_unit_id: Referat_312_Renten
+expected_tier: 2
+derived_procedure_id: altersrente
+derivation_source: hint
+expected_gaps:
+- requirement_id: rentenart
+  status: invalid
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: Als Rentenart ist eine Hinterbliebenenrente angegeben, die dieses Verfahren
+  nicht kennt. Inhaltlich traegt der Rentenbeginn die Verfahrensableitung, sie bestaetigt
+  den Kanalhinweis.

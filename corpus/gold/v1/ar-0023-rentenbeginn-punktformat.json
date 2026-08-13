@@ -1,0 +1,33 @@
+{
+  "submissionId": "ar-0023-rentenbeginn-punktformat",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-06T07:21:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antragsteller": {
+      "versicherungsnummer": "08076018N047",
+      "geburtsdatum": "  1960-07-08  ",
+      "anschrift": {
+        "ort": "Musterstadt",
+        "plz": "10115",
+        "hausnummer": "3",
+        "strasse": "Musterweg"
+      }
+    },
+    "meta": {
+      "eingangsdatum": "2026-08-06"
+    },
+    "antrag": {
+      "auslandsbezug": "nein",
+      "rentenart": "  regelaltersrente \t",
+      "rentenbeginn": "01.11.2026",
+      "hinweistext": "Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir. Ich bin ab kommender Woche im Urlaub."
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

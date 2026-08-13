@@ -1,0 +1,49 @@
+ENTWURF - zur Pruefung und Freigabe durch eine Sachbearbeiterin oder einen
+Sachbearbeiter. Dieses Schreiben ist noch nicht versandt und entfaltet keine
+Rechtswirkung.
+
+ENTWURF EINES BESCHEIDES - KEIN VERWALTUNGSAKT. Dieses Schreiben ist
+maschinell vorbereitet und wird erst dann zu einer Entscheidung, wenn eine
+Sachbearbeiterin oder ein Sachbearbeiter es geprueft, freigegeben und
+abgesandt hat. Bis dahin ist es ein Vorschlag und nichts weiter.
+
+Kirchgasse 2
+24103 Beispielstadt
+
+Vorgang: case-ar-0001-regelaltersrente-vollstaendig
+Versicherungsnummer: 17170459B012
+Geburtsdatum: 1959-04-17
+Eingegangen am: 06.08.2026
+
+Betreff: Ihr Antrag auf Altersrente
+
+Sehr geehrte Damen und Herren,
+
+Ihr Antrag ist vollstaendig. Die Angaben sind widerspruchsfrei, ein
+Auslandsbezug ist nicht ersichtlich, und der Vorgang ist als Klarfall
+vorbereitet worden.
+
+Zugrunde gelegte Angaben aus Ihrem Antrag:
+
+- Geburtsdatum der antragstellenden Person: 1959-04-17
+- Versicherungsnummer: 17170459B012
+- Beantragte Rentenart: regelaltersrente
+- Gewuenschter Rentenbeginn: 2026-11-01
+- Auslandsbezug: nein
+
+Ueber Ihren Antrag wird nach Pruefung durch die zustaendige Stelle
+entschieden. Erst die freigegebene und bekannt gegebene Entscheidung ist
+ein Verwaltungsakt im Sinne des par. 31 SGB X; sie enthaelt dann auch die
+Berechnung und die Rechtsbehelfsbelehrung.
+
+Mit freundlichen Gruessen
+
+Referat 312 - Altersrenten
+
+Dieser Entwurf wurde vollstaendig aus hinterlegten Textbausteinen erzeugt;
+es wurde kein Sprachmodell verwendet.
+
+Interner Vermerk (nicht Bestandteil des Schreibens): vorbereitet als
+Tier-1-Klarfall. Vollautomatische Bekanntgabe findet nicht statt; die
+Freigabe durch einen Menschen ist Voraussetzung (par. 31a SGB X,
+Art. 22 DSGVO, ADR-003).

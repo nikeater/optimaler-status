@@ -1,0 +1,40 @@
+{
+  "submissionId": "sf-0031-statusantrag-mit-rentenangaben",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "antragsteller": {
+      "versicherungsnummer": "  25180763W045 \t",
+      "anschrift": {
+        "plz": " \t04109 \t",
+        "strasse": "Lindenallee",
+        "hausnummer": " \t17a  ",
+        "ort": "Beispielau"
+      },
+      "geburtsdatum": "1963-07-18"
+    },
+    "auftraggeber": {
+      "firmenname": "Ziegler Ingenieurbuero GmbH"
+    },
+    "meta": {
+      "eingangsdatum": "05.08.2026",
+      "bearbeitungswunsch": "Bitte antworten Sie schriftlich, nicht telefonisch."
+    },
+    "antrag": {
+      "antragsart": "feststellung_nach_aufnahme",
+      "taetigkeit_bezeichnung": "Beratung im Bauwesen",
+      "rentenbeginn": " 2029-08-01 ",
+      "rentenart": "regelaltersrente",
+      "taetigkeit_beginn": "2025-04-01",
+      "hinweistext": "Antrag wie besprochen online eingereicht.",
+      "antragsteller_rolle": "auftragnehmer"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "statusfeststellung"
+}

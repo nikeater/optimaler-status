@@ -1,0 +1,34 @@
+{
+  "submissionId": "ar-0002-regelaltersrente-schaltjahr",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-27T08:04:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antragsteller": {
+      "anschrift": {
+        "hausnummer": " \t45 ",
+        "ort": "Musterdorf",
+        "strasse": "Feldstrasse",
+        "plz": "70173"
+      },
+      "geburtsdatum": "1960-02-29",
+      "versicherungsnummer": " \t17290260C043 "
+    },
+    "meta": {
+      "bearbeitungswunsch": "  Eine Eingangsbestaetigung waere mir wichtig.  ",
+      "eingangsdatum": "2026-07-27"
+    },
+    "antrag": {
+      "rentenbeginn": "  2026-09-01 \t",
+      "hinweistext": "Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir.",
+      "auslandsbezug": "nein",
+      "rentenart": " \tregelaltersrente \t"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

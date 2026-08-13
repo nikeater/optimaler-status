@@ -1,0 +1,27 @@
+description: >-
+  Routing is unambiguous but a required field is missing: routable, not
+  clearable. Tier 1 fails on the completeness condition, tier 2 qualifies.
+evidence:
+  routing:
+    - unit_id: Referat_312_Renten
+      source: rule
+      rule_ids: [rule_altersrente_hint]
+      confidence: 1.0
+  completeness:
+    verdict: incomplete
+    gap_ids: [versicherungsnummer]
+  min_confidence: 1.0
+  discarded_count: 1
+flags:
+  procedure_id: altersrente
+  tier1_enabled: true
+  fully_automated: false
+clear_cut: true
+anomaly: null
+scorer_mode: log_only
+expect:
+  tier: 2
+  pre_downgrade_tier: 2
+  routed_unit_id: Referat_312_Renten
+  reason_kinds: [failed, qualified]
+  reason_rule_ids: [tier1_clear_and_complete, tier2_routable_incomplete]

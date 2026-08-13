@@ -1,0 +1,43 @@
+{
+  "submissionId": "ar-0066-email-ohne-auslandsangabe",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "email",
+  "submittedAt": "2026-07-27T08:04:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {},
+  "attachments": [],
+  "bodyText": "Betreff: Antrag auf Regelaltersrente\n\nSehr geehrte Damen und Herren,\n\nich beantrage meine Regelaltersrente zum genannten Zeitpunkt und bitte um eine kurze Bestaetigung.\n\nAbsender: Herr Jonas Musterling\nAnschrift: Lindenallee 17, 04109 Beispielau\nGeburtsdatum: 1962-04-02\nVersicherungsnummer: 19020462P018\nRentenart: regelaltersrente\nRentenbeginn: 2027-05-01\n\nMit freundlichen Gruessen\nHerr Jonas Musterling",
+  "extractionFixture": [
+    {
+      "field": "geburtsdatum",
+      "part_id": "part-text-0",
+      "anchor": "Geburtsdatum:",
+      "mode": "sealed"
+    },
+    {
+      "field": "versicherungsnummer",
+      "part_id": "part-text-0",
+      "anchor": "Versicherungsnummer:",
+      "mode": "sealed"
+    },
+    {
+      "field": "rentenart",
+      "part_id": "part-text-0",
+      "anchor": "Rentenart:",
+      "mode": "literal",
+      "value": "regelaltersrente",
+      "quote": "Rentenart: regelaltersrente"
+    },
+    {
+      "field": "rentenbeginn",
+      "part_id": "part-text-0",
+      "anchor": "Rentenbeginn:",
+      "mode": "literal",
+      "value": "2027-05-01",
+      "quote": "Rentenbeginn: 2027-05-01"
+    }
+  ]
+}

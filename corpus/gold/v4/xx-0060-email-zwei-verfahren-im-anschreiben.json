@@ -1,0 +1,14 @@
+{
+  "submissionId": "xx-0060-email-zwei-verfahren-im-anschreiben",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "email",
+  "submittedAt": "2026-08-06T07:21:00+00:00",
+  "serviceType": {
+    "name": "Allgemeines Anliegen",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000009"
+  },
+  "data": {},
+  "attachments": [],
+  "bodyText": "Betreff: Antrag auf Rente\n\nSehr geehrte Damen und Herren,\n\nich beantrage in erster Linie eine Altersrente, hilfsweise eine Erwerbsminderungsrente, falls die erste nicht moeglich ist.\n\nAbsender: Herr Jonas Musterling\nAnschrift: Feldstrasse 45, 70173 Musterdorf\n\nMit freundlichen Gruessen\nHerr Jonas Musterling",
+  "extractionFixture": []
+}

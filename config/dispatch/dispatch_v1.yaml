@@ -1,0 +1,58 @@
+# Dispatch settings (config/dispatch/), part 10.
+#
+# What happens at the ONE moment a caseworker confirms a prepared letter: the
+# dispatch date is journaled, the absolute response deadline is computed from it
+# (engine/draft/bekanntgabe.py), and an xdomea-SHAPED export stub is written to
+# $EINGANGSLOTSE_DISPATCH_DIR for a pilot adapter to pick up.
+#
+# A NEW, independently versioned file rather than an edit to an existing one:
+# `config/thresholds.yaml`, `config/rules/`, `config/taxonomy/` and
+# `config/decision/` have their versions frozen into corpus/gold/v4/MANIFEST.yaml,
+# and the corpus check proves the gold set rebuilds byte-identically from them.
+# Adding a key there would break that gate for a setting the gold set has never
+# heard of. Same lesson as config/review/, config/drafting/ and config/scoring/.
+#
+# READ THIS BEFORE TRUSTING THE HOLIDAY LIST BELOW.
+#
+#   German public holidays are LAND-SPECIFIC. Fronleichnam, Reformationstag,
+#   Mariae Himmelfahrt and Weltkindertag apply in some Laender and not in
+#   others, and which set applies to a given letter depends on the place of
+#   service - Verwaltungswissen this repository cannot cite. `holidays` is
+#   therefore EMPTY, and empty is a deliberate, documented state and not an
+#   oversight: par. 26 Abs. 3 SGB X still shifts every Saturday and Sunday, so
+#   an unfilled list computes a deadline that is correct except where a holiday
+#   would have pushed it one or two working days further out.
+#
+#   Filling it is a FACHBEREICH decision, not an engineering one. The deployment
+#   supplies the Land and its holiday dates; a table invented here would compute
+#   a wrong deadline confidently, which is the worse failure by a wide margin.
+#
+#   `land` is a marked placeholder for the same reason. It is printed on the
+#   review UI's confirm dialog next to the computed deadline, so nobody can
+#   confirm a Nachforderung without seeing which calendar produced its date.
+version: dispatch_v1
+
+land: "[Platzhalter Behoerde: Bundesland des Zustellorts]"
+land_note: >-
+  Nicht belegt. Das Bundesland bestimmt den Feiertagssatz und damit die
+  Fristberechnung nach par. 26 Abs. 3 SGB X. Die Festlegung trifft der
+  Fachbereich der einsetzenden Behoerde, nicht dieses Repository.
+
+# Public holidays at the place of service, as ISO dates. Empty on purpose; see
+# the header. Every entry a deployment adds moves a deadline that lands on it to
+# the next Werktag, exactly like a weekend.
+holidays: []
+
+# What the exported stub claims to be. xdomea is the German records-management
+# exchange standard; this is a SHAPE, not a conformant message, and the file
+# says so in its own first element so nobody can mistake it for one.
+export:
+  format_id: xdomea_shaped_stub_v0
+  note: >-
+    Platzhalter fuer den Pilot-Adapter. Die Datei ist an xdomea 3.x angelehnt
+    (Vorgang, Dokument, Nachrichtenkopf), aber NICHT konform: kein
+    XOEV-Namensraum, keine Schemavalidierung, keine Signatur. Ein echter
+    Adapter ersetzt engine/dispatch/xdomea.py, nicht die Aufrufstelle.
+  # The one thing an export may never carry beyond the addressee it is
+  # addressed to. Asserted in tests rather than trusted to review.
+  omit_caseworker_identity: true

@@ -1,0 +1,29 @@
+# Everything the image does not run. The build context is deliberately small:
+# .venv alone is larger than the whole image, and copying it in would also
+# import a Windows venv into a Linux container.
+.venv/
+.git/
+.github/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+__pycache__/
+*.pyc
+*.egg-info/
+.coverage
+coverage.xml
+htmlcov/
+.env
+
+# Built inside the image by `python -m eval.run` (see Dockerfile), never copied
+# in: a report from a developer machine in a published image would be a number
+# nobody can reproduce.
+eval/reports/
+
+# Tests are not shipped. The gate runs in CI and in the dev venv; an image that
+# carried its own tests would invite someone to believe running them there
+# proved something about the deployment.
+tests/
+docs/
+deploy/README.md

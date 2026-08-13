@@ -1,0 +1,32 @@
+{
+  "submissionId": "ar-0012-ohne-geburtsdatum",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antrag": {
+      "auslandsbezug": "nein",
+      "rentenart": "regelaltersrente",
+      "hinweistext": "Antrag wie besprochen online eingereicht. Bitte antworten Sie schriftlich, nicht telefonisch.",
+      "rentenbeginn": "2027-02-01"
+    },
+    "meta": {
+      "eingangsdatum": "05.08.2026"
+    },
+    "antragsteller": {
+      "anschrift": {
+        "plz": "04109",
+        "ort": " Beispielau ",
+        "strasse": "Lindenallee",
+        "hausnummer": "17a"
+      },
+      "versicherungsnummer": "17220760H054"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

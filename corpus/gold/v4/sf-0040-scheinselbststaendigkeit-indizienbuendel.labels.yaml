@@ -1,0 +1,24 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: sf-0040-scheinselbststaendigkeit-indizienbuendel
+procedure_id: statusfeststellung
+scenario_kind: anomalous_rule_passing
+expected_unit_id: Referat_340_Clearingstelle
+expected_tier: 3
+derived_procedure_id: statusfeststellung
+derivation_source: hint
+expected_gaps: []
+anomaly_expected: true
+anomaly_pattern: 'scheinselbststaendigkeit_indizienbuendel: alleiniger Auftraggeber,
+  100 Prozent Umsatzanteil, Arbeitsort beim Auftraggeber, festes Monatshonorar und
+  Eingliederung in die Arbeitsorganisation treten gemeinsam auf. Das Buendel ist die
+  Auffaelligkeit, nicht das einzelne Merkmal.'
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: 'Die Verwaltungspraxis arbeitet mit einer Faustregel um die Fuenf-Sechstel-Grenze
+  des Umsatzes bei einem Auftraggeber. Sie ist bewusst NICHT als Regel codiert: es
+  ist Verwaltungswissen, das dieses Repository nicht belegen kann, und eine erfundene
+  Schwelle waere schlechter als keine. Der Scorer aus Teil 06 darf sie lernen, das
+  Regelwerk erfindet sie nicht. Der Downgrade waere hier ohnehin ein Tier-No-op -
+  der Vorgang steht schon auf Tier 3; der Wert liegt in der Markierung im Journal.'

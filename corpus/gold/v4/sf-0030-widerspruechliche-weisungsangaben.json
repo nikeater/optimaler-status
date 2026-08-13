@@ -1,0 +1,45 @@
+{
+  "submissionId": "sf-0030-widerspruechliche-weisungsangaben",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-29T11:37:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "antragsteller": {
+      "geburtsdatum": "1976-01-09",
+      "anschrift": {
+        "strasse": "Kirchgasse",
+        "hausnummer": "2",
+        "ort": "  Beispielstadt  ",
+        "plz": "24103"
+      },
+      "versicherungsnummer": " 24090176V034  "
+    },
+    "antrag": {
+      "hinweistext": "Sehr geehrte Damen und Herren, hiermit reiche ich den beigefuegten Antrag ein und bitte um Bearbeitung. Fuer Rueckfragen stehe ich Ihnen zur Verfuegung.",
+      "eingliederung_arbeitsorganisation": "ja",
+      "umsatzanteil_hauptauftraggeber": "100",
+      "honorar_modell": "fest_monatlich",
+      "weitere_auftraggeber": "nein",
+      "antragsart": " feststellung_nach_aufnahme \t",
+      "antragsteller_rolle": " \tauftragnehmer  ",
+      "rahmenvertrag": "ja",
+      "weisungsgebunden": "nein",
+      "arbeitsort": " beim_auftraggeber \t",
+      "taetigkeit_beginn": "  2025-10-01 ",
+      "taetigkeit_bezeichnung": "Kundenbetreuung im Innendienst"
+    },
+    "meta": {
+      "eingangsdatum": " 29. Juli 2026 "
+    },
+    "auftraggeber": {
+      "betriebsnummer": " 22334455 \t",
+      "firmenname": " \tAlsterfeld Versicherungsmakler GmbH \t"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "statusfeststellung"
+}

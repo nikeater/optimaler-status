@@ -1,0 +1,42 @@
+{
+  "submissionId": "sf-0022-antragsart-gruppenfeststellung",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-03T09:12:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "meta": {
+      "bearbeitungswunsch": "Eine Eingangsbestaetigung waere mir wichtig.",
+      "eingangsdatum": "2026-08-03"
+    },
+    "antragsteller": {
+      "geburtsdatum": "1986-10-27",
+      "versicherungsnummer": "  23271086U023  ",
+      "anschrift": {
+        "plz": "24103",
+        "strasse": "  Kirchgasse ",
+        "ort": "Beispielstadt",
+        "hausnummer": "  2  "
+      }
+    },
+    "antrag": {
+      "weitere_auftraggeber": "  nein \t",
+      "antragsteller_rolle": "auftraggeber",
+      "hinweistext": "Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir.",
+      "antragsart": "  gruppenfeststellung  ",
+      "honorar_modell": "  nach_ergebnis ",
+      "taetigkeit_beginn": "2026-05-04",
+      "arbeitsort": "wechselnd",
+      "taetigkeit_bezeichnung": "Zustellung von Paketsendungen"
+    },
+    "auftraggeber": {
+      "betriebsnummer": "  01234567 ",
+      "firmenname": "Paketpartner Nordwest GmbH"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "statusfeststellung"
+}

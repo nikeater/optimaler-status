@@ -1,0 +1,185 @@
+/* The guided showcase (part 13), on top of metrics.css and review.css.
+   Plain CSS, no framework, no build step - the part-10 deviation, unchanged.
+
+   THE ONE THING THIS FILE ADDS THAT THE OTHERS DO NOT: reflow. The caseworker
+   UI's 1.4.10 row has been open since part 10 because its wide tables scroll
+   sideways on a narrow viewport. These pages are for a citizen on a phone, so
+   they are built to work at 320 CSS px and the rules that make that true are
+   here rather than in a media query nobody reads:
+
+   * every wide table lives inside `.scroll-x`, which scrolls ITSELF rather
+     than the page - the body never scrolls horizontally;
+   * `dl` drops from two columns to one below 40rem, because a definition list
+     with a `max-content` first column is exactly what overflows at 320px;
+   * the side-by-side becomes stacked below 52rem;
+   * every input and textarea is `width: 100%` with `box-sizing: border-box`,
+     so a field cannot be wider than its own form.
+
+   The accessibility rules of review.css apply unchanged and are not repeated:
+   no state is carried by colour alone, focus is never removed, nothing depends
+   on hover. */
+
+/* ---------------------------------------------------------- step indicator */
+
+.tour-steps ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0.75rem 0;
+  padding: 0;
+  counter-reset: none;
+}
+
+.tour-step {
+  border: 1px solid var(--line);
+  padding: 0.3rem 0.6rem;
+  background: #f5f7f8;
+  color: var(--muted);
+}
+
+/* The current step is bordered AND named: `aria-current="step"` plus the
+   offscreen "(aktuelle Phase)" carry the meaning, the weight only repeats it. */
+.tour-step-current {
+  border-color: var(--ink);
+  border-left-width: 4px;
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------ intake page */
+
+.tabs {
+  margin: 0.5rem 0 0.75rem;
+}
+
+.tab-current {
+  border-bottom: 3px solid var(--ink);
+  padding-bottom: 0.2rem;
+}
+
+.persona-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.persona {
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  padding: 0.5rem 0.9rem 0.9rem;
+  margin: 0.75rem 0;
+}
+
+.persona h3 {
+  margin-top: 0.6rem;
+}
+
+.persona-current {
+  border-left-color: var(--ink);
+  background: #f5f7f8;
+}
+
+.hints dt {
+  margin-top: 0.5rem;
+}
+
+textarea {
+  font: inherit;
+  font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem;
+  border: 1px solid var(--muted);
+  background: var(--surface);
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+.field input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ---------------------------------------------------------- pipeline page */
+
+.stage {
+  border-top: 1px solid var(--line);
+  padding-top: 0.5rem;
+}
+
+/* A placeholder token is monospaced and boxed so it reads as a MACHINE token
+   rather than as text somebody wrote. `mark` keeps its own semantics; the
+   border is what survives a monochrome display. */
+.placeholder {
+  border: 1px solid var(--muted);
+  background: #eef1f3;
+  padding: 0 0.2rem;
+  font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+  word-break: break-all;
+}
+
+.side-by-side {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.side-by-side > div {
+  flex: 1 1 22rem;
+  min-width: 0;
+}
+
+.side-by-side h4 {
+  margin-bottom: 0.35rem;
+}
+
+.handover {
+  border: 2px solid var(--ink);
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+}
+
+/* The queue row a visitor was handed to. Display only: the marker is the word
+   "Ihr Vorgang" in the row, this only repeats it (review_queue.html). */
+.tour-row th,
+.tour-row td {
+  background: #f1f7f3;
+  border-top-width: 2px;
+  border-bottom-width: 2px;
+}
+
+/* ------------------------------------------------------------- the reflow */
+
+/* Wide content scrolls INSIDE its own box. The page body never scrolls
+   sideways, which is the half of 1.4.10 that a `max-width` alone does not
+   give you. */
+.scroll-x {
+  overflow-x: auto;
+}
+
+pre {
+  overflow-x: auto;
+}
+
+@media (max-width: 40rem) {
+  /* metrics.css sets `grid-template-columns: max-content 1fr`, which is the
+     one rule on these pages that cannot hold at 320px: a term like
+     "Versicherungsnummer" claims the width and the value has nowhere to go. */
+  dl {
+    grid-template-columns: 1fr;
+  }
+
+  dd {
+    margin-bottom: 0.5rem;
+  }
+
+  .navbar {
+    gap: 0.5rem;
+  }
+
+  .tour-steps ol {
+    flex-direction: column;
+  }
+}

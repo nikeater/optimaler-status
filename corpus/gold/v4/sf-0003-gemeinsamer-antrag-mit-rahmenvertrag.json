@@ -1,0 +1,45 @@
+{
+  "submissionId": "sf-0003-gemeinsamer-antrag-mit-rahmenvertrag",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-06T07:21:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "meta": {
+      "eingangsdatum": "6. August 2026"
+    },
+    "auftraggeber": {
+      "firmenname": "Hansen Maschinenbau GmbH und Co. KG",
+      "betriebsnummer": " \t34567890 \t"
+    },
+    "antragsteller": {
+      "geburtsdatum": "  1978-11-05 ",
+      "versicherungsnummer": "15051178M045",
+      "anschrift": {
+        "hausnummer": "2",
+        "plz": "24103",
+        "ort": "Beispielstadt",
+        "strasse": "  Kirchgasse \t"
+      }
+    },
+    "antrag": {
+      "taetigkeit_beginn": "2025-09-01",
+      "antragsart": "feststellung_nach_aufnahme",
+      "eingliederung_arbeitsorganisation": "nein",
+      "antragsteller_rolle": "gemeinsam",
+      "rahmenvertrag": "ja",
+      "weisungsgebunden": "nein",
+      "umsatzanteil_hauptauftraggeber": "  60 \t",
+      "taetigkeit_bezeichnung": " Technische Redaktion und Dokumentation  ",
+      "honorar_modell": " nach_stunden ",
+      "weitere_auftraggeber": "  ja ",
+      "arbeitsort": " \twechselnd ",
+      "hinweistext": "  Hallo, ich schicke Ihnen hier meinen Antrag. Ich hoffe, so ist alles richtig ausgefuellt. Bitte antworten Sie schriftlich, nicht telefonisch. Vielen Dank vorab.  "
+    }
+  },
+  "attachments": [],
+  "procedureHint": "statusfeststellung"
+}

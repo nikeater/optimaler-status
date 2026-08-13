@@ -1,0 +1,65 @@
+{
+  "submissionId": "sf-0062-scan-auftraggeber-und-taetigkeit",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "scan",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {},
+  "attachments": [],
+  "bodyText": "Betreff: Anfrage zu cinem geplanten Auftragsverhaeltnis\n\nSehr geehrte Damen und Herren,\n\nwir moechten vor Aufnahme der Zusammenarbeit geklaert wissen, wie das unten beschriebene Verhaeltnis sozialversicherungsrechtlich einzuordnen ist.\n\nAbsender: Frau Halina Probstfeld\nAnschrift: Am Hang 8, 99084 Musterhausen\nGeburtsdatum: 1985-11-27\nVersicherungsnummer: 13271185V052\nAntragsart: prognose_vor_aufnahrne\nRolle im Auftragsverhaeltnis: gemeinsam\nTaetigkeit: Pflegehilfe irn Nachtdienst\nTaetigkeit seit: 2026-05-01\nAuftraggeber: Musterpflege Nordwest GmbH\n\nMit freundlichen Gruessen\nFrau Halina Probstfeld",
+  "extractionFixture": [
+    {
+      "field": "geburtsdatum",
+      "part_id": "part-text-0",
+      "anchor": "Geburtsdatum:",
+      "mode": "sealed"
+    },
+    {
+      "field": "versicherungsnummer",
+      "part_id": "part-text-0",
+      "anchor": "Versicherungsnummer:",
+      "mode": "sealed"
+    },
+    {
+      "field": "antragsart",
+      "part_id": "part-text-0",
+      "anchor": "Antragsart:",
+      "mode": "literal",
+      "value": "prognose_vor_aufnahme",
+      "quote": "Antragsart: prognose_vor_aufnahme"
+    },
+    {
+      "field": "antragsteller_rolle",
+      "part_id": "part-text-0",
+      "anchor": "Rolle im Auftragsverhaeltnis:",
+      "mode": "literal",
+      "value": "gemeinsam",
+      "quote": "Rolle im Auftragsverhaeltnis: gemeinsam"
+    },
+    {
+      "field": "taetigkeit_bezeichnung",
+      "part_id": "part-text-0",
+      "anchor": "Taetigkeit:",
+      "mode": "literal",
+      "value": "Pflegehilfe im Nachtdienst",
+      "quote": "Taetigkeit: Pflegehilfe im Nachtdienst"
+    },
+    {
+      "field": "taetigkeit_beginn",
+      "part_id": "part-text-0",
+      "anchor": "Taetigkeit seit:",
+      "mode": "literal",
+      "value": "2026-05-01",
+      "quote": "Taetigkeit seit: 2026-05-01"
+    },
+    {
+      "field": "auftraggeber_name",
+      "part_id": "part-text-0",
+      "anchor": "Auftraggeber:",
+      "mode": "sealed"
+    }
+  ]
+}

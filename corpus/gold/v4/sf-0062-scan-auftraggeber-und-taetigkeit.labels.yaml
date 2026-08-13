@@ -1,0 +1,18 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: sf-0062-scan-auftraggeber-und-taetigkeit
+procedure_id: statusfeststellung
+scenario_kind: complete_clear
+expected_unit_id: Referat_340_Clearingstelle
+expected_tier: 3
+derived_procedure_id: statusfeststellung
+derivation_source: content
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: none
+known_divergence: []
+divergence_reason: null
+notes: 'Die zweite Signatur des Verfahrens, im Freitext: kein anderes konfiguriertes
+  Verfahren kennt einen Auftraggeber, deshalb traegt die Kombination auch ohne das
+  Wort Statusfeststellung.'

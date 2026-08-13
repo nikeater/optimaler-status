@@ -1,0 +1,23 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: sf-0032-prognose-mit-beginn-in-der-vergangenheit
+procedure_id: statusfeststellung
+scenario_kind: ambiguous_conflicting
+expected_unit_id: Referat_340_Clearingstelle
+expected_tier: 3
+derived_procedure_id: statusfeststellung
+derivation_source: hint
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: 'Kein Feld ist falsch, die Kombination ist es. Es gibt hier bewusst keine taktgebundene
+  Kreuzpruefung "Prognose setzt einen Beginn in der Zukunft voraus": jede solche Regel
+  muesste gegen die Uhr pruefen, und die Vollstaendigkeitspruefung liest keine Uhr
+  - sonst begaenne ein eingefrorener Goldsatz an einem Dienstag zu scheitern. Fachlich
+  deutet die DRV einen unmoeglich gewordenen Prognoseantrag in einen Antrag nach Aufnahme
+  um; eine Umdeutung ist eine rechtliche Wertung, die kein Regelwerk vornehmen darf.
+  Eine uhrfreie Kreuzpruefungsart (etwa "Antragsart passt zur Lage des Datums relativ
+  zum Eingangsdatum") waere eine Contract-Anfrage, keine stille Erfindung.'

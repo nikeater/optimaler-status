@@ -1,0 +1,20 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: em-0040-eintritt-vor-jahrzehnten
+procedure_id: erwerbsminderungsrente
+scenario_kind: anomalous_rule_passing
+expected_unit_id: Referat_316_Erwerbsminderungsrenten
+expected_tier: 3
+derived_procedure_id: erwerbsminderungsrente
+derivation_source: hint
+expected_gaps: []
+anomaly_expected: true
+anomaly_pattern: 'eintritt_alter: Eintritt der Erwerbsminderung wenige Wochen nach
+  dem 14. Geburtstag, bei gleichzeitig angegebener Erwerbstaetigkeit. Knapp innerhalb
+  der Regelgrenze, weit ausserhalb der Verteilung - genau die Zone, fuer die es einen
+  Scorer gibt.'
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: Vollstaendiger Antrag, in dem der Eintritt der Erwerbsminderung 32 Jahre zurueckliegt
+  und die antragstellende Person damals 14 Jahre alt war.

@@ -1,0 +1,41 @@
+description: >-
+  A COMPLETE Statusfeststellungsantrag, routed with full confidence, and it
+  still ends at tier 3. The tier-1 row fails on procedure.tier1_enabled (and on
+  procedure.clear_cut, which is false because the procedure ships no clear_cut
+  block at all); the tier-2 row fails because the verdict is complete, not
+  incomplete. No row matches, so the table default applies and the record says
+  DEFAULTED. That is the intended shape for a par. 7a Abs. 2 S. 1 SGB IV
+  Gesamtwuerdigung, not a gap in the table - and this file is the regression
+  test that stops anyone from "fixing" it.
+evidence:
+  routing:
+    - unit_id: Referat_340_Clearingstelle
+      source: rule
+      rule_ids:
+        - rule_statusfeststellung_antragsart
+        - rule_statusfeststellung_auftraggeber
+        - rule_statusfeststellung_hint
+      confidence: 1.0
+  completeness:
+    procedure_id: statusfeststellung
+    verdict: complete
+    gap_ids: []
+    requirements_version: statusfeststellung_requirements_v1
+  min_confidence: 1.0
+  discarded_count: 0
+flags:
+  procedure_id: statusfeststellung
+  tier1_enabled: false
+  fully_automated: false
+clear_cut: false
+anomaly: null
+scorer_mode: log_only
+expect:
+  tier: 3
+  pre_downgrade_tier: 3
+  routed_unit_id: Referat_340_Clearingstelle
+  reason_kinds: [failed, failed, defaulted]
+  reason_rule_ids:
+    - tier1_clear_and_complete
+    - tier2_routable_incomplete
+    - default

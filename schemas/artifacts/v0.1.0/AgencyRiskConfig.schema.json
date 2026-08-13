@@ -1,0 +1,126 @@
+{
+  "$defs": {
+    "AnomalyThreshold": {
+      "additionalProperties": false,
+      "properties": {
+        "threshold_id": {
+          "title": "Threshold Id",
+          "type": "string"
+        },
+        "value": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Value",
+          "type": "number"
+        },
+        "calibrated_on": {
+          "description": "Gold-set version used to calibrate",
+          "title": "Calibrated On",
+          "type": "string"
+        }
+      },
+      "required": [
+        "threshold_id",
+        "value",
+        "calibrated_on"
+      ],
+      "title": "AnomalyThreshold",
+      "type": "object"
+    },
+    "ProcedureFlags": {
+      "additionalProperties": false,
+      "description": "Per-procedure legal/config gates (config/procedures/).",
+      "properties": {
+        "procedure_id": {
+          "title": "Procedure Id",
+          "type": "string"
+        },
+        "tier1_enabled": {
+          "description": "May tier 1 be produced at all; requires an identified legal basis (par. 35a VwVfG / par. 31a SGB X mapping)",
+          "title": "Tier1 Enabled",
+          "type": "boolean"
+        },
+        "fully_automated": {
+          "default": false,
+          "description": "Reserved: flipping prepared-plus-confirm to automated issuance is a config change once the legal basis exists. Always False in phase 1.",
+          "title": "Fully Automated",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "procedure_id",
+        "tier1_enabled"
+      ],
+      "title": "ProcedureFlags",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Versioned, agency-editable risk configuration (config/thresholds.yaml\n+ config/decision/). Referenced by version from every DecisionRecord.",
+  "properties": {
+    "version": {
+      "title": "Version",
+      "type": "string"
+    },
+    "scorer_mode": {
+      "default": "log_only",
+      "enum": [
+        "log_only",
+        "enforcing"
+      ],
+      "title": "Scorer Mode",
+      "type": "string"
+    },
+    "thresholds": {
+      "items": {
+        "$ref": "#/$defs/AnomalyThreshold"
+      },
+      "minItems": 1,
+      "title": "Thresholds",
+      "type": "array"
+    },
+    "downgrade_rate_budget": {
+      "description": "Efficiency budget: max share of tier-1-eligible items the scorer may downgrade before it must return to log-only",
+      "exclusiveMinimum": 0.0,
+      "maximum": 1.0,
+      "title": "Downgrade Rate Budget",
+      "type": "number"
+    },
+    "audit_sample_rate": {
+      "default": 0.0,
+      "description": "Par. 88(5) Nr. 1 AO analog: share of tier-1/2 items deterministically sampled (salted case-id hash, reproducible) into full human review, journal-tagged audit_sample. Sampling only adds review, never removes it (valve-compatible). Engine support lands with part 09 (ADR-016).",
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Audit Sample Rate",
+      "type": "number"
+    },
+    "review_due": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "ISO date by which thresholds and downgrade conditions must be re-reviewed (par. 88(5) Nr. 4 AO analog); the eval harness warns when overdue (ADR-016)",
+      "title": "Review Due"
+    },
+    "procedures": {
+      "items": {
+        "$ref": "#/$defs/ProcedureFlags"
+      },
+      "title": "Procedures",
+      "type": "array"
+    }
+  },
+  "required": [
+    "version",
+    "thresholds",
+    "downgrade_rate_budget"
+  ],
+  "title": "AgencyRiskConfig",
+  "type": "object",
+  "$id": "https://opencode.de/eingangslotse/schemas/v0.1.0/AgencyRiskConfig.schema.json"
+}

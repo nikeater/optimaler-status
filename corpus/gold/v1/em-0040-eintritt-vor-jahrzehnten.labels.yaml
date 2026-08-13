@@ -1,0 +1,16 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: em-0040-eintritt-vor-jahrzehnten
+procedure_id: erwerbsminderungsrente
+scenario_kind: anomalous_rule_passing
+expected_unit_id: Referat_316_Erwerbsminderungsrenten
+expected_tier: 3
+expected_gaps: []
+anomaly_expected: true
+anomaly_pattern: 'eintritt_alter: Eintritt der Erwerbsminderung im Alter von 15 Jahren,
+  bei gleichzeitig angegebener Erwerbstaetigkeit. Jede Angabe fuer sich ist formatgueltig.'
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: Vollstaendiger Antrag, in dem der Eintritt der Erwerbsminderung 32 Jahre zurueckliegt
+  und die antragstellende Person damals 15 Jahre alt war.

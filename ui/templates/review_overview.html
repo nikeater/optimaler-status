@@ -1,0 +1,131 @@
+{% extends "review_base.html" %}
+{% block title %}EingangsLotse - Warteschlangen{% endblock %}
+{% block heading %}Warteschlangen{% endblock %}
+{% block content %}
+<section aria-labelledby="queues-heading">
+  <h2 id="queues-heading">Offene Vorgaenge je Einheit</h2>
+  <p>
+    {{ view.open_items }} offene(r) Vorgang/Vorgaenge, Stand
+    {{ view.now.isoformat() }}. Ein Vorgang ist offen, solange ihn kein Mensch
+    bestaetigt hat; eine Korrektur schliesst ihn nicht, sie verschiebt ihn.
+  </p>
+  <table>
+    <caption>Warteschlangen. Die Zentrale Klaerung wird immer angezeigt, auch leer.</caption>
+    <thead>
+      <tr>
+        <th scope="col">Einheit</th>
+        <th scope="col">Offen</th>
+        <th scope="col">Aeltester Vorgang</th>
+        <th scope="col">Ueber Latenzbudget</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for queue in view.queues %}
+      <tr>
+        <th scope="row">
+          <a href="/review/queue/{{ queue.queue_id }}{% if view.unit_id %}?unit={{ view.unit_id }}{% endif %}">{{ queue.label }}</a>
+          {% if queue.clearing %}
+          <span class="tag">par. 16 Abs. 2 SGB I</span>
+          {% endif %}
+        </th>
+        <td>{{ queue.count }}</td>
+        <td>{{ queue.oldest_label }}</td>
+        <td>
+          {{ queue.over_budget }}
+          {% if queue.over_budget %}
+          <span class="sr-only">Vorgaenge ueber dem betrieblichen Zielwert</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4">Keine offenen Vorgaenge.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section aria-labelledby="backlog-heading">
+  <h2 id="backlog-heading">Ausnahmepfad je Tier (P-10)</h2>
+  <p>
+    Alter des aeltesten offenen Vorgangs je Tier, gegen den betrieblichen
+    Zielwert aus <code>config/queues/queues_v1.yaml</code>. Zielwerte, keine
+    Rechtsfristen: nichts davon bewegt einen Vorgang oder bricht einen Build.
+  </p>
+  <table>
+    <caption>Rueckstand je Tier</caption>
+    <thead>
+      <tr>
+        <th scope="col">Tier</th>
+        <th scope="col">Offen</th>
+        <th scope="col">Aeltester (Std.)</th>
+        <th scope="col">Zielwert (Std.)</th>
+        <th scope="col">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in view.metrics.backlog %}
+      <tr>
+        <th scope="row">{{ row.tier }}</th>
+        <td>{{ row.open_items }}</td>
+        <td>{{ "%.1f"|format(row.oldest_hours) if row.oldest_hours is not none else "-" }}</td>
+        <td>{{ row.budget_hours if row.budget_hours is not none else "-" }}</td>
+        <td>{% if row.over_budget %}ueber Zielwert{% else %}im Zielwert{% endif %}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5">Kein offener Vorgang.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section aria-labelledby="p6-heading">
+  <h2 id="p6-heading">Bearbeitungsqualitaet je Einheit (P-6)</h2>
+  <p>
+    Zwei Zahlen, die zusammen etwas ueber die Pruefungstiefe sagen: der Anteil
+    der Bestaetigungen ohne Aenderung am Entwurf, und die Liegezeit von der
+    Entscheidung bis zur Bestaetigung. Eine hohe Quote ohne Aenderung ist kein
+    Beweis fuer Durchwinken - die meisten Entwuerfe sollen richtig sein - aber
+    eine Quote nahe 1,000 bei gleichzeitig verschwindender Korrekturquote ist
+    das Muster, das die Aufarbeitungen von Robodebt und der toeslagenaffaire
+    beschreiben.
+  </p>
+  <table>
+    <caption>Kennzahlen je Organisationseinheit; keine personenbezogene Auswertung</caption>
+    <thead>
+      <tr>
+        <th scope="col">Einheit</th>
+        <th scope="col">Bestaetigt</th>
+        <th scope="col">Ohne Aenderung</th>
+        <th scope="col">Korrekturen</th>
+        <th scope="col">Korrekturquote</th>
+        <th scope="col">Liegezeit Median</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for unit in view.metrics.units %}
+      <tr>
+        <th scope="row">{{ unit.unit_id }}</th>
+        <td>{{ unit.confirmed }}</td>
+        <td>
+          {% if unit.confirm_without_edit_rate is none %}
+          {{ unit.confirmed_without_edit }} <span class="muted">(Quote: zu wenige Vorgaenge)</span>
+          {% else %}
+          {{ "%.3f"|format(unit.confirm_without_edit_rate) }}
+          {% endif %}
+        </td>
+        <td>{{ unit.overridden }}</td>
+        <td>{{ "%.3f"|format(unit.override_rate) if unit.override_rate is not none else "-" }}</td>
+        <td>{{ "%.0f s"|format(unit.median_seconds_to_confirm) if unit.median_seconds_to_confirm is not none else "-" }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6">Noch keine Bestaetigung und keine Korrektur.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <ul>
+    {% for note in view.metrics.notes %}
+    <li>{{ note }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endblock %}

@@ -1,0 +1,33 @@
+{
+  "submissionId": "ar-0003-regelaltersrente-jahreswechsel",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-29T11:37:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antragsteller": {
+      "versicherungsnummer": "18051261A021",
+      "anschrift": {
+        "ort": "Musterhausen",
+        "hausnummer": "8",
+        "plz": "99084",
+        "strasse": "  Am Hang "
+      },
+      "geburtsdatum": "1961-12-05"
+    },
+    "antrag": {
+      "rentenart": "regelaltersrente",
+      "auslandsbezug": "nein",
+      "hinweistext": "Hallo, ich schicke Ihnen hier meinen Antrag. Ich hoffe, so ist alles richtig ausgefuellt. Vielen Dank vorab.",
+      "rentenbeginn": "2027-01-01"
+    },
+    "meta": {
+      "eingangsdatum": " \t2026-07-29  "
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

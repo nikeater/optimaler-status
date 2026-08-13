@@ -1,0 +1,31 @@
+{
+  "submissionId": "xx-0001-grundsicherung-anfrage",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-03T09:12:00+00:00",
+  "serviceType": {
+    "name": "Allgemeines Anliegen",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000009"
+  },
+  "data": {
+    "meta": {
+      "bearbeitungswunsch": "Bitte antworten Sie schriftlich, nicht telefonisch.",
+      "eingangsdatum": "3. August 2026"
+    },
+    "antragsteller": {
+      "versicherungsnummer": "17080355P027",
+      "anschrift": {
+        "ort": " \tMusterdorf \t",
+        "plz": "70173",
+        "hausnummer": "45",
+        "strasse": " \tFeldstrasse  "
+      },
+      "geburtsdatum": "1955-03-08"
+    },
+    "antrag": {
+      "hinweistext": "Hallo, ich schicke Ihnen hier meinen Antrag. Ich hoffe, so ist alles richtig ausgefuellt. Bitte antworten Sie schriftlich, nicht telefonisch. Vielen Dank vorab."
+    }
+  },
+  "attachments": [],
+  "procedureHint": "grundsicherung"
+}

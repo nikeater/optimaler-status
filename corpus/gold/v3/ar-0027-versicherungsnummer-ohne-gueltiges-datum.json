@@ -1,0 +1,33 @@
+{
+  "submissionId": "ar-0027-versicherungsnummer-ohne-gueltiges-datum",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-29T11:37:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antragsteller": {
+      "geburtsdatum": "1959-02-28",
+      "versicherungsnummer": "12310259D064",
+      "anschrift": {
+        "ort": "Musterdorf",
+        "hausnummer": "45",
+        "plz": "70173",
+        "strasse": "Feldstrasse"
+      }
+    },
+    "antrag": {
+      "hinweistext": "Hallo, ich schicke Ihnen hier meinen Antrag. Ich hoffe, so ist alles richtig ausgefuellt. Eine Eingangsbestaetigung waere mir wichtig. Vielen Dank vorab.",
+      "rentenart": "regelaltersrente",
+      "auslandsbezug": "  nein  ",
+      "rentenbeginn": " 2026-11-01  "
+    },
+    "meta": {
+      "eingangsdatum": "29.07.2026"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

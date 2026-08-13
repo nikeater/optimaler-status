@@ -1,0 +1,19 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: em-0051-ohne-verfahrenshinweis-unvollstaendig
+procedure_id: erwerbsminderungsrente
+scenario_kind: hint_missing
+expected_unit_id: Referat_316_Erwerbsminderungsrenten
+expected_tier: 2
+derived_procedure_id: erwerbsminderungsrente
+derivation_source: content
+expected_gaps:
+- requirement_id: letzte_taetigkeit
+  status: missing
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: 'EM-Antrag ohne Kanalhinweis und ohne Angabe der letzten Taetigkeit: das Verfahren
+  ist ableitbar, die Pruefung faellt trotzdem unvollstaendig aus.'

@@ -1,0 +1,135 @@
+# Applicant notifications v1 (config/notifications/).
+#
+# Config is the product: the WORDING an applicant reads is agency text, edited
+# here and versioned here, never a string literal in Python. The loader
+# (engine/config_loader.py, NotificationsConfig) validates this file at startup;
+# the projection worker (engine/notify/) renders it.
+#
+# Its own file with its own version, for the part-06 reason: the version strings
+# of config/rules/ and config/taxonomy/ are frozen into every gold-set MANIFEST,
+# so a wording change may not ride on one of them. This file's version appears
+# in the NOTIFIED event payload (`notifications_version`) and nowhere in a
+# frozen manifest.
+#
+# THE BOUNDARY THIS FILE MAY NOT CROSS (ADR-005, ruling 3 of task 07):
+# everything here is a Realakt - informational, automated end to end, and never
+# a Verwaltungsakt. No template may state a Rechtsfolge, set a deadline, or ask
+# for a document. That is the human-confirmed drafting path (part 08), and the
+# loader refuses a template that reads like one.
+#
+# WHAT MAY APPEAR IN A TEMPLATE: the case id, the timestamps of the journal
+# events, and NAMES THE CONFIG ITSELF SUPPLIES (procedure display name, channel
+# display name, the routed unit's public name from config/taxonomy/). Nothing is
+# ever re-hydrated out of the identity vault on this path - see engine/notify/
+# render.py for the assertion that enforces it.
+version: notifications_v1
+
+# The two projections ADR-005 names: "received" triggers the instant receipt,
+# "routed" triggers the status update. `trigger` is the journal event type that
+# owes this notification; the worker matches on it.
+templates:
+  - template_id: eingangsbestaetigung_v1
+    trigger: received
+    subject: Eingangsbestaetigung zu Ihrem Anliegen
+    # The Art. 13/14 DSGVO notice block rides on the receipt (C-5, 07 slice).
+    # Every controller-specific item is a CLEARLY MARKED placeholder in square
+    # brackets: an agency fills them in, and an unfilled one is visible to a
+    # reader rather than silently absent. They are deliberately NOT the reserved
+    # [[PII|...]] syntax - nothing on this path is ever re-hydrated.
+    body: |-
+      Eingangsbestaetigung
+
+      Ihr Anliegen ist bei uns eingegangen.
+
+      Vorgangsnummer: {{ case_id }}
+      Eingegangen am: {{ received_at }}
+      Eingangsweg: {{ channel_name }}
+      {% if procedure_name %}
+      Anliegen: {{ procedure_name }}
+      {% endif %}
+
+      Diese Nachricht bestaetigt ausschliesslich den Eingang. Sie ist keine
+      Entscheidung ueber Ihr Anliegen und keine Aufforderung an Sie. Sie
+      muessen darauf nicht antworten und nichts einreichen. Sobald Ihr
+      Anliegen einer Organisationseinheit zugeordnet ist, erhalten Sie eine
+      weitere Nachricht dieser Art.
+
+      Hinweise nach Art. 13 und 14 DSGVO
+
+      Verantwortlich: [Platzhalter Behoerde: Bezeichnung und Anschrift]
+      Datenschutzbeauftragte Person: [Platzhalter Behoerde: Kontaktdaten]
+      Zweck der Verarbeitung: Bearbeitung Ihres Anliegens im gesetzlichen
+      Aufgabenbereich des Traegers.
+      Rechtsgrundlage: [Platzhalter Behoerde: Rechtsgrundlage]
+      Empfaenger: die fachlich zustaendigen Organisationseinheiten des
+      Traegers.
+      Speicherdauer: [Platzhalter Behoerde: Aufbewahrungsdauer]
+      Ihre Rechte: Auskunft, Berichtigung, Loeschung, Einschraenkung der
+      Verarbeitung, Datenuebertragbarkeit und Widerspruch gegen die
+      Verarbeitung sowie Beschwerde bei einer Aufsichtsbehoerde.
+      Aufsichtsbehoerde: [Platzhalter Behoerde: Anschrift der Aufsicht]
+
+      Diese Nachricht wurde automatisch erzeugt und ist ohne Unterschrift
+      gueltig. Ihr Text stammt vollstaendig aus einer hinterlegten Vorlage;
+      es wurde kein Sprachmodell verwendet.
+
+  - template_id: zuordnung_v1
+    trigger: routed
+    subject: Zwischenstand zu Ihrem Anliegen
+    body: |-
+      Zwischenstand zu Ihrem Anliegen
+
+      Vorgangsnummer: {{ case_id }}
+      Stand: {{ routed_at }}
+      Zustaendig: {{ unit_name }}
+
+      Ihr Anliegen wurde der oben genannten Organisationseinheit zur
+      Bearbeitung zugeordnet. Diese Nachricht informiert Sie ueber den Stand
+      der Bearbeitung. Sie ist keine Entscheidung ueber Ihr Anliegen, sie
+      fordert nichts von Ihnen, und Sie muessen darauf nicht antworten.
+
+      Diese Nachricht wurde automatisch erzeugt und ist ohne Unterschrift
+      gueltig. Ihr Text stammt vollstaendig aus einer hinterlegten Vorlage;
+      es wurde kein Sprachmodell verwendet.
+
+# Channel/formality mapping (C-8). The inbound channel of the case decides the
+# outbound shape. All three are INFORMATIONAL: anything with procedural
+# consequence leaves through the print or qualified-electronic path of part 08+
+# (par. 36a SGB I), never through here. `delivery` is what the demo's outbox
+# records and what a real adapter would implement.
+channels:
+  - channel: fit_connect
+    delivery: status_event
+    display_name: elektronisches Antragsportal (FIT-Connect)
+    note: >-
+      Statusereignis im Zustellprotokoll (P-14: "accepted by destination"). Der
+      echte Adapter ist Pilotarbeit; hier wird das Ereignis in die simulierte
+      Mailbox geschrieben.
+  - channel: email
+    delivery: mail
+    display_name: E-Mail
+    note: >-
+      Formlose E-Mail an die Absenderadresse. Kein Verwaltungsakt, keine
+      Zustellung im Rechtssinne.
+  - channel: scan
+    delivery: postal_stub
+    display_name: Papierpost (Scan)
+    note: >-
+      Druckweg, Teil 08+. Der Papierweg hat keinen digitalen Rueckkanal; hier
+      entsteht nur ein Druckauftrag als Platzhalter, damit die Grenze sichtbar
+      bleibt und nicht umgangen wird.
+
+# Display names the templates may use. A name an APPLICANT reads may only come
+# from this file or from config/taxonomy/ - never from the submission, because
+# a submission is applicant-controlled text and echoing it back is how identity
+# data returns to a channel it was sealed out of. An id without an entry here
+# renders nothing at all (see engine/notify/render.py).
+procedure_names:
+  altersrente: Antrag auf Altersrente
+  erwerbsminderungsrente: Antrag auf Rente wegen Erwerbsminderung
+  statusfeststellung: Statusfeststellung nach par. 7a SGB IV
+
+# Fallbacks for the two names a case may not have yet. Neutral on purpose: an
+# item whose procedure nobody derived is still owed a receipt.
+fallback_channel_name: unbekannter Eingangsweg
+fallback_unit_name: noch nicht zugeordnet

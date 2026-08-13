@@ -1,0 +1,41 @@
+{
+  "submissionId": "sf-0010-ohne-versicherungsnummer",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-29T11:37:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "antrag": {
+      "honorar_modell": "nach_stunden",
+      "taetigkeit_bezeichnung": "Physiotherapie auf Honorarbasis",
+      "arbeitsort": " beim_auftraggeber \t",
+      "weitere_auftraggeber": "ja",
+      "taetigkeit_beginn": "2026-04-01",
+      "antragsart": "feststellung_nach_aufnahme",
+      "antragsteller_rolle": "auftragnehmer",
+      "hinweistext": "Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir. Bitte antworten Sie schriftlich, nicht telefonisch."
+    },
+    "auftraggeber": {
+      "firmenname": " \tGesundheitszentrum Auental GmbH \t",
+      "betriebsnummer": "56789012"
+    },
+    "meta": {
+      "bearbeitungswunsch": "  Ich bin ab kommender Woche im Urlaub.  ",
+      "eingangsdatum": "2026-07-29"
+    },
+    "antragsteller": {
+      "geburtsdatum": " \t1975-09-30 ",
+      "anschrift": {
+        "hausnummer": " 8  ",
+        "plz": "99084",
+        "ort": "Musterhausen",
+        "strasse": "Am Hang"
+      }
+    }
+  },
+  "attachments": [],
+  "procedureHint": "statusfeststellung"
+}

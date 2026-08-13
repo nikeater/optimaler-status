@@ -1,0 +1,41 @@
+{
+  "submissionId": "sf-0011-ohne-taetigkeitsbezeichnung",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-27T08:04:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "antrag": {
+      "arbeitsort": "wechselnd",
+      "honorar_modell": "nach_ergebnis",
+      "antragsart": "feststellung_nach_aufnahme",
+      "weitere_auftraggeber": " nein \t",
+      "antragsteller_rolle": "auftragnehmer",
+      "taetigkeit_beginn": "2025-11-17",
+      "hinweistext": " Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir. \t"
+    },
+    "meta": {
+      "bearbeitungswunsch": " \tBitte antworten Sie schriftlich, nicht telefonisch.  ",
+      "eingangsdatum": " 27. Juli 2026 "
+    },
+    "auftraggeber": {
+      "betriebsnummer": "67890123",
+      "firmenname": "Seewind Energieservice GmbH"
+    },
+    "antragsteller": {
+      "anschrift": {
+        "ort": "Beispielstadt",
+        "plz": "24103",
+        "strasse": "Kirchgasse",
+        "hausnummer": "2"
+      },
+      "geburtsdatum": " \t1988-06-08  ",
+      "versicherungsnummer": " 17080688P067 \t"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "statusfeststellung"
+}

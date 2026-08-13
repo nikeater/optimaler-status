@@ -1,0 +1,18 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: ar-0066-email-ohne-auslandsangabe
+procedure_id: altersrente
+scenario_kind: ambiguous_conflicting
+expected_unit_id: Referat_312_Renten
+expected_tier: 3
+derived_procedure_id: altersrente
+derivation_source: content
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: none
+known_divergence: []
+divergence_reason: null
+notes: 'Vollstaendig im Sinne der Pflichtangaben und trotzdem Tier 3: die Klarfallkriterien
+  lassen sich nicht pruefen, und "nicht geprueft" darf nie wie "geprueft und in Ordnung"
+  aussehen.'

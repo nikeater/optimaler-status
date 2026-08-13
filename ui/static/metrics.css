@@ -1,0 +1,91 @@
+/* Plain, high-contrast styling for the metrics panel.
+   No framework, no web fonts, no colour-only meaning: every state that colour
+   marks is also spelled out in words. */
+
+:root {
+  --ink: #14171a;
+  --muted: #4a5158;
+  --line: #c8cdd2;
+  --ok: #10502c;
+  --alarm: #8a1414;
+  --surface: #ffffff;
+}
+
+body {
+  margin: 0 auto;
+  max-width: 62rem;
+  padding: 1.5rem 1rem 3rem;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: system-ui, "Segoe UI", sans-serif;
+  line-height: 1.5;
+}
+
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.25rem; margin-top: 2rem; }
+h3 { font-size: 1.05rem; margin-top: 1.75rem; }
+
+code {
+  background: #eef1f3;
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+
+a { color: #0b4f8a; }
+a:focus-visible { outline: 3px solid #0b4f8a; outline-offset: 2px; }
+
+dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; }
+dt { font-weight: 600; }
+dd { margin: 0; }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1rem 0;
+}
+
+caption {
+  text-align: left;
+  font-weight: 600;
+  padding-bottom: 0.35rem;
+}
+
+th, td {
+  border: 1px solid var(--line);
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+thead th { background: #eef1f3; }
+tbody th { font-weight: 600; }
+td { font-variant-numeric: tabular-nums; }
+
+.gate-row th, .gate-row td { border-width: 2px; }
+.gate-passed { color: var(--ok); font-weight: 600; }
+.gate-failed { color: var(--alarm); font-weight: 700; }
+
+.notice {
+  border-left: 4px solid var(--muted);
+  padding: 0.5rem 0.75rem;
+  background: #f5f7f8;
+}
+
+/* The public-demo banner (part 11). Renders only when EINGANGSLOTSE_DEMO_MODE
+   is on, sits above everything else on every page, and says in words what it
+   means - the border colour carries no meaning of its own. */
+.demo-banner {
+  border: 2px solid var(--alarm);
+  border-left-width: 8px;
+  background: #fdf3f3;
+  padding: 0.6rem 0.9rem;
+  margin: 0 0 1.25rem;
+}
+
+.demo-banner p { margin: 0; }
+
+footer {
+  margin-top: 2.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}

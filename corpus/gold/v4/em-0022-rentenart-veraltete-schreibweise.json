@@ -1,0 +1,35 @@
+{
+  "submissionId": "em-0022-rentenart-veraltete-schreibweise",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-27T08:04:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {
+    "meta": {
+      "eingangsdatum": " 2026-07-27  "
+    },
+    "antragsteller": {
+      "versicherungsnummer": "19190185J063",
+      "anschrift": {
+        "hausnummer": "2",
+        "strasse": "  Kirchgasse  ",
+        "ort": "Beispielstadt",
+        "plz": "24103"
+      },
+      "geburtsdatum": "1985-01-19"
+    },
+    "antrag": {
+      "gutachten_status": "liegt_nicht_vor",
+      "letzte_taetigkeit": "Kommissioniererin",
+      "hinweistext": "Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir. Eine Eingangsbestaetigung waere mir wichtig.",
+      "eintritt_erwerbsminderung": "2026-04-06",
+      "rentenart": "  erwerbsminderungsrente ",
+      "auslandsbezug": "nein"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "erwerbsminderungsrente"
+}

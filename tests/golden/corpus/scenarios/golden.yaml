@@ -1,0 +1,81 @@
+# Fixed golden scenarios for tests/test_corpus_golden.py.
+#
+# Four items, one per outcome shape, built with seed 7 and compared against
+# tests/golden/corpus/expected.yaml byte for byte. If a change to the renderer,
+# the paraphrase pass or the label sidecar format alters any of them, this file
+# pair is where it becomes visible - deliberately separate from the shipped
+# corpus so a corpus rebuild cannot quietly "fix" the expectation.
+description: Golden scenarios for the generator regression test.
+
+scenarios:
+  - scenario_id: golden-0001-altersrente-klarfall
+    kind: complete_clear
+    description: Vollstaendiger Regelaltersrentenantrag, Klarfall, Tier 1.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1959-04-17"
+      versicherungsnummer: "17170459B012"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-11-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 1
+      derivation_source: hint
+      gaps: []
+
+  - scenario_id: golden-0002-erwerbsminderung-unvollstaendig
+    kind: missing_field
+    description: Erwerbsminderungsrente ohne Angabe der letzten Taetigkeit.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1981-03-08"
+      versicherungsnummer: "19080381B047"
+      rentenart: erwerbsminderungsrente_teilweise
+      eintritt_erwerbsminderung: "2026-01-15"
+      auslandsbezug: nein
+      gutachten_status: liegt_nicht_vor
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: letzte_taetigkeit
+          status: missing
+
+  - scenario_id: golden-0003-unbekanntes-verfahren
+    kind: unknown_procedure
+    description: Eingang zu einem Verfahren, das nicht konfiguriert ist.
+    procedure_id: null
+    procedure_hint: grundsicherung
+    facts:
+      geburtsdatum: "1955-03-08"
+      versicherungsnummer: "17080355P027"
+    expected:
+      unit_id: null
+      tier: 3
+      derivation_source: none
+      gaps: []
+
+  - scenario_id: golden-0004-statusfeststellung-vollstaendig
+    kind: complete_clear
+    description: >-
+      Vollstaendiger Statusantrag nach par. 7a SGB IV: keine Luecke, kein
+      Klarfall-Block, also Tier 3.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1985-03-14"
+      versicherungsnummer: "12140385K023"
+      antragsart: feststellung_nach_aufnahme
+      antragsteller_rolle: auftragnehmer
+      taetigkeit_bezeichnung: IT-Beratung und Softwareentwicklung
+      taetigkeit_beginn: "2026-01-15"
+      auftraggeber_name: Nordlicht Systemhaus GmbH
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 3
+      derivation_source: hint
+      gaps: []

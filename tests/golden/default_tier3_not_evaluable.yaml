@@ -1,0 +1,30 @@
+description: >-
+  Unknown procedure: completeness could not be evaluated at all. "We could not
+  check" must never look like "we checked and it was fine", so neither the
+  tier-1 nor the tier-2 row qualifies and the item defaults to tier 3.
+evidence:
+  routing:
+    - unit_id: Referat_390_Sonstiges
+      source: rule
+      rule_ids: [rule_altersrente_hint]
+      confidence: 1.0
+  completeness:
+    procedure_id: null
+    verdict: not_evaluable
+    gap_ids: []
+    requirements_version: unknown
+  min_confidence: null
+  discarded_count: 0
+flags: null
+clear_cut: false
+anomaly: null
+scorer_mode: log_only
+expect:
+  tier: 3
+  pre_downgrade_tier: 3
+  routed_unit_id: Referat_390_Sonstiges
+  reason_kinds: [failed, failed, defaulted]
+  reason_rule_ids:
+    - tier1_clear_and_complete
+    - tier2_routable_incomplete
+    - default

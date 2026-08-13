@@ -1,0 +1,18 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: xx-0005-widerspruch
+procedure_id: null
+scenario_kind: unknown_procedure
+expected_unit_id: Widerspruchsstelle_360
+expected_tier: 3
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence:
+- unit
+divergence_reason: Fuer Widersprueche existiert noch keine Routing-Regel, also bleibt
+  der Vorgang heute ohne Zuordnung. Die Regel gehoert mit dem Widerspruchs- Workflow
+  zusammen und wird nicht vorab erfunden, nur damit die Metrik besser aussieht.
+notes: 'Widerspruch gegen einen Rentenbescheid: fachlich klar die Widerspruchsstelle,
+  im Regelwerk bislang nicht abgebildet.'

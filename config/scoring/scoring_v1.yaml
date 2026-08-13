@@ -1,0 +1,208 @@
+# Shadow-scorer config v1 (engine.score.config.ScoringConfig, ADR-024).
+#
+# Its own versioned file rather than a block in config/thresholds.yaml, for the
+# reason part 06 established: thresholds.yaml's version string (risk_v0) is
+# frozen into corpus/gold/v4/MANIFEST.yaml config_versions, and gold v4 is
+# verified by a byte-identical rebuild. A calibrated threshold added there would
+# either invalidate a frozen corpus or ship under a version that no longer
+# describes the file. So the calibrated threshold lives here with its own id,
+# `anomaly_default_v0` stays in thresholds.yaml as the historical uncalibrated
+# placeholder it always was, and AnomalyEvidence.threshold_ref names which of
+# the two actually governed the item in front of you.
+#
+# WHAT THIS FILE CANNOT DO. Nothing here can lower a tier. The decision table's
+# schema accepts anomaly fields in downgrade conditions only, with monotone
+# operators and a fixed target of tier 3, and the engine applies
+# max(tier, to_tier) (ADR-004). Raising the threshold makes the scorer quieter;
+# lowering it makes it noisier; neither can clear an item.
+#
+# LOG-ONLY IS STRUCTURAL. `scorer_mode: log_only` lives in the FROZEN
+# thresholds.yaml, so enforcing the downgrades means superseding a frozen config
+# version - deliberately as much friction as the decision deserves.
+version: scoring_v1
+
+# Stamped onto every AnomalyEvidence and every ANOMALY_SCORED event through
+# VersionStamp.feature_set_version, the slot reserved for it since part 01.
+# Bump this whenever the feature list, a feature's meaning or the reference
+# population changes: a score computed by two different feature sets is two
+# different numbers wearing one name.
+feature_set_version: fsv_v1
+
+# The population the scorer calls normal. "Score 0.94" means "more unusual than
+# 94 percent of THIS population" and nothing else, which is why the population
+# is named in the artifact and in every report.
+reference_id: gold_v4
+reference_population: reference_gold_v4.json
+
+# The calibrated operating point, chosen off `python -m eval.score_fit
+# --distribution` on gold v4. It is a percentile of the reference population, so
+# it reads as a workload decision: "look at the most unusual 15 of 101".
+#
+# WHY 0.86 AND NOT THE QUIETER ALTERNATIVES. It is the HIGHEST threshold that
+# still reaches every anomaly this identity-blind feature set can reach (7 of
+# the 9 labelled items; ar-0042 and ar-0044 need a Geburtsdatum and a
+# Versicherungsnummer, which part 04 sealed before the scorer runs). 0.88 and
+# 0.90 select the same 13 items and drop sf-0041, the Honorarhoehe case that
+# BSG 31.03.2017 (B 12 R 7/15 R) calls a gewichtiges Indiz; 0.93 and above drop
+# the Indizienbuendel as well. The quieter rows buy one fewer tier-1 false flag,
+# and the downgrade-rate budget is a BOUND rather than a target: at 0.86 the
+# false-flag reading is 1 of 13 tier-1 items = 0.077, half of the 0.15 in
+# config/thresholds.yaml. Below 0.86 nothing further is found and only noise is
+# added (0.84 costs two more false flags for no extra recall).
+#
+# It also sits in a gap rather than on a cliff: the nearest included score is
+# 0.871 and the nearest excluded one 0.851.
+#
+# TUNED ON THE FROZEN SET, and this file says so rather than letting a reader
+# assume otherwise. The forest sees no labels; the THRESHOLD was chosen while
+# looking at the nine anomaly_expected items, so the recall and false-flag
+# numbers on gold v4 are in-sample. Phase 1 has no outcome data and no second
+# labelled set; the plan's own instruction is to calibrate here and say so.
+threshold:
+  threshold_id: anomaly_gold_v4_v1
+  value: 0.86
+  calibrated_on: >-
+    gold v4 (101 items, 9 anomaly_expected), IsolationForest over feature set
+    fsv_v1, seed 42, chosen 2026-08-12 from the score distribution of
+    python -m eval.score_fit --distribution; IN-SAMPLE (see ADR-024)
+
+forest:
+  n_estimators: 200
+  max_samples: auto
+  seed: 42
+
+reasons:
+  # A flag carries at most this many feature-level reasons, strongest first. A
+  # caseworker reading five sentences reads none of them.
+  max_reasons: 4
+  # Below this a contribution is noise in an ensemble of 200 trees. When NO
+  # feature clears it - which happens when an item is unusual as a COMBINATION -
+  # the renderer falls back to the feature furthest from the reference median,
+  # because a flagged item with no reason is the one output this system may not
+  # produce.
+  min_contribution: 0.005
+
+audit_sampling:
+  # P-1, par. 88 Abs. 5 Nr. 1 AO analog. The RATE lives in
+  # config/thresholds.yaml (AgencyRiskConfig.audit_sample_rate, 0.0 today); this
+  # is only the salt, so rotating it does not force a risk-config supersession.
+  # blake2b(case_id, key=salt) -> first 8 bytes as a big-endian integer over
+  # 2**64 -> a number in [0, 1). Below the rate means "into full review". A
+  # caseworker with this file can recompute any draw in one line, which is the
+  # whole point: a sample nobody can reproduce is not an audit measure.
+  salt: eingangslotse-stichprobe-2026-demo
+  note: >-
+    Demo-Salz. Vor einem Pilotbetrieb ersetzen und in der Betriebsdokumentation
+    festhalten; die Ziehung bleibt nachrechenbar, das Salz gehoert aber zur
+    Konfiguration der Behoerde und nicht in ein oeffentliches Repository.
+
+bias_monitoring:
+  # P-2. Reported, never gated: an alarm that failed a build would teach people
+  # to tune the alarm. The ratio is max/min flag rate across the groups of one
+  # dimension (procedure, channel, item shape), computed only over groups with
+  # at least min_group_items so a group of two cannot produce an infinity.
+  max_flag_rate_ratio: 3.0
+  min_group_items: 5
+
+# The date each procedure's file is ABOUT. The part-03 hand-off: the calendar
+# bounds in config/procedures/ are absolute and wide because they catch the
+# impossible; "possible, but decades away from the day the application arrived"
+# was left to the scorer on purpose. Every field id here must be a field the
+# named procedure maps, which the loader checks.
+leading_date_fields:
+  altersrente: rentenbeginn
+  erwerbsminderungsrente: eintritt_erwerbsminderung
+  statusfeststellung: taetigkeit_beginn
+
+# The Indizien of the par. 7a Abs. 2 S. 1 SGB IV Gesamtwuerdigung, and which
+# recorded value points at Beschaeftigung. They are deliberately NOT
+# completeness requirements (part 03b): turning an Abwaegung into a checklist
+# would fake an answer the law does not permit. The scorer reads them as a
+# BUNDLE - the share of recorded Indizien pointing one way - because the bundle
+# is the Auffaelligkeit and no single Merkmal is.
+#
+# Nothing here is a threshold. The Fuenf-Sechstel Faustregel of the
+# Verwaltungspraxis is not encoded anywhere in this repository: it is
+# Verwaltungswissen this project cannot cite, and an invented threshold would be
+# worse than none.
+umsatz_path: antrag.umsatzanteil_hauptauftraggeber
+indizien:
+  - path: antrag.weisungsgebunden
+    label: Weisungsgebundenheit
+    beschaeftigung_values: [ja]
+  - path: antrag.eingliederung_arbeitsorganisation
+    label: Eingliederung in die Arbeitsorganisation
+    beschaeftigung_values: [ja]
+  - path: antrag.arbeitsort
+    label: Arbeitsort
+    beschaeftigung_values: [beim_auftraggeber]
+  - path: antrag.weitere_auftraggeber
+    label: weitere Auftraggeber
+    beschaeftigung_values: [nein]
+  - path: antrag.honorar_modell
+    label: Honorarmodell
+    beschaeftigung_values: [fest_monatlich]
+
+# Every feature the engine computes needs wording here, and no wording may name
+# a feature the engine does not compute. The loader refuses both directions: an
+# unknown name is a typo whose wording would silently never render, a missing
+# name is a feature that would reach a caseworker as a bare id.
+#
+# NOT IN THIS LIST, and the absence is the finding of part 09: nothing computed
+# from a Geburtsdatum, a Versicherungsnummer or an Anschrift. Part 04 seals
+# those before this scorer runs, so a feature over them would be a feature over
+# a random token. gold v4's ar-0042 (Alter 118) and ar-0044 (Bereichsnummer 99)
+# are therefore out of this scorer's reach by construction; they are
+# deterministic checks over the witness, next to the birthdate-in-VSNR
+# cross-check that already exists. See ADR-024.
+#
+# The CHANNEL is deliberately not a feature either: on every configured intake
+# path it is a function of the item shape, and a scorer that learned "paper is
+# unusual" would systematically flag the people least able to use the online
+# form. Channel and shape are dimensions of the bias section instead (P-2).
+features:
+  felder_belegt_anteil:
+    label: Belegte Verfahrensfelder
+    unit: ""
+    expected_note: Anteil der im Verfahren vorgesehenen Felder mit einem Wert.
+  freitext_vorgang:
+    label: Vorgangsform
+    unit: ""
+    expected_note: 1 = Anschreiben mit Freitext, 0 = strukturiertes Formular.
+  indizien_beschaeftigung_anteil:
+    label: Indizien fuer Beschaeftigung
+    unit: ""
+    expected_note: >-
+      Anteil der erfassten Indizien der Gesamtwuerdigung nach par. 7a Abs. 2
+      S. 1 SGB IV, die fuer eine Beschaeftigung sprechen. Das Buendel ist die
+      Auffaelligkeit, nicht das einzelne Merkmal.
+  indizien_erfasst_anteil:
+    label: Erfasste Indizienfelder
+    unit: ""
+    expected_note: >-
+      Wie viele der Indizienfelder ueberhaupt ausgefuellt sind; ohne diese
+      Angabe waere "keine Indizien fuer Beschaeftigung" nicht von "kein
+      Statusfeststellungsantrag" zu unterscheiden.
+  leitdatum_abstand_jahre:
+    label: Abstand des Leitdatums zum Eingang
+    unit: Jahre
+    expected_note: >-
+      Vorzeichenbehaftet: ein Rentenbeginn dreizehn Jahre voraus und einer
+      achtundzwanzig Jahre zurueck sind verschiedene Faelle. Die
+      Datumsgrenzen der Verfahrenskonfiguration sind absolut und fangen
+      beides bewusst nicht ab.
+  leitdatum_vorhanden:
+    label: Leitdatum vorhanden
+    unit: ""
+    expected_note: 1 = das verfahrenstragende Datum steht im Vorgang.
+  ocr_vorgang:
+    label: Scanvorgang
+    unit: ""
+    expected_note: 1 = mindestens ein Teil des Vorgangs kommt aus einem Scan.
+  umsatzanteil_hauptauftraggeber:
+    label: Umsatzanteil beim Hauptauftraggeber
+    unit: ""
+    expected_note: >-
+      Angegebener Anteil als Bruchteil. Bewertet wird die Lage im
+      Referenzbestand, nicht das Ueberschreiten einer Grenze - eine solche
+      Grenze steht in keiner Konfiguration dieses Systems.

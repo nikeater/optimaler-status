@@ -1,0 +1,671 @@
+# Scenario specs for the altersrente procedure (config/procedures/altersrente_v1.yaml).
+#
+# Each entry declares the facts of a case and the ground truth that follows from
+# them. The renderer builds the payload from the same facts, so the labels are
+# true by construction; `python -m corpus.generator.build` then re-runs the real
+# pipeline over every rendered item and refuses to write the corpus if an
+# outcome disagrees with what is declared here.
+#
+# `expected.derivation_source` is ground truth too, and it is required per item:
+# "the channel told us" (hint), "the form told us" (content) and "nobody could
+# tell" (none) are three different claims, and the middle one is what part 03
+# added. It is never inferred from the other fields.
+#
+# Every value is invented. The Versicherungsnummern follow the real structure
+# (Bereichsnummer, Geburtsdatum TTMMJJ, Anfangsbuchstabe, Seriennummer,
+# Pruefziffer) and belong to nobody; dates and addresses are synthetic (see
+# corpus/gold/v2/README.md).
+description: >-
+  Altersrente: clear complete cases, missing and invalid fields, cases that are
+  complete but not clear-cut, applications whose procedure has to be read off
+  the form, and internally consistent but statistically odd applications.
+
+scenarios:
+  # ---------------------------------------------------------------- tier 1 ---
+  - scenario_id: ar-0001-regelaltersrente-vollstaendig
+    kind: complete_clear
+    description: >-
+      Vollstaendiger Regelaltersrentenantrag ohne Auslandsbezug: Regel greift,
+      Pflichtangaben vorhanden, Klarfallkriterien erfuellt.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1959-04-17"
+      versicherungsnummer: "17170459B012"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-11-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 1
+      derivation_source: hint
+      gaps: []
+
+  - scenario_id: ar-0002-regelaltersrente-schaltjahr
+    kind: complete_clear
+    description: >-
+      Vollstaendiger Antrag, Geburtsdatum am 29. Februar eines Schaltjahres.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1960-02-29"
+      versicherungsnummer: "17290260C043"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-09-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 1
+      derivation_source: hint
+      gaps: []
+
+  - scenario_id: ar-0003-regelaltersrente-jahreswechsel
+    kind: complete_clear
+    description: Vollstaendiger Antrag mit Rentenbeginn zum Jahreswechsel.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1961-12-05"
+      versicherungsnummer: "18051261A021"
+      rentenart: regelaltersrente
+      rentenbeginn: "2027-01-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 1
+      derivation_source: hint
+      gaps: []
+
+  - scenario_id: ar-0004-regelaltersrente-spaeter-beginn
+    kind: complete_clear
+    description: Vollstaendiger Antrag mit Rentenbeginn knapp zwei Jahre spaeter.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1962-03-14"
+      versicherungsnummer: "19140362D007"
+      rentenart: regelaltersrente
+      rentenbeginn: "2028-06-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 1
+      derivation_source: hint
+      gaps: []
+
+  - scenario_id: ar-0005-regelaltersrente-kurzfristig
+    kind: complete_clear
+    description: Vollstaendiger Antrag mit kurzfristigem Rentenbeginn.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1959-08-30"
+      versicherungsnummer: "17300859E066"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-09-15"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 1
+      derivation_source: hint
+      gaps: []
+
+  # ------------------------------------------------- tier 2: missing field ---
+  - scenario_id: ar-0010-ohne-versicherungsnummer
+    kind: missing_field
+    description: Antrag ohne Versicherungsnummer, sonst vollstaendig.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1958-06-21"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-10-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: versicherungsnummer
+          status: missing
+
+  - scenario_id: ar-0011-ohne-rentenbeginn
+    kind: missing_field
+    description: Antrag ohne gewuenschten Rentenbeginn.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1960-01-09"
+      versicherungsnummer: "18090160G015"
+      rentenart: regelaltersrente
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: rentenbeginn
+          status: missing
+
+  - scenario_id: ar-0012-ohne-geburtsdatum
+    kind: missing_field
+    description: >-
+      Antrag ohne Geburtsdatum. Die Versicherungsnummer traegt das Geburtsdatum
+      zwar in sich, wird aber nicht als Ersatzangabe verwendet: die Pruefziffer
+      allein macht aus einer Nummer keine erklaerte Angabe.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      versicherungsnummer: "17220760H054"
+      rentenart: regelaltersrente
+      rentenbeginn: "2027-02-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: geburtsdatum
+          status: missing
+
+  - scenario_id: ar-0013-ohne-rentenart
+    kind: missing_field
+    description: >-
+      Antrag ohne Angabe der Rentenart; die Zuordnung traegt allein der
+      Verfahrenshinweis des Kanals.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1961-05-03"
+      versicherungsnummer: "18030561J028"
+      rentenbeginn: "2027-05-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: rentenart
+          status: missing
+
+  - scenario_id: ar-0014-ohne-vsnr-und-rentenbeginn
+    kind: missing_field
+    description: Antrag ohne Versicherungsnummer und ohne Rentenbeginn.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1957-11-27"
+      rentenart: regelaltersrente
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: versicherungsnummer
+          status: missing
+        - requirement_id: rentenbeginn
+          status: missing
+
+  # ------------------------------------------------- tier 2: invalid field ---
+  - scenario_id: ar-0020-versicherungsnummer-zu-kurz
+    kind: invalid_field
+    description: Versicherungsnummer mit elf statt zwoelf Stellen.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1959-02-14"
+      versicherungsnummer: "17140259K01"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-12-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: versicherungsnummer
+          status: invalid
+
+  - scenario_id: ar-0021-geburtsdatum-deutsches-format
+    kind: invalid_field
+    description: >-
+      Geburtsdatum im deutschen Punktformat statt als ISO-Datum; der Mapper
+      liest den Wert, die Validierung weist ihn zurueck. Die Pruefung der
+      Versicherungsnummer gegen das Geburtsdatum entfaellt: sie wuerde einen
+      Folgefehler melden statt der Ursache.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "17.04.1959"
+      versicherungsnummer: "17170459L009"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-11-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: geburtsdatum
+          status: invalid
+
+  - scenario_id: ar-0022-rentenart-nicht-zulaessig
+    kind: invalid_field
+    description: >-
+      Als Rentenart ist eine Hinterbliebenenrente angegeben, die dieses
+      Verfahren nicht kennt. Inhaltlich traegt der Rentenbeginn die
+      Verfahrensableitung, sie bestaetigt den Kanalhinweis.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1963-09-12"
+      versicherungsnummer: "19120963M031"
+      rentenart: witwenrente
+      rentenbeginn: "2027-01-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: rentenart
+          status: invalid
+
+  - scenario_id: ar-0023-rentenbeginn-punktformat
+    kind: invalid_field
+    description: Rentenbeginn im deutschen Punktformat statt als ISO-Datum.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1960-07-08"
+      versicherungsnummer: "18080760N047"
+      rentenart: regelaltersrente
+      rentenbeginn: "01.11.2026"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: rentenbeginn
+          status: invalid
+
+  - scenario_id: ar-0024-rentenbeginn-vor-dem-60-lebensjahr
+    kind: invalid_field
+    description: >-
+      Beide Datumsangaben sind fuer sich gueltig, zusammen nicht: die
+      antragstellende Person waere bei Rentenbeginn 51 Jahre alt. Eine
+      Altersrente ist fruehestens ab 60 moeglich, also stimmt eine der beiden
+      Angaben nicht.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1975-05-20"
+      versicherungsnummer: "12200575A061"
+      rentenart: regelaltersrente
+      rentenbeginn: "2027-01-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: rentenbeginn
+          status: invalid
+
+  - scenario_id: ar-0025-geburtsdatum-kalendarisch-unmoeglich
+    kind: invalid_field
+    description: >-
+      Das Geburtsdatum hat die richtige Form und ist trotzdem kein Datum: den
+      30. Februar gibt es nicht. Genau dafuer reicht ein Formatmuster nicht.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1959-02-30"
+      versicherungsnummer: "12280259B062"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-11-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: geburtsdatum
+          status: invalid
+
+  - scenario_id: ar-0026-geburtsdatum-vor-der-untergrenze
+    kind: invalid_field
+    description: >-
+      Ein Geburtsdatum aus dem Jahr 1889 liegt unter der konfigurierten
+      Untergrenze. Die Versicherungsnummer traegt dieselbe zweistellige
+      Jahresangabe und bleibt deshalb widerspruchsfrei - gemeldet wird nur die
+      Ursache.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1889-04-17"
+      versicherungsnummer: "12170489C063"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-11-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: geburtsdatum
+          status: invalid
+
+  - scenario_id: ar-0027-versicherungsnummer-ohne-gueltiges-datum
+    kind: invalid_field
+    description: >-
+      Die Versicherungsnummer hat zwoelf Stellen in der richtigen Form, ihre
+      Geburtsdatumsstellen ergeben aber den 31. Februar. Formatgueltig ist
+      nicht dasselbe wie gueltig.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1959-02-28"
+      versicherungsnummer: "12310259D064"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-11-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: versicherungsnummer
+          status: invalid
+
+  - scenario_id: ar-0043-vsnr-widerspricht-geburtsdatum
+    kind: invalid_field
+    description: >-
+      Die Stellen 3 bis 8 der Versicherungsnummer kodieren den 01.01.1957,
+      angegeben ist der 17.04.1959. Jede Angabe fuer sich ist formatgueltig,
+      gemeinsam sind sie widerspruechlich - und dieser Widerspruch ist
+      deterministisch pruefbar.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1959-04-17"
+      versicherungsnummer: "12010157A001"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-11-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: versicherungsnummer
+          status: invalid
+    notes: >-
+      In v1 war dieser Vorgang ein anomalous_rule_passing-Item mit Tier 1: die
+      Regeln sahen nichts, nur der Scorer haette anschlagen koennen. Mit der
+      Querpruefung aus Teil 03 faellt er deterministisch auf. Das ist die
+      gewuenschte Richtung - was eine Regel sicher findet, gehoert nicht in
+      ein Modell.
+
+  - scenario_id: ar-0052-mehrere-maengel
+    kind: missing_field
+    description: >-
+      Ein Vorgang mit zwei unabhaengigen Maengeln: die Versicherungsnummer
+      fehlt ganz, und der gewuenschte Rentenbeginn liegt vor dem 60.
+      Lebensjahr. Beide Punkte muessen in einer Nachforderung stehen.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1974-02-08"
+      rentenart: regelaltersrente
+      rentenbeginn: "2027-06-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: versicherungsnummer
+          status: missing
+        - requirement_id: rentenbeginn
+          status: invalid
+
+  # ------------------------------------- tier 3: complete but not clear-cut ---
+  - scenario_id: ar-0030-langjaehrig-vollstaendig
+    kind: ambiguous_conflicting
+    description: >-
+      Vollstaendige Altersrente fuer langjaehrig Versicherte: alle Pflichtangaben
+      liegen vor, aber die Wartezeitpruefung ist keine Klarfallkonstellation.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1962-04-02"
+      versicherungsnummer: "19020462P018"
+      rentenart: altersrente_langjaehrig
+      rentenbeginn: "2027-04-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 3
+      derivation_source: hint
+      gaps: []
+
+  - scenario_id: ar-0031-auslandsbezug
+    kind: ambiguous_conflicting
+    description: >-
+      Vollstaendiger Regelaltersrentenantrag mit Auslandsbezug: die Zuordnung
+      geht an die Auslandsrenten, der Klarfall entfaellt. Die
+      Rentenart-Regel und die Hinweis-Regel schlagen ebenfalls an, verlieren
+      die Arbitrierung aber gegen Prioritaet 10 - der Konflikt steht im
+      Journal, entschieden ist er trotzdem.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1959-10-19"
+      versicherungsnummer: "17191059Q062"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-12-01"
+      auslandsbezug: ja
+    expected:
+      unit_id: Referat_318_Auslandsrenten
+      tier: 3
+      derivation_source: hint
+      gaps: []
+
+  - scenario_id: ar-0032-ohne-auslandsangabe
+    kind: ambiguous_conflicting
+    description: >-
+      Alle Pflichtangaben liegen vor, aber der Auslandsbezug ist gar nicht
+      angegeben: ohne diese Angabe laesst sich der Klarfall nicht feststellen.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1958-03-25"
+      versicherungsnummer: "17250358R073"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-10-01"
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 3
+      derivation_source: hint
+      gaps: []
+
+  - scenario_id: ar-0033-hinweis-widerspricht-inhalt
+    kind: ambiguous_conflicting
+    description: >-
+      Der Kanal meldet eine Altersrente, der Inhalt ist ein Antrag auf volle
+      Erwerbsminderungsrente. Ein widerspruechlicher Vorgang gehoert fachlich
+      vollstaendig geprueft und inhaltlich zum Erwerbsminderungsreferat.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1978-01-30"
+      versicherungsnummer: "19300178S085"
+      rentenart: erwerbsminderungsrente_voll
+      rentenbeginn: "2026-11-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 3
+      derivation_source: none
+      gaps: []
+    notes: >-
+      In v1 eine deklarierte Abweichung in Unit UND Tier. Teil 03 schliesst
+      beide: die Inhaltsregel (Prioritaet 20) schlaegt den Kanalhinweis
+      (Prioritaet 50), und weil Rentenbeginn und Rentenart auf verschiedene
+      Verfahren zeigen, wird gar kein Verfahren abgeleitet. Ohne Verfahren
+      gibt es keine Vollstaendigkeitspruefung, also auch keine Luecken - der
+      Vorgang ist nicht unvollstaendig, er ist nicht pruefbar.
+
+  # --------------------------- Verfahren steht nur im Formular (Teil 03) ---
+  - scenario_id: ar-0050-ohne-verfahrenshinweis-vollstaendig
+    kind: hint_missing
+    description: >-
+      Vollstaendiger, klarer Regelaltersrentenantrag, bei dem der Kanal kein
+      Verfahren meldet. Das Verfahren steht eindeutig im Formular, also wird
+      es abgeleitet, geprueft und freigegeben.
+    procedure_id: altersrente
+    procedure_hint: null
+    facts:
+      geburtsdatum: "1960-06-15"
+      versicherungsnummer: "12150660F066"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-12-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 1
+      derivation_source: content
+      gaps: []
+    notes: >-
+      Das Gegenstueck zu ar-0001 ohne Kanalhinweis. Es haelt eine bewusste
+      Entscheidung fest: eine inhaltlich eindeutig abgeleitete Verfahrenszuordnung
+      ist fuer Tier 1 zugelassen, weil sie deterministisch und geprueft ist.
+      Waere das anders gewollt, braeuchte die Entscheidungstabelle ein neues
+      qualifizierendes Feld (Contract-Anfrage, siehe ADR-013).
+
+  - scenario_id: ar-0051-ohne-verfahrenshinweis-ohne-rentenart
+    kind: hint_missing
+    description: >-
+      Kein Kanalhinweis und keine angekreuzte Rentenart, aber ein gewuenschter
+      Rentenbeginn: das reicht fuer die Verfahrensableitung und damit fuer die
+      Zuordnung, nicht fuer die Vollstaendigkeit.
+    procedure_id: altersrente
+    procedure_hint: null
+    facts:
+      geburtsdatum: "1957-09-12"
+      versicherungsnummer: "12120957G067"
+      rentenbeginn: "2027-03-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: content
+      gaps:
+        - requirement_id: rentenart
+          status: missing
+    notes: >-
+      Zuordnung kommt hier aus der Verfahrensregel (Prioritaet 40), nicht aus
+      der Rentenart-Regel: ohne Rentenart feuert die inhaltliche Regel nicht.
+      Ableitung und Zuordnung sind zwei Schritte, und dieses Item zeigt den
+      Unterschied.
+
+  # --------------------------------------- anomalous but rule-passing today ---
+  - scenario_id: ar-0040-rentenbeginn-weit-in-der-zukunft
+    kind: anomalous_rule_passing
+    description: >-
+      Formal einwandfreier Antrag, dessen gewuenschter Rentenbeginn dreizehn
+      Jahre in der Zukunft liegt.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1962-05-09"
+      versicherungsnummer: "19090562T011"
+      rentenart: regelaltersrente
+      rentenbeginn: "2039-01-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 1
+      derivation_source: hint
+      gaps: []
+    anomaly_expected: true
+    anomaly_pattern: >-
+      rentenbeginn_abstand_tage: Rentenbeginn liegt rund 4500 Tage nach dem
+      Eingang; gueltig, aber weit ausserhalb der ueblichen Verteilung.
+
+  - scenario_id: ar-0041-rentenbeginn-rueckwirkend
+    kind: anomalous_rule_passing
+    description: >-
+      Formal einwandfreier Antrag mit einem Rentenbeginn achtundzwanzig Jahre in
+      der Vergangenheit.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1935-02-18"
+      versicherungsnummer: "17180235U024"
+      rentenart: regelaltersrente
+      rentenbeginn: "1998-01-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 1
+      derivation_source: hint
+      gaps: []
+    anomaly_expected: true
+    anomaly_pattern: >-
+      rentenbeginn_abstand_tage negativ: Rentenbeginn liegt Jahrzehnte vor dem
+      Eingang, formal aber ein gueltiges ISO-Datum und mit 62 Jahren Abstand
+      zum Geburtsdatum auch rechtlich moeglich.
+
+  - scenario_id: ar-0042-geburtsdatum-implausibel-alt
+    kind: anomalous_rule_passing
+    description: >-
+      Formal einwandfreier Antrag einer angeblich 118 Jahre alten Person.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1908-01-04"
+      versicherungsnummer: "17040108V035"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-11-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 1
+      derivation_source: hint
+      gaps: []
+    anomaly_expected: true
+    anomaly_pattern: >-
+      alter_bei_antragstellung: rund 118 Jahre, innerhalb der Formatgrenzen und
+      ausserhalb jeder plausiblen Verteilung. Die Untergrenze der
+      Datumspruefung liegt bewusst bei 1900: unplausibel ist Sache des
+      Scorers, unmoeglich Sache der Regel.
+
+  - scenario_id: ar-0044-unbekannte-bereichsnummer
+    kind: anomalous_rule_passing
+    description: >-
+      Vollstaendiger Antrag, dessen Versicherungsnummer mit der Bereichsnummer
+      99 beginnt. Die Nummer ist formgerecht und traegt das richtige
+      Geburtsdatum, 99 wird von der Rentenversicherung aber nicht vergeben.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    facts:
+      geburtsdatum: "1958-11-03"
+      versicherungsnummer: "99031158E065"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-11-01"
+      auslandsbezug: nein
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 1
+      derivation_source: hint
+      gaps: []
+    anomaly_expected: true
+    anomaly_pattern: >-
+      bereichsnummer_unbekannt: 99 gehoert zu keinem Rentenversicherungstraeger.
+      Bewusst NICHT als Regel geprueft: die Liste der vergebenen
+      Bereichsnummern ist Verwaltungswissen, das dieses Repository nicht
+      belegen kann, und eine erfundene Liste waere schlechter als keine.

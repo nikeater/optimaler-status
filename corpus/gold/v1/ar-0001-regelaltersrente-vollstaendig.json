@@ -1,0 +1,34 @@
+{
+  "submissionId": "ar-0001-regelaltersrente-vollstaendig",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-06T07:21:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antragsteller": {
+      "geburtsdatum": "1959-04-17",
+      "anschrift": {
+        "plz": "24103",
+        "hausnummer": "2",
+        "ort": "Beispielstadt",
+        "strasse": " Kirchgasse \t"
+      },
+      "versicherungsnummer": " \t17045917B012  "
+    },
+    "antrag": {
+      "rentenart": "regelaltersrente",
+      "rentenbeginn": " \t2026-11-01  ",
+      "auslandsbezug": "nein",
+      "hinweistext": "Antrag wie besprochen online eingereicht. Bitte antworten Sie schriftlich, nicht telefonisch."
+    },
+    "meta": {
+      "bearbeitungswunsch": "  Bitte antworten Sie schriftlich, nicht telefonisch. \t",
+      "eingangsdatum": " 6. August 2026 \t"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

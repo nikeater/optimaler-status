@@ -1,0 +1,57 @@
+# Zero-shot unit classifier v1 (config/classifier/, ADR-021).
+#
+# The fallback that answers "who would probably have to look at this" for the
+# items no routing rule catches. It NEVER overrules a rule; it is consulted only
+# when none fired.
+#
+# SHIPPED STATE: enabled: false, and there is no calibration block. That is not
+# an oversight, it is the whole design:
+#
+#   * Disabled, the classifier is LOG-ONLY. Suggestions are recorded in the
+#     evidence record and in the evidence_assembled journal event, and the
+#     decision plane does not admit them (engine/decide: the admitted routing
+#     sources default to RULE alone). No tier and no addressee moves.
+#   * Enabling it is an agency decision, and the loader REFUSES `enabled: true`
+#     without a `calibration` block whose provenance names the gold set, the
+#     model and the date. A raw cosine similarity is not a probability, and
+#     comparing one against the decision table's 0.9 confidence bound would be
+#     a category error that happens to produce a tier.
+#
+# Its own file rather than a block in config/rules/: routing_v3's version string
+# is frozen into every gold-set MANIFEST, so a classifier tweak inside that file
+# would either invalidate a frozen corpus or ship under a version that no longer
+# describes the file it names.
+version: classifier_v1
+
+enabled: false
+
+# Multilingual because the post is German; e5-class because the problem is
+# asymmetric retrieval (an inbound letter is a query, a Referat's responsibility
+# text is a passage). Rides the optional [classify] extra; see docs/BUILD.md.
+model_id: intfloat/multilingual-e5-small
+
+# Deliberately the same number as the decision table's routing-confidence bound.
+# A suggestion that clears this minimum is one the table would also accept, so
+# the two thresholds cannot drift into disagreeing about what "sure enough"
+# means. Meaningful only once a calibration exists; see engine/evidence/classify.
+min_confidence: 0.90
+
+# Units the classifier may never suggest.
+#
+# The two Geschaeftsbereiche are supervisory nodes whose responsibilities read
+# "Versicherungs- und Rentenangelegenheiten" and "Fachaufsicht ueber die
+# Referate" - text so general that every item resembles it. Referat 390 is the
+# catch-all, and its responsibility text describes the ABSENCE of a match
+# ("nicht eindeutig zuordenbare Eingaenge"), which an embedding cannot
+# represent: it would rank highest for letters that happen to use the word
+# "unklar". The honest way for this classifier to say "I do not know" is to
+# produce no suggestion at all, which is exactly what a confidence below the
+# minimum does.
+exclude_unit_ids:
+  - GB_Versicherung_Rente
+  - GB_Rehabilitation
+  - Referat_390_Sonstiges
+# calibration:
+#   Fit it with `python -m eval.calibrate` on a machine with the [classify]
+#   extra and paste the emitted block here. Until then this key stays absent
+#   and `enabled: true` is refused at load time.

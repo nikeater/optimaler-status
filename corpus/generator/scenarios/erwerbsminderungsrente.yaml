@@ -1,0 +1,458 @@
+# Scenario specs for the erwerbsminderungsrente procedure.
+#
+# The procedure runs with tier1_enabled: false, so the interesting shape here is
+# the one that looks paradoxical at first: a FORMALLY COMPLETE application ends
+# at tier 3, not tier 1. The tier-1 row cannot qualify (the legal gate is off)
+# and the tier-2 row requires an incomplete verdict, so a complete item falls
+# through to the table default. That is the intended behaviour for a procedure
+# that hangs on a sozialmedizinische Beurteilung, and these items are the
+# regression test for it.
+#
+# Every value is invented (see corpus/gold/v2/README.md).
+description: >-
+  Erwerbsminderungsrente: complete applications that still need a caseworker,
+  missing and invalid fields, an Auslandsfall, a contradictory Rentenart,
+  applications whose procedure has to be read off the form, and two
+  statistically odd but rule-passing items.
+
+scenarios:
+  # ------------------------------- complete, and still a case for a human ---
+  - scenario_id: em-0001-volle-erwerbsminderung-vollstaendig
+    kind: complete_clear
+    description: >-
+      Vollstaendiger Antrag auf volle Erwerbsminderungsrente mit vorliegendem
+      Gutachten: alle Klarfallkriterien sind erfuellt, tier1_enabled ist aber
+      false, also bleibt es bei der vollstaendigen fachlichen Pruefung.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1974-06-12"
+      versicherungsnummer: "19120674A031"
+      rentenart: erwerbsminderungsrente_voll
+      eintritt_erwerbsminderung: "2025-11-04"
+      letzte_taetigkeit: Lagerarbeiterin
+      auslandsbezug: nein
+      gutachten_status: liegt_vor
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 3
+      derivation_source: hint
+      gaps: []
+    notes: >-
+      Beleg dafuer, dass der Klarfall allein keine Tier-1-Freigabe erzeugt:
+      erst der gesetzte Rechtsgrund in ProcedureFlags oeffnet Tier 1.
+
+  - scenario_id: em-0002-teilweise-erwerbsminderung-vollstaendig
+    kind: complete_clear
+    description: >-
+      Vollstaendiger Antrag auf teilweise Erwerbsminderungsrente, Gutachten
+      liegt noch nicht vor.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1981-03-08"
+      versicherungsnummer: "19080381B047"
+      rentenart: erwerbsminderungsrente_teilweise
+      eintritt_erwerbsminderung: "2026-01-15"
+      letzte_taetigkeit: Kraftfahrer im Nahverkehr
+      auslandsbezug: nein
+      gutachten_status: liegt_nicht_vor
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 3
+      derivation_source: hint
+      gaps: []
+
+  - scenario_id: em-0003-gutachten-ausstehend
+    kind: complete_clear
+    description: >-
+      Vollstaendiger Antrag auf volle Erwerbsminderungsrente, das
+      sozialmedizinische Gutachten ist beauftragt, aber noch nicht da.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1969-09-23"
+      versicherungsnummer: "19230969C052"
+      rentenart: erwerbsminderungsrente_voll
+      eintritt_erwerbsminderung: "2025-08-30"
+      letzte_taetigkeit: Pflegehelfer
+      auslandsbezug: nein
+      gutachten_status: ausstehend
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 3
+      derivation_source: hint
+      gaps: []
+
+  # ------------------------------------------------- tier 2: missing field ---
+  - scenario_id: em-0010-ohne-eintritt-der-erwerbsminderung
+    kind: missing_field
+    description: >-
+      Antrag ohne Angabe, seit wann die Erwerbsminderung besteht. Die
+      Verfahrensableitung traegt hier die Rentenart, nicht das Eintrittsdatum.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1977-12-01"
+      versicherungsnummer: "19011277D019"
+      rentenart: erwerbsminderungsrente_voll
+      letzte_taetigkeit: Verkaeuferin
+      auslandsbezug: nein
+      gutachten_status: liegt_nicht_vor
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: eintritt_erwerbsminderung
+          status: missing
+
+  - scenario_id: em-0011-ohne-letzte-taetigkeit
+    kind: missing_field
+    description: Antrag ohne Angabe der zuletzt ausgeuebten Taetigkeit.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1983-05-17"
+      versicherungsnummer: "19170583E026"
+      rentenart: erwerbsminderungsrente_teilweise
+      eintritt_erwerbsminderung: "2026-02-02"
+      auslandsbezug: nein
+      gutachten_status: liegt_nicht_vor
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: letzte_taetigkeit
+          status: missing
+
+  - scenario_id: em-0012-ohne-versicherungsnummer
+    kind: missing_field
+    description: Antrag ohne Versicherungsnummer.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1971-02-11"
+      rentenart: erwerbsminderungsrente_voll
+      eintritt_erwerbsminderung: "2025-06-19"
+      letzte_taetigkeit: Maurer
+      auslandsbezug: nein
+      gutachten_status: liegt_vor
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: versicherungsnummer
+          status: missing
+
+  - scenario_id: em-0013-ohne-geburtsdatum-und-taetigkeit
+    kind: missing_field
+    description: Antrag ohne Geburtsdatum und ohne letzte Taetigkeit.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      versicherungsnummer: "19051075F038"
+      rentenart: erwerbsminderungsrente_voll
+      eintritt_erwerbsminderung: "2026-03-11"
+      auslandsbezug: nein
+      gutachten_status: ausstehend
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: geburtsdatum
+          status: missing
+        - requirement_id: letzte_taetigkeit
+          status: missing
+
+  # ------------------------------------------------- tier 2: invalid field ---
+  - scenario_id: em-0020-taetigkeit-zu-kurz
+    kind: invalid_field
+    description: >-
+      Die letzte Taetigkeit ist als zweistellige Abkuerzung angegeben und
+      unterschreitet damit die Mindestlaenge.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1979-08-05"
+      versicherungsnummer: "19050879G044"
+      rentenart: erwerbsminderungsrente_voll
+      eintritt_erwerbsminderung: "2025-12-01"
+      letzte_taetigkeit: IT
+      auslandsbezug: nein
+      gutachten_status: liegt_nicht_vor
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: letzte_taetigkeit
+          status: invalid
+
+  - scenario_id: em-0021-eintritt-deutsches-format
+    kind: invalid_field
+    description: Eintritt der Erwerbsminderung im Punktformat statt als ISO-Datum.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1966-04-28"
+      versicherungsnummer: "19280466H057"
+      rentenart: erwerbsminderungsrente_voll
+      eintritt_erwerbsminderung: "01.03.2024"
+      letzte_taetigkeit: Schlosser
+      auslandsbezug: nein
+      gutachten_status: liegt_vor
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: eintritt_erwerbsminderung
+          status: invalid
+
+  - scenario_id: em-0022-rentenart-veraltete-schreibweise
+    kind: invalid_field
+    description: >-
+      Die Rentenart ist in der alten Sammelschreibweise angegeben, das Verfahren
+      unterscheidet aber volle und teilweise Erwerbsminderung. Inhaltlich
+      traegt das Eintrittsdatum die Verfahrensableitung.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1985-01-19"
+      versicherungsnummer: "19190185J063"
+      rentenart: erwerbsminderungsrente
+      eintritt_erwerbsminderung: "2026-04-06"
+      letzte_taetigkeit: Kommissioniererin
+      auslandsbezug: nein
+      gutachten_status: liegt_nicht_vor
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: rentenart
+          status: invalid
+
+  - scenario_id: em-0023-eintritt-vor-dem-14-lebensjahr
+    kind: invalid_field
+    description: >-
+      Der angegebene Eintritt der Erwerbsminderung liegt im zehnten Lebensjahr
+      der antragstellenden Person. Vor dem 14. Geburtstag gibt es keine
+      Erwerbsfaehigkeit, die gemindert sein koennte.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1985-06-10"
+      versicherungsnummer: "19100685K068"
+      rentenart: erwerbsminderungsrente_voll
+      eintritt_erwerbsminderung: "1996-03-01"
+      letzte_taetigkeit: Auszubildende im Einzelhandel
+      auslandsbezug: nein
+      gutachten_status: liegt_nicht_vor
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: eintritt_erwerbsminderung
+          status: invalid
+
+  - scenario_id: em-0024-eintritt-nach-der-obergrenze
+    kind: invalid_field
+    description: >-
+      Der Eintritt der Erwerbsminderung ist auf das Jahr 2038 datiert und
+      liegt damit ueber der konfigurierten Obergrenze.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1980-04-22"
+      versicherungsnummer: "19220480L069"
+      rentenart: erwerbsminderungsrente_teilweise
+      eintritt_erwerbsminderung: "2038-01-01"
+      letzte_taetigkeit: Elektroniker
+      auslandsbezug: nein
+      gutachten_status: ausstehend
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: eintritt_erwerbsminderung
+          status: invalid
+
+  - scenario_id: em-0025-versicherungsnummer-widerspricht-geburtsdatum
+    kind: invalid_field
+    description: >-
+      Die Versicherungsnummer kodiert den 14.09.1977, angegeben ist der
+      14.09.1976. Ein Zahlendreher im Jahr, formatgueltig auf beiden Seiten.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1976-09-14"
+      versicherungsnummer: "19140977M070"
+      rentenart: erwerbsminderungsrente_voll
+      eintritt_erwerbsminderung: "2025-03-05"
+      letzte_taetigkeit: Dachdecker
+      auslandsbezug: nein
+      gutachten_status: liegt_vor
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: versicherungsnummer
+          status: invalid
+
+  # --------------------------------------------- tier 3: ambiguous variants ---
+  - scenario_id: em-0030-auslandsbezug
+    kind: ambiguous_conflicting
+    description: >-
+      Vollstaendiger Antrag mit Auslandsbezug: die Zuordnung geht an die
+      Auslandsrenten, gewuerdigt wird der Vorgang ohnehin vollstaendig.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1972-10-30"
+      versicherungsnummer: "19301072N071"
+      rentenart: erwerbsminderungsrente_voll
+      eintritt_erwerbsminderung: "2025-09-14"
+      letzte_taetigkeit: Monteur
+      auslandsbezug: ja
+      gutachten_status: liegt_vor
+    expected:
+      unit_id: Referat_318_Auslandsrenten
+      tier: 3
+      derivation_source: hint
+      gaps: []
+
+  - scenario_id: em-0031-rentenart-widerspricht-verfahren
+    kind: ambiguous_conflicting
+    description: >-
+      Der Kanal meldet eine Erwerbsminderungsrente, im Formular ist die
+      Regelaltersrente angekreuzt. Fachlich ist der Vorgang widerspruechlich und
+      gehoert vollstaendig geprueft.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1960-06-24"
+      versicherungsnummer: "18240660P082"
+      rentenart: regelaltersrente
+      eintritt_erwerbsminderung: "2026-05-02"
+      letzte_taetigkeit: Buerokauffrau
+      auslandsbezug: nein
+      gutachten_status: liegt_nicht_vor
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 3
+      derivation_source: none
+      gaps: []
+    notes: >-
+      In v1 eine deklarierte Tier-Abweichung: die Vollstaendigkeitspruefung sah
+      nur eine unzulaessige Rentenart und stufte den Vorgang als unvollstaendig
+      in Tier 2 ein. Teil 03 schliesst sie. Rentenart und Eintrittsdatum zeigen
+      auf verschiedene Verfahren, also wird keines abgeleitet; die Zuordnung
+      traegt der Kanalhinweis, gewuerdigt wird vollstaendig.
+
+  # --------------------------- Verfahren steht nur im Formular (Teil 03) ---
+  - scenario_id: em-0050-ohne-verfahrenshinweis-vollstaendig
+    kind: hint_missing
+    description: >-
+      Vollstaendiger EM-Antrag ohne Kanalhinweis. Rentenart und Eintrittsdatum
+      zeigen beide auf dasselbe Verfahren, also ist es eindeutig ableitbar.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: null
+    facts:
+      geburtsdatum: "1968-03-27"
+      versicherungsnummer: "19270368Q071"
+      rentenart: erwerbsminderungsrente_voll
+      eintritt_erwerbsminderung: "2026-01-20"
+      letzte_taetigkeit: Busfahrerin
+      auslandsbezug: nein
+      gutachten_status: liegt_vor
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 3
+      derivation_source: content
+      gaps: []
+
+  - scenario_id: em-0051-ohne-verfahrenshinweis-unvollstaendig
+    kind: hint_missing
+    description: >-
+      EM-Antrag ohne Kanalhinweis und ohne Angabe der letzten Taetigkeit: das
+      Verfahren ist ableitbar, die Pruefung faellt trotzdem unvollstaendig aus.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: null
+    facts:
+      geburtsdatum: "1982-07-19"
+      versicherungsnummer: "19190782R072"
+      rentenart: erwerbsminderungsrente_teilweise
+      eintritt_erwerbsminderung: "2025-10-08"
+      auslandsbezug: nein
+      gutachten_status: liegt_nicht_vor
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 2
+      derivation_source: content
+      gaps:
+        - requirement_id: letzte_taetigkeit
+          status: missing
+
+  # --------------------------------------- anomalous but rule-passing today ---
+  - scenario_id: em-0040-eintritt-vor-jahrzehnten
+    kind: anomalous_rule_passing
+    description: >-
+      Vollstaendiger Antrag, in dem der Eintritt der Erwerbsminderung 32 Jahre
+      zurueckliegt und die antragstellende Person damals 14 Jahre alt war.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1979-07-16"
+      versicherungsnummer: "19160779S093"
+      rentenart: erwerbsminderungsrente_voll
+      eintritt_erwerbsminderung: "1994-05-02"
+      letzte_taetigkeit: Gaertnerin
+      auslandsbezug: nein
+      gutachten_status: liegt_vor
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 3
+      derivation_source: hint
+      gaps: []
+    anomaly_expected: true
+    anomaly_pattern: >-
+      eintritt_alter: Eintritt der Erwerbsminderung wenige Wochen nach dem
+      14. Geburtstag, bei gleichzeitig angegebener Erwerbstaetigkeit. Knapp
+      innerhalb der Regelgrenze, weit ausserhalb der Verteilung - genau die
+      Zone, fuer die es einen Scorer gibt.
+
+  - scenario_id: em-0041-eintritt-in-der-zukunft
+    kind: anomalous_rule_passing
+    description: >-
+      Antrag ohne letzte Taetigkeit, dessen Eintritt der Erwerbsminderung drei
+      Jahre in der Zukunft liegt.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: erwerbsminderungsrente
+    facts:
+      geburtsdatum: "1988-11-02"
+      versicherungsnummer: "19021188T018"
+      rentenart: erwerbsminderungsrente_teilweise
+      eintritt_erwerbsminderung: "2029-01-01"
+      auslandsbezug: nein
+      gutachten_status: liegt_nicht_vor
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: letzte_taetigkeit
+          status: missing
+    anomaly_expected: true
+    anomaly_pattern: >-
+      eintritt_in_der_zukunft: der angegebene Eintritt liegt nach dem
+      Eingangsdatum; das Format ist gueltig, der Sachverhalt kann nicht
+      stimmen. Die Datumsgrenze faengt ihn nicht ab, weil sie absolut ist und
+      nicht am Eingangsdatum haengt.

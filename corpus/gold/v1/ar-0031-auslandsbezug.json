@@ -1,0 +1,34 @@
+{
+  "submissionId": "ar-0031-auslandsbezug",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antragsteller": {
+      "anschrift": {
+        "hausnummer": "3",
+        "strasse": "Musterweg",
+        "plz": "10115",
+        "ort": "Musterstadt"
+      },
+      "geburtsdatum": "1959-10-19",
+      "versicherungsnummer": "  19105917Q062 \t"
+    },
+    "meta": {
+      "bearbeitungswunsch": "Ich bin ab kommender Woche im Urlaub.",
+      "eingangsdatum": "5. August 2026"
+    },
+    "antrag": {
+      "rentenbeginn": "2026-12-01",
+      "rentenart": "  regelaltersrente  ",
+      "hinweistext": "Antrag wie besprochen online eingereicht.",
+      "auslandsbezug": " \tja \t"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

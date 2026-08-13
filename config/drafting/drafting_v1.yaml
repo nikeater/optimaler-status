@@ -1,0 +1,276 @@
+# Drafting v1 (config/drafting/).
+#
+# The WORDING of every prepared letter is agency text, edited here and versioned
+# here, never a string literal in Python. The loader (engine/config_loader.py,
+# DraftingConfig) validates this file at startup and renders every template once
+# against a probe context, so a template that cannot render fails at startup and
+# not in front of a caseworker. The drafting engine (engine/draft/) fills it in
+# and re-hydrates the sealed identity into it (ADR-023).
+#
+# Its own file with its own version, for the part-06 reason: the version strings
+# of config/rules/, config/taxonomy/, config/decision/ and config/thresholds.yaml
+# are frozen into every gold-set MANIFEST, so a wording change may not ride on
+# one of them. This file's version appears in the DRAFTED event payload
+# (`drafting_version`) and in no frozen manifest.
+#
+# WHAT A DRAFT IS, AND IS NOT (ADR-003, ADR-023). Everything here is prepared
+# FOR A HUMAN and nothing here is dispatched. A Nachforderung becomes a request
+# when a caseworker confirms and sends it; a Bewilligungsentwurf becomes a
+# Verwaltungsakt only when a caseworker confirms and it is issued. Part 08
+# writes drafts into a store and journals that they exist. Confirmation, editing
+# and dispatch are part 10.
+#
+# WHAT MAY APPEAR IN A TEMPLATE: the case id, journal timestamps, names this
+# file and config/taxonomy/ supply, the gap sentences the procedure configs
+# already author (engine/evidence/nachforderung.py renders them; a draft
+# assembles them and never rewrites them), the extracted values of the item, and
+# the re-hydrated identity of the applicant. The last two are the difference
+# between this path and the notification path, which may carry none of it.
+version: drafting_v1
+
+# How long the applicant has to answer, stated RELATIVELY in the letter. The
+# absolute date needs a dispatch date, which does not exist while a draft waits
+# for a caseworker; engine/draft/bekanntgabe.py computes it from the dispatch
+# timestamp part 10 journals (par. 37 Abs. 2 SGB X four-day Bekanntgabefiktion
+# plus par. 26 Abs. 3 SGB X working-day shift). This number is the one the
+# letter prints and the one that arithmetic takes.
+response_window_days: 30
+
+# Framing every draft carries. One editable home for the two sentences that
+# matter most: that this is not yet an act of administration, and that no
+# language model wrote a word of it (C-13).
+framing:
+  banner: >-
+    ENTWURF - zur Pruefung und Freigabe durch eine Sachbearbeiterin oder einen
+    Sachbearbeiter. Dieses Schreiben ist noch nicht versandt und entfaltet keine
+    Rechtswirkung.
+  no_model_notice: >-
+    Dieser Entwurf wurde vollstaendig aus hinterlegten Textbausteinen erzeugt;
+    es wurde kein Sprachmodell verwendet.
+  dispatch_note: >-
+    Interner Vermerk (nicht Bestandteil des Schreibens): Der Versandzeitpunkt
+    wird beim Versand journalisiert. Die absolute Frist ergibt sich erst daraus:
+    Versanddatum zuzueglich vier Tage Bekanntgabefiktion (par. 37 Abs. 2 SGB X),
+    danach die oben genannte Frist, jeweils auf den naechsten Werktag verschoben
+    (par. 26 Abs. 3 SGB X).
+
+# Amtsermittlungsgrundsatz (C-7). Requirements the DRV can determine itself are
+# still ASKED for - the applicant's answer is faster and less error-prone - but
+# the wording softens, and they are EXCLUDED from any par. 66 Abs. 3 scope: a
+# Rechtsfolgenhinweis for a fact the agency can look up would threaten a
+# consequence that par. 66 Abs. 1 SGB I does not carry, because the applicant's
+# cooperation is not what makes the Sachaufklaerung possible.
+#
+# The loader refuses a requirement id no procedure declares, so a renamed
+# requirement cannot silently stop softening.
+amtsermittlung:
+  note: >-
+    Diese Angabe koennen wir auch selbst ermitteln (Amtsermittlungsgrundsatz,
+    par. 20 SGB X); Ihre Mitteilung beschleunigt die Bearbeitung.
+  entries:
+    - procedure_id: altersrente
+      requirement_ids:
+        - versicherungsnummer
+      note: >-
+        Die Versicherungsnummer ist im Bestand der Rentenversicherung
+        recherchierbar; par. 60 SGB I verlangt Mitwirkung nur, soweit die
+        Behoerde den Sachverhalt nicht selbst aufklaeren kann.
+    - procedure_id: erwerbsminderungsrente
+      requirement_ids:
+        - versicherungsnummer
+    - procedure_id: statusfeststellung
+      requirement_ids:
+        - versicherungsnummer
+
+# par. 66 Abs. 3 SGB I Rechtsfolgenhinweis. NOT a template block that renders by
+# default: there is no on/off switch in this file at all, on purpose. The block
+# is rendered only when a caller passes rechtsfolgenhinweis=True, and part 10's
+# review UI is where a caseworker makes that choice per case. The loader refuses
+# a block that does not carry the {{ requirements }} slot, because a hint that
+# does not name the concrete Angaben it applies to is boilerplate, and
+# boilerplate is exactly what par. 66 Abs. 3 SGB I does not permit.
+rechtsfolgenhinweis:
+  heading: Hinweis auf die Folgen fehlender Mitwirkung (par. 66 Abs. 3 SGB I)
+  body: >-
+    Wenn Sie die folgenden Angaben nicht innerhalb der genannten Frist
+    nachreichen, kann die beantragte Leistung ohne weitere Ermittlungen ganz
+    oder teilweise versagt oder entzogen werden (par. 66 Abs. 1 SGB I):
+    {{ requirements }}. Ueber eine Versagung wird nach pflichtgemaessem Ermessen
+    im Einzelfall entschieden; sie setzt voraus, dass der Sachverhalt ohne Ihre
+    Mitwirkung nicht aufgeklaert werden kann. Sie koennen die Mitwirkung
+    nachholen; die Leistung wird dann nach par. 67 SGB I nachtraeglich erbracht,
+    soweit die Voraussetzungen vorliegen.
+
+# Reply channel per inbound channel, and the dispatch shape a letter bearing a
+# par. 66 Abs. 3 hint needs (C-8 remainder). `reply` is what the letter tells the
+# applicant; `dispatch` is what the SENDING path has to be, and it is stricter
+# than the inbound channel on purpose: par. 36a Abs. 2 SGB I lets an electronic
+# document replace the written form only with a qualified electronic signature,
+# so a Rechtsfolgenhinweis may not leave as a plain e-mail. Nothing is dispatched
+# in part 08; this records the shape part 10 and the pilot have to implement.
+channels:
+  - channel: fit_connect
+    reply: >-
+      Bitte antworten Sie ueber das Antragsportal, ueber das Sie Ihren Antrag
+      eingereicht haben, oder schriftlich an die im Briefkopf genannte Anschrift.
+    dispatch: qualified_electronic
+    note: >-
+      Rueckkanal des Portals ist vorhanden. Ein Schreiben mit
+      Rechtsfolgenhinweis braucht die qualifizierte elektronische Form
+      (par. 36a Abs. 2 SGB I) oder den Postweg.
+  - channel: email
+    reply: >-
+      Bitte antworten Sie schriftlich an die im Briefkopf genannte Anschrift
+      oder ueber das Antragsportal. Eine einfache E-Mail wahrt die Schriftform
+      nicht.
+    dispatch: postal
+    note: >-
+      Einfache E-Mail ersetzt die Schriftform nicht (par. 36a Abs. 2 SGB I).
+      Ein Schreiben mit Rechtsfolgenhinweis geht auf dem Postweg hinaus.
+  - channel: scan
+    reply: >-
+      Bitte antworten Sie schriftlich an die im Briefkopf genannte Anschrift.
+    dispatch: postal
+    note: >-
+      Papiereingang, Papierausgang. Der Druckweg ist Teil 10/Pilot; heute
+      entsteht nur der Entwurf.
+
+# The letter head. Every path here MUST be identity-classed in
+# config/redaction/, and the loader refuses one that is not: the head of a
+# letter is where the applicant is addressed by name, and a path that was never
+# sealed would print payload content that never went through the vault - which
+# would make the round-trip check vacuous for exactly the fields it matters for.
+# A path no submission carries simply renders nothing (gold v4 carries no
+# antragsteller.name, so the drafts address "Sehr geehrte Damen und Herren").
+addressee:
+  anschrift: antragsteller.anschrift
+  versicherungsnummer: antragsteller.versicherungsnummer
+  geburtsdatum: antragsteller.geburtsdatum
+
+# How a procedure is named in the Betreff of a letter. Deliberately its own
+# home, not a second reader of config/notifications/: the informational display
+# name an applicant reads on a receipt ("Antrag auf Altersrente") and the
+# Betreff of a formal letter are different texts that change for different
+# reasons. The loader refuses a name for a procedure that does not exist.
+procedure_names:
+  altersrente: Ihr Antrag auf Altersrente
+  erwerbsminderungsrente: Ihr Antrag auf Rente wegen Erwerbsminderung
+  statusfeststellung: Ihr Antrag auf Feststellung des Erwerbsstatus nach par. 7a SGB IV
+
+# Fallbacks for the two names a draft may not have. A tier-3 item gets no draft
+# at all and a tier-2 item is always routed (the tier-2 row of the decision table
+# requires a rule hit), so both of these are reachable only for a config the
+# loader would otherwise have to guess about. They exist so that a template never
+# renders an empty Betreff or an unsigned letter.
+fallback_procedure_name: Ihr Anliegen
+fallback_unit_name: die zustaendige Fachabteilung
+
+# The two letters. One template per kind, both required: a tier-1 item with no
+# prepared-decision template would silently get no draft.
+templates:
+  - template_id: nachforderung_v1
+    kind: nachforderung
+    subject: "{{ procedure_label }} - noch fehlende Angaben (Vorgang {{ case_id }})"
+    body: |-
+      {{ entwurf_banner | wrap }}
+
+      {% if empfaenger_anschrift %}
+      {{ empfaenger_anschrift }}
+
+      {% endif %}
+      Vorgang: {{ case_id }}
+      {% if versicherungsnummer %}
+      Versicherungsnummer: {{ versicherungsnummer }}
+      {% endif %}
+      {% if geburtsdatum %}
+      Geburtsdatum: {{ geburtsdatum }}
+      {% endif %}
+      Eingegangen am: {{ received_at }}
+
+      Betreff: {{ procedure_label }} - noch fehlende Angaben
+
+      Sehr geehrte Damen und Herren,
+
+      fuer die Bearbeitung Ihres Antrags fehlen uns noch Angaben. Nach par. 60
+      Abs. 1 Satz 1 Nr. 1 SGB I haben Sie die Tatsachen anzugeben, die fuer die
+      Leistung erheblich sind. Wir bitten Sie deshalb um Folgendes:
+
+      {% for gap in gaps %}
+      - {{ gap.sentence_full | wrap("  ") }}
+      {% endfor %}
+
+      Bitte antworten Sie innerhalb von {{ window_days }} Tagen nach Bekanntgabe
+      dieses Schreibens.
+
+      {{ reply_channel | wrap }}
+      {% if rechtsfolgenhinweis %}
+
+      {{ rechtsfolgenhinweis_heading }}
+
+      {{ rechtsfolgenhinweis_body | wrap }}
+      {% endif %}
+
+      Wenn Sie Fragen zu diesem Schreiben haben, nennen Sie uns bitte die oben
+      genannte Vorgangsnummer.
+
+      Mit freundlichen Gruessen
+
+      {{ unit_name }}
+
+      {{ no_model_notice | wrap }}
+
+      {{ dispatch_note | wrap }}
+
+  - template_id: bewilligungsentwurf_v1
+    kind: prepared_decision
+    subject: "{{ procedure_label }} - Bewilligungsentwurf (Vorgang {{ case_id }})"
+    body: |-
+      {{ entwurf_banner | wrap }}
+
+      ENTWURF EINES BESCHEIDES - KEIN VERWALTUNGSAKT. Dieses Schreiben ist
+      maschinell vorbereitet und wird erst dann zu einer Entscheidung, wenn eine
+      Sachbearbeiterin oder ein Sachbearbeiter es geprueft, freigegeben und
+      abgesandt hat. Bis dahin ist es ein Vorschlag und nichts weiter.
+
+      {% if empfaenger_anschrift %}
+      {{ empfaenger_anschrift }}
+
+      {% endif %}
+      Vorgang: {{ case_id }}
+      {% if versicherungsnummer %}
+      Versicherungsnummer: {{ versicherungsnummer }}
+      {% endif %}
+      {% if geburtsdatum %}
+      Geburtsdatum: {{ geburtsdatum }}
+      {% endif %}
+      Eingegangen am: {{ received_at }}
+
+      Betreff: {{ procedure_label }}
+
+      Sehr geehrte Damen und Herren,
+
+      Ihr Antrag ist vollstaendig. Die Angaben sind widerspruchsfrei, ein
+      Auslandsbezug ist nicht ersichtlich, und der Vorgang ist als Klarfall
+      vorbereitet worden.
+
+      Zugrunde gelegte Angaben aus Ihrem Antrag:
+
+      {% for fact in facts %}
+      - {{ fact.label }}: {{ fact.value }}
+      {% endfor %}
+
+      Ueber Ihren Antrag wird nach Pruefung durch die zustaendige Stelle
+      entschieden. Erst die freigegebene und bekannt gegebene Entscheidung ist
+      ein Verwaltungsakt im Sinne des par. 31 SGB X; sie enthaelt dann auch die
+      Berechnung und die Rechtsbehelfsbelehrung.
+
+      Mit freundlichen Gruessen
+
+      {{ unit_name }}
+
+      {{ no_model_notice | wrap }}
+
+      Interner Vermerk (nicht Bestandteil des Schreibens): vorbereitet als
+      Tier-1-Klarfall. Vollautomatische Bekanntgabe findet nicht statt; die
+      Freigabe durch einen Menschen ist Voraussetzung (par. 31a SGB X,
+      Art. 22 DSGVO, ADR-003).

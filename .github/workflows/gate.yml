@@ -1,0 +1,148 @@
+# The gate, on every push and every pull request.
+#
+# This is the project's own gate, run by a machine that has never seen
+# this project before, and that is the whole point of publishing it: the claim
+# "1257 tests, four eval gates, no false clear" is only worth something if a
+# stranger can watch it being checked.
+#
+# CPU-only, NO EXTRAS, NO MODEL DOWNLOADS. The [redact] extra (presidio,
+# spaCy) and the [classify] extra (sentence-transformers, torch) are never
+# installed here, and that is a design property rather than a saving: a gate
+# whose numbers depend on which wheels a machine happens to have is not a gate.
+# The deterministic redaction recall is 1.000 without the NER model and the
+# zero-shot classifier is never auto-loaded, so this job measures exactly what
+# a developer measures locally.
+#
+# The commands below are the ones in docs/BUILD.md, in the order that document
+# lists them. If the two ever disagree, the document is the specification and
+# this file is the bug.
+#
+# NOT VERIFIED BY EXECUTION at the time of writing: GitHub Actions cannot be
+# run locally, and this repository has never been pushed. The YAML parses and
+# every command is one that was run on the development machine, but the first
+# real evidence that this workflow is green is the first push.
+
+name: gate
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install the project and the dev extra (no [redact], no [classify])
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Assert the optional extras really are absent
+        # A gate that silently gained a model would report different numbers
+        # while still passing, which is the one failure mode this whole
+        # arrangement exists to prevent. Checked rather than assumed.
+        run: |
+          python - <<'PY'
+          import importlib.util as u
+          leaked = [
+              name
+              for name in ("presidio_analyzer", "spacy", "torch", "sentence_transformers")
+              if u.find_spec(name) is not None
+          ]
+          if leaked:
+              raise SystemExit(f"optional extras must not be installed in CI: {leaked}")
+          print("extras absent: presidio_analyzer, spacy, torch, sentence_transformers")
+          PY
+
+      - name: Tests and the coverage floor
+        run: python -m pytest
+
+      - name: Formatting
+        run: python -m ruff format --check .
+
+      - name: Linting
+        run: python -m ruff check .
+
+      - name: Types
+        run: python -m mypy
+
+      - name: Frozen corpora - integrity and outcomes
+        # v4 is the current set and --check re-derives every outcome against
+        # the declared labels; v1 to v3 are superseded and --check verifies
+        # their integrity. A frozen set is verified, never trusted (ADR-015).
+        run: |
+          python -m corpus.generator.build --out corpus/gold/v1 --check
+          python -m corpus.generator.build --out corpus/gold/v2 --check
+          python -m corpus.generator.build --out corpus/gold/v3 --check
+          python -m corpus.generator.build --out corpus/gold/v4 --check
+
+      - name: Frozen PII golden set
+        run: python -m corpus.pii_golden.build --check
+
+      - name: Shadow-scorer reference population is a pure function of its inputs
+        run: python -m eval.score_fit --check
+
+      - name: The four eval gates
+        # Exit 0 means all four: no false clear, deterministic redaction recall
+        # 1.000, the structured subset unmoved, and every anomaly flag carrying
+        # a readable feature-level reason.
+        run: python -m eval.run
+
+      - name: JSON Schema artifacts are up to date
+        # The export is idempotent by construction; a diff here means somebody
+        # changed a contract without regenerating, and the artifacts are what
+        # an integrator reads.
+        run: python -m schemas.export_json_schema
+
+      - name: The working tree is clean
+        # Everything above either checks or regenerates. A dirty tree at this
+        # point is a generated artifact that was committed stale.
+        run: |
+          git status --porcelain
+          test -z "$(git status --porcelain)" || {
+            echo "::error::the gate modified tracked files; commit the regenerated artifacts"
+            git --no-pager diff
+            exit 1
+          }
+
+      - name: The demo image builds and the gate passes inside it
+        # The build runs `python -m eval.run` in the image, so this step also
+        # proves the container serves the same numbers as the job above.
+        run: docker build -t eingangslotse:ci .
+
+      - name: The container boots, seeds and serves the review UI
+        run: |
+          docker run -d --name eingangslotse-ci -p 8000:8000 eingangslotse:ci
+          for _ in $(seq 1 60); do
+            curl -sf http://127.0.0.1:8000/healthz >/dev/null && break
+            sleep 2
+          done
+          curl -sf http://127.0.0.1:8000/healthz
+          curl -sf http://127.0.0.1:8000/review | grep -q '101 offene(r) Vorgang'
+          curl -sf http://127.0.0.1:8000/review | grep -q 'id="demo-banner"'
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST \
+            -H 'Content-Type: application/json' -d '{}' \
+            http://127.0.0.1:8000/ingest)" = "403"
+          docker logs eingangslotse-ci
+          docker rm -f eingangslotse-ci

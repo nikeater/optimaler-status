@@ -1,0 +1,86 @@
+# HYPOTHETICAL decision table - NOT shipped, NOT loaded by the engine.
+#
+# table_v1 with ONE condition added to the tier-1 row:
+#
+#     extraction.min_confidence >= 0.97
+#
+# The companion of the 0.95 table, and the one that proves the knob works end to
+# end: at 0.97 the tier-1 scan (min_confidence 0.963) and the tier-1 e-mails
+# (0.95) both fall to tier 3, and every form item (1.0) stays where it is.
+#
+# It also shows what the knob CANNOT do, which is the more useful half. KE-4
+# describes a fuzzy scan clearing "exactly like a born-digital one that verified
+# exactly", implying the scan is the weaker evidence. On gold v4 the ordering is
+# the other way round: an OCR span that matched at 0.963 carries a MEASURED
+# score, while an exact born-digital span carries the configured
+# `confidence.exact: 0.95` - a statement that reading prose never earns 1.0.
+# 0.963 > 0.95, so no threshold on this field separates the scan from the
+# e-mail. What this field separates is "read out of prose" from "read out of a
+# key", and a Fachbereich adopting it would be deciding THAT, whether or not
+# that is what it meant to decide.
+#
+# The directory is a subdirectory on purpose: tests/test_decide_golden.py globs
+# tests/golden/*.yaml and must never pick these up as shipped expectations.
+version: table_hypothetical_min_confidence_097
+
+rows:
+  - row_id: tier1_clear_and_complete
+    tier: 1
+    when_all:
+      - field: routing.rule_hit
+        op: eq
+        value: true
+      - field: routing.confidence
+        op: ge
+        value: 0.9
+      - field: completeness.verdict
+        op: eq
+        value: complete
+      - field: extraction.discarded_count
+        op: eq
+        value: 0
+      # The one line that differs from table_v1.
+      - field: extraction.min_confidence
+        op: ge
+        value: 0.97
+      - field: procedure.tier1_enabled
+        op: eq
+        value: true
+      - field: procedure.clear_cut
+        op: eq
+        value: true
+
+  - row_id: tier2_routable_incomplete
+    tier: 2
+    when_all:
+      - field: routing.rule_hit
+        op: eq
+        value: true
+      - field: routing.confidence
+        op: ge
+        value: 0.9
+      - field: completeness.verdict
+        op: eq
+        value: incomplete
+
+downgrades:
+  - row_id: downgrade_anomaly_flagged
+    when_all:
+      - field: anomaly.flagged
+        op: eq
+        value: true
+    to_tier: 3
+    reason_template: >-
+      Shadow-Scorer hat den Vorgang markiert (Schwelle {threshold_ref}):
+      {reasons}
+
+  - row_id: downgrade_anomaly_score
+    when_all:
+      - field: anomaly.score
+        op: ge
+        value: 0.85
+    to_tier: 3
+    reason_template: >-
+      Anomaliescore {score} erreicht die Downgrade-Schwelle 0.85: {reasons}
+
+default_tier: 3

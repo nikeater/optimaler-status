@@ -1,0 +1,57 @@
+{
+  "submissionId": "sf-0063-scan-ohne-antragsart",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "scan",
+  "submittedAt": "2026-08-03T09:12:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {},
+  "attachments": [],
+  "bodyText": "Betreff: Anfrage zum Erwerbsstatus einer Auftragnehrnerin\n\nSehr geehrte Damen und Herren,\n\nwir bitten um Klaerung des Erwerbsstatus fuer die unten beschriebene Zusamrnenarbeit.\n\nAbsender: Frau Halina Probstfeld\nAnschrift: Musterweg 3, 10115 Musterstadt\nGeburtsdatum: 1992-08-05\nVersicherungsnummer: 13050892W029\nRolle im Auftragsverhaeltnis: auft-\nraggeber\nTaetigkeit: Grafikdesign\nTaetigkeit seit: 2026-02-02\nAuftraggeber: Beispielagentur Sued GmbH\n\nMit freundlichen Gruessen\nFrau Halina Probstfeld",
+  "extractionFixture": [
+    {
+      "field": "geburtsdatum",
+      "part_id": "part-text-0",
+      "anchor": "Geburtsdatum:",
+      "mode": "sealed"
+    },
+    {
+      "field": "versicherungsnummer",
+      "part_id": "part-text-0",
+      "anchor": "Versicherungsnummer:",
+      "mode": "sealed"
+    },
+    {
+      "field": "antragsteller_rolle",
+      "part_id": "part-text-0",
+      "anchor": "Rolle im Auftragsverhaeltnis:",
+      "mode": "literal",
+      "value": "auftraggeber",
+      "quote": "Rolle im Auftragsverhaeltnis: auftraggeber"
+    },
+    {
+      "field": "taetigkeit_bezeichnung",
+      "part_id": "part-text-0",
+      "anchor": "Taetigkeit:",
+      "mode": "literal",
+      "value": "Grafikdesign",
+      "quote": "Taetigkeit: Grafikdesign"
+    },
+    {
+      "field": "taetigkeit_beginn",
+      "part_id": "part-text-0",
+      "anchor": "Taetigkeit seit:",
+      "mode": "literal",
+      "value": "2026-02-02",
+      "quote": "Taetigkeit seit: 2026-02-02"
+    },
+    {
+      "field": "auftraggeber_name",
+      "part_id": "part-text-0",
+      "anchor": "Auftraggeber:",
+      "mode": "sealed"
+    }
+  ]
+}

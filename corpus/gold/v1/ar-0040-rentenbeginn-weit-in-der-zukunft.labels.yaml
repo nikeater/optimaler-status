@@ -1,0 +1,16 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: ar-0040-rentenbeginn-weit-in-der-zukunft
+procedure_id: altersrente
+scenario_kind: anomalous_rule_passing
+expected_unit_id: Referat_312_Renten
+expected_tier: 1
+expected_gaps: []
+anomaly_expected: true
+anomaly_pattern: 'rentenbeginn_abstand_tage: Rentenbeginn liegt rund 4500 Tage nach
+  dem Eingang; gueltig, aber weit ausserhalb der ueblichen Verteilung.'
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: Formal einwandfreier Antrag, dessen gewuenschter Rentenbeginn dreizehn Jahre
+  in der Zukunft liegt.

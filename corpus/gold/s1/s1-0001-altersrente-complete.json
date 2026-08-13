@@ -1,0 +1,29 @@
+{
+  "submissionId": "s1-0001-altersrente-complete",
+  "destinationId": "drv-bund-eingang-test",
+  "procedureHint": "altersrente",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-03T09:12:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antragsteller": {
+      "geburtsdatum": "1959-04-17",
+      "versicherungsnummer": "17045917B012",
+      "anschrift": {
+        "strasse": "Musterweg",
+        "hausnummer": "3",
+        "plz": "10115",
+        "ort": "Musterstadt"
+      }
+    },
+    "antrag": {
+      "rentenart": "regelaltersrente",
+      "rentenbeginn": "2026-11-01",
+      "auslandsbezug": "nein"
+    }
+  },
+  "attachments": []
+}

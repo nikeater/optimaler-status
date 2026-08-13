@@ -1,0 +1,20 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: em-0023-eintritt-vor-dem-14-lebensjahr
+procedure_id: erwerbsminderungsrente
+scenario_kind: invalid_field
+expected_unit_id: Referat_316_Erwerbsminderungsrenten
+expected_tier: 2
+derived_procedure_id: erwerbsminderungsrente
+derivation_source: hint
+expected_gaps:
+- requirement_id: eintritt_erwerbsminderung
+  status: invalid
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: Der angegebene Eintritt der Erwerbsminderung liegt im zehnten Lebensjahr der
+  antragstellenden Person. Vor dem 14. Geburtstag gibt es keine Erwerbsfaehigkeit,
+  die gemindert sein koennte.

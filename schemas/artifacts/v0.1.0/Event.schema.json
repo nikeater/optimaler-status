@@ -1,0 +1,229 @@
+{
+  "$defs": {
+    "Actor": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/ActorKind"
+        },
+        "unit_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Organizational unit for caseworker actions. Session-scoped confirm identity stays in the agency IdP, not the journal.",
+          "title": "Unit Id"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "Actor",
+      "type": "object"
+    },
+    "ActorKind": {
+      "enum": [
+        "system",
+        "caseworker"
+      ],
+      "title": "ActorKind",
+      "type": "string"
+    },
+    "EventType": {
+      "enum": [
+        "received",
+        "redacted",
+        "extracted",
+        "evidence_assembled",
+        "anomaly_scored",
+        "tier_decided",
+        "routed",
+        "drafted",
+        "confirmed",
+        "overridden",
+        "notified"
+      ],
+      "title": "EventType",
+      "type": "string"
+    },
+    "VersionStamp": {
+      "additionalProperties": false,
+      "description": "Versions of everything that produced an artifact; journal-stamped.",
+      "properties": {
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "taxonomy_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Taxonomy Version"
+        },
+        "rules_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rules Version"
+        },
+        "decision_table_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Decision Table Version"
+        },
+        "thresholds_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Thresholds Version"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Version"
+        },
+        "model_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Id"
+        },
+        "feature_set_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Feature Set Version"
+        }
+      },
+      "required": [
+        "schema_version"
+      ],
+      "title": "VersionStamp",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "One immutable journal entry.",
+  "properties": {
+    "event_id": {
+      "title": "Event Id",
+      "type": "string"
+    },
+    "case_id": {
+      "title": "Case Id",
+      "type": "string"
+    },
+    "sequence": {
+      "description": "Monotonic per case",
+      "minimum": 0,
+      "title": "Sequence",
+      "type": "integer"
+    },
+    "type": {
+      "$ref": "#/$defs/EventType"
+    },
+    "occurred_at": {
+      "format": "date-time",
+      "title": "Occurred At",
+      "type": "string"
+    },
+    "actor": {
+      "$ref": "#/$defs/Actor"
+    },
+    "versions": {
+      "$ref": "#/$defs/VersionStamp"
+    },
+    "payload": {
+      "additionalProperties": true,
+      "title": "Payload",
+      "type": "object"
+    },
+    "informational_only": {
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "REQUIRED (True) for NOTIFIED events: marks the outbound message as a Realakt, no Verwaltungsakt",
+      "title": "Informational Only"
+    },
+    "template_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Notification/draft template used, if any",
+      "title": "Template Id"
+    }
+  },
+  "required": [
+    "event_id",
+    "case_id",
+    "sequence",
+    "type",
+    "occurred_at",
+    "actor",
+    "versions"
+  ],
+  "title": "Event",
+  "type": "object",
+  "$id": "https://opencode.de/eingangslotse/schemas/v0.1.0/Event.schema.json"
+}

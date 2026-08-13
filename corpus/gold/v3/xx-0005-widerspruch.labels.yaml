@@ -1,0 +1,24 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: xx-0005-widerspruch
+procedure_id: null
+scenario_kind: unknown_procedure
+expected_unit_id: Widerspruchsstelle_360
+expected_tier: 3
+derived_procedure_id: null
+derivation_source: none
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: 'Seit v1 trug dieses Item eine deklarierte Unit-Abweichung: es gab keine Routing-Regel
+  fuer Widersprueche, und sie wurde nicht vorab erfunden, nur damit eine Metrik besser
+  aussieht. Teil 03b schliesst sie (C-9, Config- Haelfte). Die Zuordnung an die Widerspruchsstelle
+  ist eine reine Organisationsentscheidung, ein Realakt: sie sagt nichts ueber Zulaessigkeit
+  oder Fristwahrung, denn darueber entscheidet der Widerspruchsausschuss (par. 85
+  Abs. 2 Nr. 2 SGG, par. 36a SGB IV). Ein Verfahren "widerspruch" ist weiterhin nicht
+  konfiguriert, also bleibt die Vollstaendigkeit nicht pruefbar und der Vorgang auf
+  Tier 3 - er wartet jetzt nur in der richtigen Warteschlange. Die Aktenzeichen-Extraktion
+  und das Fristen-Flag folgen mit Teil 10.'

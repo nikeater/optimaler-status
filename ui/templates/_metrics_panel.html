@@ -1,0 +1,542 @@
+<section id="metrics-panel" aria-labelledby="metrics-heading">
+  <h2 id="metrics-heading">Messwerte</h2>
+  {% if not view.available %}
+  <p class="notice">
+    {{ view.problem }} Report erzeugen mit:
+    <code>{{ view.refresh_hint }}</code>
+  </p>
+  {% else %}
+  <p class="{{ 'gate-passed' if view.gate_passed else 'gate-failed' }}">
+    {% if view.gate_passed %}
+    Gate bestanden: keine False Clears.
+    {% else %}
+    Gate gerissen: mindestens ein Vorgang wurde faelschlich nach Tier 1
+    freigegeben.
+    {% endif %}
+  </p>
+  <dl>
+    <dt>Goldset</dt><dd>{{ view.gold_dir }} ({{ view.item_count }} Vorgaenge)</dd>
+    <dt>Gemessen am</dt><dd>{{ view.generated_at }}</dd>
+    <dt>Scorer-Modus</dt><dd>{{ view.scorer_mode }}</dd>
+    <dt>Versionen</dt>
+    <dd>
+      {% for key, value in view.versions.items() %}{{ key }}={{ value }}{% if not loop.last %}, {% endif %}{% endfor %}
+    </dd>
+    <dt>Paraphrase</dt>
+    <dd>
+      {% for key, value in view.paraphrase_counts.items() %}{{ key }}: {{ value }}{% if not loop.last %}, {% endif %}{% else %}-{% endfor %}
+    </dd>
+  </dl>
+
+  <table>
+    <caption>Gesamtmetriken</caption>
+    <thead>
+      <tr><th scope="col">Metrik</th><th scope="col">Wert</th><th scope="col">Bedeutung</th></tr>
+    </thead>
+    <tbody>
+      {% for metric in view.headline %}
+      <tr{% if metric.is_gate %} class="gate-row"{% endif %}>
+        <th scope="row">{{ metric.label }}</th>
+        <td>{{ metric.value }}</td>
+        <td>{{ metric.note }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <table>
+    <caption>Nach Verfahren</caption>
+    <thead>
+      <tr>
+        <th scope="col">Verfahren</th>
+        <th scope="col">Vorgaenge</th>
+        <th scope="col">Routing</th>
+        <th scope="col">Tier</th>
+        <th scope="col">False Clear</th>
+        <th scope="col">Luecken P/R</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for procedure_id, metrics in view.by_procedure.items() %}
+      <tr>
+        <th scope="row">{{ procedure_id }}</th>
+        <td>{{ metrics.item_count }}</td>
+        <td>{{ "%.3f"|format(metrics.routing_accuracy) }}</td>
+        <td>{{ "%.3f"|format(metrics.tier_accuracy) }}</td>
+        <td>{{ "%.3f"|format(metrics.false_clear_rate) }}</td>
+        <td>{{ "%.3f"|format(metrics.gap_precision) }} / {{ "%.3f"|format(metrics.gap_recall) }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6">Keine Aufschluesselung im Report.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>Verfahrensableitung</h3>
+  <p>
+    {{ view.procedure_derivation.get("labelled_items", 0) }} Vorgaenge tragen
+    eine Sollangabe zur Verfahrensableitung
+    ({{ view.procedure_derivation.get("unlabelled_items", 0) }} ohne, diese
+    zaehlen nicht mit). Genauigkeit je Herkunft:
+    {% for source, value in view.procedure_derivation.get("accuracy_by_source", {}).items() %}{{ source }} {{ "%.3f"|format(value) }}{% if not loop.last %}, {% endif %}{% else %}-{% endfor %}.
+    Gezaehlt wird nur als richtig, was das richtige Verfahren AUF DEM RICHTIGEN
+    WEG findet: "der Kanal hat es gesagt" und "das Formular hat es gesagt" sind
+    verschiedene Leistungen.
+  </p>
+
+  <h3>Redaktion (P-7)</h3>
+  <p>
+    Der Erkenner-Verbund wurde gegen
+    {{ view.redaction.get("item_count", 0) }} gelabelte deutsche
+    Verwaltungs-Schnipsel gemessen (corpus/pii_golden). Recall auf den
+    deterministischen Arten:
+    {{ "%.3f"|format(view.redaction.get("deterministic_recall", 0.0)) }}
+    (Gate: 1.000), ueber alle Arten
+    {{ "%.3f"|format(view.redaction.get("overall_recall", 0.0)) }}.
+    NER-Extra:
+    {{ "installiert" if view.redaction.get("ner_installed") else "nicht installiert" }}.
+    Precision wird je Art berichtet und NICHT gegated: Ueberredaktion kostet
+    Nutzbarkeit, Unterredaktion kostet die Daten einer Person.
+  </p>
+  <table>
+    <caption>Redaktions-Recall je Art</caption>
+    <thead>
+      <tr>
+        <th scope="col">Art</th>
+        <th scope="col">Labels</th>
+        <th scope="col">Recall</th>
+        <th scope="col">Precision</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for kind, metrics in view.redaction.get("by_kind", {}).items() %}
+      <tr>
+        <th scope="row">{{ kind }}</th>
+        <td>{{ metrics.get("labels", 0) }}</td>
+        <td>{{ "%.3f"|format(metrics.get("recall", 0.0)) }}</td>
+        <td>{{ "%.3f"|format(metrics.get("precision", 0.0)) }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4">Keine Redaktionsmessung im Report.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>Spanpruefung (P-8, P-12)</h3>
+  <p>
+    Jede Angabe aus Freitext muss ein woertliches Zitat UND eine Zeichenposition
+    mitbringen; beide werden unabhaengig geprueft. Ueber
+    {{ view.span_verification.get("text_items", 0) }} Vorgaenge mit Freitext:
+    {{ view.span_verification.get("verified", 0) }} von
+    {{ view.span_verification.get("proposals", 0) }} Fundstellen belegt,
+    {{ view.span_verification.get("discarded", 0) }} verworfen. Verworfen heisst
+    NICHT gerettet: die Angabe faellt weg und der Vorgang rueckt Richtung Tier 3.
+    Diese Quote wird berichtet und NICHT gegated - ein Gate darauf wuerde Druck
+    erzeugen, die Schwelle zu senken, bis die Zahl gut aussieht.
+  </p>
+  <table>
+    <caption>Belegte Fundstellen je Herkunft des Textes</caption>
+    <thead>
+      <tr>
+        <th scope="col">Herkunft</th>
+        <th scope="col">Vorgaenge</th>
+        <th scope="col">Fundstellen</th>
+        <th scope="col">belegt</th>
+        <th scope="col">verworfen</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for source, metrics in view.span_verification.get("by_source_type", {}).items() %}
+      <tr>
+        <th scope="row">{{ source }}</th>
+        <td>{{ metrics.get("items", 0) }}</td>
+        <td>{{ metrics.get("proposals", 0) }}</td>
+        <td>{{ "%.3f"|format(metrics.get("verified_rate", 0.0)) }}</td>
+        <td>{{ "%.3f"|format(metrics.get("discard_rate", 0.0)) }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5">Kein Vorgang in diesem Satz traegt Freitext.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p>
+    Gruende fuer Verwerfungen:
+    {% for kind, count in view.span_verification.get("failures", {}).items() %}{{ kind }} {{ count }}{% if not loop.last %}, {% endif %}{% else %}keine{% endfor %}.
+  </p>
+
+  <h3>Strukturierte Teilmenge (Regressionsidentitaet)</h3>
+  <p>
+    {{ view.structured_subset.get("item_count", 0) }} Vorgaenge dieses Satzes
+    tragen gar keinen Freitext. Es sind die eingefrorenen Vorgaenge des
+    vorigen Satzes, unveraendert, und sie muessen exakt dieselben Werte
+    erreichen wie vorher - alles andere waere eine Aenderung an Vorgaengen, in
+    denen gar kein Text steht. Zuordnung
+    {{ "%.3f"|format(view.structured_subset.get("routing_accuracy", 0.0)) }},
+    Tier {{ "%.3f"|format(view.structured_subset.get("tier_accuracy", 0.0)) }},
+    False-Clear
+    {{ "%.3f"|format(view.structured_subset.get("false_clear_rate", 0.0)) }},
+    Verfahrensableitung
+    {{ "%.3f"|format(view.structured_subset.get("derivation_accuracy", 0.0)) }}.
+    Status:
+    <strong>{{ "unveraendert" if view.structured_subset.get("invariant_held") else "VERLETZT" }}</strong>.
+  </p>
+
+  <h3>Schwellenwert-Review (P-5, par. 88 Abs. 5 Nr. 4 AO analog)</h3>
+  <p>
+    Jede Zahl, die entscheidet, welche Vorgaenge ein Mensch nie sieht - mit
+    Herkunft und gemessenem Arbeitspunkt. Naechster Review:
+    <strong>{{ view.thresholds_review.get("review_due") or "nicht gesetzt" }}</strong>{% if view.thresholds_review.get("overdue") %}
+    <strong>(UEBERFAELLIG)</strong>{% endif %}. Der Hinweis ist informativ und
+    aendert keinen Exit-Code.
+  </p>
+  <table>
+    <caption>Geltende Schwellenwerte</caption>
+    <thead>
+      <tr>
+        <th scope="col">Schwelle</th>
+        <th scope="col">Wert</th>
+        <th scope="col">Quelle</th>
+        <th scope="col">Herkunft</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for entry in view.thresholds_review.get("thresholds", []) %}
+      <tr>
+        <th scope="row">{{ entry.get("threshold_id") }}</th>
+        <td>{{ entry.get("value") }}</td>
+        <td>{{ entry.get("source_version") }}</td>
+        <td>{% if not entry.get("calibrated") %}<strong>unkalibriert:</strong> {% endif %}{{ entry.get("provenance") }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="4">Kein Schwellenwert-Review im Report.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h3>Zuordnungsvorschlag (Klassifikator, Teil 06)</h3>
+  <p>
+    {% if not view.classifier.get("configured") %}
+    Kein Klassifikator konfiguriert.
+    {% else %}
+    Der Klassifikator schlaegt eine Organisationseinheit nur fuer Vorgaenge vor,
+    die keine Regel erfasst - in diesem Satz
+    {{ view.classifier.get("addressable_items", 0) }}. Status:
+    <strong>{{ "aktiv" if view.classifier.get("enabled") else "nur Protokoll" }}</strong>.
+    Nur Protokoll heisst: der Vorschlag steht im Evidenzsatz und im Journal und
+    wird von der Entscheidungstabelle nicht gelesen - kein Tier und keine
+    Zustaendigkeit bewegen sich. Modell {{ view.classifier.get("model_id") }},
+    Paket {{ "installiert" if view.classifier.get("extra_installed") else "nicht installiert" }}.
+    {% if view.classifier.get("ran") %}
+    Gemessen: Vorschlag fuer
+    {{ view.classifier.get("coverage", {}).get("suggested", 0) }} von
+    {{ view.classifier.get("coverage", {}).get("rule_less_items", 0) }}
+    regellosen Vorgaengen; Uebereinstimmung mit dem Gold-Satz
+    {{ "%.3f"|format(view.classifier.get("agreement", {}).get("rate", 0.0)) }}
+    auf {{ view.classifier.get("agreement", {}).get("scorable_items", 0) }}
+    gelabelten Vorgaengen.
+    {% else %}
+    In diesem Lauf nicht ausgefuehrt (kein Modell geladen); die Messung ist
+    freiwillig und nie Teil eines Gates.
+    {% endif %}
+    {% endif %}
+  </p>
+
+  <h3>Benachrichtigungen (ADR-005, P-10 Teilstueck)</h3>
+  <p>
+    {% if not view.notifications.get("configured") %}
+    Fuer diese Konfiguration sind keine Benachrichtigungen hinterlegt.
+    {% else %}
+    Eingangsbestaetigung und Zwischenstand entstehen als Projektion des
+    Vorgangsjournals: <code>received</code> loest die Bestaetigung aus,
+    <code>routed</code> den Zwischenstand. Beide sind rein informatorisch
+    (Realakt, kein Verwaltungsakt), beide durchlaufen keine Pruefung durch
+    einen Menschen, und der Text stammt vollstaendig aus
+    <code>{{ view.notifications.get("version") }}</code> - kein Sprachmodell.
+    In diesem Lauf:
+    {{ view.notifications.get("notification_count", 0) }} Nachrichten fuer
+    {{ view.notifications.get("items_notified", 0) }} von
+    {{ view.notifications.get("item_count", 0) }} Vorgaengen. Vorgaenge ohne
+    Zuordnung erhalten nur die Bestaetigung - das ist die ehrliche
+    Asymmetrie: "wir haben Ihr Anliegen" stimmt immer, "hier ist die
+    zustaendige Stelle" noch nicht.
+    <a href="/inbox">Simuliertes Postfach ansehen</a>.
+    {% endif %}
+  </p>
+  <table>
+    <caption>Laufzeit vom Journalereignis bis zur Nachricht</caption>
+    <thead>
+      <tr>
+        <th scope="col">Anlass</th>
+        <th scope="col">Nachrichten</th>
+        <th scope="col">Median</th>
+        <th scope="col">p95</th>
+        <th scope="col">Maximum</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for trigger, metrics in view.notifications.get("by_trigger", {}).items() %}
+      <tr>
+        <th scope="row">{{ trigger }}</th>
+        <td>{{ metrics.get("count", 0) }}</td>
+        <td>{{ "%.1f"|format(metrics.get("median_ms") or 0.0) }} ms</td>
+        <td>{{ "%.1f"|format(metrics.get("p95_ms") or 0.0) }} ms</td>
+        <td>{{ "%.1f"|format(metrics.get("max_ms") or 0.0) }} ms</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5">Keine Benachrichtigung in diesem Lauf.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p>
+    Die Laufzeit ist die Differenz zweier Journal-Zeitstempel, keine
+    Stoppuhr - und sie wird berichtet, nicht gegated: gemessen wird der Lauf
+    auf dieser Maschine. Was zugesichert ist, steht in den Tests: jeder
+    Vorgang erhaelt genau die Nachrichten, die seine Ereignisse verlangen, und
+    ein erneuter Lauf verschickt nichts nach. Der Rest von P-10 (Alter des
+    aeltesten Tier-3-Vorgangs, Laufzeitbudget je Tier) steht in der
+    Bearbeitungsoberflaeche unter <a href="/review">/review</a>, wo es ein
+    echtes Journal mit Bestaetigungen gibt.
+  </p>
+
+  <h3>Warteschlangen im Goldlauf (Teil 10, P-10 / C-10)</h3>
+  <p>
+    Wie sich die Vorgaenge auf die Einheiten verteilen wuerden, als reine
+    Anzahlen. {{ view.review.get("open_items", 0) }} offene Vorgaenge, davon
+    {{ view.review.get("clearing_queue", 0) }} ohne Zuordnung (Zentrale
+    Klaerung, par. 16 Abs. 2 SGB I),
+    {{ view.review.get("widerspruch_frist_laeuft", 0) }} mit dem Hinweis
+    "Frist laeuft" (C-9) und
+    {{ view.review.get("reha_par14_clock", 0) }} mit der Zwei-Wochen-Frist nach
+    par. 14 SGB IX (C-10).
+  </p>
+  <table>
+    <caption>Offene Vorgaenge je Einheit (Goldlauf, ohne Bestaetigungen)</caption>
+    <thead><tr><th scope="col">Einheit</th><th scope="col">Offen</th></tr></thead>
+    <tbody>
+      {% for unit_id, count in view.review.get("by_unit", {}).items() %}
+      <tr><th scope="row">{{ unit_id }}</th><td>{{ count }}</td></tr>
+      {% else %}
+      <tr><td colspan="2">Kein Vorgang in diesem Lauf.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p>{{ view.review.get("note", "") }}</p>
+
+  <h3>Vorbereitete Schreiben (ADR-003, ADR-023)</h3>
+  <p>
+    {% if not view.drafting.get("configured") %}
+    Fuer diese Konfiguration sind keine Schreiben hinterlegt.
+    {% else %}
+    Nach der Tier-Entscheidung: Tier 2 mit Luecken erhaelt eine
+    Nachforderung, Tier 1 einen Bewilligungsentwurf, Tier 3 bewusst nichts -
+    ein Entwurf fuer einen Vorgang, den noch niemand gelesen hat, wuerde das
+    Ergebnis vorwegnehmen. In diesem Lauf:
+    {{ view.drafting.get("draft_count", 0) }} Entwuerfe fuer
+    {{ view.drafting.get("item_count", 0) }} Vorgaenge
+    ({{ view.drafting.get("by_kind", {}).get("nachforderung", 0) }}
+    Nachforderungen,
+    {{ view.drafting.get("by_kind", {}).get("prepared_decision", 0) }}
+    Bewilligungsentwuerfe,
+    {{ view.drafting.get("no_draft_items", 0) }} Vorgaenge ohne Entwurf).
+    Der Text stammt vollstaendig aus
+    <code>{{ view.drafting.get("version") }}</code> - kein Sprachmodell.
+    <strong>Nichts davon wurde versandt</strong>: Freigabe, Bearbeitung und
+    Versand sind Teil 10.
+    {% endif %}
+  </p>
+  <table>
+    <caption>Rueckbefuellung aus dem Identitaetstresor</caption>
+    <tbody>
+      <tr>
+        <th scope="row">Aufgeloeste Platzhalter</th>
+        <td>{{ view.drafting.get("tokens", {}).get("resolved", 0) }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Nicht aufgeloest</th>
+        <td>{{ view.drafting.get("unresolved_tokens", 0) }} (muss 0 sein)</td>
+      </tr>
+      <tr>
+        <th scope="row">Blockierte Entwuerfe</th>
+        <td>{{ view.drafting.get("blocked", 0) }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Nach par. 20 SGB X abgemildert</th>
+        <td>{{ view.drafting.get("amtsermittlung_softened", 0) }} Angaben</td>
+      </tr>
+      <tr>
+        <th scope="row">Mit Rechtsfolgenhinweis</th>
+        <td>{{ view.drafting.get("rechtsfolgenhinweis", 0) }} (par. 66 Abs. 3 SGB I, nur auf Anforderung)</td>
+      </tr>
+      <tr>
+        <th scope="row">Versandt</th>
+        <td>{{ view.drafting.get("dispatched", 0) }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+    Ein unbekannter Platzhalter ist ein harter Fehler und verhindert den
+    Entwurf vollstaendig - es gibt keinen halben Brief. Die Zeile "nicht
+    aufgeloest" zaehlt nach, was in den fertigen Schreiben noch nach
+    Platzhalter aussieht; die eigentliche Zusicherung ist eine Eigenschaft in
+    <code>tests/test_draft_rehydrate.py</code> und kein Bericht. Die Entwuerfe
+    selbst enthalten Personendaten und stehen deshalb nur unter
+    <code>/drafts/{case_id}</code>, nicht im Journal und nicht in diesem
+    Bericht.
+  </p>
+
+  <h3>Schatten-Scorer (ADR-004, ADR-024)</h3>
+  <p>
+    {% if not view.anomaly.get("configured") %}
+    Fuer diese Konfiguration ist kein Scorer hinterlegt.
+    {% else %}
+    Betriebsart <strong>{{ view.anomaly.get("scorer_mode") }}</strong>:
+    {{ view.anomaly.get("flagged", {}).get("count", 0) }} von
+    {{ view.anomaly.get("items_scored", 0) }} Vorgaengen markiert bei Schwelle
+    <code>{{ view.anomaly.get("threshold", {}).get("value") }}</code>
+    (<code>{{ view.anomaly.get("threshold", {}).get("threshold_id") }}</code>,
+    Merkmalssatz <code>{{ view.anomaly.get("feature_set_version") }}</code>,
+    Referenzbestand <code>{{ view.anomaly.get("reference_id") }}</code>).
+    <strong>Im Protokollbetrieb bewegt der Scorer kein einziges Tier</strong> -
+    die Entscheidungstabelle notiert, was ein Downgrade getan haette, und
+    wendet nichts an.
+    {% endif %}
+  </p>
+  {% if view.anomaly.get("configured") %}
+  <table>
+    <caption>Markierungen und was sie bewegen wuerden</caption>
+    <tbody>
+      <tr>
+        <th scope="row">Im Goldsatz gekennzeichnet gefunden</th>
+        <td>
+          {{ view.anomaly.get("anomaly_expected", {}).get("found", []) | length }}
+          von {{ view.anomaly.get("anomaly_expected", {}).get("count", 0) }}
+          (Trefferquote
+          {{ "%.3f" | format(view.anomaly.get("anomaly_expected", {}).get("recall", 0.0)) }})
+        </td>
+      </tr>
+      <tr>
+        <th scope="row">Fehlmarkierungen auf Tier-1-Vorgaengen</th>
+        <td>
+          {{ view.anomaly.get("false_flags", {}).get("tier1_false_flags", []) | length }}
+          von {{ view.anomaly.get("false_flags", {}).get("tier1_eligible_items", 0) }}
+          (Quote
+          {{ "%.3f" | format(view.anomaly.get("false_flags", {}).get("rate_on_tier1_eligible", 0.0)) }},
+          Budget {{ view.anomaly.get("false_flags", {}).get("budget", 0.0) }})
+        </td>
+      </tr>
+      <tr>
+        <th scope="row">Wuerde im Enforcing-Betrieb ein Tier bewegen</th>
+        <td>{{ view.anomaly.get("tier_movement", {}).get("would_downgrade", 0) }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Markiert ohne Tier-Bewegung (bereits Tier 3)</th>
+        <td>{{ view.anomaly.get("tier_movement", {}).get("flag_without_tier_movement", 0) }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Markierungen mit lesbarer Begruendung</th>
+        <td>
+          {{ view.anomaly.get("reasons", {}).get("items_with_reasons", 0) }}
+          von {{ view.anomaly.get("reasons", {}).get("flagged_items", 0) }}
+          ({{ view.anomaly.get("reasons", {}).get("reason_count", 0) }} Begruendungen;
+          Gate)
+        </td>
+      </tr>
+      <tr>
+        <th scope="row">Scoring fehlgeschlagen (Degradation)</th>
+        <td>{{ view.anomaly.get("degraded", {}).get("count", 0) }}</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+    Der Score ist ein Perzentil im Referenzbestand: 0.99 heisst "auffaelliger
+    als 99 Prozent des Referenzbestands", nicht "zu 99 Prozent auffaellig".
+    Jede Markierung traegt mindestens eine Merkmalsbegruendung mit Beobachtung,
+    Referenzbereich und Beitrag - das ist das einzige Scorer-Ergebnis, das
+    einen Lauf scheitern laesst. Zwei der neun gekennzeichneten Vorgaenge sind
+    fuer diesen Scorer bauartbedingt unerreichbar: sie haengen an Geburtsdatum
+    und Versicherungsnummer, die vor dem Scorer versiegelt werden.
+  </p>
+
+  <h3>Verzerrungsbeobachtung (P-2)</h3>
+  <p>
+    Markierungsquote und mittlerer Merkmalsbeitrag je Verfahren, Kanal und
+    Vorgangsform. <strong>Nur Bericht, kein Gate</strong>: ein Alarm, der einen
+    Lauf scheitern laesst, bringt Menschen dazu, den Alarm zu justieren.
+  </p>
+  <table>
+    <caption>Markierungsquote je Gruppe</caption>
+    <thead>
+      <tr><th scope="col">Dimension</th><th scope="col">Gruppe</th><th scope="col">Vorgaenge</th><th scope="col">markiert</th><th scope="col">Quote</th><th scope="col">mittl. Beitrag</th></tr>
+    </thead>
+    <tbody>
+      {% for dimension, groups in view.bias.get("dimensions", {}).items() %}
+      {% for name, entry in groups.items() %}
+      <tr>
+        <th scope="row">{{ dimension }}</th>
+        <td>{{ name }}</td>
+        <td>{{ entry.get("items", 0) }}</td>
+        <td>{{ entry.get("flagged", 0) }}</td>
+        <td>{{ "%.3f" | format(entry.get("flag_rate", 0.0)) }}</td>
+        <td>{{ "%.3f" | format(entry.get("mean_abs_contribution", 0.0)) }}</td>
+      </tr>
+      {% endfor %}
+      {% endfor %}
+    </tbody>
+  </table>
+  <p>
+    Schiefe (hoechste durch niedrigste Quote, nur Gruppen ab
+    {{ view.bias.get("advisory", {}).get("min_group_items", 0) }} Vorgaengen):
+    {% for dimension, entry in view.bias.get("skew", {}).items() %}
+    {{ dimension }}
+    {% if entry.get("ratio") is none %}ohne endliches Verhaeltnis{% else %}{{ "%.2f" | format(entry.get("ratio")) }}{% endif %}{% if entry.get("above_advisory") %} <strong>(ueber dem Richtwert {{ view.bias.get("advisory", {}).get("max_flag_rate_ratio") }})</strong>{% endif %}{% if not loop.last %}, {% endif %}
+    {% endfor %}.
+    Der Kanal ist bewusst kein Merkmal des Scorers - auf jedem konfigurierten
+    Eingangsweg ist er eine Funktion der Vorgangsform -, steht hier aber als
+    Dimension, damit eine systematische Benachteiligung von Papiereingaengen
+    sichtbar wird statt vermutet.
+  </p>
+  {% endif %}
+
+  <h3>Auffaellige Teilmenge</h3>
+  <p>
+    {{ view.anomalous.get("item_count", 0) }} Vorgaenge sind als statistisch
+    auffaellig, aber regelkonform markiert. Tier-Uebereinstimmung:
+    {{ "%.3f"|format(view.anomalous.get("tier_agreement", 0.0)) }}.
+    Diese Vorgaenge tragen das Tier, das die heutigen Regeln erzeugen; der
+    Shadow-Scorer aus Teil 06 soll sie anheben, nicht bestaetigen. Die Zahl ist
+    darum ein Ausgangswert, keine Qualitaetsaussage.
+  </p>
+
+  <details>
+    <summary>Einzelne Vorgaenge ({{ view.items|length }})</summary>
+    <table>
+      <caption>Vorgaenge im Detail</caption>
+      <thead>
+        <tr>
+          <th scope="col">Vorgang</th>
+          <th scope="col">Verfahren</th>
+          <th scope="col">Tier Gold/Ist</th>
+          <th scope="col">Einheit Gold/Ist</th>
+          <th scope="col">Abweichung</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in view.items %}
+        <tr>
+          <th scope="row">{{ item.item_id }}</th>
+          <td>{{ item.procedure_id }}</td>
+          <td>{{ item.expected_tier }} / {{ item.actual_tier }}</td>
+          <td>{{ item.expected_unit_id or "-" }} / {{ item.actual_unit_id or "-" }}</td>
+          <td>
+            {% if item.false_clear %}False Clear
+            {% elif item.known_divergence %}dokumentiert: {{ item.known_divergence|join(", ") }}
+            {% elif not item.tier_correct or not item.routing_correct %}Abweichung
+            {% else %}-{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </details>
+  {% endif %}
+</section>

@@ -1,0 +1,85 @@
+# HYPOTHETICAL decision table - NOT shipped, NOT loaded by the engine.
+#
+# table_v1 with ONE condition added to the tier-1 row:
+#
+#     extraction.min_confidence >= 0.95
+#
+# It exists to answer the question KE-4 asks and does not decide: "a scanned
+# letter whose spans verified fuzzily reaches tier 1 exactly like a born-digital
+# one - is that right?" Adding this condition is the obvious way to say no.
+#
+# WHAT IT ACTUALLY DOES ON GOLD V4: nothing. Not one item moves. The tier-1
+# scan (ar-0064) carries min_confidence 0.963, the tier-1 e-mails carry 0.95
+# (the configured `confidence.exact`, because reading prose never earns 1.0)
+# and the forms carry 1.0. Every one of them clears 0.95.
+#
+# That is the finding, and it is why this file is committed rather than fixed:
+# a table condition that reads a real field, evaluates correctly and changes
+# nothing is exactly what a Fachbereich needs to see before adopting it. The
+# proof that the knob WORKS is the 0.97 table next to this one.
+#
+# The directory is a subdirectory on purpose: tests/test_decide_golden.py globs
+# tests/golden/*.yaml and must never pick these up as shipped expectations.
+version: table_hypothetical_min_confidence_095
+
+rows:
+  - row_id: tier1_clear_and_complete
+    tier: 1
+    when_all:
+      - field: routing.rule_hit
+        op: eq
+        value: true
+      - field: routing.confidence
+        op: ge
+        value: 0.9
+      - field: completeness.verdict
+        op: eq
+        value: complete
+      - field: extraction.discarded_count
+        op: eq
+        value: 0
+      # The one line that differs from table_v1.
+      - field: extraction.min_confidence
+        op: ge
+        value: 0.95
+      - field: procedure.tier1_enabled
+        op: eq
+        value: true
+      - field: procedure.clear_cut
+        op: eq
+        value: true
+
+  - row_id: tier2_routable_incomplete
+    tier: 2
+    when_all:
+      - field: routing.rule_hit
+        op: eq
+        value: true
+      - field: routing.confidence
+        op: ge
+        value: 0.9
+      - field: completeness.verdict
+        op: eq
+        value: incomplete
+
+downgrades:
+  - row_id: downgrade_anomaly_flagged
+    when_all:
+      - field: anomaly.flagged
+        op: eq
+        value: true
+    to_tier: 3
+    reason_template: >-
+      Shadow-Scorer hat den Vorgang markiert (Schwelle {threshold_ref}):
+      {reasons}
+
+  - row_id: downgrade_anomaly_score
+    when_all:
+      - field: anomaly.score
+        op: ge
+        value: 0.85
+    to_tier: 3
+    reason_template: >-
+      Anomaliescore {score} erreicht die Downgrade-Schwelle 0.85: {reasons}
+
+default_tier: 3

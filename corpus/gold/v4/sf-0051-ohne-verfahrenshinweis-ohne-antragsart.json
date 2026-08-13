@@ -1,0 +1,39 @@
+{
+  "submissionId": "sf-0051-ohne-verfahrenshinweis-ohne-antragsart",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-06T07:21:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "antrag": {
+      "honorar_modell": "  nach_stunden  ",
+      "taetigkeit_bezeichnung": "Pflege der Aussenanlagen",
+      "hinweistext": "Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir. Eine Eingangsbestaetigung waere mir wichtig.",
+      "weitere_auftraggeber": "nein",
+      "arbeitsort": "beim_auftraggeber",
+      "taetigkeit_beginn": "2025-05-02",
+      "antragsteller_rolle": "  auftraggeber "
+    },
+    "antragsteller": {
+      "anschrift": {
+        "ort": "Musterdorf",
+        "strasse": "Feldstrasse",
+        "plz": "70173",
+        "hausnummer": "  45  "
+      },
+      "versicherungsnummer": "40280279C013",
+      "geburtsdatum": "1979-02-28"
+    },
+    "meta": {
+      "eingangsdatum": "6. August 2026"
+    },
+    "auftraggeber": {
+      "firmenname": "Gruenflaechen Bauer GmbH",
+      "betriebsnummer": "55667788"
+    }
+  },
+  "attachments": []
+}

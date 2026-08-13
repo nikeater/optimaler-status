@@ -1,0 +1,163 @@
+# Organizational taxonomy v2 (config/taxonomy/).
+#
+# Units and roles only, never named individuals (BPersVG). Every node carries an
+# honest `source`: either the public basis it was derived from, or an explicit
+# statement that it is a derived placeholder.
+#
+# SOURCING HONESTY, read this before quoting the file anywhere:
+#
+#   * The FUNCTIONS below (Altersrenten, Renten wegen Erwerbsminderung,
+#     zwischenstaatliche Renten/Verbindungsstelle, Versicherungskonto und
+#     Versicherungsnummer, medizinische Rehabilitation und Teilhabe am
+#     Arbeitsleben, sozialmedizinische Begutachtung, Widerspruchsbearbeitung,
+#     zentraler Eingang) are public knowledge: they follow from SGB VI, SGB IX,
+#     SGB X, SGG and the coordinating EU regulations, and every Rentenversicherungs-
+#     traeger of this size performs them.
+#   * The UNIT NUMBERS, the exact cut of each unit and the two Geschaeftsbereiche
+#     above them are NOT verified against the published Organisationsplan of the
+#     Deutsche Rentenversicherung Bund. They are shaped like one so the routing
+#     layer has a realistic target set, and they are marked as derived
+#     placeholders below.
+#   * Nothing here was copied from an internal document, and no named individual
+#     appears. Replacing this file with the design partner's real GVP is a
+#     config change, not a code change - that is the point of the file.
+#
+# v2 changes over v1: one node added (Referat_340_Clearingstelle) for the
+# Statusfeststellung nach par. 7a SGB IV. Every existing node is byte-identical
+# to v1; a taxonomy is superseded, not edited in place, so a routing rule that
+# names a unit keeps meaning the same unit across versions.
+version: taxonomy_drv_bund_v2
+nodes:
+  - unit_id: GB_Versicherung_Rente
+    name: Geschaeftsbereich Versicherung und Rente
+    parent_id: null
+    responsibilities:
+      - Versicherungs- und Rentenangelegenheiten
+      - Fachaufsicht ueber die Rentenreferate
+    source: >-
+      Abgeleiteter Platzhalter bis zur Bestaetigung durch den Design-Partner;
+      die Buendelung von Versicherung und Rente in einem Geschaeftsbereich ist
+      branchenueblich, der Zuschnitt hier ist nicht aus dem veroeffentlichten
+      Organisationsplan belegt.
+
+  - unit_id: Referat_312_Renten
+    name: Referat 312 - Altersrenten
+    parent_id: GB_Versicherung_Rente
+    responsibilities:
+      - Antraege auf Regelaltersrente und vorgezogene Altersrenten
+      - Rentenbeginn, Rentenart und Hinzuverdienst
+    source: >-
+      Funktion oeffentlich belegt (Altersrenten nach par. 35 bis 38 SGB VI);
+      Referatsnummer und Zuschnitt sind ein abgeleiteter Platzhalter bis zur
+      Bestaetigung durch den Design-Partner.
+
+  - unit_id: Referat_316_Erwerbsminderungsrenten
+    name: Referat 316 - Renten wegen Erwerbsminderung
+    parent_id: GB_Versicherung_Rente
+    responsibilities:
+      - Antraege auf Rente wegen voller oder teilweiser Erwerbsminderung
+      - Befristung, Weiterzahlung und Hinzuverdienstpruefung
+    source: >-
+      Funktion oeffentlich belegt (Renten wegen Erwerbsminderung nach par. 43
+      SGB VI); Referatsnummer und Zuschnitt sind ein abgeleiteter Platzhalter
+      bis zur Bestaetigung durch den Design-Partner.
+
+  - unit_id: Referat_318_Auslandsrenten
+    name: Referat 318 - Auslandsrenten und zwischenstaatliches Recht
+    parent_id: GB_Versicherung_Rente
+    responsibilities:
+      - Renten mit Auslandsbezug und zwischenstaatlichem Recht
+      - Zusammenarbeit mit auslaendischen Traegern als Verbindungsstelle
+    source: >-
+      Funktion oeffentlich belegt (Verbindungsstellenaufgaben und
+      zwischenstaatliches Rentenrecht nach VO (EG) 883/2004 und par. 110 ff.
+      SGB VI); Referatsnummer und Zuschnitt sind ein abgeleiteter Platzhalter
+      bis zur Bestaetigung durch den Design-Partner.
+
+  - unit_id: Referat_330_Versicherungskonto
+    name: Referat 330 - Versicherungskonto und Versicherungsnummer
+    parent_id: GB_Versicherung_Rente
+    responsibilities:
+      - Kontenklaerung und Versicherungsverlauf
+      - Vergabe und Pflege der Versicherungsnummer
+    source: >-
+      Funktion oeffentlich belegt (Versicherungsnummer und Stammsatzdatei nach
+      par. 147 SGB VI, gefuehrt bei der Deutschen Rentenversicherung Bund);
+      Referatsnummer und Zuschnitt sind ein abgeleiteter Platzhalter bis zur
+      Bestaetigung durch den Design-Partner.
+
+  - unit_id: Referat_340_Clearingstelle
+    name: Referat 340 - Clearingstelle Statusfeststellung
+    parent_id: GB_Versicherung_Rente
+    responsibilities:
+      - >-
+        Feststellung des Erwerbsstatus nach par. 7a SGB IV (optionale und
+        obligatorische Verfahren)
+      - Prognoseentscheidungen und gutachterliche Aeusserungen
+    source: >-
+      Zustaendigkeit oeffentlich belegt und bundesweit exklusiv: par. 7a Abs. 1
+      SGB IV weist das Verfahren der Deutschen Rentenversicherung Bund zu,
+      andere Traeger leiten Antraege dorthin weiter (BT-Drs. 21/1059, Antwort
+      zu Frage 4); "Clearingstelle" ist die eigene oeffentliche Bezeichnung der
+      DRV Bund, die Anschrift 10704 Berlin steht auf dem Vordruck V0027.
+      Referatsnummer, Zuschnitt und Einhaengung sind ein abgeleiteter
+      Platzhalter: die interne Organisationsstellung der Clearingstelle ist
+      nicht oeffentlich dokumentiert.
+
+  - unit_id: GB_Rehabilitation
+    name: Geschaeftsbereich Rehabilitation
+    parent_id: null
+    responsibilities:
+      - Leistungen zur Teilhabe
+      - Fachaufsicht ueber die Reha-Referate
+    source: >-
+      Abgeleiteter Platzhalter bis zur Bestaetigung durch den Design-Partner;
+      ein eigener Geschaeftsbereich Rehabilitation ist branchenueblich, der
+      Zuschnitt hier ist nicht aus dem veroeffentlichten Organisationsplan
+      belegt.
+
+  - unit_id: Referat_320_Reha
+    name: Referat 320 - Medizinische Rehabilitation und Teilhabe am Arbeitsleben
+    parent_id: GB_Rehabilitation
+    responsibilities:
+      - Antraege auf medizinische Rehabilitation
+      - Leistungen zur Teilhabe am Arbeitsleben
+    source: >-
+      Funktion oeffentlich belegt (Leistungen zur Teilhabe nach par. 9 ff.
+      SGB VI i.V.m. SGB IX); Referatsnummer und Zuschnitt sind ein abgeleiteter
+      Platzhalter bis zur Bestaetigung durch den Design-Partner.
+
+  - unit_id: Referat_324_Sozialmedizin
+    name: Referat 324 - Sozialmedizinischer Dienst
+    parent_id: GB_Rehabilitation
+    responsibilities:
+      - Sozialmedizinische Begutachtung
+      - Beratung der Fachreferate in medizinischen Fragen
+    source: >-
+      Funktion oeffentlich belegt (sozialmedizinische Begutachtung als Aufgabe
+      der Rentenversicherungstraeger, par. 62 SGB I, par. 275 ff. Verfahren der
+      Begutachtung); Referatsnummer und Zuschnitt sind ein abgeleiteter
+      Platzhalter bis zur Bestaetigung durch den Design-Partner.
+
+  - unit_id: Widerspruchsstelle_360
+    name: Widerspruchsstelle
+    parent_id: null
+    responsibilities:
+      - Widersprueche gegen Bescheide aller Fachreferate
+      - Zuarbeit fuer die Widerspruchsausschuesse
+    source: >-
+      Funktion oeffentlich belegt (Widerspruchsstelle nach par. 85 Abs. 2 SGG,
+      Widerspruchsausschuesse nach par. 36a SGB IV); Bezeichnung und
+      organisatorische Einhaengung sind ein abgeleiteter Platzhalter bis zur
+      Bestaetigung durch den Design-Partner.
+
+  - unit_id: Referat_390_Sonstiges
+    name: Referat 390 - Zentraler Eingang / Sonstiges
+    parent_id: null
+    responsibilities:
+      - Nicht eindeutig zuordenbare Eingaenge
+      - Weiterleitung nach manueller Sichtung
+    source: >-
+      Abgeleiteter Platzhalter bis zur Bestaetigung durch den Design-Partner;
+      ein Auffangpunkt fuer nicht zuordenbare Eingaenge ist betrieblich
+      notwendig, im veroeffentlichten Organisationsplan aber nicht belegt.

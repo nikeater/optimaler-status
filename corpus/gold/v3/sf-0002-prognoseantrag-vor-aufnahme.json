@@ -1,0 +1,46 @@
+{
+  "submissionId": "sf-0002-prognoseantrag-vor-aufnahme",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "antragsteller": {
+      "anschrift": {
+        "plz": "10115",
+        "ort": "Musterstadt",
+        "strasse": "Musterweg",
+        "hausnummer": " 3  "
+      },
+      "geburtsdatum": " 1990-07-22  ",
+      "versicherungsnummer": " 13220790L034 \t"
+    },
+    "auftraggeber": {
+      "betriebsnummer": "  23456789  ",
+      "firmenname": "Wortbild Verlagsgesellschaft mbH"
+    },
+    "meta": {
+      "eingangsdatum": "2026-08-05",
+      "bearbeitungswunsch": " \tIch bin ab kommender Woche im Urlaub. \t"
+    },
+    "antrag": {
+      "rahmenvertrag": "nein",
+      "antragsart": " prognose_vor_aufnahme  ",
+      "weisungsgebunden": "nein",
+      "taetigkeit_bezeichnung": "Grafikdesign und Illustration",
+      "weitere_auftraggeber": "  ja ",
+      "eingliederung_arbeitsorganisation": " \tnein  ",
+      "arbeitsort": "eigene_betriebsstaette",
+      "hinweistext": "Sehr geehrte Damen und Herren, hiermit reiche ich den beigefuegten Antrag ein und bitte um Bearbeitung. Fuer Rueckfragen stehe ich Ihnen zur Verfuegung.",
+      "antragsteller_rolle": "auftragnehmer",
+      "umsatzanteil_hauptauftraggeber": "45",
+      "taetigkeit_beginn": "2026-11-02",
+      "honorar_modell": "nach_ergebnis"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "statusfeststellung"
+}

@@ -1,0 +1,18 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: em-0041-eintritt-in-der-zukunft
+procedure_id: erwerbsminderungsrente
+scenario_kind: anomalous_rule_passing
+expected_unit_id: Referat_316_Erwerbsminderungsrenten
+expected_tier: 2
+expected_gaps:
+- requirement_id: letzte_taetigkeit
+  status: missing
+anomaly_expected: true
+anomaly_pattern: 'eintritt_in_der_zukunft: der angegebene Eintritt liegt nach dem
+  Eingangsdatum; das Format ist gueltig, der Sachverhalt kann nicht stimmen.'
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: Antrag ohne letzte Taetigkeit, dessen Eintritt der Erwerbsminderung drei Jahre
+  in der Zukunft liegt.

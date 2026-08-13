@@ -1,0 +1,33 @@
+Eingangsbestaetigung
+
+Ihr Anliegen ist bei uns eingegangen.
+
+Vorgangsnummer: case-ar-0001-regelaltersrente-vollstaendig
+Eingegangen am: 17.03.2026, 08:30 Uhr (UTC)
+Eingangsweg: elektronisches Antragsportal (FIT-Connect)
+Anliegen: Antrag auf Altersrente
+
+Diese Nachricht bestaetigt ausschliesslich den Eingang. Sie ist keine
+Entscheidung ueber Ihr Anliegen und keine Aufforderung an Sie. Sie
+muessen darauf nicht antworten und nichts einreichen. Sobald Ihr
+Anliegen einer Organisationseinheit zugeordnet ist, erhalten Sie eine
+weitere Nachricht dieser Art.
+
+Hinweise nach Art. 13 und 14 DSGVO
+
+Verantwortlich: [Platzhalter Behoerde: Bezeichnung und Anschrift]
+Datenschutzbeauftragte Person: [Platzhalter Behoerde: Kontaktdaten]
+Zweck der Verarbeitung: Bearbeitung Ihres Anliegens im gesetzlichen
+Aufgabenbereich des Traegers.
+Rechtsgrundlage: [Platzhalter Behoerde: Rechtsgrundlage]
+Empfaenger: die fachlich zustaendigen Organisationseinheiten des
+Traegers.
+Speicherdauer: [Platzhalter Behoerde: Aufbewahrungsdauer]
+Ihre Rechte: Auskunft, Berichtigung, Loeschung, Einschraenkung der
+Verarbeitung, Datenuebertragbarkeit und Widerspruch gegen die
+Verarbeitung sowie Beschwerde bei einer Aufsichtsbehoerde.
+Aufsichtsbehoerde: [Platzhalter Behoerde: Anschrift der Aufsicht]
+
+Diese Nachricht wurde automatisch erzeugt und ist ohne Unterschrift
+gueltig. Ihr Text stammt vollstaendig aus einer hinterlegten Vorlage;
+es wurde kein Sprachmodell verwendet.

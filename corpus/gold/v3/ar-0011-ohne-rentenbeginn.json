@@ -1,0 +1,32 @@
+{
+  "submissionId": "ar-0011-ohne-rentenbeginn",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-03T09:12:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "meta": {
+      "eingangsdatum": "03.08.2026"
+    },
+    "antragsteller": {
+      "geburtsdatum": "1960-01-09",
+      "anschrift": {
+        "hausnummer": "3",
+        "strasse": "  Musterweg  ",
+        "ort": " Musterstadt \t",
+        "plz": "10115"
+      },
+      "versicherungsnummer": " 18090160G015 \t"
+    },
+    "antrag": {
+      "hinweistext": "Hallo, ich schicke Ihnen hier meinen Antrag. Ich hoffe, so ist alles richtig ausgefuellt. Eine Eingangsbestaetigung waere mir wichtig. Vielen Dank vorab.",
+      "auslandsbezug": "  nein ",
+      "rentenart": "  regelaltersrente \t"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

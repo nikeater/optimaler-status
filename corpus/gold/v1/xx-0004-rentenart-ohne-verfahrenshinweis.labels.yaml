@@ -1,0 +1,19 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: xx-0004-rentenart-ohne-verfahrenshinweis
+procedure_id: null
+scenario_kind: unknown_procedure
+expected_unit_id: Referat_312_Renten
+expected_tier: 3
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence:
+- unit
+divergence_reason: 'Ohne bekanntes Verfahren gibt es keine field_map, ohne field_map
+  keine Extraktion und ohne Extraktion feuert die Regel rule_altersrente_rentenart
+  nicht: der Vorgang bleibt heute ohne Zuordnung. Genau diese Henne-Ei-Situation loest
+  der inhaltsbasierte Klassifikator aus Teil 03.'
+notes: Im Formular steht eine Regelaltersrente mit Rentenbeginn, der Kanal meldet
+  aber kein Verfahren. Ein Mensch wuerde den Vorgang sofort den Altersrenten zuordnen.

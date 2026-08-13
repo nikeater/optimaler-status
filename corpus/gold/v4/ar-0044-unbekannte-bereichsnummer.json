@@ -1,0 +1,33 @@
+{
+  "submissionId": "ar-0044-unbekannte-bereichsnummer",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-03T09:12:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antragsteller": {
+      "anschrift": {
+        "ort": "Beispielau",
+        "hausnummer": "  17a ",
+        "strasse": "Lindenallee",
+        "plz": "04109"
+      },
+      "geburtsdatum": " \t1958-11-03 ",
+      "versicherungsnummer": " \t99031158E065  "
+    },
+    "meta": {
+      "eingangsdatum": "03.08.2026"
+    },
+    "antrag": {
+      "rentenart": "regelaltersrente",
+      "rentenbeginn": " \t2026-11-01 ",
+      "hinweistext": "Hallo, ich schicke Ihnen hier meinen Antrag. Ich hoffe, so ist alles richtig ausgefuellt. Bitte antworten Sie schriftlich, nicht telefonisch. Vielen Dank vorab.",
+      "auslandsbezug": "nein"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

@@ -1,0 +1,704 @@
+# Scenario specs for the statusfeststellung procedure
+# (config/procedures/statusfeststellung_v1.yaml, par. 7a SGB IV).
+#
+# THE SHAPE THIS FILE EXISTS FOR: a COMPLETE Statusantrag ends at tier 3.
+#
+# The tier-1 row cannot qualify (tier1_enabled is false and there is no
+# clear_cut block at all), and the tier-2 row requires an INCOMPLETE verdict, so
+# a complete, routable application matches no row and falls to the table default
+# of tier 3. That is the em-0001 precedent, and here it is permanent rather than
+# provisional: par. 7a Abs. 2 S. 1 SGB IV orders a Gesamtwuerdigung aller
+# Umstaende des Einzelfalles, and no set of form fields can stand in for it. The
+# triage value of these items is what triage is actually for - the item is
+# received, receipted, checked for completeness, and routed to the unit that can
+# decide it, with the decision itself untouched.
+#
+# So the four complete items below are labelled `complete_clear` with
+# `expected.tier: 3` and no gaps. No tier "2.5" was invented, nothing was forced
+# to tier 2, and no divergence is declared: this is not a divergence, it is the
+# intended behaviour.
+#
+# The Indizien of the Gesamtabwaegung (Weisungsgebundenheit, Eingliederung,
+# Arbeitsort, weitere Auftraggeber, Umsatzanteil, Honorarmodell, Rahmenvertrag)
+# ride in the payload but are NOT requirements - see the field_map comment in
+# the procedure config. They are what the anomaly patterns describe and what a
+# caseworker weighs; they are never a checklist.
+#
+# Every value is invented. The Versicherungsnummern follow the real structure
+# (Bereichsnummer, Geburtsdatum TTMMJJ, Anfangsbuchstabe, Seriennummer,
+# Pruefziffer) and belong to nobody; firms, dates and addresses are synthetic
+# (see corpus/gold/v3/README.md).
+description: >-
+  Statusfeststellung nach par. 7a SGB IV: complete applications that end at
+  tier 3 by design, missing and invalid fields, a Prognoseantrag whose Beginn
+  lies in the future and one whose Beginn lies in the past, contradictory
+  Weisungsangaben, a form claimed by two procedures at once, three
+  Scheinselbststaendigkeits-Indizienbuendel that pass every rule, and two
+  applications whose procedure has to be read off the form.
+
+scenarios:
+  # -------------------- vollstaendig, und trotzdem vollstaendig zu wuerdigen ---
+  - scenario_id: sf-0001-it-beratung-vollstaendig
+    kind: complete_clear
+    description: >-
+      Vollstaendiger Antrag einer IT-Beraterin auf Feststellung des
+      Erwerbsstatus fuer eine bereits aufgenommene Taetigkeit. Mehrere
+      Auftraggeber, eigene Betriebsstaette, Abrechnung nach Stunden - alle
+      Pflichtangaben liegen vor, die Wuerdigung bleibt beim Menschen.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1985-03-14"
+      versicherungsnummer: "12140385K023"
+      antragsart: feststellung_nach_aufnahme
+      antragsteller_rolle: auftragnehmer
+      taetigkeit_bezeichnung: IT-Beratung und Softwareentwicklung
+      taetigkeit_beginn: "2026-01-15"
+      auftraggeber_name: Nordlicht Systemhaus GmbH
+      auftraggeber_betriebsnummer: "12345678"
+      weisungsgebunden: nein
+      eingliederung_arbeitsorganisation: nein
+      arbeitsort: eigene_betriebsstaette
+      weitere_auftraggeber: ja
+      umsatzanteil_hauptauftraggeber: "35"
+      honorar_modell: nach_stunden
+      rahmenvertrag: nein
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 3
+      derivation_source: hint
+      gaps: []
+    notes: >-
+      Das Musteritem fuer die Kernaussage dieses Verfahrens: vollstaendig
+      erfasst, zugeordnet, in voller fachlicher Wuerdigung beim Menschen. Kein
+      Mangel, keine Abweichung - die Entscheidungstabelle hat schlicht keine
+      Zeile, die eine Gesamtwuerdigung nach par. 7a Abs. 2 S. 1 SGB IV
+      abnehmen koennte, und soll auch keine haben.
+
+  - scenario_id: sf-0002-prognoseantrag-vor-aufnahme
+    kind: complete_clear
+    description: >-
+      Prognoseantrag nach par. 7a Abs. 4a SGB IV: die Taetigkeit beginnt erst
+      in rund drei Monaten. Ein Beginn in der Zukunft ist hier der Regelfall
+      und darf niemals als Fehler gelten.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1990-07-22"
+      versicherungsnummer: "13220790L034"
+      antragsart: prognose_vor_aufnahme
+      antragsteller_rolle: auftragnehmer
+      taetigkeit_bezeichnung: Grafikdesign und Illustration
+      taetigkeit_beginn: "2026-11-02"
+      auftraggeber_name: Wortbild Verlagsgesellschaft mbH
+      auftraggeber_betriebsnummer: "23456789"
+      weisungsgebunden: nein
+      eingliederung_arbeitsorganisation: nein
+      arbeitsort: eigene_betriebsstaette
+      weitere_auftraggeber: ja
+      umsatzanteil_hauptauftraggeber: "45"
+      honorar_modell: nach_ergebnis
+      rahmenvertrag: nein
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 3
+      derivation_source: hint
+      gaps: []
+    notes: >-
+      Das Regressionsitem gegen Uhrzeit-Validierung: die Datumsgrenzen der
+      Vollstaendigkeitspruefung sind absolut (1990-2035) und werden nie gegen
+      "heute" geprueft. Wuerde jemand eine Regel "Beginn darf nicht in der
+      Zukunft liegen" einbauen, faellt genau dieses Item - und mit ihm der
+      halbe Zweck des par. 7a Abs. 4a SGB IV.
+
+  - scenario_id: sf-0003-gemeinsamer-antrag-mit-rahmenvertrag
+    kind: complete_clear
+    description: >-
+      Auftragnehmer und Auftraggeber stellen den Antrag gemeinsam; der
+      Taetigkeit liegt ein Rahmenvertrag zugrunde.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1978-11-05"
+      versicherungsnummer: "15051178M045"
+      antragsart: feststellung_nach_aufnahme
+      antragsteller_rolle: gemeinsam
+      taetigkeit_bezeichnung: Technische Redaktion und Dokumentation
+      taetigkeit_beginn: "2025-09-01"
+      auftraggeber_name: Hansen Maschinenbau GmbH und Co. KG
+      auftraggeber_betriebsnummer: "34567890"
+      weisungsgebunden: nein
+      eingliederung_arbeitsorganisation: nein
+      arbeitsort: wechselnd
+      weitere_auftraggeber: ja
+      umsatzanteil_hauptauftraggeber: "60"
+      honorar_modell: nach_stunden
+      rahmenvertrag: ja
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 3
+      derivation_source: hint
+      gaps: []
+
+  - scenario_id: sf-0004-antrag-des-auftraggebers
+    kind: complete_clear
+    description: >-
+      Der Auftraggeber selbst beantragt die Feststellung des Erwerbsstatus
+      fuer eine beauftragte Person - nach par. 7a Abs. 1 S. 1 SGB IV ist er
+      dazu ebenso berechtigt wie die auftragnehmende Person.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1982-02-17"
+      versicherungsnummer: "16170282N056"
+      antragsart: feststellung_nach_aufnahme
+      antragsteller_rolle: auftraggeber
+      taetigkeit_bezeichnung: Fahrdienst im Werkverkehr
+      taetigkeit_beginn: "2026-03-02"
+      auftraggeber_name: Rheinlogistik Speditions GmbH
+      auftraggeber_betriebsnummer: "45678901"
+      weisungsgebunden: ja
+      eingliederung_arbeitsorganisation: ja
+      arbeitsort: beim_auftraggeber
+      weitere_auftraggeber: nein
+      umsatzanteil_hauptauftraggeber: "100"
+      honorar_modell: nach_stunden
+      rahmenvertrag: ja
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 3
+      derivation_source: hint
+      gaps: []
+    notes: >-
+      Fachlich sieht dieser Vorgang nach abhaengiger Beschaeftigung aus, und
+      genau deshalb steht hier keine Tier-1-Zeile: die Triage sagt nichts zum
+      Ergebnis. Sie stellt fest, dass alles da ist, und legt die Sache dem
+      zustaendigen Referat vor.
+
+  # ------------------------------------------------- tier 2: missing field ---
+  - scenario_id: sf-0010-ohne-versicherungsnummer
+    kind: missing_field
+    description: >-
+      Statusantrag ohne Versicherungsnummer der auftragnehmenden Person.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1975-09-30"
+      antragsart: feststellung_nach_aufnahme
+      antragsteller_rolle: auftragnehmer
+      taetigkeit_bezeichnung: Physiotherapie auf Honorarbasis
+      taetigkeit_beginn: "2026-04-01"
+      auftraggeber_name: Gesundheitszentrum Auental GmbH
+      auftraggeber_betriebsnummer: "56789012"
+      weitere_auftraggeber: ja
+      arbeitsort: beim_auftraggeber
+      honorar_modell: nach_stunden
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: versicherungsnummer
+          status: missing
+
+  - scenario_id: sf-0011-ohne-taetigkeitsbezeichnung
+    kind: missing_field
+    description: >-
+      Der Antrag benennt den Auftraggeber, sagt aber nicht, welche Taetigkeit
+      beurteilt werden soll. Ohne bezeichnete Taetigkeit gibt es nichts zu
+      wuerdigen.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1988-06-08"
+      versicherungsnummer: "17080688P067"
+      antragsart: feststellung_nach_aufnahme
+      antragsteller_rolle: auftragnehmer
+      taetigkeit_beginn: "2025-11-17"
+      auftraggeber_name: Seewind Energieservice GmbH
+      auftraggeber_betriebsnummer: "67890123"
+      weitere_auftraggeber: nein
+      arbeitsort: wechselnd
+      honorar_modell: nach_ergebnis
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: taetigkeit_bezeichnung
+          status: missing
+
+  - scenario_id: sf-0012-ohne-auftraggeber
+    kind: missing_field
+    description: >-
+      Der Antrag beschreibt die Taetigkeit, nennt aber keinen Auftraggeber.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1969-12-11"
+      versicherungsnummer: "18111269Q078"
+      antragsart: prognose_vor_aufnahme
+      antragsteller_rolle: auftragnehmer
+      taetigkeit_bezeichnung: Buchhaltung und Lohnabrechnung
+      taetigkeit_beginn: "2026-12-01"
+      weitere_auftraggeber: ja
+      arbeitsort: eigene_betriebsstaette
+      honorar_modell: nach_stunden
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: auftraggeber_name
+          status: missing
+    notes: >-
+      Die zweite Inhaltssignatur des Verfahrens (Auftraggeber UND Taetigkeit)
+      kann hier nicht feuern - die Zuordnung tragen die angekreuzte Antragsart
+      und der Kanalhinweis. Ein Beleg dafuer, dass zwei unabhaengige Signale
+      pro Verfahren keine Redundanz sind, sondern der Grund, warum ein
+      Formular mit einer Luecke trotzdem beim richtigen Referat landet.
+
+  - scenario_id: sf-0013-ohne-antragsart-und-beginn
+    kind: missing_field
+    description: >-
+      Weder Antragsart noch Beginn der Taetigkeit sind angegeben: zwei
+      Luecken, ein Vorgang.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1993-04-26"
+      versicherungsnummer: "19260493R089"
+      antragsteller_rolle: gemeinsam
+      taetigkeit_bezeichnung: Kurierfahrten im Stadtgebiet
+      auftraggeber_name: Stadtkurier Meissner GmbH
+      auftraggeber_betriebsnummer: "78901234"
+      weitere_auftraggeber: nein
+      arbeitsort: wechselnd
+      honorar_modell: nach_ergebnis
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: antragsart
+          status: missing
+        - requirement_id: taetigkeit_beginn
+          status: missing
+
+  # ------------------------------------------------- tier 2: invalid field ---
+  - scenario_id: sf-0020-versicherungsnummer-zu-kurz
+    kind: invalid_field
+    description: >-
+      Die Versicherungsnummer hat nur elf Stellen; die Pruefziffer fehlt.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1980-08-19"
+      versicherungsnummer: "11190880S07"
+      antragsart: feststellung_nach_aufnahme
+      antragsteller_rolle: auftragnehmer
+      taetigkeit_bezeichnung: Gebaeudereinigung im Auftrag
+      taetigkeit_beginn: "2025-07-01"
+      auftraggeber_name: Klarblick Gebaeudedienste GmbH
+      auftraggeber_betriebsnummer: "89012345"
+      weitere_auftraggeber: nein
+      arbeitsort: beim_auftraggeber
+      honorar_modell: nach_stunden
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: versicherungsnummer
+          status: invalid
+
+  - scenario_id: sf-0021-taetigkeitsbeginn-punktformat
+    kind: invalid_field
+    description: >-
+      Der Beginn der Taetigkeit steht im deutschen Punktformat statt als
+      ISO-Datum.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1972-05-03"
+      versicherungsnummer: "21030572T012"
+      antragsart: feststellung_nach_aufnahme
+      antragsteller_rolle: auftraggeber
+      taetigkeit_bezeichnung: Montage von Photovoltaikanlagen
+      taetigkeit_beginn: "01.03.2026"
+      auftraggeber_name: Sonnenpark Anlagenbau GmbH
+      auftraggeber_betriebsnummer: "90123456"
+      weitere_auftraggeber: ja
+      arbeitsort: wechselnd
+      honorar_modell: nach_ergebnis
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: taetigkeit_beginn
+          status: invalid
+
+  - scenario_id: sf-0022-antragsart-gruppenfeststellung
+    kind: invalid_field
+    description: >-
+      Als Antragsart ist "gruppenfeststellung" angegeben. Die gutachterliche
+      Aeusserung fuer gleiche Auftragsverhaeltnisse nach par. 7a Abs. 4b SGB IV
+      ist ein eigenes Verfahren mit eigenem Vordruck (C0050/C0051) und laesst
+      sich nicht in den V0027 hineinschreiben.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1986-10-27"
+      versicherungsnummer: "23271086U023"
+      antragsart: gruppenfeststellung
+      antragsteller_rolle: auftraggeber
+      taetigkeit_bezeichnung: Zustellung von Paketsendungen
+      taetigkeit_beginn: "2026-05-04"
+      auftraggeber_name: Paketpartner Nordwest GmbH
+      auftraggeber_betriebsnummer: "01234567"
+      weitere_auftraggeber: nein
+      arbeitsort: wechselnd
+      honorar_modell: nach_ergebnis
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: antragsart
+          status: invalid
+    notes: >-
+      Die Verfahrensableitung haengt hier nicht an der Antragsart, die ja
+      unzulaessig ist, sondern an der zweiten Inhaltssignatur (Auftraggeber und
+      Taetigkeit). Der Vorgang bleibt damit pruefbar, statt an einem einzigen
+      falschen Ankreuzfeld unbestimmbar zu werden.
+
+  - scenario_id: sf-0023-beginn-vor-dem-14-lebensjahr
+    kind: invalid_field
+    description: >-
+      Der angegebene Beginn der Taetigkeit liegt im zwoelften Lebensjahr der
+      auftragnehmenden Person. Vor dem 14. Geburtstag gibt es kein
+      Auftragsverhaeltnis, das zu beurteilen waere (par. 5 JArbSchG).
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "2008-06-20"
+      versicherungsnummer: "15200608H037"
+      antragsart: feststellung_nach_aufnahme
+      antragsteller_rolle: auftragnehmer
+      taetigkeit_bezeichnung: Aushilfe im Ladengeschaeft
+      taetigkeit_beginn: "2020-09-01"
+      auftraggeber_name: Dorfladen Wiesengrund GmbH
+      auftraggeber_betriebsnummer: "11223344"
+      weitere_auftraggeber: nein
+      arbeitsort: beim_auftraggeber
+      honorar_modell: nach_stunden
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: taetigkeit_beginn
+          status: invalid
+
+  # --------------------------------------------- tier 3: ambiguous variants ---
+  - scenario_id: sf-0030-widerspruechliche-weisungsangaben
+    kind: ambiguous_conflicting
+    description: >-
+      Der Antrag verneint die Weisungsgebundenheit, bejaht aber die
+      Eingliederung in die Arbeitsorganisation, nennt als Arbeitsort die
+      Raeume des Auftraggebers und als Verguetung ein festes Monatshonorar.
+      Formal vollstaendig, inhaltlich in sich widerspruechlich.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1976-01-09"
+      versicherungsnummer: "24090176V034"
+      antragsart: feststellung_nach_aufnahme
+      antragsteller_rolle: auftragnehmer
+      taetigkeit_bezeichnung: Kundenbetreuung im Innendienst
+      taetigkeit_beginn: "2025-10-01"
+      auftraggeber_name: Alsterfeld Versicherungsmakler GmbH
+      auftraggeber_betriebsnummer: "22334455"
+      weisungsgebunden: nein
+      eingliederung_arbeitsorganisation: ja
+      arbeitsort: beim_auftraggeber
+      weitere_auftraggeber: nein
+      umsatzanteil_hauptauftraggeber: "100"
+      honorar_modell: fest_monatlich
+      rahmenvertrag: ja
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 3
+      derivation_source: hint
+      gaps: []
+    notes: >-
+      Die Angaben widersprechen einander, und trotzdem gibt es hier bewusst
+      keine Regel, die den Widerspruch aufloest: welches Indiz wie schwer
+      wiegt, ist genau die Gesamtabwaegung nach par. 7a Abs. 2 S. 1 SGB IV,
+      die dem Menschen vorbehalten ist. Seit BSG 28.06.2022 (B 12 R 3/20 R)
+      entscheidet ohnehin die gelebte Praxis, nicht die Selbstbeschreibung im
+      Formular. Die Triage stellt fest, dass alles da ist, und sagt kein Wort
+      zum Ergebnis.
+
+  - scenario_id: sf-0031-statusantrag-mit-rentenangaben
+    kind: ambiguous_conflicting
+    description: >-
+      Der Kanal meldet eine Statusfeststellung, das Formular traegt zusaetzlich
+      eine angekreuzte Regelaltersrente mit gewuenschtem Rentenbeginn. Zwei
+      Verfahren beanspruchen denselben Vorgang, also wird keines abgeleitet.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1963-07-18"
+      versicherungsnummer: "25180763W045"
+      antragsart: feststellung_nach_aufnahme
+      antragsteller_rolle: auftragnehmer
+      taetigkeit_bezeichnung: Beratung im Bauwesen
+      taetigkeit_beginn: "2025-04-01"
+      auftraggeber_name: Ziegler Ingenieurbuero GmbH
+      rentenart: regelaltersrente
+      rentenbeginn: "2029-08-01"
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 3
+      derivation_source: none
+      gaps: []
+    notes: >-
+      Das Spiegelbild von ar-0033 und xx-0006 fuer das dritte Verfahren: die
+      Signale der Altersrente und der Statusfeststellung feuern gleichzeitig,
+      also wird nicht geraten und nichts geprueft ("nicht pruefbar" ist etwas
+      anderes als "unvollstaendig"). Zugeordnet wird trotzdem jemand: zwei
+      Regeln der Prioritaet 20 zeigen auf Referat 312 und Referat 340, die
+      Ordnung (priority, rule_id) bestimmt den Gewinner deterministisch, die
+      Confidence sinkt auf 0.6 und beide Zeilen der Entscheidungstabelle
+      fallen aus. Ein Vorgang ohne Adressaten wartet sonst auf niemanden.
+
+  - scenario_id: sf-0032-prognose-mit-beginn-in-der-vergangenheit
+    kind: ambiguous_conflicting
+    description: >-
+      Angekreuzt ist der Prognoseantrag vor Aufnahme der Taetigkeit, angegeben
+      ist ein Beginn, der zwei Jahre zurueckliegt. Beide Werte sind fuer sich
+      genommen gueltig.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1991-03-02"
+      versicherungsnummer: "26020391X056"
+      antragsart: prognose_vor_aufnahme
+      antragsteller_rolle: gemeinsam
+      taetigkeit_bezeichnung: Tontechnik bei Veranstaltungen
+      taetigkeit_beginn: "2024-03-01"
+      auftraggeber_name: Buehnenwerk Veranstaltungstechnik GmbH
+      auftraggeber_betriebsnummer: "33445566"
+      weitere_auftraggeber: ja
+      arbeitsort: wechselnd
+      honorar_modell: nach_ergebnis
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 3
+      derivation_source: hint
+      gaps: []
+    notes: >-
+      Kein Feld ist falsch, die Kombination ist es. Es gibt hier bewusst keine
+      taktgebundene Kreuzpruefung "Prognose setzt einen Beginn in der Zukunft
+      voraus": jede solche Regel muesste gegen die Uhr pruefen, und die
+      Vollstaendigkeitspruefung liest keine Uhr - sonst begaenne ein
+      eingefrorener Goldsatz an einem Dienstag zu scheitern. Fachlich deutet
+      die DRV einen unmoeglich gewordenen Prognoseantrag in einen Antrag nach
+      Aufnahme um; eine Umdeutung ist eine rechtliche Wertung, die kein
+      Regelwerk vornehmen darf. Eine uhrfreie Kreuzpruefungsart (etwa
+      "Antragsart passt zur Lage des Datums relativ zum Eingangsdatum") waere
+      eine Contract-Anfrage, keine stille Erfindung.
+
+  # --------------------------- Verfahren steht nur im Formular (Teil 03) ---
+  - scenario_id: sf-0050-ohne-verfahrenshinweis-antragsart
+    kind: hint_missing
+    description: >-
+      Vollstaendiger Statusantrag ohne Kanalhinweis. Die angekreuzte Antragsart
+      nach par. 7a SGB IV macht das Verfahren eindeutig ableitbar.
+    procedure_id: statusfeststellung
+    procedure_hint: null
+    facts:
+      geburtsdatum: "1987-08-15"
+      versicherungsnummer: "39150887B091"
+      antragsart: feststellung_nach_aufnahme
+      antragsteller_rolle: auftragnehmer
+      taetigkeit_bezeichnung: Uebersetzung technischer Texte
+      taetigkeit_beginn: "2026-02-16"
+      auftraggeber_name: Lingua Nord Uebersetzungen GmbH
+      auftraggeber_betriebsnummer: "44556677"
+      weitere_auftraggeber: ja
+      arbeitsort: eigene_betriebsstaette
+      umsatzanteil_hauptauftraggeber: "40"
+      honorar_modell: nach_ergebnis
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 3
+      derivation_source: content
+      gaps: []
+
+  - scenario_id: sf-0051-ohne-verfahrenshinweis-ohne-antragsart
+    kind: hint_missing
+    description: >-
+      Kein Kanalhinweis und keine angekreuzte Antragsart, aber ein benannter
+      Auftraggeber und eine bezeichnete Taetigkeit: die zweite Inhaltssignatur
+      traegt die Ableitung, die fehlende Antragsart bleibt als Luecke.
+    procedure_id: statusfeststellung
+    procedure_hint: null
+    facts:
+      geburtsdatum: "1979-02-28"
+      versicherungsnummer: "40280279C013"
+      antragsteller_rolle: auftraggeber
+      taetigkeit_bezeichnung: Pflege der Aussenanlagen
+      taetigkeit_beginn: "2025-05-02"
+      auftraggeber_name: Gruenflaechen Bauer GmbH
+      auftraggeber_betriebsnummer: "55667788"
+      weitere_auftraggeber: nein
+      arbeitsort: beim_auftraggeber
+      honorar_modell: nach_stunden
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 2
+      derivation_source: content
+      gaps:
+        - requirement_id: antragsart
+          status: missing
+
+  # --------------------------------------- anomalous but rule-passing today ---
+  #
+  # ALL THREE ALREADY SIT AT TIER 3, so a downgrade would change nothing about
+  # the tier. That is not a defect of the items, it is what a one-way valve
+  # looks like at the end of its travel: the value here is the FLAG in the
+  # journal and the reason attached to it, which tells a caseworker WHERE to
+  # look in a file that would otherwise look like every other complete Antrag.
+  # In part 09 these are also the items that show a downgrade-rate budget cannot
+  # be read off tier movements alone.
+  - scenario_id: sf-0040-scheinselbststaendigkeit-indizienbuendel
+    kind: anomalous_rule_passing
+    description: >-
+      Vollstaendiger Antrag, in dem saemtliche Indizien in dieselbe Richtung
+      zeigen: ein einziger Auftraggeber, 100 Prozent des Umsatzes, Arbeit in
+      dessen Raeumen, festes Monatshonorar, keine eigene Betriebsstaette - und
+      dazu die Angabe, nicht weisungsgebunden zu sein.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1984-09-12"
+      versicherungsnummer: "28120984Y067"
+      antragsart: feststellung_nach_aufnahme
+      antragsteller_rolle: auftragnehmer
+      taetigkeit_bezeichnung: Sachbearbeitung im Kundenservice
+      taetigkeit_beginn: "2025-02-03"
+      auftraggeber_name: Ostwall Dienstleistungen GmbH
+      auftraggeber_betriebsnummer: "66778899"
+      weisungsgebunden: nein
+      eingliederung_arbeitsorganisation: ja
+      arbeitsort: beim_auftraggeber
+      weitere_auftraggeber: nein
+      umsatzanteil_hauptauftraggeber: "100"
+      honorar_modell: fest_monatlich
+      honorar_monatlich: "3200"
+      rahmenvertrag: ja
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 3
+      derivation_source: hint
+      gaps: []
+    anomaly_expected: true
+    anomaly_pattern: >-
+      scheinselbststaendigkeit_indizienbuendel: alleiniger Auftraggeber,
+      100 Prozent Umsatzanteil, Arbeitsort beim Auftraggeber, festes
+      Monatshonorar und Eingliederung in die Arbeitsorganisation treten
+      gemeinsam auf. Das Buendel ist die Auffaelligkeit, nicht das einzelne
+      Merkmal.
+    notes: >-
+      Die Verwaltungspraxis arbeitet mit einer Faustregel um die
+      Fuenf-Sechstel-Grenze des Umsatzes bei einem Auftraggeber. Sie ist
+      bewusst NICHT als Regel codiert: es ist Verwaltungswissen, das dieses
+      Repository nicht belegen kann, und eine erfundene Schwelle waere
+      schlechter als keine. Der Scorer aus Teil 06 darf sie lernen, das
+      Regelwerk erfindet sie nicht. Der Downgrade waere hier ohnehin ein
+      Tier-No-op - der Vorgang steht schon auf Tier 3; der Wert liegt in der
+      Markierung im Journal.
+
+  - scenario_id: sf-0041-honorar-unter-vergleichslohn
+    kind: anomalous_rule_passing
+    description: >-
+      Vollstaendiger Antrag einer selbststaendig taetigen Pflegefachkraft mit
+      einem festen Monatshonorar von 1150 Euro bei Vollzeit - deutlich unter
+      dem, was eine vergleichbare Anstellung einbraechte.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1995-11-24"
+      versicherungsnummer: "29241195Z078"
+      antragsart: feststellung_nach_aufnahme
+      antragsteller_rolle: auftragnehmer
+      taetigkeit_bezeichnung: Pflegefachkraft im Schichtdienst
+      taetigkeit_beginn: "2025-12-01"
+      auftraggeber_name: Seniorenresidenz Lindenhof GmbH
+      auftraggeber_betriebsnummer: "77889900"
+      weisungsgebunden: nein
+      eingliederung_arbeitsorganisation: nein
+      arbeitsort: beim_auftraggeber
+      weitere_auftraggeber: nein
+      umsatzanteil_hauptauftraggeber: "100"
+      honorar_modell: fest_monatlich
+      honorar_monatlich: "1150"
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 3
+      derivation_source: hint
+      gaps: []
+    anomaly_expected: true
+    anomaly_pattern: >-
+      honorar_niedrig_vs_taetigkeit: die Honorarhoehe ist nach BSG 31.03.2017
+      (B 12 R 7/15 R) ein gewichtiges Indiz - liegt sie deutlich unter dem
+      Arbeitsentgelt eines vergleichbar Beschaeftigten, spricht das gegen
+      Selbststaendigkeit. Ein Vergleichslohn ist Marktwissen und steht in
+      keiner Konfiguration; deshalb Scorer, nicht Regel.
+    notes: >-
+      Tier-No-op wie bei sf-0040: der Vorgang steht bereits auf Tier 3. Die
+      Markierung sagt einem Menschen, welche Zahl im Formular die interessante
+      ist.
+
+  - scenario_id: sf-0042-beginn-fuenfzehn-jahre-zurueck
+    kind: anomalous_rule_passing
+    description: >-
+      Vollstaendiger Antrag, dessen zu beurteilende Taetigkeit vor mehr als
+      siebzehn Jahren begonnen hat. Formal einwandfrei, praktisch weit
+      ausserhalb der ueblichen Verteilung.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    facts:
+      geburtsdatum: "1971-06-06"
+      versicherungsnummer: "38060671A089"
+      antragsart: feststellung_nach_aufnahme
+      antragsteller_rolle: gemeinsam
+      taetigkeit_bezeichnung: Hausmeisterdienste im Objektbetrieb
+      taetigkeit_beginn: "2009-04-01"
+      auftraggeber_name: Objektverwaltung Sudhaus GmbH
+      auftraggeber_betriebsnummer: "88990011"
+      weisungsgebunden: nein
+      eingliederung_arbeitsorganisation: nein
+      arbeitsort: wechselnd
+      weitere_auftraggeber: ja
+      umsatzanteil_hauptauftraggeber: "70"
+      honorar_modell: nach_stunden
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 3
+      derivation_source: hint
+      gaps: []
+    anomaly_expected: true
+    anomaly_pattern: >-
+      taetigkeit_beginn_abstand_tage: der Abstand zwischen Beginn der
+      Taetigkeit und Eingang des Antrags betraegt mehr als 6000 Tage. Analog
+      zu ar-0041; fachlich relevant, weil die Beitragsnachforderung an der
+      Verjaehrung des par. 25 SGB IV haengt und ein solcher Vorgang eine ganz
+      andere Aktenlage hat als ein frischer Antrag.
+    notes: >-
+      Bewusst keine Regel: die Datumsgrenze ist absolut (1990-2035) und faengt
+      diesen Fall nicht ab, weil ein weit zurueckliegender Beginn zulaessig
+      ist - nur selten. Tier-No-op wie bei den beiden anderen anomalen Items.

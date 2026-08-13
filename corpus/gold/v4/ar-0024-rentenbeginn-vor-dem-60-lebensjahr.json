@@ -1,0 +1,33 @@
+{
+  "submissionId": "ar-0024-rentenbeginn-vor-dem-60-lebensjahr",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-06T07:21:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "meta": {
+      "eingangsdatum": "06.08.2026"
+    },
+    "antragsteller": {
+      "anschrift": {
+        "plz": "10115",
+        "strasse": "  Musterweg \t",
+        "ort": "Musterstadt",
+        "hausnummer": "3"
+      },
+      "versicherungsnummer": "12200575A061",
+      "geburtsdatum": "1975-05-20"
+    },
+    "antrag": {
+      "rentenbeginn": "2027-01-01",
+      "rentenart": "regelaltersrente",
+      "hinweistext": "Hallo, ich schicke Ihnen hier meinen Antrag. Ich hoffe, so ist alles richtig ausgefuellt. Ich bin ab kommender Woche im Urlaub. Vielen Dank vorab.",
+      "auslandsbezug": "  nein "
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

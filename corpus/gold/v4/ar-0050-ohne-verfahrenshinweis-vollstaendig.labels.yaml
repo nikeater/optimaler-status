@@ -1,0 +1,20 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: ar-0050-ohne-verfahrenshinweis-vollstaendig
+procedure_id: altersrente
+scenario_kind: hint_missing
+expected_unit_id: Referat_312_Renten
+expected_tier: 1
+derived_procedure_id: altersrente
+derivation_source: content
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: 'Das Gegenstueck zu ar-0001 ohne Kanalhinweis. Es haelt eine bewusste Entscheidung
+  fest: eine inhaltlich eindeutig abgeleitete Verfahrenszuordnung ist fuer Tier 1
+  zugelassen, weil sie deterministisch und geprueft ist. Waere das anders gewollt,
+  braeuchte die Entscheidungstabelle ein neues qualifizierendes Feld (Contract-Anfrage,
+  siehe ADR-013).'

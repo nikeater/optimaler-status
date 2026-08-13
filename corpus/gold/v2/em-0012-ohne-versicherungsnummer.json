@@ -1,0 +1,34 @@
+{
+  "submissionId": "em-0012-ohne-versicherungsnummer",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {
+    "antragsteller": {
+      "anschrift": {
+        "strasse": " \tKirchgasse  ",
+        "ort": " Beispielstadt  ",
+        "hausnummer": "2",
+        "plz": "24103"
+      },
+      "geburtsdatum": "1971-02-11"
+    },
+    "antrag": {
+      "hinweistext": "Sehr geehrte Damen und Herren, hiermit reiche ich den beigefuegten Antrag ein und bitte um Bearbeitung. Eine Eingangsbestaetigung waere mir wichtig. Fuer Rueckfragen stehe ich Ihnen zur Verfuegung.",
+      "eintritt_erwerbsminderung": "  2025-06-19 ",
+      "gutachten_status": "liegt_vor",
+      "rentenart": "erwerbsminderungsrente_voll",
+      "letzte_taetigkeit": "  Maurer ",
+      "auslandsbezug": " \tnein \t"
+    },
+    "meta": {
+      "eingangsdatum": "2026-08-05"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "erwerbsminderungsrente"
+}

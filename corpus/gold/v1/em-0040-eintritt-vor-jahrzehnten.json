@@ -1,0 +1,35 @@
+{
+  "submissionId": "em-0040-eintritt-vor-jahrzehnten",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {
+    "antrag": {
+      "gutachten_status": "liegt_vor",
+      "letzte_taetigkeit": " Gaertnerin  ",
+      "eintritt_erwerbsminderung": "1994-05-02",
+      "auslandsbezug": "nein",
+      "rentenart": " erwerbsminderungsrente_voll  ",
+      "hinweistext": "Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir."
+    },
+    "meta": {
+      "eingangsdatum": "05.08.2026"
+    },
+    "antragsteller": {
+      "anschrift": {
+        "hausnummer": "3",
+        "plz": "10115",
+        "strasse": "Musterweg",
+        "ort": "Musterstadt"
+      },
+      "geburtsdatum": "1979-07-16",
+      "versicherungsnummer": "16077919M093"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "erwerbsminderungsrente"
+}

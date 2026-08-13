@@ -1,0 +1,43 @@
+{
+  "submissionId": "ar-0062-email-ohne-rentenbeginn",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "email",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {},
+  "attachments": [],
+  "bodyText": "Betreff: Antrag auf Altersrente\n\nSehr geehrte Damen und Herren,\n\nich beantrage meine Regelaltersrente. Wann sie beginnen soll, moechte ich noch mit Ihnen besprechen.\n\nAbsender: Frau Halina Probstfeld\nAnschrift: Kirchgasse 2, 24103 Beispielstadt\nGeburtsdatum: 1961-12-05\nVersicherungsnummer: 18051261A021\nRentenart: regelaltersrente\nAuslandsbezug: nein\n\nMit freundlichen Gruessen\nFrau Halina Probstfeld",
+  "extractionFixture": [
+    {
+      "field": "geburtsdatum",
+      "part_id": "part-text-0",
+      "anchor": "Geburtsdatum:",
+      "mode": "sealed"
+    },
+    {
+      "field": "versicherungsnummer",
+      "part_id": "part-text-0",
+      "anchor": "Versicherungsnummer:",
+      "mode": "sealed"
+    },
+    {
+      "field": "rentenart",
+      "part_id": "part-text-0",
+      "anchor": "Rentenart:",
+      "mode": "literal",
+      "value": "regelaltersrente",
+      "quote": "Rentenart: regelaltersrente"
+    },
+    {
+      "field": "auslandsbezug",
+      "part_id": "part-text-0",
+      "anchor": "Auslandsbezug:",
+      "mode": "literal",
+      "value": "nein",
+      "quote": "Auslandsbezug: nein"
+    }
+  ]
+}

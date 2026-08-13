@@ -1,0 +1,14 @@
+{
+  "submissionId": "xx-0061-email-terminanfrage",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "email",
+  "submittedAt": "2026-08-03T09:12:00+00:00",
+  "serviceType": {
+    "name": "Allgemeines Anliegen",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000009"
+  },
+  "data": {},
+  "attachments": [],
+  "bodyText": "Betreff: Bitte um einen Beratungstermin\n\nSehr geehrte Damen und Herren,\n\nich haette gerne einen Termin in Ihrer Auskunfts- und Beratungsstelle und bitte um einen Vorschlag.\n\nAbsender: Frau Halina Probstfeld\nAnschrift: Musterweg 3, 10115 Musterstadt\n\nMit freundlichen Gruessen\nFrau Halina Probstfeld",
+  "extractionFixture": []
+}

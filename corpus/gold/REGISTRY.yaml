@@ -1,0 +1,101 @@
+# Gold-set registry: which corpora exist, what each one is worth, and how it
+# is verified. Hand-maintained; one entry per directory under corpus/gold/.
+#
+# This file lives OUTSIDE the frozen directories on purpose. Recording "v1 was
+# superseded by v2" inside corpus/gold/v1/MANIFEST.yaml would be an edit to a
+# frozen set, and ADR-010 has exactly one rule about editing frozen sets. The
+# fact that a set has a successor is knowledge that came into existence after
+# the set was frozen, so it belongs next to the sets, not inside one.
+#
+# `verification` decides what `python -m corpus.generator.build --check --out
+# corpus/gold/<set>` does (ADR-015):
+#
+#   rebuild    the set is current: rebuild it from the specs and compare byte
+#              for byte, including the self-check against the live engine.
+#   integrity  the set is superseded: recompute the SHA-256 of every item and
+#              compare it with the set's own MANIFEST. Today's engine is NOT
+#              re-run over it - a superseded set exists precisely because the
+#              engine moved on, and re-running it would fail by design.
+#   none       pre-gold scaffolding without a manifest; nothing to verify.
+#
+# Superseded sets stay in git. Every number this project has ever quoted names
+# the set it came from, and those numbers keep their meaning.
+sets:
+  - gold_set: s1
+    path: corpus/gold/s1
+    status: superseded
+    superseded_by: v1
+    verification: none
+    items: 2
+    built_by: part 01 (S1)
+    note: >-
+      Two hand-written pre-gold items, no generator and no manifest. Kept
+      because tests/test_pipeline.py and tests/test_eval.py still use them as
+      the smallest end-to-end fixtures.
+
+  - gold_set: v1
+    path: corpus/gold/v1
+    status: superseded
+    superseded_by: v2
+    verification: integrity
+    items: 41
+    built_by: part 02 (S2)
+    note: >-
+      The first generated gold set (generator corpus_generator_v1, seed 42,
+      rules routing_v1, table table_v0). Superseded by v2 for three reasons,
+      all recorded in the engineering log: the Versicherungsnummern carried
+      the birth date in the wrong six digits, so no structural check could
+      ever pass; four items declared divergences that part 03 closed; and the
+      set had no ground truth for procedure derivation, which did not exist
+      yet. The items are unchanged and stay quotable.
+
+  - gold_set: v2
+    path: corpus/gold/v2
+    status: superseded
+    superseded_by: v3
+    verification: integrity
+    items: 57
+    built_by: part 03 (S3)
+    note: >-
+      v1's scenarios with corrected Versicherungsnummern and corrected labels,
+      plus derivation ground truth per item and new validation-failure,
+      hint-missing and arbitration-conflict scenarios. Superseded by v3 for two
+      reasons, both recorded in the engineering log: the third demo procedure
+      (Statusfeststellung nach par. 7a SGB IV) added 20 items that v2 cannot
+      grow into, and xx-0005's declared unit divergence was closed by the
+      Widerspruchs-Routing-Regel of part 03b, so keeping the declaration would
+      have been a lie in the other direction. The 57 items are unchanged and
+      stay quotable.
+
+  - gold_set: v3
+    path: corpus/gold/v3
+    status: superseded
+    superseded_by: v4
+    verification: integrity
+    items: 77
+    built_by: part 03b
+    note: >-
+      v2's 57 scenarios unchanged except for xx-0005 (divergence removed, the
+      Widerspruch now routes to the Widerspruchsstelle), plus 20 items for the
+      Statusfeststellung nach par. 7a SGB IV. Superseded by v4 for one reason,
+      recorded in the engineering log: every item in it is a FORM, and part 05
+      added the other half of the inbox - an Anschreiben by e-mail, a scanned
+      letter - which a frozen set cannot grow into. All 77 items are
+      byte-identical inside v4, payloads and labels alike, and the v4 eval
+      asserts that they still score exactly what they scored here. They stay
+      quotable.
+
+  - gold_set: v4
+    path: corpus/gold/v4
+    status: current
+    verification: rebuild
+    items: 101
+    built_by: part 05
+    note: >-
+      v3's 77 form items unchanged, plus 24 free-text Anschreiben (16 by
+      e-mail, born-digital; 8 as scans with seeded OCR noise) across all three
+      procedures and without a determinable one. A letter item carries an EMPTY
+      data object on purpose: nothing in it can be answered by reading a payload
+      key, so it measures the text path end to end - span sealing, the
+      normalized layer, derivation from text.*, and the double-lock span
+      verification. The default corpus for python -m eval.run.

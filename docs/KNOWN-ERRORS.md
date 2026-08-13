@@ -1,0 +1,273 @@
+# Known errors
+
+What this system gets wrong, written down by the people who build it.
+
+This file exists because of backlog row P-12. A public administration system
+that only publishes its successes teaches its users to trust it uniformly, which
+is the opposite of what an assistive triage tool needs: a caseworker has to know
+where to look twice. Every entry below is a limit somebody found and could have
+quietly left out of a report.
+
+The rule for this file: an error belongs here when it is **real, reproducible and
+not fixed**. A bug that was fixed belongs in the engineering log. A risk nobody
+has demonstrated belongs in the DPIA input material. Every entry names how it was
+found, what it costs, and what would actually fix it - not what would hide it.
+
+**Release practice is still open.** P-12 asks for a public known-errors log *per
+release*, and this project has not cut a release yet. What exists today is the
+file and the discipline of filling it; wiring it into a release checklist is
+part of the deployment work.
+
+---
+
+## KE-1: OCR-mangled identity evades the detector union
+
+**Since:** part 05 (2026-08-12) - the text path is the first place it can happen
+**Severity:** high (a person's data reaches the working copy)
+**Found by:** `tests/test_redact_canaries.py::test_ocr_mangled_identity_can_evade_the_detector`
+
+A scanned Versicherungsnummer read with a capital `O` where a zero stood is still
+a Versicherungsnummer to a human reader and is no longer one to a regular
+expression. The recall-first union does not find it, so the boundary does not
+seal it; the post-seal sweep runs the same recognizers, so it does not flag it
+either; and the mangled run reaches `redacted_text`, the normalized layer, and
+from there any journal payload that quotes text (none do today) and any screen
+that shows the working copy (part 07).
+
+The same holds for an address whose street name lost a letter, a Steuer-ID with a
+transposed digit, and a name the optional NER model does not recognise.
+
+**What it costs.** The identifier is corrupt, so it is not *usable* identity data
+in the way a clean one is - but it is identity-adjacent text about a real person
+in a working copy that the architecture promises carries none.
+
+**What does not fix it.** Lowering a threshold: there is no threshold here, the
+recognizers are patterns with checksums. Adding fuzzy recognizers: a pattern
+loose enough to catch `6517O839J0O3` also catches ordinary Aktenzeichen, Betraege
+and dates, and a sweep that fires on legitimate content is a sweep somebody
+switches off within a week (that is the reason the VERIFY profile is
+precision-first in the first place, see ADR-017).
+
+**What would fix it.** OCR confidence at the source. A scanner that reports per
+character confidence lets the boundary treat a low-confidence run near an
+identity-shaped context as identity, which is a decision with evidence behind it
+rather than a wider guess. That is scan-adapter work and belongs to part 07
+(backlog P-14 territory).
+
+**Not hidden in the corpus.** Gold v4's OCR items corrupt text OUTSIDE identity
+values on purpose, so that the build-time assertion "deterministic sealing leaves
+every gold letter verification-clean" stays meaningful. The limit is demonstrated
+by the canary test above instead, which asserts that the mangled run survives.
+
+---
+
+## KE-2: A field with no requirement is never asked of a live model
+
+**Since:** part 05 (2026-08-12)
+**Severity:** low (affects the optional live path only; the gated path is unaffected)
+**Found by:** `tests/test_eval_live.py::test_a_model_that_reads_the_letter_scores_well`
+
+The extraction prompt lists a field only when some procedure declares a
+**requirement** for it, because the requirement wording is the single definition
+of what a field means (it is the same sentence the completeness checker and the
+Nachforderung text use). `auslandsbezug` is mapped in the Altersrente field map
+but is required by nobody - and the Altersrente clear-cut criteria read exactly
+that field.
+
+**Consequence:** a live model is never asked for `auslandsbezug`, so an item
+extracted only by a live model cannot satisfy the clear-cut criteria and cannot
+reach tier 1. It lands at tier 3, which is the safe direction, and it lands there
+for a reason nobody would guess from the item.
+
+**What does not fix it.** Writing a second description for the model. That is a
+second definition of what the field means, and it would drift on the first
+fachliche correction nobody thought to copy over.
+
+**What would fix it.** Either a requirement for `auslandsbezug` (a fachliche
+decision - is it a Pflichtangabe?), or clear-cut criteria that only read fields
+that are requirements (a config decision). Both are for the Fachbereich, not for
+the engine.
+
+---
+
+## KE-3: Span-verification failure rates are reported, not gated
+
+**Since:** part 05 (2026-08-12)
+**Severity:** informational - this is a design decision, recorded so nobody
+mistakes it for an oversight
+
+The eval reports `span_verification` (verified rate, discard rate, failure
+histogram, split by source type and by procedure) and the `EXTRACTED` journal
+event carries the same counts per case. Neither is a gate.
+
+The reason is in ADR-020: a gate on the verification rate creates pressure to
+lower the match threshold until the number looks good, which is precisely the
+wrong direction for a threshold whose job is to refuse. A collapse in extraction
+quality is still visible in the gated numbers, because every discarded span
+increments `discarded_count` and pushes its item toward tier 3 - the system gets
+more cautious, not more wrong.
+
+**What an operator should watch.** A shift in the failure histogram
+(`quote_mismatch` rising is an offset problem, `value_not_in_quote` rising is a
+model summarizing) and a discard rate that diverges between `born_digital` and
+`ocr` (only OCR: a scanner problem; both: an extractor problem).
+
+---
+
+## KE-4: A fuzzy-verified scan can still reach tier 1
+
+**Since:** part 05 (2026-08-12)
+**Severity:** open policy question, not a defect
+**Visible in:** gold v4 item `ar-0064-scan-regelaltersrente-vollstaendig`
+
+The decision table qualifies tier 1 on `extraction.discarded_count == 0`, on
+routing confidence and on the clear-cut criteria. It does NOT read
+`extraction_min_confidence`, which is the field that carries "how well was this
+value established". A scanned letter whose every span verified at a fuzzy score
+of 0.96 therefore reaches tier 1 exactly like a born-digital one that verified
+exactly.
+
+That may well be right - the span WAS verified, above a threshold an agency set -
+but it is a policy choice nobody has made explicitly, and it is invisible in the
+table. Adding an `extraction.min_confidence >= x` condition would not move any
+item of gold v4's structured subset (structured records carry confidence 1.0), so
+the change is available cheaply if the Fachbereich wants it.
+
+Recorded here rather than decided by the engine: which evidence quality is good
+enough for an unattended decision is not an engineering question.
+
+**Part 06 update: the knob is wired and tested; the number is still the
+Fachbereich's - and the field does not separate what this entry assumed it
+would.** `extraction.min_confidence` has been legal vocabulary since part 01 and
+the interpreter resolves it, and `tests/test_ke4_min_confidence.py` now proves
+that end to end against two hypothetical tables in `tests/golden/hypothetical/`.
+Doing so measured what the entry above only reasoned about: gold v4's tier-1
+items carry min_confidence 0.963 (the OCR scan - a *measured* fuzzy score), 0.95
+(the e-mail - the configured `confidence.exact`, which is the deliberate
+statement that reading prose never earns 1.0) and 1.0 (the form - a key was
+read). The scan is therefore the *more* confident of the two prose readings, so
+the obvious condition `>= 0.95` moves no item at all, and any condition strict
+enough to catch the scan (0.97) catches every born-digital letter with it. This
+field separates "read out of prose" from "read out of a key", not scan from
+e-mail, and a Fachbereich adopting it would be deciding that.
+
+---
+
+## KE-5: A 7B model cannot produce a character offset the double lock accepts
+
+**Since:** part 12 (2026-08-13) - the first time a real model was measured
+**Severity:** high for the live path (it makes live extraction useless on this
+hardware); zero for the gated path, which never calls a model
+**Found by:** `python -m eval.live` against two local Ollama models; recorded in
+ADR-028
+
+The live extractor asks a model for four things per value: the field, the value,
+a verbatim quote, and the character offset of that quote in the normalized text.
+The prompt hands over the text in 96-character numbered chunks with their start
+offsets, so the model only has to add a position inside one chunk to a number it
+was given. Two open-weights 7B instruct models at Q4 - `mistral:7b-instruct-v0.3`
+and `qwen2.5:7b-instruct` - get the first three right very often and the fourth
+almost always wrong.
+
+Measured on the 24 free-text letters of gold v4:
+
+| | mistral 7b v0.3 Q4_K_M | qwen2.5 7b Q4_K_M |
+|---|---|---|
+| spans proposed | 86 | 85 |
+| spans verified | 0 | 3 |
+| `quote_mismatch` | 72 | 76 |
+| `offset_out_of_range` | 7 | 5 |
+| `empty_value` | 5 | 1 |
+| `value_not_in_quote` | 2 | 0 |
+
+Observed offset errors on one item: -34 and +18 characters. Three distinct
+causes sit behind `quote_mismatch`:
+
+1. **The arithmetic.** The model adds the in-chunk position to the chunk start
+   incorrectly. This is the dominant cause and the one nothing in the prompt can
+   fix - a model reads tokens, and a character index is not a token.
+2. **The chunk marker is quoted.** The model returns
+   `"[288] Geburtsdatum: ..."` - it quotes the scaffolding the prompt added
+   rather than the text underneath it.
+3. **A placeholder split across a chunk boundary.** A 96-character chunk can end
+   inside `[[PII|GEBDAT|...]]`, and the model reassembles the two halves with a
+   space, so the quote no longer occurs in the text at all.
+
+**What it costs.** Nothing that is gated, and on this corpus nothing at all: a
+blind control (fixture removed, no extractor) produced the same tier as the live
+run on 24 of 24 letters. A model that verifies 0-3 spans of ~86 is
+indistinguishable in outcome from no model.
+
+**What does not fix it.** Searching the neighbourhood of the claimed offset for
+a matching window. That is the exact repair ADR-020 and P-8 forbid: it converts
+a wrong answer into a right one and then reports the result as verified,
+collapsing two independent locks into one. Lowering the fuzzy threshold does not
+help either - these offsets are wrong by tens of characters, not by one.
+
+**What would fix it.** Causes 2 and 3 are prompt and chunking work: a chunk
+boundary that never falls inside a placeholder, and a prompt that says the
+marker is not part of the text. Both live behind `prompt_version` and
+`chunk_chars` in `config/extraction/extraction_v1.yaml`, which are frozen with
+the numbers they produced, so they are a deliberate future change with a version
+bump and a re-measurement, not a tweak. Cause 1 - the arithmetic - is a model
+capability question: a larger model, or a serving stack whose grammar can emit
+the offset from the decoder's own position rather than from the model's
+reasoning (vLLM with guided decoding over a token-index-aware grammar is the
+shape of that answer). Until one of those exists, the recommendation stands:
+replay is the extractor, live mode is a laboratory instrument.
+
+---
+
+## KE-6: With the optional NER extra installed, the boundary refuses some demo letters
+
+**Since:** part 13 (2026-08-13) - the guided showcase is the first surface that
+seals a letter somebody wrote by hand and then shows the result to them
+**Severity:** zero for the hosted demo and for the gate (neither has the extra);
+cosmetic-but-confusing for a developer who runs the showcase locally with it
+**Found by:** walking all four personas through both intake tabs on a machine
+with `pip install -e ".[redact]"`; two of eight combinations were refused, and
+which two changed between runs
+
+`ADR-019` ruling 4 says the post-seal sweep masks every well-formed placeholder
+to a same-length run of spaces before the recall-first union runs over it, so
+that a recognizer firing ON a placeholder is treated as having found the
+redaction rather than residue. That works. What it does not cover is the text
+AROUND the mask.
+
+A persona letter says `Mein Name ist Herr Theo Musterkind, geboren am ...`. The
+deterministic `name_anrede` recognizer seals the name and leaves the salutation
+standing, because the salutation is not the name. After masking, the verify pass
+sees `Mein Name ist Herr` followed by twenty-six spaces, and the spaCy member
+tags `Herr` plus the whitespace run as a PERSON of thirty characters. The
+boundary then refuses its own output, exactly as it is supposed to when the
+sweep finds something.
+
+It is not deterministic across runs, and the reason is the one ADR-019 already
+records: whether the model fires depends on the characters the token source drew
+for the placeholder, so the same letter is refused on one submission and
+accepted on the next.
+
+**What it costs.** On the hosted demo, nothing: the image installs core
+dependencies only and CI asserts `presidio_analyzer`, `spacy`, `torch` and
+`sentence_transformers` are not importable (ADR-027 ruling 8). On the gate,
+nothing: every gate path seals prose with the deterministic union, and the
+corpus generator asserts at build time that this is enough for every gold
+letter. Locally, a visitor sees the refusal screen instead of the pipeline -
+which is an honest screen showing a real behaviour, but not the one they clicked
+for.
+
+**What does not fix it.** Removing the salutation from the letters. The
+salutation is what makes the name findable WITHOUT a model, and a demo letter
+whose name only spaCy can find would leak that name on the hosted instance,
+which has no spaCy. Suppressing a model hit that is adjacent to a mask is worse
+still: "ignore what the model found next to a redaction" is one refactor away
+from "ignore what the model found".
+
+**What would fix it.** Masking with a token the model reads as a name rather
+than with spaces, so the salutation has something to attach to and the hit lands
+ON the mask where ruling 4 already ignores it. That is a change to the sweep,
+which is the most safety-critical loop in the repository, and it needs its own
+measurement over `corpus/pii_golden` plus the letter half of gold v4 before it
+goes anywhere near the boundary. Until then: run the local showcase with
+`EINGANGSLOTSE_TEXT_NER=0`, which is the posture the hosted demo has anyway, and
+which `docs/BUILD.md` now says next to the demo commands.

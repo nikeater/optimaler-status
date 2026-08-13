@@ -1,0 +1,14 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: ar-0005-regelaltersrente-kurzfristig
+procedure_id: altersrente
+scenario_kind: complete_clear
+expected_unit_id: Referat_312_Renten
+expected_tier: 1
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: Vollstaendiger Antrag mit kurzfristigem Rentenbeginn.

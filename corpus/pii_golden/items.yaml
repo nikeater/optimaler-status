@@ -1,0 +1,572 @@
+# Seeded German-PII golden set for the redaction recall metric (P-7).
+# GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.pii_golden.build --seed 20260811
+# Every value is synthetic. Labels are char spans produced by composition,
+# never by searching the text, so they cannot agree with a broken detector.
+policy_id: pii_golden_v1
+generator_version: pii_golden_v1
+seed: 20260811
+items:
+- item_id: pii-0001
+  scenario: vsnr
+  text: Die Versicherungsnummer lautet 11040650L949.
+  labels:
+  - kind: VSNR
+    start: 31
+    end: 43
+- item_id: pii-0002
+  scenario: vsnr
+  text: Bitte ordnen Sie den Vorgang der Versicherungsnummer 16220268N148 zu.
+  labels:
+  - kind: VSNR
+    start: 53
+    end: 65
+- item_id: pii-0003
+  scenario: vsnr
+  text: Im Antrag ist die Rentenversicherungsnummer 23111056B954 eingetragen.
+  labels:
+  - kind: VSNR
+    start: 44
+    end: 56
+- item_id: pii-0004
+  scenario: vsnr
+  text: 'Versicherungsnummer: 15041067M147'
+  labels:
+  - kind: VSNR
+    start: 21
+    end: 33
+- item_id: pii-0005
+  scenario: vsnr
+  text: Der Sozialversicherungsausweis weist die Nummer 18180541B570 aus.
+  labels:
+  - kind: VSNR
+    start: 48
+    end: 60
+- item_id: pii-0006
+  scenario: vsnr_mistyped
+  text: Zu Ihrer Versicherungsnummer 24220757B329 liegt uns bereits ein Konto vor.
+  labels:
+  - kind: VSNR
+    start: 29
+    end: 41
+- item_id: pii-0007
+  scenario: steuer_id
+  text: Die steuerliche Identifikationsnummer lautet 75451627076.
+  labels:
+  - kind: STID
+    start: 45
+    end: 56
+- item_id: pii-0008
+  scenario: steuer_id
+  text: 'Steuer-ID: 88441939055'
+  labels:
+  - kind: STID
+    start: 11
+    end: 22
+- item_id: pii-0009
+  scenario: steuer_id
+  text: Bitte geben Sie die Identifikationsnummer 41108901873 im Formular an.
+  labels:
+  - kind: STID
+    start: 42
+    end: 53
+- item_id: pii-0010
+  scenario: steuer_id
+  text: Fuer den Rentenbezugsmitteilung wird die Steuer-ID 36222412745 benoetigt.
+  labels:
+  - kind: STID
+    start: 51
+    end: 62
+- item_id: pii-0011
+  scenario: steuer_id
+  text: Die IdNr. 20291385058 ist beim Finanzamt hinterlegt.
+  labels:
+  - kind: STID
+    start: 10
+    end: 21
+- item_id: pii-0012
+  scenario: steuer_id
+  text: Als steuerliche Identifikationsnummer wurde 45343981126 uebermittelt.
+  labels:
+  - kind: STID
+    start: 44
+    end: 55
+- item_id: pii-0013
+  scenario: iban_de
+  text: Die Zahlung erfolgt auf das Konto DE77605441644688850415.
+  labels:
+  - kind: IBAN
+    start: 34
+    end: 56
+- item_id: pii-0014
+  scenario: iban_de
+  text: 'Bankverbindung: DE11912495312767553825'
+  labels:
+  - kind: IBAN
+    start: 16
+    end: 38
+- item_id: pii-0015
+  scenario: iban_de
+  text: Bitte ueberweisen Sie den Betrag auf die IBAN DE78132466370587363137.
+  labels:
+  - kind: IBAN
+    start: 46
+    end: 68
+- item_id: pii-0016
+  scenario: iban_de
+  text: Als Kontoverbindung wurde DE62644858621590086451 angegeben.
+  labels:
+  - kind: IBAN
+    start: 26
+    end: 48
+- item_id: pii-0017
+  scenario: iban_de
+  text: Die Rente soll auf DE07149561845673893813 ausgezahlt werden.
+  labels:
+  - kind: IBAN
+    start: 19
+    end: 41
+- item_id: pii-0018
+  scenario: iban_auslandskonto
+  text: 'Auslandskonto: AT729099421191364045'
+  labels:
+  - kind: IBAN
+    start: 15
+    end: 35
+- item_id: pii-0019
+  scenario: betriebsnummer
+  text: Betriebsnummer 79969041 des Auftraggebers.
+  labels:
+  - kind: BNR
+    start: 15
+    end: 23
+- item_id: pii-0020
+  scenario: betriebsnummer
+  text: Der Betrieb ist unter der Betriebsnummer 18203850 gemeldet.
+  labels:
+  - kind: BNR
+    start: 41
+    end: 49
+- item_id: pii-0021
+  scenario: betriebsnummer
+  text: 'Betriebsnummer: 77300798'
+  labels:
+  - kind: BNR
+    start: 16
+    end: 24
+- item_id: pii-0022
+  scenario: betriebsnummer
+  text: Bitte pruefen Sie die Betriebsnummer 22742385 im Meldeverfahren.
+  labels:
+  - kind: BNR
+    start: 37
+    end: 45
+- item_id: pii-0023
+  scenario: betriebsnummer
+  text: Als BetrNr. 49172372 wurde uns die Nummer der Bundesagentur genannt.
+  labels:
+  - kind: BNR
+    start: 12
+    end: 20
+- item_id: pii-0024
+  scenario: aktenzeichen
+  text: 'Aktenzeichen: S 12 R 4711/26'
+  labels:
+  - kind: AKTZ
+    start: 14
+    end: 28
+- item_id: pii-0025
+  scenario: aktenzeichen
+  text: Wir beziehen uns auf das Verfahren B 12 R 3/25 R vor dem Sozialgericht.
+  labels:
+  - kind: AKTZ
+    start: 35
+    end: 48
+- item_id: pii-0026
+  scenario: aktenzeichen
+  text: Az. L 4 R 812/24 - Widerspruch gegen den Bescheid.
+  labels:
+  - kind: AKTZ
+    start: 4
+    end: 16
+- item_id: pii-0027
+  scenario: aktenzeichen
+  text: In der Sache S 9 R 1043/26 wurde bereits entschieden.
+  labels:
+  - kind: AKTZ
+    start: 13
+    end: 26
+- item_id: pii-0028
+  scenario: aktenzeichen
+  text: Bitte nennen Sie bei Rueckfragen das Geschaeftszeichen L 16 R 77/25.
+  labels:
+  - kind: AKTZ
+    start: 55
+    end: 67
+- item_id: pii-0029
+  scenario: email
+  text: Rueckfragen bitte an i.wegener@nordlicht-beispiel.de.
+  labels:
+  - kind: EMAIL
+    start: 21
+    end: 52
+- item_id: pii-0030
+  scenario: email
+  text: 'E-Mail: m.thalheim@nordlicht-beispiel.de'
+  labels:
+  - kind: EMAIL
+    start: 8
+    end: 40
+- item_id: pii-0031
+  scenario: email
+  text: Der Antrag ging per Mail von m.thalheim@nordlicht-beispiel.de ein.
+  labels:
+  - kind: EMAIL
+    start: 29
+    end: 61
+- item_id: pii-0032
+  scenario: email
+  text: Bitte antworten Sie an m.thalheim@nordlicht-beispiel.de und nicht telefonisch.
+  labels:
+  - kind: EMAIL
+    start: 23
+    end: 55
+- item_id: pii-0033
+  scenario: email
+  text: 'Kontakt: a.vollbrecht@nordlicht-beispiel.de (Poststelle)'
+  labels:
+  - kind: EMAIL
+    start: 9
+    end: 43
+- item_id: pii-0034
+  scenario: email
+  text: Eine Kopie wurde an a.vollbrecht@beispielstadt-verwaltung.de gesendet.
+  labels:
+  - kind: EMAIL
+    start: 20
+    end: 60
+- item_id: pii-0035
+  scenario: telefon
+  text: Telefonisch erreichbar unter 0431 4567890.
+  labels:
+  - kind: TEL
+    start: 29
+    end: 41
+- item_id: pii-0036
+  scenario: telefon
+  text: Tel. +49 30 12345678
+  labels:
+  - kind: TEL
+    start: 5
+    end: 20
+- item_id: pii-0037
+  scenario: telefon
+  text: Rueckruf erbeten unter 0221 9876543 ab 9 Uhr.
+  labels:
+  - kind: TEL
+    start: 23
+    end: 35
+- item_id: pii-0038
+  scenario: telefon
+  text: Die Rufnummer lautet 030 5551234.
+  labels:
+  - kind: TEL
+    start: 21
+    end: 32
+- item_id: pii-0039
+  scenario: telefon
+  text: 'Fuer Rueckfragen: +49 431 778899'
+  labels:
+  - kind: TEL
+    start: 18
+    end: 32
+- item_id: pii-0040
+  scenario: telefon
+  text: Bitte rufen Sie unter 0511 3344556 zurueck.
+  labels:
+  - kind: TEL
+    start: 22
+    end: 34
+- item_id: pii-0041
+  scenario: anschrift
+  text: Die Anschrift lautet Kirchgasse 2, 24103 Beispielstadt.
+  labels:
+  - kind: ADDR
+    start: 21
+    end: 33
+  - kind: ADDR
+    start: 35
+    end: 54
+- item_id: pii-0042
+  scenario: anschrift
+  text: Wohnhaft Amselweg 14, 10117 Musterhausen, seit 2019.
+  labels:
+  - kind: ADDR
+    start: 9
+    end: 20
+  - kind: ADDR
+    start: 22
+    end: 40
+- item_id: pii-0043
+  scenario: anschrift
+  text: 'Anschrift: Bergstrasse 7a, 50667 Beispieldorf'
+  labels:
+  - kind: ADDR
+    start: 11
+    end: 25
+  - kind: ADDR
+    start: 27
+    end: 45
+- item_id: pii-0044
+  scenario: anschrift
+  text: Post bitte an Lindenallee 33, 70173 Musterberg senden.
+  labels:
+  - kind: ADDR
+    start: 14
+    end: 28
+  - kind: ADDR
+    start: 30
+    end: 46
+- item_id: pii-0045
+  scenario: strasse_ohne_ort
+  text: Die Zustelladresse ist Hafenufer 5 im Erdgeschoss.
+  labels:
+  - kind: ADDR
+    start: 23
+    end: 34
+- item_id: pii-0046
+  scenario: strasse_ohne_ort
+  text: Die Zustelladresse ist Marktplatz 1 im Erdgeschoss.
+  labels:
+  - kind: ADDR
+    start: 23
+    end: 35
+- item_id: pii-0047
+  scenario: strasse_ohne_ort
+  text: Die Zustelladresse ist Rosensteig 22 im Erdgeschoss.
+  labels:
+  - kind: ADDR
+    start: 23
+    end: 36
+- item_id: pii-0048
+  scenario: geburtsdatum
+  text: Die antragstellende Person ist geboren am 22.08.1949.
+  labels:
+  - kind: GEBDAT
+    start: 42
+    end: 52
+- item_id: pii-0049
+  scenario: geburtsdatum
+  text: 'Geburtsdatum: 1963-04-05'
+  labels:
+  - kind: GEBDAT
+    start: 14
+    end: 24
+- item_id: pii-0050
+  scenario: geburtsdatum
+  text: geb. 11.03.51, wohnhaft in Norddeutschland.
+  labels:
+  - kind: GEBDAT
+    start: 5
+    end: 13
+- item_id: pii-0051
+  scenario: geburtsdatum
+  text: Der Antragsteller wurde geboren am 17.04.1954 und ist rentennah.
+  labels:
+  - kind: GEBDAT
+    start: 35
+    end: 45
+- item_id: pii-0052
+  scenario: geburtsdatum
+  text: Als Geburtsdatum wurde 1948-03-27 angegeben.
+  labels:
+  - kind: GEBDAT
+    start: 23
+    end: 33
+- item_id: pii-0053
+  scenario: geburtsdatum
+  text: Geburtstag 05.08.61 laut Ausweis.
+  labels:
+  - kind: GEBDAT
+    start: 11
+    end: 19
+- item_id: pii-0054
+  scenario: organisation
+  text: Auftraggeber ist die Nordlicht Systemhaus GmbH.
+  labels:
+  - kind: ORG
+    start: 21
+    end: 46
+- item_id: pii-0055
+  scenario: organisation
+  text: Der Auftrag wurde von der Thalheim Logistik AG erteilt.
+  labels:
+  - kind: ORG
+    start: 26
+    end: 46
+- item_id: pii-0056
+  scenario: organisation
+  text: Als Auftraggeber wurde die Meyer & Sohn GmbH benannt.
+  labels:
+  - kind: ORG
+    start: 27
+    end: 44
+- item_id: pii-0057
+  scenario: organisation
+  text: Der Vertrag besteht mit der Ostsee Pflegedienst gGmbH seit 2024.
+  labels:
+  - kind: ORG
+    start: 28
+    end: 53
+- item_id: pii-0058
+  scenario: organisation
+  text: Rechnungsempfaenger ist die Beispieltal Bau GmbH & Co. KG.
+  labels:
+  - kind: ORG
+    start: 28
+    end: 57
+- item_id: pii-0059
+  scenario: organisation
+  text: Beschaeftigt bei der Musterstadt Kulturverein e. V., in Teilzeit.
+  labels:
+  - kind: ORG
+    start: 21
+    end: 51
+- item_id: pii-0060
+  scenario: name_mit_anrede
+  text: Der Antrag wurde von Herrn Ansgar Vollbrecht unterschrieben.
+  labels:
+  - kind: NAME
+    start: 27
+    end: 44
+- item_id: pii-0061
+  scenario: name_mit_anrede
+  text: Frau Ilse Wegener hat den Vorgang telefonisch angekuendigt.
+  labels:
+  - kind: NAME
+    start: 5
+    end: 17
+- item_id: pii-0062
+  scenario: name_mit_anrede
+  text: Die Unterlagen wurden an Herrn Katarzyna Dombrowski zurueckgesandt.
+  labels:
+  - kind: NAME
+    start: 31
+    end: 51
+- item_id: pii-0063
+  scenario: name_ohne_anrede
+  text: Mehmet Thalheim hat den Antrag am Schalter abgegeben.
+  labels:
+  - kind: NAME
+    start: 0
+    end: 15
+- item_id: pii-0064
+  scenario: name_ohne_anrede
+  text: Zustaendig ist der Sachbearbeiter Bettina Kruse im Referat 312.
+  labels:
+  - kind: NAME
+    start: 34
+    end: 47
+- item_id: pii-0065
+  scenario: name_ohne_anrede
+  text: Nach Ruecksprache mit Jonas Baumgart wird der Vorgang weitergeleitet.
+  labels:
+  - kind: NAME
+    start: 22
+    end: 36
+- item_id: pii-0066
+  scenario: kombiniert_antrag
+  text: Antrag auf Altersrente, Versicherungsnummer 19110860S420, geboren am 24.12.1964, wohnhaft Amselweg
+    14, 24103 Beispielstadt.
+  labels:
+  - kind: VSNR
+    start: 44
+    end: 56
+  - kind: GEBDAT
+    start: 69
+    end: 79
+  - kind: ADDR
+    start: 90
+    end: 101
+  - kind: ADDR
+    start: 103
+    end: 122
+- item_id: pii-0067
+  scenario: kombiniert_statusfeststellung
+  text: Auftraggeber ist die Nordlicht Systemhaus GmbH, Betriebsnummer 73110684, Rueckfragen an poststelle@nordlicht-beispiel.de.
+  labels:
+  - kind: ORG
+    start: 21
+    end: 46
+  - kind: BNR
+    start: 63
+    end: 71
+  - kind: EMAIL
+    start: 88
+    end: 120
+- item_id: pii-0068
+  scenario: kombiniert_widerspruch
+  text: Widerspruch im Verfahren S 3 R 902/26, Rueckruf unter 0221 4455667, Konto DE53375756206830111642.
+  labels:
+  - kind: AKTZ
+    start: 25
+    end: 37
+  - kind: TEL
+    start: 54
+    end: 66
+  - kind: IBAN
+    start: 74
+    end: 96
+- item_id: pii-0069
+  scenario: kombiniert_ohne_pii
+  text: Der Vorgang ist vollstaendig, die Frist laeuft bis zum 30.09.2026 und der Betrag von 4500 Euro
+    wurde angewiesen.
+  labels: []
+- item_id: pii-0070
+  scenario: hard_negative
+  text: Der Antrag ging am 06.08.2026 in der Poststelle ein.
+  labels: []
+- item_id: pii-0071
+  scenario: hard_negative
+  text: Die Nachzahlung betraegt 12345678 Cent und wird im Folgemonat angewiesen.
+  labels: []
+- item_id: pii-0072
+  scenario: hard_negative
+  text: Kundennummer 4711 wurde im Fachverfahren vergeben.
+  labels: []
+- item_id: pii-0073
+  scenario: hard_negative
+  text: Die Rechnungsnummer lautet 20260811 und ist bereits verbucht.
+  labels: []
+- item_id: pii-0074
+  scenario: hard_negative
+  text: Der Beitragssatz betraegt 18,6 Prozent.
+  labels: []
+- item_id: pii-0075
+  scenario: hard_negative
+  text: Die interne Zaehlernummer 987654321 gehoert zum Postbuch.
+  labels: []
+- item_id: pii-0076
+  scenario: hard_negative
+  text: Die Taetigkeit begann am 15.01.2026 und dauert an.
+  labels: []
+- item_id: pii-0077
+  scenario: hard_negative
+  text: Der gewuenschte Rentenbeginn ist der 2026-11-01.
+  labels: []
+- item_id: pii-0078
+  scenario: hard_negative
+  text: Insgesamt 30000000 Versicherte sind von der Anpassung betroffen.
+  labels: []
+- item_id: pii-0079
+  scenario: hard_negative
+  text: Bitte antworten Sie schriftlich, nicht telefonisch.
+  labels: []
+- item_id: pii-0080
+  scenario: hard_negative
+  text: Das Formular V0027 liegt in Kopie bei.
+  labels: []
+- item_id: pii-0081
+  scenario: hard_negative
+  text: Der Bescheid wurde am 03.05.2025 zur Post gegeben.
+  labels: []

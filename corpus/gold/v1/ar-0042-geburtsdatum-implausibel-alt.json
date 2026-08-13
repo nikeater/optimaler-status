@@ -1,0 +1,33 @@
+{
+  "submissionId": "ar-0042-geburtsdatum-implausibel-alt",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antrag": {
+      "rentenbeginn": "2026-11-01",
+      "rentenart": " \tregelaltersrente  ",
+      "auslandsbezug": "nein",
+      "hinweistext": "Sehr geehrte Damen und Herren, hiermit reiche ich den beigefuegten Antrag ein und bitte um Bearbeitung. Ich bin ab kommender Woche im Urlaub. Fuer Rueckfragen stehe ich Ihnen zur Verfuegung."
+    },
+    "antragsteller": {
+      "versicherungsnummer": "04010817V035",
+      "anschrift": {
+        "ort": "Beispielstadt",
+        "strasse": "Kirchgasse",
+        "plz": "24103",
+        "hausnummer": " \t2  "
+      },
+      "geburtsdatum": "1908-01-04"
+    },
+    "meta": {
+      "eingangsdatum": "2026-08-05"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

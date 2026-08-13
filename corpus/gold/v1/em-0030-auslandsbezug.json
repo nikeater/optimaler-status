@@ -1,0 +1,36 @@
+{
+  "submissionId": "em-0030-auslandsbezug",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-29T11:37:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {
+    "antrag": {
+      "letzte_taetigkeit": "  Monteur \t",
+      "rentenart": "erwerbsminderungsrente_voll",
+      "hinweistext": "Hallo, ich schicke Ihnen hier meinen Antrag. Ich hoffe, so ist alles richtig ausgefuellt. Bitte antworten Sie schriftlich, nicht telefonisch. Vielen Dank vorab.",
+      "eintritt_erwerbsminderung": "  2025-09-14  ",
+      "auslandsbezug": " ja \t",
+      "gutachten_status": " liegt_vor  "
+    },
+    "meta": {
+      "bearbeitungswunsch": "Eine Eingangsbestaetigung waere mir wichtig.",
+      "eingangsdatum": "29.07.2026"
+    },
+    "antragsteller": {
+      "anschrift": {
+        "ort": " Musterhausen ",
+        "plz": "99084",
+        "strasse": "Am Hang",
+        "hausnummer": "8"
+      },
+      "geburtsdatum": "1972-10-30",
+      "versicherungsnummer": "30107219K071"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "erwerbsminderungsrente"
+}

@@ -1,0 +1,51 @@
+{
+  "submissionId": "em-0062-scan-teilweise-erwerbsminderung-vollstaendig",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "scan",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {},
+  "attachments": [],
+  "bodyText": "Betreff: Antrag auf Erwerbsrninderungsrente\n\nSehr geehrte Darnen und Herren,\n\nich kann nur noch stundenweise arbeiten und beantrage deshalb eine Erwerbsminderungsrente.\n\nAbsender: Frau Halina Probstfeld\nAnschrift: Musterweg 3, 10115 Musterstadt\nGeburtsdatum: 1961-05-03\nVersicherungsnummer: 18030561J028\nRentenart: erwerbsminderungsrente_teilwcise\nEintritt der Erwerbsminderung: 2024-11-11\nLetzte Taetigkeit: Kraftfahrer\n\nMit freundlichen Gruessen\nFrau Halina Probstfeld",
+  "extractionFixture": [
+    {
+      "field": "geburtsdatum",
+      "part_id": "part-text-0",
+      "anchor": "Geburtsdatum:",
+      "mode": "sealed"
+    },
+    {
+      "field": "versicherungsnummer",
+      "part_id": "part-text-0",
+      "anchor": "Versicherungsnummer:",
+      "mode": "sealed"
+    },
+    {
+      "field": "rentenart",
+      "part_id": "part-text-0",
+      "anchor": "Rentenart:",
+      "mode": "literal",
+      "value": "erwerbsminderungsrente_teilweise",
+      "quote": "Rentenart: erwerbsminderungsrente_teilweise"
+    },
+    {
+      "field": "eintritt_erwerbsminderung",
+      "part_id": "part-text-0",
+      "anchor": "Eintritt der Erwerbsminderung:",
+      "mode": "literal",
+      "value": "2024-11-11",
+      "quote": "Eintritt der Erwerbsminderung: 2024-11-11"
+    },
+    {
+      "field": "letzte_taetigkeit",
+      "part_id": "part-text-0",
+      "anchor": "Letzte Taetigkeit:",
+      "mode": "literal",
+      "value": "Kraftfahrer",
+      "quote": "Letzte Taetigkeit: Kraftfahrer"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "submissionId": "ar-0043-vsnr-widerspricht-geburtsdatum",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-27T08:04:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antrag": {
+      "rentenbeginn": "2026-11-01",
+      "rentenart": "regelaltersrente",
+      "auslandsbezug": " \tnein  ",
+      "hinweistext": " Sehr geehrte Damen und Herren, hiermit reiche ich den beigefuegten Antrag ein und bitte um Bearbeitung. Ich bin ab kommender Woche im Urlaub. Fuer Rueckfragen stehe ich Ihnen zur Verfuegung.  "
+    },
+    "meta": {
+      "bearbeitungswunsch": " Ich bin ab kommender Woche im Urlaub.  ",
+      "eingangsdatum": " 27.07.2026  "
+    },
+    "antragsteller": {
+      "anschrift": {
+        "plz": "70173",
+        "strasse": "Feldstrasse",
+        "ort": "Musterdorf",
+        "hausnummer": "45"
+      },
+      "geburtsdatum": "1959-04-17",
+      "versicherungsnummer": "01010157A001"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

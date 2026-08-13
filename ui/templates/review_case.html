@@ -1,0 +1,522 @@
+{% extends "review_base.html" %}
+{% set state = view.state %}
+{% set case = state.case %}
+{% block title %}EingangsLotse - Vorgang {{ state.case_id }}{% endblock %}
+{% block heading %}Vorgang {{ state.case_id }}{% endblock %}
+{% block picker_action %}/review/case/{{ state.case_id }}{% endblock %}
+{% block content %}
+
+<div aria-live="polite">
+  {% if view.message %}<p class="notice ok-note">{{ view.message }}</p>{% endif %}
+  {% if view.error %}<p class="notice alarm-note">Nicht ausgefuehrt: {{ view.error }}</p>{% endif %}
+</div>
+
+<section aria-labelledby="stand-heading">
+  <h2 id="stand-heading">Stand</h2>
+  <dl>
+    <dt>Zugeordnete Einheit</dt>
+    <dd>
+      {{ state.unit_id or "keine (Zentrale Klaerung)" }}
+      {% if state.rerouted %}
+      <span class="tag">manuell geaendert, maschinell: {{ state.machine_unit_id or "keine" }}</span>
+      {% endif %}
+    </dd>
+    <dt>Tier</dt>
+    <dd>
+      {{ view.tier_label }}
+      {% if state.tier_changed %}
+      <span class="tag">manuell geaendert, maschinell: {{ view.machine_tier_label }}</span>
+      {% endif %}
+    </dd>
+    <dt>Eingang</dt>
+    <dd>{{ case.received_at.isoformat() if case.received_at else "unbekannt" }} ueber {{ case.channel or "unbekannt" }}</dd>
+    <dt>Verfahren</dt>
+    <dd>{{ case.procedure_id or "nicht abgeleitet" }} (Hinweis: {{ case.procedure_hint or "keiner" }})</dd>
+    <dt>Status</dt>
+    <dd>
+      {% if state.confirmed %}
+      bestaetigt am {{ state.confirmed_at.isoformat() }} durch Einheit
+      {{ case.confirmed_unit_id or "unbekannt" }}
+      {% else %}
+      offen, wartet auf menschliche Bestaetigung
+      {% endif %}
+    </dd>
+  </dl>
+  {% if state.sampled %}
+  <p class="notice sample-note">{{ view.sampled_note }}</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="copy-heading">
+  <h2 id="copy-heading">Arbeitskopie: was die Maschine gesehen hat</h2>
+  <p>
+    Vor jeder Auswertung hat die Datenschutzgrenze die Identitaetsangaben durch
+    Platzhalter der Form <code>[[PII|ART|Token]]</code> ersetzt. Jede
+    nachgelagerte Stufe - Ableitung, Extraktion, Regeln, Entscheidung, Scorer -
+    hat ausschliesslich diese Fassung gelesen. Der Klartext liegt im
+    Identitaetstresor und wird nur beim Rendern eines Schreibens
+    zurueckgeschrieben (ADR-002, ADR-017).
+  </p>
+  <dl>
+    <dt>Versiegelte Werte insgesamt</dt><dd>{{ case.sealed_count if case.sealed_count is not none else "-" }}</dd>
+    <dt>Nachpruefung der Versiegelung</dt>
+    <dd>
+      {% if case.redaction_verified %}bestanden (zweiter Erkennerlauf fand nichts)
+      {% else %}nicht bestanden oder nicht protokolliert{% endif %}
+    </dd>
+  </dl>
+  {% if view.sealed_kinds %}
+  <table>
+    <caption>Was im Fliesstext versiegelt wurde, nach Art. Werte erscheinen hier nie.</caption>
+    <thead><tr><th scope="col">Art</th><th scope="col">Bedeutung</th><th scope="col">Anzahl</th></tr></thead>
+    <tbody>
+      {% for kind, label, count in view.sealed_kinds %}
+      <tr><th scope="row"><code>{{ kind }}</code></th><td>{{ label }}</td><td>{{ count }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">Im Fliesstext wurde nichts versiegelt (strukturierter Eingang oder kein Identitaetsbezug im Text).</p>
+  {% endif %}
+  {% if case.text_layer.get("parts") %}
+  <table>
+    <caption>Normalisierte Textteile, gegen die jede Fundstelle geprueft wurde</caption>
+    <thead><tr><th scope="col">Teil</th><th scope="col">Quelle</th><th scope="col">Zeichen</th></tr></thead>
+    <tbody>
+      {% for part in case.text_layer.get("parts", []) %}
+      <tr>
+        <th scope="row"><code>{{ part.get("part_id") }}</code></th>
+        <td>{{ part.get("source_type") }}</td>
+        <td>{{ part.get("normalized_chars") }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  <p class="notice">
+    Der Wortlaut der Arbeitskopie steht bewusst NICHT im Journal: das Journal
+    haelt Tatsachen ueber den Vorgang, keinen Vorgangsinhalt, und es
+    unterliegt einer anderen Aufbewahrungsfrist als der Tresor. Wer den Text
+    lesen muss, oeffnet die Akte - nicht diese Seite.
+  </p>
+</section>
+
+<section aria-labelledby="spans-heading">
+  <h2 id="spans-heading">Fundstellen der ausgelesenen Felder</h2>
+  <p>
+    Jeder Wert traegt eine Fundstelle, die zweifach geprueft wurde: das Zitat
+    und die Zeichenposition, unabhaengig voneinander gegen dieselbe
+    normalisierte Textfassung (ADR-020). Was hier steht, sind die Koordinaten -
+    Teil und Zeichenbereich - und die Pruefart. Der Wert selbst steht nicht im
+    Journal.
+  </p>
+  <table>
+    <caption>Ausgelesene Felder mit Fundstelle und Pruefart</caption>
+    <thead>
+      <tr>
+        <th scope="col">Feld</th>
+        <th scope="col">Textteil</th>
+        <th scope="col">Zeichenbereich</th>
+        <th scope="col">Pruefart</th>
+        <th scope="col">Konfidenz</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for span in case.spans %}
+      <tr>
+        <th scope="row">{{ span.get("field") }}</th>
+        <td>{{ span.get("part_id") or "strukturiertes Feld" }}</td>
+        <td>
+          {% if span.get("start") is not none %}
+          {{ span.get("start") }}&#8211;{{ span.get("end") }}
+          <span class="sr-only">
+            Zeichen {{ span.get("start") }} bis {{ span.get("end") }} im Teil
+            {{ span.get("part_id") }}
+          </span>
+          {% else %}
+          <span class="muted">ohne Textfundstelle</span>
+          <span class="sr-only">strukturiertes Feld, Herkunft ist der gemeldete Datensatz</span>
+          {% endif %}
+        </td>
+        <td>{{ span.get("match_mode") }}</td>
+        <td>{{ "%.2f"|format(span.get("confidence")) if span.get("confidence") is not none else "-" }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5">Kein Feld ausgelesen.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p>
+    Verworfen: {{ case.discarded_count if case.discarded_count is not none else 0 }}.
+    Ein verworfener Vorschlag ist ein Wert, dessen Fundstelle die Pruefung nicht
+    bestanden hat; er wird nicht uebernommen und schiebt den Vorgang Richtung
+    Tier 3.
+  </p>
+</section>
+
+<section aria-labelledby="gaps-heading">
+  <h2 id="gaps-heading">Vollstaendigkeit</h2>
+  <p>Verdikt: <strong>{{ case.completeness_verdict or "unbekannt" }}</strong>.</p>
+  {% if case.gaps %}
+  <table>
+    <caption>Gemeldete Luecken mit dem Satz, den die Nachforderung dazu stellt</caption>
+    <thead>
+      <tr>
+        <th scope="col">Anforderung</th>
+        <th scope="col">Status</th>
+        <th scope="col">Befund</th>
+        <th scope="col">Formulierung im Schreiben</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for gap in case.gaps %}
+      <tr>
+        <th scope="row"><code>{{ gap.get("requirement_id") }}</code></th>
+        <td>{{ gap.get("status") }}</td>
+        <td>{{ gap.get("detail") or "-" }}</td>
+        <td>{{ gap.get("request_text") or "-" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">Keine Luecke gemeldet.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="routing-heading">
+  <h2 id="routing-heading">Zuordnung</h2>
+  <p>
+    <strong>Zugeordnet wurde: {{ state.machine_unit_id or "keine Einheit" }}.</strong>
+    Das ist die Antwort der Entscheidungsebene und die einzige, die den Vorgang
+    tatsaechlich in eine Warteschlange gelegt hat.
+  </p>
+  {% if case.routing %}
+  <table>
+    <caption>Alle Zuordnungsbelege, mit ihrer Quelle</caption>
+    <thead>
+      <tr>
+        <th scope="col">Einheit</th>
+        <th scope="col">Quelle</th>
+        <th scope="col">Regel</th>
+        <th scope="col">Konfidenz</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for suggestion in case.routing %}
+      <tr>
+        <th scope="row">{{ suggestion.get("unit_id") }}</th>
+        <td>{{ suggestion.get("source") }}</td>
+        <td>{{ suggestion.get("rule_ids") | join(", ") or "-" }}</td>
+        <td>{{ "%.3f"|format(suggestion.get("confidence")) if suggestion.get("confidence") is not none else "-" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% if view.classifier_ranking %}
+  <div class="log-only">
+    <h3>Vorschlag (nur Protokoll)</h3>
+    <p>
+      Ein Aehnlichkeitsmodell hat die folgende Rangfolge vorgeschlagen. Sie hat
+      diesen Vorgang NICHT zugeordnet und kein Tier bewegt: die
+      Entscheidungsebene baut ausschliesslich auf Regelbelegen auf, solange die
+      Behoerde die Quelle nicht ausdruecklich zulaesst (ADR-021). Die Rangfolge
+      steht hier, damit sie widersprochen werden kann, nicht damit sie
+      mitentscheidet.
+    </p>
+    <table>
+      <caption>Rangfolge des Aehnlichkeitsmodells; ohne Wirkung auf diesen Vorgang</caption>
+      <thead><tr><th scope="col">Rang</th><th scope="col">Einheit</th><th scope="col">Wert</th></tr></thead>
+      <tbody>
+        {% for entry in view.classifier_ranking %}
+        <tr>
+          <th scope="row">{{ loop.index }}</th>
+          <td>{{ entry.get("unit_id") }}</td>
+          <td>{{ "%.3f"|format(entry.get("score")) if entry.get("score") is not none else "-" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</section>
+
+<section aria-labelledby="tier-heading">
+  <h2 id="tier-heading">Warum dieses Tier</h2>
+  <table>
+    <caption>Begruendungen der Entscheidungstabelle, in Auswertungsreihenfolge</caption>
+    <thead><tr><th scope="col">Art</th><th scope="col">Zeile</th><th scope="col">Begruendung</th></tr></thead>
+    <tbody>
+      {% for reason in case.reasons %}
+      <tr {% if reason.get("kind") == "sampled" %}class="sample-row"{% endif %}>
+        <th scope="row">{{ reason.get("kind") }}</th>
+        <td><code>{{ reason.get("rule_id") }}</code></td>
+        <td>{{ reason.get("detail") }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="3">Keine Begruendung protokolliert.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section aria-labelledby="anomaly-heading">
+  <h2 id="anomaly-heading">Auffaelligkeitspruefung</h2>
+  {% if case.anomaly %}
+  <dl>
+    <dt>Score</dt><dd>{{ "%.3f"|format(case.anomaly.get("score")) if case.anomaly.get("score") is not none else "-" }}</dd>
+    <dt>Markiert</dt><dd>{% if case.anomaly.get("flagged") %}ja{% else %}nein{% endif %}</dd>
+    <dt>Betriebsart</dt><dd>{{ case.anomaly.get("mode") or "-" }}</dd>
+  </dl>
+  {% if view.anomaly_reasons %}
+  <p>
+    Eine Markierung ist eine Beobachtung am Vorgang gegen einen
+    Referenzbestand, kein Befund ueber eine Person, und im Protokollbetrieb
+    bewegt sie kein Tier.
+  </p>
+  <ul>
+    {% for reason in view.anomaly_reasons %}
+    <li>{{ reason.text }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted">Keine Merkmalsbegruendung protokolliert.</p>
+  {% endif %}
+  {% else %}
+  <p class="muted">Keine Auffaelligkeitspruefung protokolliert.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="drafts-heading">
+  <h2 id="drafts-heading">Vorbereitete Schreiben</h2>
+  {% if view.drafts_gated %}
+  <p class="notice">
+    Vorbereitete Schreiben enthalten die zurueckgeschriebenen Identitaetsdaten
+    der antragstellenden Person. Sie werden erst angezeigt, wenn oben eine
+    bearbeitende Einheit gewaehlt ist. Das ist die Demo-Fassung des
+    Berechtigungskonzepts (C-5), nicht seine Umsetzung.
+  </p>
+  {% elif view.drafts %}
+  {% for draft in view.drafts %}
+  <article>
+    <h3>{{ draft.kind }} <code>{{ draft.template_id }}</code></h3>
+    <dl>
+      <dt>Betreff</dt><dd>{{ draft.subject }}</dd>
+      <dt>Antwortfrist im Text</dt>
+      <dd>{{ draft.response_window_days ~ " Tage nach Bekanntgabe" if draft.response_window_days else "keine" }}</dd>
+      <dt>Rechtsfolgenhinweis par. 66 Abs. 3 SGB I</dt>
+      <dd>{% if draft.rechtsfolgenhinweis %}enthalten{% else %}nicht enthalten{% endif %}</dd>
+      <dt>Von der Amtsermittlung ausgenommen (C-7)</dt>
+      <dd>{{ draft.amtsermittlung_ids | join(", ") or "keine" }}</dd>
+    </dl>
+    <pre>{{ draft.body }}</pre>
+  </article>
+  {% endfor %}
+  {% else %}
+  <p class="muted">Zu diesem Vorgang wurde kein Schreiben vorbereitet.</p>
+  {% endif %}
+</section>
+
+{% if not state.confirmed %}
+<section aria-labelledby="actions-heading">
+  <h2 id="actions-heading">Entscheidung</h2>
+
+  <form method="post" action="/review/case/{{ state.case_id }}/confirm" class="action-form">
+    <fieldset>
+      <legend>Bestaetigen{% if view.has_nachforderung %} und versenden{% endif %}</legend>
+      <input type="hidden" name="unit" value="{{ view.unit_id or '' }}">
+      <p class="field">
+        <input type="checkbox" id="draft_edited" name="draft_edited" value="1">
+        <label for="draft_edited">Ich habe den Entwurf inhaltlich geaendert</label>
+      </p>
+      <p class="field">
+        <input type="checkbox" id="rechtsfolgenhinweis" name="rechtsfolgenhinweis" value="1">
+        <label for="rechtsfolgenhinweis">
+          Rechtsfolgenhinweis nach par. 66 Abs. 3 SGB I in das Schreiben
+          aufnehmen (Einzelfallentscheidung; nur bei einer Nachforderung
+          wirksam, nie fuer Angaben, die die DRV selbst ermitteln kann)
+        </label>
+      </p>
+      <p class="field">
+        <input type="checkbox" id="dispatch" name="dispatch" value="1" checked>
+        <label for="dispatch">Versandtatsachen jetzt festschreiben (Datum und Frist)</label>
+      </p>
+      <p class="field">
+        <label for="note">Vermerk (optional)</label>
+        <input type="text" id="note" name="note" maxlength="500">
+      </p>
+      <p class="notice">
+        Beim Festschreiben wird die absolute Frist aus dem Versanddatum
+        berechnet: vier Tage Bekanntgabefiktion (par. 37 Abs. 2 SGB X), dann
+        die Antwortfrist, beides auf den naechsten Werktag geschoben
+        (par. 26 Abs. 3 SGB X). Feiertagssatz:
+        <strong>{{ view.dispatch_land }}</strong> mit
+        {{ view.dispatch_holidays }} hinterlegten Feiertagen. Ist das nicht das
+        Bundesland des Zustellorts, stimmt die Frist nicht.
+      </p>
+      <button type="submit">Bestaetigen</button>
+    </fieldset>
+  </form>
+
+  <form method="post" action="/review/case/{{ state.case_id }}/override" class="action-form">
+    <fieldset>
+      <legend>Zuordnung aendern</legend>
+      <input type="hidden" name="unit" value="{{ view.unit_id or '' }}">
+      <input type="hidden" name="field" value="unit">
+      <p class="field">
+        <label for="to_unit">Neue Einheit</label>
+        <select id="to_unit" name="to">
+          {% for unit in view.units %}
+          <option value="{{ unit.unit_id }}" {% if unit.unit_id == state.unit_id %}selected{% endif %}>{{ unit.name }}</option>
+          {% endfor %}
+        </select>
+      </p>
+      <p class="field">
+        <label for="reason_unit">Begruendung (erforderlich)</label>
+        <input type="text" id="reason_unit" name="reason" required maxlength="500"
+               aria-describedby="reason-unit-help">
+        <span class="help" id="reason-unit-help">
+          Die Begruendung wird in den Korrekturpool exportiert und ist das
+          Trainingsmaterial fuer die naechste Fassung der Regeln.
+        </span>
+      </p>
+      <button type="submit">Zuordnung aendern</button>
+    </fieldset>
+  </form>
+
+  <form method="post" action="/review/case/{{ state.case_id }}/override" class="action-form">
+    <fieldset>
+      <legend>Tier aendern</legend>
+      <input type="hidden" name="unit" value="{{ view.unit_id or '' }}">
+      <input type="hidden" name="field" value="tier">
+      <p class="field">
+        <label for="to_tier">Neues Tier</label>
+        <select id="to_tier" name="to">
+          {% for tier, label in view.tier_labels.items() %}
+          <option value="{{ tier }}" {% if tier == state.tier %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </p>
+      <p class="field">
+        <label for="reason_tier">Begruendung (erforderlich)</label>
+        <input type="text" id="reason_tier" name="reason" required maxlength="500">
+      </p>
+      <button type="submit">Tier aendern</button>
+    </fieldset>
+  </form>
+
+  {% if state.tier != 3 %}
+  <form method="post" action="/review/case/{{ state.case_id }}/escalate" class="action-form">
+    <fieldset>
+      <legend>Eskalieren</legend>
+      <input type="hidden" name="unit" value="{{ view.unit_id or '' }}">
+      <p>
+        Ein Klick hebt den Vorgang auf Tier 3 (vollstaendige Pruefung) und
+        schreibt eine Korrektur ins Journal (P-4, par. 88 Abs. 5 Nr. 3 AO
+        analog). Eine Begruendung ist hier freiwillig: Eskalieren fuegt
+        Pruefung hinzu, und vor die sichere Richtung gehoert keine Huerde.
+      </p>
+      <p class="field">
+        <label for="reason_escalate">Begruendung (optional)</label>
+        <input type="text" id="reason_escalate" name="reason" maxlength="500">
+      </p>
+      <button type="submit">Zur vollstaendigen Pruefung eskalieren</button>
+    </fieldset>
+  </form>
+  {% else %}
+  <p class="notice">
+    Dieser Vorgang steht bereits in der vollstaendigen Pruefung (Tier 3). Eine
+    Eskalation wuerde eine Bewegung ins Journal schreiben, die nicht
+    stattgefunden hat, und wird deshalb nicht angeboten.
+  </p>
+  {% endif %}
+</section>
+{% else %}
+<section aria-labelledby="confirmed-heading">
+  <h2 id="confirmed-heading">Bestaetigung</h2>
+  <p>
+    Dieser Vorgang ist bestaetigt. Es gibt keine Schaltflaeche, die das
+    rueckgaengig macht: eine Korrektur nach der Bestaetigung ist eine neue
+    Entscheidung und kein Ueberschreiben dieser (ADR-008).
+  </p>
+  <table>
+    <caption>Was die Bestaetigung festgehalten hat</caption>
+    <thead><tr><th scope="col">Feld</th><th scope="col">Wert</th></tr></thead>
+    <tbody>
+      {% for key, value in (case.confirmation or {}).items() %}
+      <tr><th scope="row"><code>{{ key }}</code></th><td>{{ value }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+{% if state.overrides %}
+<section aria-labelledby="overrides-heading">
+  <h2 id="overrides-heading">Korrekturen</h2>
+  <table>
+    <caption>Manuelle Korrekturen an diesem Vorgang, in Journalreihenfolge</caption>
+    <thead>
+      <tr>
+        <th scope="col">Zeitpunkt</th>
+        <th scope="col">Feld</th>
+        <th scope="col">Von</th>
+        <th scope="col">Auf</th>
+        <th scope="col">Einheit</th>
+        <th scope="col">Begruendung</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for override in state.overrides %}
+      <tr>
+        <th scope="row">{{ override.get("occurred_at") }}</th>
+        <td>{{ override.get("field") }}</td>
+        <td>{{ override.get("from") }}</td>
+        <td>{{ override.get("to") }}</td>
+        <td>{{ override.get("unit_id") }}</td>
+        <td>{{ override.get("reason") }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+
+<section aria-labelledby="journal-heading">
+  <h2 id="journal-heading">Journal</h2>
+  <p>
+    Der vollstaendige Verlauf, in der Reihenfolge, in der er geschrieben wurde.
+    Diese Liste ist die Quelle aller Angaben oben; keine Seite dieser
+    Oberflaeche haelt einen eigenen Zustand.
+  </p>
+  <table>
+    <caption>Journalereignisse des Vorgangs {{ state.case_id }}</caption>
+    <thead>
+      <tr>
+        <th scope="col">Nr.</th>
+        <th scope="col">Zeitpunkt</th>
+        <th scope="col">Ereignis</th>
+        <th scope="col">Akteur</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for event in view.events %}
+      <tr>
+        <th scope="row">{{ event.sequence }}</th>
+        <td>{{ event.occurred_at.isoformat() }}</td>
+        <td>{{ event.type.value }}</td>
+        <td>
+          {{ event.actor.kind.value }}{% if event.actor.unit_id %} / {{ event.actor.unit_id }}{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="muted">
+    Der Akteur ist immer das System oder eine Organisationseinheit. Eine
+    natuerliche Person steht in keinem Ereignis - das Journal hat kein Feld
+    dafuer (BPersVG par. 80 Abs. 1 Nr. 21, C-4).
+  </p>
+</section>
+{% endblock %}

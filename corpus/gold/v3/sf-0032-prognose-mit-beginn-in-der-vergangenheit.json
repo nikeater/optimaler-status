@@ -1,0 +1,41 @@
+{
+  "submissionId": "sf-0032-prognose-mit-beginn-in-der-vergangenheit",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-27T08:04:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "auftraggeber": {
+      "betriebsnummer": "33445566",
+      "firmenname": " Buehnenwerk Veranstaltungstechnik GmbH  "
+    },
+    "meta": {
+      "eingangsdatum": "27.07.2026"
+    },
+    "antragsteller": {
+      "geburtsdatum": "  1991-03-02  ",
+      "versicherungsnummer": "26020391X056",
+      "anschrift": {
+        "plz": " \t99084 ",
+        "strasse": "Am Hang",
+        "hausnummer": "8",
+        "ort": " Musterhausen  "
+      }
+    },
+    "antrag": {
+      "honorar_modell": "nach_ergebnis",
+      "arbeitsort": "wechselnd",
+      "hinweistext": "Hallo, ich schicke Ihnen hier meinen Antrag. Ich hoffe, so ist alles richtig ausgefuellt. Vielen Dank vorab.",
+      "weitere_auftraggeber": "  ja \t",
+      "taetigkeit_beginn": "2024-03-01",
+      "antragsart": "prognose_vor_aufnahme",
+      "taetigkeit_bezeichnung": "Tontechnik bei Veranstaltungen",
+      "antragsteller_rolle": "gemeinsam"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "statusfeststellung"
+}

@@ -1,0 +1,665 @@
+# Scenario specs for items that arrive as a LETTER instead of as a form (part 05).
+#
+# Every item in this file carries a `letter:` block, and an item with one has an
+# EMPTY `data` object. That is the whole point of them: no payload path resolves,
+# so the schema mapper extracts nothing, every `payload.*` derivation signal is
+# silent and every routing rule that reads a payload path is silent. The item can
+# only be understood through the text path - seal the identity spans, normalize,
+# derive the procedure from `text.*`, propose values, verify every span against
+# the normalized layer (ADR-019, ADR-020).
+#
+# The e-mail and the scan channel ride the same submission shape on purpose. A
+# real IMAP/MIME adapter is part 07 (backlog P-14); what part 05 needs is the
+# ENVELOPE a text item produces, and inventing a second inbound format to get it
+# would have meant writing the adapter twice.
+#
+# `ocr_noise: true` applies seeded scanner mistakes OUTSIDE identity values,
+# outside the labels the extractor locates values by, and outside values too
+# short to survive a substitution. One of them lands inside a declared value, so
+# the bounded-fuzzy lock is measured rather than configured; one is a line-break
+# hyphenation the normalizer has to undo before the span can match at all.
+#
+# What is deliberately NOT here: an item whose letter carries identity a regular
+# expression cannot find. A bare person name in the middle of a sentence is
+# exactly what the optional NER member exists for, and a gold item that depended
+# on it would make the gate depend on an optional wheel. The limit is documented
+# in docs/KNOWN-ERRORS.md and demonstrated by a unit fixture instead.
+#
+# Every value is invented; the Versicherungsnummern follow the real structure and
+# carry the stated birth date in positions 3 to 8 (see corpus/gold/v3/README.md).
+description: >-
+  Freitext-Anschreiben per E-Mail und als Scan, ueber alle drei Verfahren und
+  ohne bestimmbares Verfahren: vollstaendige Antraege, fehlende und ungueltige
+  Angaben, ein Anschreiben ganz ohne Angaben, widerspruechliche Schreiben und
+  Schreiben, deren Kanalhinweis dem Text widerspricht.
+
+scenarios:
+  # --------------------------------------------------------- Altersrente ---
+  - scenario_id: ar-0060-email-regelaltersrente-vollstaendig
+    kind: hint_missing
+    description: >-
+      Vollstaendiges Regelaltersrenten-Anschreiben per E-Mail, ohne jeden
+      Kanalhinweis: das Verfahren steht nur im Text, und jede Angabe muss
+      ueber eine gepruefte Fundstelle belegt sein.
+    procedure_id: altersrente
+    procedure_hint: null
+    channel: email
+    facts:
+      geburtsdatum: "1959-04-17"
+      versicherungsnummer: "17170459B012"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-11-01"
+      auslandsbezug: nein
+    letter:
+      subject: Antrag auf Regelaltersrente
+      opening: >-
+        hiermit beantrage ich meine Regelaltersrente und bitte um Bearbeitung
+        meines Antrags.
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 1
+      derivation_source: content
+      gaps: []
+    notes: >-
+      Der Beleg fuer den ganzen Textpfad: ohne strukturierte Daten, ohne
+      Kanalhinweis, und trotzdem Tier 1 - weil jede Angabe eine verifizierte
+      Fundstelle im geschwaerzten Text hat.
+
+  - scenario_id: ar-0061-email-mit-kanalhinweis-vollstaendig
+    kind: complete_clear
+    description: >-
+      Dasselbe Anschreiben, diesmal mit Kanalhinweis: die Ableitung kommt aus
+      dem Hinweis, die Angaben weiterhin aus dem Text.
+    procedure_id: altersrente
+    procedure_hint: altersrente
+    channel: email
+    facts:
+      geburtsdatum: "1960-02-29"
+      versicherungsnummer: "17290260C043"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-09-01"
+      auslandsbezug: nein
+    letter:
+      subject: Rentenantrag zur Weiterleitung
+      opening: >-
+        ich moechte meine Regelaltersrente beantragen und habe alle Angaben
+        unten zusammengestellt.
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 1
+      derivation_source: hint
+      gaps: []
+
+  - scenario_id: ar-0062-email-ohne-rentenbeginn
+    kind: missing_field
+    description: >-
+      Anschreiben ohne gewuenschten Rentenbeginn: die Pflichtangabe fehlt, der
+      Vorgang bleibt beim Menschen.
+    procedure_id: altersrente
+    procedure_hint: null
+    channel: email
+    facts:
+      geburtsdatum: "1961-12-05"
+      versicherungsnummer: "18051261A021"
+      rentenart: regelaltersrente
+      auslandsbezug: nein
+    letter:
+      subject: Antrag auf Altersrente
+      opening: >-
+        ich beantrage meine Regelaltersrente. Wann sie beginnen soll, moechte
+        ich noch mit Ihnen besprechen.
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: content
+      gaps:
+        - requirement_id: rentenbeginn
+          status: missing
+
+  - scenario_id: ar-0063-email-rentenart-nicht-zulaessig
+    kind: invalid_field
+    description: >-
+      Der Text nennt eine Rentenart, die keine Altersrente ist; abgeleitet wird
+      das Verfahren ueber den genannten Rentenbeginn.
+    procedure_id: altersrente
+    procedure_hint: null
+    channel: email
+    facts:
+      geburtsdatum: "1962-03-14"
+      versicherungsnummer: "19140362D007"
+      rentenart: witwenrente
+      rentenbeginn: "2027-04-01"
+      auslandsbezug: nein
+    letter:
+      subject: Rentenantrag mit Angaben
+      opening: >-
+        ich beantrage eine Rente und bitte um Pruefung der unten stehenden
+        Angaben.
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: content
+      gaps:
+        - requirement_id: rentenart
+          status: invalid
+
+  - scenario_id: ar-0064-scan-regelaltersrente-vollstaendig
+    kind: complete_clear
+    description: >-
+      Eingescanntes vollstaendiges Anschreiben mit den ueblichen Lesefehlern
+      eines Scanners: die unscharfe Spanpruefung muss sie tragen.
+    procedure_id: altersrente
+    procedure_hint: null
+    channel: scan
+    facts:
+      geburtsdatum: "1959-08-30"
+      versicherungsnummer: "17300859E066"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-12-01"
+      auslandsbezug: nein
+    letter:
+      subject: Antrag auf Regelaltersrente
+      opening: >-
+        hiermit beantrage ich meine Regelaltersrente zum unten genannten
+        Zeitpunkt.
+      ocr_noise: true
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 1
+      derivation_source: content
+      gaps: []
+    notes: >-
+      Das Gegenstueck zu ar-0060: derselbe Fall, nur als Scan. Was hier gemessen
+      wird, ist der Schwellwert fuer die unscharfe Uebereinstimmung - eine
+      Angabe traegt einen Lesefehler und wird trotzdem belegt.
+
+  - scenario_id: ar-0065-scan-ohne-versicherungsnummer
+    kind: missing_field
+    description: >-
+      Eingescanntes Anschreiben ohne Versicherungsnummer.
+    procedure_id: altersrente
+    procedure_hint: null
+    channel: scan
+    facts:
+      geburtsdatum: "1960-01-09"
+      rentenart: regelaltersrente
+      rentenbeginn: "2026-10-01"
+      auslandsbezug: nein
+    letter:
+      subject: Antrag auf Regelaltersrente
+      opening: >-
+        ich beantrage meine Regelaltersrente. Meine Versicherungsunterlagen
+        reiche ich nach.
+      ocr_noise: true
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: content
+      gaps:
+        - requirement_id: versicherungsnummer
+          status: missing
+
+  - scenario_id: ar-0066-email-ohne-auslandsangabe
+    kind: ambiguous_conflicting
+    description: >-
+      Alle Pflichtangaben stehen im Text, der Auslandsbezug fehlt: ohne diese
+      Angabe laesst sich der Klarfall nicht feststellen.
+    procedure_id: altersrente
+    procedure_hint: null
+    channel: email
+    facts:
+      geburtsdatum: "1962-04-02"
+      versicherungsnummer: "19020462P018"
+      rentenart: regelaltersrente
+      rentenbeginn: "2027-05-01"
+    letter:
+      subject: Antrag auf Regelaltersrente
+      opening: >-
+        ich beantrage meine Regelaltersrente zum genannten Zeitpunkt und bitte
+        um eine kurze Bestaetigung.
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 3
+      derivation_source: content
+      gaps: []
+    notes: >-
+      Vollstaendig im Sinne der Pflichtangaben und trotzdem Tier 3: die
+      Klarfallkriterien lassen sich nicht pruefen, und "nicht geprueft" darf
+      nie wie "geprueft und in Ordnung" aussehen.
+
+  - scenario_id: ar-0067-email-anschreiben-ohne-angaben
+    kind: missing_field
+    description: >-
+      Ein Anschreiben, das nur das Anliegen nennt und keine einzige
+      Pflichtangabe enthaelt - der Alltagsfall im Posteingang.
+    procedure_id: altersrente
+    procedure_hint: null
+    channel: email
+    facts: {}
+    letter:
+      subject: Frage zur Altersrente
+      opening: >-
+        ich moechte meine Regelaltersrente beantragen und bitte Sie, mir die
+        naechsten Schritte mitzuteilen.
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 2
+      derivation_source: content
+      gaps:
+        - requirement_id: geburtsdatum
+          status: missing
+        - requirement_id: versicherungsnummer
+          status: missing
+        - requirement_id: rentenart
+          status: missing
+        - requirement_id: rentenbeginn
+          status: missing
+    notes: >-
+      Das Verfahren ist aus einem Satz ableitbar, die Angaben sind es nicht.
+      Genau dafuer gibt es die Nachforderung.
+
+  # ------------------------------------------------ Erwerbsminderungsrente ---
+  - scenario_id: em-0060-email-volle-erwerbsminderung-vollstaendig
+    kind: hint_missing
+    description: >-
+      Vollstaendiges Anschreiben zur Rente wegen voller Erwerbsminderung ohne
+      Kanalhinweis.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: null
+    channel: email
+    facts:
+      geburtsdatum: "1975-05-20"
+      versicherungsnummer: "12200575A061"
+      rentenart: erwerbsminderungsrente_voll
+      eintritt_erwerbsminderung: "2025-03-04"
+      letzte_taetigkeit: Pflegehelferin
+    letter:
+      subject: Antrag auf Erwerbsminderungsrente
+      opening: >-
+        ich kann meinen Beruf seit dem letzten Jahr nicht mehr ausueben und
+        beantrage deshalb eine Erwerbsminderungsrente.
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 3
+      derivation_source: content
+      gaps: []
+
+  - scenario_id: em-0061-email-ohne-eintritt
+    kind: missing_field
+    description: >-
+      Anschreiben ohne Angabe, seit wann die Erwerbsminderung besteht.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: null
+    channel: email
+    facts:
+      geburtsdatum: "1978-01-30"
+      versicherungsnummer: "19300178S085"
+      rentenart: erwerbsminderungsrente_voll
+      letzte_taetigkeit: Lagerarbeiter
+    letter:
+      subject: Antrag auf Erwerbsminderungsrente
+      opening: >-
+        ich beantrage eine Erwerbsminderungsrente. Seit wann die Einschraenkung
+        genau besteht, kann ich nicht sagen.
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 2
+      derivation_source: content
+      gaps:
+        - requirement_id: eintritt_erwerbsminderung
+          status: missing
+
+  - scenario_id: em-0062-scan-teilweise-erwerbsminderung-vollstaendig
+    kind: complete_clear
+    description: >-
+      Eingescanntes vollstaendiges Anschreiben zur teilweisen
+      Erwerbsminderungsrente.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: null
+    channel: scan
+    facts:
+      geburtsdatum: "1961-05-03"
+      versicherungsnummer: "18030561J028"
+      rentenart: erwerbsminderungsrente_teilweise
+      eintritt_erwerbsminderung: "2024-11-11"
+      letzte_taetigkeit: Kraftfahrer
+    letter:
+      subject: Antrag auf Erwerbsminderungsrente
+      opening: >-
+        ich kann nur noch stundenweise arbeiten und beantrage deshalb eine
+        Erwerbsminderungsrente.
+      ocr_noise: true
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 3
+      derivation_source: content
+      gaps: []
+
+  - scenario_id: em-0063-scan-ohne-letzte-taetigkeit
+    kind: missing_field
+    description: >-
+      Eingescanntes Anschreiben ohne die zuletzt ausgeuebte Taetigkeit.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: null
+    channel: scan
+    facts:
+      geburtsdatum: "1963-09-12"
+      versicherungsnummer: "19120963M031"
+      rentenart: erwerbsminderungsrente_voll
+      eintritt_erwerbsminderung: "2025-06-30"
+    letter:
+      subject: Antrag auf Erwerbsminderungsrente
+      opening: >-
+        ich beantrage eine Erwerbsminderungsrente und reiche die Angaben zu
+        meinem Beruf nach.
+      ocr_noise: true
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 2
+      derivation_source: content
+      gaps:
+        - requirement_id: letzte_taetigkeit
+          status: missing
+
+  - scenario_id: em-0064-email-taetigkeit-zu-kurz
+    kind: invalid_field
+    description: >-
+      Die zuletzt ausgeuebte Taetigkeit ist im Text auf zwei Zeichen abgekuerzt
+      und damit nicht verwertbar.
+    procedure_id: erwerbsminderungsrente
+    procedure_hint: null
+    channel: email
+    facts:
+      geburtsdatum: "1960-07-08"
+      versicherungsnummer: "18080760N047"
+      rentenart: erwerbsminderungsrente_voll
+      eintritt_erwerbsminderung: "2025-01-20"
+      letzte_taetigkeit: IT
+    letter:
+      subject: Antrag auf Erwerbsminderungsrente
+      opening: >-
+        ich beantrage eine Erwerbsminderungsrente wegen einer dauerhaften
+        Erkrankung.
+    expected:
+      unit_id: Referat_316_Erwerbsminderungsrenten
+      tier: 2
+      derivation_source: content
+      gaps:
+        - requirement_id: letzte_taetigkeit
+          status: invalid
+
+  # -------------------------------------------------- Statusfeststellung ---
+  - scenario_id: sf-0060-email-erwerbsstatus-vollstaendig
+    kind: hint_missing
+    description: >-
+      Vollstaendiges Anschreiben zur Feststellung des Erwerbsstatus nach
+      par. 7a SGB IV, ohne Kanalhinweis.
+    procedure_id: statusfeststellung
+    procedure_hint: null
+    channel: email
+    facts:
+      geburtsdatum: "1988-06-14"
+      versicherungsnummer: "13140688T004"
+      antragsart: feststellung_nach_aufnahme
+      antragsteller_rolle: auftragnehmer
+      taetigkeit_bezeichnung: IT-Beratung
+      taetigkeit_beginn: "2026-01-15"
+      auftraggeber_name: Musterbau Systemhaus GmbH
+    letter:
+      subject: Antrag auf Feststellung des Erwerbsstatus
+      opening: >-
+        ich bitte um Feststellung meines Erwerbsstatus nach par. 7a SGB IV fuer
+        das unten genannte Auftragsverhaeltnis.
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 3
+      derivation_source: content
+      gaps: []
+
+  - scenario_id: sf-0061-email-ohne-taetigkeitsbezeichnung
+    kind: missing_field
+    description: >-
+      Anschreiben ohne Bezeichnung der Taetigkeit: ohne sie laesst sich das
+      Auftragsverhaeltnis nicht wuerdigen.
+    procedure_id: statusfeststellung
+    procedure_hint: statusfeststellung
+    channel: email
+    facts:
+      geburtsdatum: "1990-02-11"
+      versicherungsnummer: "13110290U016"
+      antragsart: feststellung_nach_aufnahme
+      antragsteller_rolle: auftragnehmer
+      taetigkeit_beginn: "2026-03-01"
+      auftraggeber_name: Beispielwerk Logistik GmbH
+    letter:
+      subject: Antrag auf Statusfeststellung
+      opening: >-
+        ich bitte um Feststellung meines Erwerbsstatus fuer mein laufendes
+        Auftragsverhaeltnis.
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 2
+      derivation_source: hint
+      gaps:
+        - requirement_id: taetigkeit_bezeichnung
+          status: missing
+
+  - scenario_id: sf-0062-scan-auftraggeber-und-taetigkeit
+    kind: complete_clear
+    description: >-
+      Eingescanntes Anschreiben, das das Verfahren nirgends beim Namen nennt:
+      abgeleitet wird es aus Auftraggeber UND Taetigkeit zusammen.
+    procedure_id: statusfeststellung
+    procedure_hint: null
+    channel: scan
+    facts:
+      geburtsdatum: "1985-11-27"
+      versicherungsnummer: "13271185V052"
+      antragsart: prognose_vor_aufnahme
+      antragsteller_rolle: gemeinsam
+      taetigkeit_bezeichnung: Pflegehilfe im Nachtdienst
+      taetigkeit_beginn: "2026-05-01"
+      auftraggeber_name: Musterpflege Nordwest GmbH
+    letter:
+      subject: Anfrage zu einem geplanten Auftragsverhaeltnis
+      opening: >-
+        wir moechten vor Aufnahme der Zusammenarbeit geklaert wissen, wie das
+        unten beschriebene Verhaeltnis sozialversicherungsrechtlich einzuordnen
+        ist.
+      ocr_noise: true
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 3
+      derivation_source: content
+      gaps: []
+    notes: >-
+      Die zweite Signatur des Verfahrens, im Freitext: kein anderes
+      konfiguriertes Verfahren kennt einen Auftraggeber, deshalb traegt die
+      Kombination auch ohne das Wort Statusfeststellung.
+
+  - scenario_id: sf-0063-scan-ohne-antragsart
+    kind: missing_field
+    description: >-
+      Eingescanntes Anschreiben ohne Angabe der Antragsart.
+    procedure_id: statusfeststellung
+    procedure_hint: null
+    channel: scan
+    facts:
+      geburtsdatum: "1992-08-05"
+      versicherungsnummer: "13050892W029"
+      antragsteller_rolle: auftraggeber
+      taetigkeit_bezeichnung: Grafikdesign
+      taetigkeit_beginn: "2026-02-02"
+      auftraggeber_name: Beispielagentur Sued GmbH
+    letter:
+      subject: Anfrage zum Erwerbsstatus einer Auftragnehmerin
+      opening: >-
+        wir bitten um Klaerung des Erwerbsstatus fuer die unten beschriebene
+        Zusammenarbeit.
+      ocr_noise: true
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 2
+      derivation_source: content
+      gaps:
+        - requirement_id: antragsart
+          status: missing
+
+  - scenario_id: sf-0064-email-antragsart-gruppenfeststellung
+    kind: invalid_field
+    description: >-
+      Das Anschreiben nennt eine Antragsart, die par. 7a SGB IV in dieser Form
+      nicht kennt.
+    procedure_id: statusfeststellung
+    procedure_hint: null
+    channel: email
+    facts:
+      geburtsdatum: "1987-04-23"
+      versicherungsnummer: "13230487Y038"
+      antragsart: gruppenfeststellung
+      antragsteller_rolle: auftraggeber
+      taetigkeit_bezeichnung: Kurierfahrten
+      taetigkeit_beginn: "2026-04-01"
+      auftraggeber_name: Musterkurier Rhein GmbH
+    letter:
+      subject: Antrag auf Statusfeststellung fuer mehrere Auftragnehmer
+      opening: >-
+        wir bitten um eine Feststellung des Erwerbsstatus fuer eine ganze
+        Gruppe von Auftragnehmerinnen und Auftragnehmern.
+    expected:
+      unit_id: Referat_340_Clearingstelle
+      tier: 2
+      derivation_source: content
+      gaps:
+        - requirement_id: antragsart
+          status: invalid
+
+  # ------------------------------------------------- ohne Verfahren ---
+  - scenario_id: xx-0060-email-zwei-verfahren-im-anschreiben
+    kind: ambiguous_conflicting
+    description: >-
+      Ein Anschreiben, das zwei Verfahren gleichzeitig anspricht: es wird nicht
+      geraten, welches gemeint ist.
+    procedure_id: null
+    procedure_hint: null
+    channel: email
+    facts: {}
+    letter:
+      subject: Antrag auf Rente
+      opening: >-
+        ich beantrage in erster Linie eine Altersrente, hilfsweise eine
+        Erwerbsminderungsrente, falls die erste nicht moeglich ist.
+    expected:
+      unit_id: null
+      tier: 3
+      derivation_source: none
+      gaps: []
+    notes: >-
+      Die Hausregel aus Teil 03, jetzt in Prosa: Signale zweier Verfahren
+      bedeuten kein Verfahren, keine Vollstaendigkeitspruefung und Tier 3.
+
+  - scenario_id: xx-0061-email-terminanfrage
+    kind: unknown_procedure
+    description: >-
+      Eine allgemeine Terminanfrage ohne jedes Verfahrenssignal.
+    procedure_id: null
+    procedure_hint: null
+    channel: email
+    facts: {}
+    letter:
+      subject: Bitte um einen Beratungstermin
+      opening: >-
+        ich haette gerne einen Termin in Ihrer Auskunfts- und Beratungsstelle
+        und bitte um einen Vorschlag.
+    expected:
+      unit_id: null
+      tier: 3
+      derivation_source: none
+      gaps: []
+
+  - scenario_id: xx-0062-scan-widerspruch
+    kind: unknown_procedure
+    description: >-
+      Ein eingescannter Widerspruch: der Kanalhinweis genuegt fuer die
+      Zuordnung an die Widerspruchsstelle, ein Verfahren dieses Namens ist aber
+      nicht konfiguriert.
+    procedure_id: null
+    procedure_hint: widerspruch
+    channel: scan
+    facts: {}
+    letter:
+      subject: Widerspruch gegen Ihren Bescheid
+      opening: >-
+        gegen den mir zugegangenen Bescheid lege ich hiermit fristgerecht
+        Widerspruch ein und bitte um Ueberpruefung.
+      ocr_noise: true
+    expected:
+      unit_id: Widerspruchsstelle_360
+      tier: 3
+      derivation_source: none
+      gaps: []
+
+  - scenario_id: xx-0063-email-kanalhinweis-widerspricht-anschreiben
+    kind: ambiguous_conflicting
+    description: >-
+      Der Kanal meldet eine Altersrente, das Anschreiben handelt von einer
+      Erwerbsminderungsrente: der Hinweis wird nicht geglaubt.
+    procedure_id: null
+    procedure_hint: altersrente
+    channel: email
+    facts: {}
+    letter:
+      subject: Antrag wegen Erwerbsminderung
+      opening: >-
+        ich beantrage eine Erwerbsminderungsrente, weil ich meinen Beruf nicht
+        mehr ausueben kann.
+    expected:
+      unit_id: Referat_312_Renten
+      tier: 3
+      derivation_source: none
+      gaps: []
+    notes: >-
+      Zugeordnet nach dem Kanalhinweis, aber ohne Verfahren und damit ohne
+      Vollstaendigkeitspruefung: die Zuordnung ist eine Zustelladresse, keine
+      fachliche Aussage.
+
+  - scenario_id: xx-0064-scan-reha-anfrage
+    kind: unknown_procedure
+    description: >-
+      Ein eingescannter Reha-Antrag: zugeordnet ueber den Kanalhinweis, ein
+      Verfahren dieses Namens ist nicht konfiguriert.
+    procedure_id: null
+    procedure_hint: reha
+    channel: scan
+    facts: {}
+    letter:
+      subject: Antrag auf medizinische Rehabilitation
+      opening: >-
+        ich beantrage eine medizinische Rehabilitationsmassnahme und lege die
+        Befunde meines Hausarztes bei.
+      ocr_noise: true
+    expected:
+      unit_id: Referat_320_Reha
+      tier: 3
+      derivation_source: none
+      gaps: []
+
+  - scenario_id: xx-0065-email-statusfeststellung-und-altersrente
+    kind: ambiguous_conflicting
+    description: >-
+      Ein Anschreiben, das eine Statusfeststellung und eine Altersrente in
+      einem Vorgang zusammenfasst.
+    procedure_id: null
+    procedure_hint: null
+    channel: email
+    facts: {}
+    letter:
+      subject: Zwei Anliegen in einem Schreiben
+      opening: >-
+        ich moechte einerseits meinen Erwerbsstatus feststellen lassen und
+        andererseits meine Altersrente beantragen.
+    expected:
+      unit_id: null
+      tier: 3
+      derivation_source: none
+      gaps: []

@@ -1,0 +1,21 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: sf-0022-antragsart-gruppenfeststellung
+procedure_id: statusfeststellung
+scenario_kind: invalid_field
+expected_unit_id: Referat_340_Clearingstelle
+expected_tier: 2
+derived_procedure_id: statusfeststellung
+derivation_source: hint
+expected_gaps:
+- requirement_id: antragsart
+  status: invalid
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: Die Verfahrensableitung haengt hier nicht an der Antragsart, die ja unzulaessig
+  ist, sondern an der zweiten Inhaltssignatur (Auftraggeber und Taetigkeit). Der Vorgang
+  bleibt damit pruefbar, statt an einem einzigen falschen Ankreuzfeld unbestimmbar
+  zu werden.

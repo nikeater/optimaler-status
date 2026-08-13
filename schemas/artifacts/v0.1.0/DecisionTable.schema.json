@@ -1,0 +1,172 @@
+{
+  "$defs": {
+    "DecisionRow": {
+      "additionalProperties": false,
+      "description": "One row of the tier decision table; rows evaluate top-down, first\nmatch wins, default is tier 3 (in doubt, tier 3).",
+      "properties": {
+        "row_id": {
+          "title": "Row Id",
+          "type": "string"
+        },
+        "tier": {
+          "$ref": "#/$defs/Tier"
+        },
+        "when_all": {
+          "items": {
+            "$ref": "#/$defs/QualifyingCondition"
+          },
+          "minItems": 1,
+          "title": "When All",
+          "type": "array"
+        }
+      },
+      "required": [
+        "row_id",
+        "tier",
+        "when_all"
+      ],
+      "title": "DecisionRow",
+      "type": "object"
+    },
+    "DowngradeCondition": {
+      "additionalProperties": false,
+      "description": "Predicate over anomaly evidence. The ONLY place it may be referenced.\n\nFiring can only move an item to tier 3 (the engine applies\nmax(current_tier, to_tier), so a downgrade never improves a tier).",
+      "properties": {
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "op": {
+          "$ref": "#/$defs/Op"
+        },
+        "value": {
+          "title": "Value"
+        }
+      },
+      "required": [
+        "field",
+        "op",
+        "value"
+      ],
+      "title": "DowngradeCondition",
+      "type": "object"
+    },
+    "DowngradeRule": {
+      "additionalProperties": false,
+      "properties": {
+        "row_id": {
+          "title": "Row Id",
+          "type": "string"
+        },
+        "when_all": {
+          "items": {
+            "$ref": "#/$defs/DowngradeCondition"
+          },
+          "minItems": 1,
+          "title": "When All",
+          "type": "array"
+        },
+        "to_tier": {
+          "const": 3,
+          "default": 3,
+          "title": "To Tier",
+          "type": "integer"
+        },
+        "reason_template": {
+          "description": "Rendered with the anomaly feature-level reasons",
+          "title": "Reason Template",
+          "type": "string"
+        }
+      },
+      "required": [
+        "row_id",
+        "when_all",
+        "reason_template"
+      ],
+      "title": "DowngradeRule",
+      "type": "object"
+    },
+    "Op": {
+      "enum": [
+        "eq",
+        "ne",
+        "gt",
+        "ge",
+        "lt",
+        "le",
+        "in"
+      ],
+      "title": "Op",
+      "type": "string"
+    },
+    "QualifyingCondition": {
+      "additionalProperties": false,
+      "description": "Predicate over non-anomaly evidence. Used to qualify tiers 1 and 2.",
+      "properties": {
+        "field": {
+          "title": "Field",
+          "type": "string"
+        },
+        "op": {
+          "$ref": "#/$defs/Op"
+        },
+        "value": {
+          "title": "Value"
+        }
+      },
+      "required": [
+        "field",
+        "op",
+        "value"
+      ],
+      "title": "QualifyingCondition",
+      "type": "object"
+    },
+    "Tier": {
+      "description": "Triage tier. Higher number = more human oversight.\n\nMonotonicity convention used everywhere: anomaly evidence may only\nINCREASE the tier number (add oversight), never decrease it.",
+      "enum": [
+        1,
+        2,
+        3
+      ],
+      "title": "Tier",
+      "type": "integer"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The versioned tier decision table (config/decision/).",
+  "properties": {
+    "version": {
+      "title": "Version",
+      "type": "string"
+    },
+    "rows": {
+      "items": {
+        "$ref": "#/$defs/DecisionRow"
+      },
+      "minItems": 1,
+      "title": "Rows",
+      "type": "array"
+    },
+    "downgrades": {
+      "items": {
+        "$ref": "#/$defs/DowngradeRule"
+      },
+      "title": "Downgrades",
+      "type": "array"
+    },
+    "default_tier": {
+      "const": 3,
+      "default": 3,
+      "title": "Default Tier",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "version",
+    "rows"
+  ],
+  "title": "DecisionTable",
+  "type": "object",
+  "$id": "https://opencode.de/eingangslotse/schemas/v0.1.0/DecisionTable.schema.json"
+}

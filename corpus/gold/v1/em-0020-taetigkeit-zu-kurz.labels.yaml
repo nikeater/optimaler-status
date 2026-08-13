@@ -1,0 +1,17 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: em-0020-taetigkeit-zu-kurz
+procedure_id: erwerbsminderungsrente
+scenario_kind: invalid_field
+expected_unit_id: Referat_316_Erwerbsminderungsrenten
+expected_tier: 2
+expected_gaps:
+- requirement_id: letzte_taetigkeit
+  status: invalid
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: Die letzte Taetigkeit ist als zweistellige Abkuerzung angegeben und unterschreitet
+  damit die Mindestlaenge.

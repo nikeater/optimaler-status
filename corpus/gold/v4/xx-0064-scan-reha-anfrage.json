@@ -1,0 +1,15 @@
+{
+  "submissionId": "xx-0064-scan-reha-anfrage",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "scan",
+  "submittedAt": "2026-08-03T09:12:00+00:00",
+  "serviceType": {
+    "name": "Allgemeines Anliegen",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000009"
+  },
+  "data": {},
+  "attachments": [],
+  "bodyText": "Betreff: Antrag auf rnedizinische Rehabilitation\n\nSehr geehrte Darnen und Herren,\n\nich beantrage eine medizinische Rehabilitationsmassnahrne und lege die Befunde meines Hausarztes bei.\n\nAbsender: Frau Nadja Musterkamp\nAnschrift: Musterweg 3, 10115 Musterstadt\n\nMit freundlichen Gruessen\nFrau Nadja Musterkamp",
+  "extractionFixture": [],
+  "procedureHint": "reha"
+}

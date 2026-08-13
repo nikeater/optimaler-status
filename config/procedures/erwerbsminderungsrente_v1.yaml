@@ -1,0 +1,215 @@
+# Procedure config v1 for "erwerbsminderungsrente" (config/procedures/).
+#
+# Same six blocks as altersrente_v1.yaml (flags, requirements, field_map,
+# clear_cut, derivation, nachforderung). The interesting difference is the
+# legal gate:
+#
+#   tier1_enabled: false
+#
+# Renten wegen Erwerbsminderung nach par. 43 SGB VI hang on a sozialmedizinische
+# Beurteilung of the remaining Leistungsvermoegen. That is a Beurteilungs- und
+# Ermessensfrage, not a checklist, so this procedure may not produce tier 1 at
+# all: even a formally complete application goes to a caseworker. With the flag
+# off, the tier-1 row of the decision table can never qualify, and a formally
+# complete item falls through to the table default (tier 3) because the tier-2
+# row requires an incomplete verdict. That is the intended shape, not a gap.
+#
+# The clear_cut criteria below are recorded even though tier1_enabled is false:
+# they document what "einfach gelagert" would mean here, and they keep enabling
+# tier 1 (if a design partner ever asks for prepared-plus-confirm on this
+# procedure) a one-line config change instead of a code change.
+#
+# ERRATA, corrected 2026-08-11 (compliance backlog C-11). An earlier version of
+# this header said tier 1 waits "once a legal basis under par. 31a SGB X
+# exists". That was wrong in direction and conflated two different provisions.
+# Par. 31a SGB X carries NO Rechtsvorschrift-Vorbehalt - it is self-authorizing,
+# on the par. 155 Abs. 4 AO model ("Ein Verwaltungsakt kann vollstaendig durch
+# automatische Einrichtungen erlassen werden, sofern kein Anlass besteht, den
+# Einzelfall durch Amtstraeger zu bearbeiten"). Only par. 35a VwVfG, which does
+# not apply to the DRV because SGB X displaces it, requires a specific
+# authorizing norm. So the basis EXISTS; what can never be satisfied here are
+# its substantive conditions: the sozialmedizinische Beurteilung of the
+# remaining Leistungsvermoegen is an evaluative judgment with a prognosis, and
+# such a judgment always gives "Anlass, den Einzelfall durch Amtstraeger zu
+# bearbeiten". That is a property of the norm applied to these facts, not a
+# provisional state waiting for legislation: PERMANENT, not pending.
+#
+# PLACEHOLDER: requirement wording, validation bounds, the clear-cut criteria
+# and the Nachforderung wording are derived from public law, not from a design
+# partner's Fachverfahren. Review with the Fachbereich before any pilot.
+#
+# TODO(part 04): add the Befundbericht as a `kind: document` requirement once
+# attachment classification exists. Today a document requirement would report
+# MISSING for every item (see engine/evidence/completeness.py), which would make
+# every item incomplete and hide the tier-3 shape described above.
+procedure_id: erwerbsminderungsrente
+
+flags:
+  procedure_id: erwerbsminderungsrente
+  tier1_enabled: false
+  fully_automated: false
+
+requirements:
+  procedure_id: erwerbsminderungsrente
+  version: erwerbsminderungsrente_requirements_v1
+  requirements:
+    - requirement_id: geburtsdatum
+      description: Geburtsdatum der antragstellenden Person (ISO-Datum).
+      kind: field
+      validation:
+        pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        date:
+          min: "1900-01-01"
+          max: "2012-12-31"
+
+    - requirement_id: versicherungsnummer
+      description: >-
+        Versicherungsnummer (12 Stellen: Bereichsnummer, Geburtsdatum TTMMJJ,
+        Anfangsbuchstabe des Geburtsnamens, Seriennummer, Pruefziffer).
+      kind: field
+      validation:
+        pattern: "^[0-9]{8}[A-Z][0-9]{3}$"
+        cross_field:
+          - kind: birthdate_in_vsnr
+            field: geburtsdatum
+            detail: >-
+              Die Versicherungsnummer traegt an den Stellen 3 bis 8 ein anderes
+              Geburtsdatum als das im Antrag angegebene.
+
+    - requirement_id: rentenart
+      description: Beantragte Rentenart (volle oder teilweise Erwerbsminderung).
+      kind: field
+      validation:
+        one_of:
+          - erwerbsminderungsrente_voll
+          - erwerbsminderungsrente_teilweise
+
+    - requirement_id: eintritt_erwerbsminderung
+      description: Angegebener Eintritt der Erwerbsminderung (ISO-Datum).
+      kind: field
+      validation:
+        pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        date:
+          min: "1960-01-01"
+          max: "2035-12-31"
+        cross_field:
+          # 14 is the earliest age at which German law permits regular work
+          # (par. 5 JArbSchG). Before it there is no Erwerbsfaehigkeit that
+          # could be gemindert. An unusually EARLY but legally possible
+          # Eintritt stays a plausibility question for the scorer.
+          - kind: min_years_after
+            field: geburtsdatum
+            years: 14
+            detail: >-
+              Der angegebene Eintritt der Erwerbsminderung liegt vor dem
+              14. Geburtstag der antragstellenden Person.
+
+    - requirement_id: letzte_taetigkeit
+      description: Zuletzt ausgeuebte berufliche Taetigkeit.
+      kind: field
+      validation:
+        min_length: 3
+        max_length: 120
+
+field_map:
+  - path: antragsteller.geburtsdatum
+    field: geburtsdatum
+  - path: antragsteller.versicherungsnummer
+    field: versicherungsnummer
+  - path: antrag.rentenart
+    field: rentenart
+  - path: antrag.eintritt_erwerbsminderung
+    field: eintritt_erwerbsminderung
+  - path: antrag.letzte_taetigkeit
+    field: letzte_taetigkeit
+  - path: antrag.auslandsbezug
+    field: auslandsbezug
+  - path: antrag.gutachten_status
+    field: gutachten_status
+
+clear_cut:
+  criteria_id: erwerbsminderungsrente_clear_cut_v0
+  description: >-
+    Einfach gelagert waere nur der Antrag auf volle Erwerbsminderungsrente mit
+    bereits vorliegendem sozialmedizinischen Gutachten und ohne Auslandsbezug.
+    Solange tier1_enabled false ist, bleibt das folgenlos: die Kriterien
+    dokumentieren den Zielzustand, sie oeffnen ihn nicht.
+  predicate:
+    all:
+      - field: extraction.rentenart
+        op: eq
+        value: erwerbsminderungsrente_voll
+      - field: extraction.gutachten_status
+        op: eq
+        value: liegt_vor
+      - field: extraction.auslandsbezug
+        op: eq
+        value: nein
+
+derivation:
+  signal_id: erwerbsminderungsrente_content_v2
+  description: >-
+    Eine angekreuzte Erwerbsminderungsrente ODER ein angegebener Eintritt der
+    Erwerbsminderung machen den Vorgang inhaltlich zu einem EM-Antrag. Trifft
+    gleichzeitig ein Signal eines anderen Verfahrens zu (etwa ein gewuenschter
+    Rentenbeginn), bleibt der Vorgang ohne Verfahren: widerspruechliche
+    Formulare gehoeren einem Menschen vorgelegt, nicht geraten.
+    v2 ergaenzt dieselbe Signatur im Freitext (ADR-020), Wort fuer Wort
+    parallel zu den beiden Payload-Signalen darueber.
+  predicate:
+    any:
+      - field: payload.antrag.rentenart
+        op: in
+        value:
+          - erwerbsminderungsrente_voll
+          - erwerbsminderungsrente_teilweise
+      - field: payload.antrag.eintritt_erwerbsminderung
+        op: ne
+        value: null
+      # Freitext, bereits geschwaerzt (ADR-020). "Erwerbsminderungsrente" deckt
+      # auch "erwerbsminderungsrente_voll" und "-teilweise" ab; der Eintritt
+      # bekommt sein eigenes Signal, damit ein Schreiben, das nur ueber den
+      # Eintritt der Erwerbsminderung berichtet, ebenfalls ableitbar bleibt.
+      - field: text.normalized
+        op: contains
+        value: Erwerbsminderungsrente
+      - field: text.normalized
+        op: contains
+        value: Eintritt der Erwerbsminderung
+
+nachforderung:
+  - requirement_id: geburtsdatum
+    missing: >-
+      Bitte teilen Sie uns Ihr Geburtsdatum mit (Tag, Monat und Jahr).
+    invalid: >-
+      Bitte pruefen Sie Ihr Geburtsdatum: die Angabe ist so nicht verwertbar
+      ({problem}).
+  - requirement_id: versicherungsnummer
+    missing: >-
+      Bitte teilen Sie uns Ihre Versicherungsnummer mit. Sie finden sie auf
+      Ihrem Sozialversicherungsausweis und auf jeder Renteninformation.
+    invalid: >-
+      Bitte pruefen Sie Ihre Versicherungsnummer: die Angabe passt nicht zu
+      einer gueltigen Versicherungsnummer ({problem}).
+  - requirement_id: rentenart
+    missing: >-
+      Bitte geben Sie an, ob Sie eine Rente wegen voller oder wegen teilweiser
+      Erwerbsminderung beantragen.
+    invalid: >-
+      Die angegebene Rentenart ist fuer dieses Verfahren nicht vorgesehen
+      ({problem}). Bitte geben Sie an, ob Sie eine Rente wegen voller oder
+      wegen teilweiser Erwerbsminderung beantragen.
+  - requirement_id: eintritt_erwerbsminderung
+    missing: >-
+      Bitte geben Sie an, seit wann die Erwerbsminderung nach Ihrer
+      Einschaetzung besteht.
+    invalid: >-
+      Bitte pruefen Sie die Angabe, seit wann die Erwerbsminderung besteht
+      ({problem}).
+  - requirement_id: letzte_taetigkeit
+    missing: >-
+      Bitte geben Sie an, welche berufliche Taetigkeit Sie zuletzt ausgeuebt
+      haben.
+    invalid: >-
+      Bitte beschreiben Sie Ihre zuletzt ausgeuebte berufliche Taetigkeit
+      ausfuehrlicher ({problem}).

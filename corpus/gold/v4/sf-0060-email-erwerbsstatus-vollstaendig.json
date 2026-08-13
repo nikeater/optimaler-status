@@ -1,0 +1,65 @@
+{
+  "submissionId": "sf-0060-email-erwerbsstatus-vollstaendig",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "email",
+  "submittedAt": "2026-08-03T09:12:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {},
+  "attachments": [],
+  "bodyText": "Betreff: Antrag auf Feststellung des Erwerbsstatus\n\nSehr geehrte Damen und Herren,\n\nich bitte um Feststellung meines Erwerbsstatus nach par. 7a SGB IV fuer das unten genannte Auftragsverhaeltnis.\n\nAbsender: Frau Halina Probstfeld\nAnschrift: Am Hang 8, 99084 Musterhausen\nGeburtsdatum: 1988-06-14\nVersicherungsnummer: 13140688T004\nAntragsart: feststellung_nach_aufnahme\nRolle im Auftragsverhaeltnis: auftragnehmer\nTaetigkeit: IT-Beratung\nTaetigkeit seit: 2026-01-15\nAuftraggeber: Musterbau Systemhaus GmbH\n\nMit freundlichen Gruessen\nFrau Halina Probstfeld",
+  "extractionFixture": [
+    {
+      "field": "geburtsdatum",
+      "part_id": "part-text-0",
+      "anchor": "Geburtsdatum:",
+      "mode": "sealed"
+    },
+    {
+      "field": "versicherungsnummer",
+      "part_id": "part-text-0",
+      "anchor": "Versicherungsnummer:",
+      "mode": "sealed"
+    },
+    {
+      "field": "antragsart",
+      "part_id": "part-text-0",
+      "anchor": "Antragsart:",
+      "mode": "literal",
+      "value": "feststellung_nach_aufnahme",
+      "quote": "Antragsart: feststellung_nach_aufnahme"
+    },
+    {
+      "field": "antragsteller_rolle",
+      "part_id": "part-text-0",
+      "anchor": "Rolle im Auftragsverhaeltnis:",
+      "mode": "literal",
+      "value": "auftragnehmer",
+      "quote": "Rolle im Auftragsverhaeltnis: auftragnehmer"
+    },
+    {
+      "field": "taetigkeit_bezeichnung",
+      "part_id": "part-text-0",
+      "anchor": "Taetigkeit:",
+      "mode": "literal",
+      "value": "IT-Beratung",
+      "quote": "Taetigkeit: IT-Beratung"
+    },
+    {
+      "field": "taetigkeit_beginn",
+      "part_id": "part-text-0",
+      "anchor": "Taetigkeit seit:",
+      "mode": "literal",
+      "value": "2026-01-15",
+      "quote": "Taetigkeit seit: 2026-01-15"
+    },
+    {
+      "field": "auftraggeber_name",
+      "part_id": "part-text-0",
+      "anchor": "Auftraggeber:",
+      "mode": "sealed"
+    }
+  ]
+}

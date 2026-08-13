@@ -1,0 +1,46 @@
+{
+  "additionalProperties": false,
+  "description": "One organizational unit from the published GVP (config/taxonomy/).\nUnits and roles only; never named individuals (BPersVG).",
+  "properties": {
+    "unit_id": {
+      "title": "Unit Id",
+      "type": "string"
+    },
+    "name": {
+      "title": "Name",
+      "type": "string"
+    },
+    "parent_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Parent Id"
+    },
+    "responsibilities": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Responsibilities",
+      "type": "array"
+    },
+    "source": {
+      "description": "Citation into the published organizational plan",
+      "title": "Source",
+      "type": "string"
+    }
+  },
+  "required": [
+    "unit_id",
+    "name",
+    "source"
+  ],
+  "title": "TaxonomyNode",
+  "type": "object",
+  "$id": "https://opencode.de/eingangslotse/schemas/v0.1.0/TaxonomyNode.schema.json"
+}

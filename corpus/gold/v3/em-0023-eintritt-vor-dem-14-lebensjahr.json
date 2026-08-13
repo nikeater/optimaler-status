@@ -1,0 +1,36 @@
+{
+  "submissionId": "em-0023-eintritt-vor-dem-14-lebensjahr",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {
+    "meta": {
+      "eingangsdatum": " \t05.08.2026  ",
+      "bearbeitungswunsch": "  Bitte antworten Sie schriftlich, nicht telefonisch.  "
+    },
+    "antragsteller": {
+      "versicherungsnummer": "19100685K068",
+      "geburtsdatum": " 1985-06-10 ",
+      "anschrift": {
+        "hausnummer": " \t17a  ",
+        "ort": "Beispielau",
+        "strasse": "  Lindenallee \t",
+        "plz": "04109"
+      }
+    },
+    "antrag": {
+      "auslandsbezug": "  nein \t",
+      "eintritt_erwerbsminderung": "1996-03-01",
+      "gutachten_status": "liegt_nicht_vor",
+      "letzte_taetigkeit": "  Auszubildende im Einzelhandel  ",
+      "rentenart": "erwerbsminderungsrente_voll",
+      "hinweistext": "Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir. Eine Eingangsbestaetigung waere mir wichtig."
+    }
+  },
+  "attachments": [],
+  "procedureHint": "erwerbsminderungsrente"
+}

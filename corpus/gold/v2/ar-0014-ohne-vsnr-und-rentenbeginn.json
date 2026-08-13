@@ -1,0 +1,32 @@
+{
+  "submissionId": "ar-0014-ohne-vsnr-und-rentenbeginn",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-03T09:12:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antrag": {
+      "rentenart": "regelaltersrente",
+      "hinweistext": "Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir. Bitte antworten Sie schriftlich, nicht telefonisch.",
+      "auslandsbezug": "nein"
+    },
+    "meta": {
+      "bearbeitungswunsch": "Ich bin ab kommender Woche im Urlaub.",
+      "eingangsdatum": " \t03.08.2026 "
+    },
+    "antragsteller": {
+      "geburtsdatum": "1957-11-27",
+      "anschrift": {
+        "ort": "Musterdorf",
+        "hausnummer": " \t45 ",
+        "plz": " 70173 \t",
+        "strasse": " Feldstrasse  "
+      }
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

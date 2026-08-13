@@ -1,0 +1,22 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: sf-0042-beginn-fuenfzehn-jahre-zurueck
+procedure_id: statusfeststellung
+scenario_kind: anomalous_rule_passing
+expected_unit_id: Referat_340_Clearingstelle
+expected_tier: 3
+derived_procedure_id: statusfeststellung
+derivation_source: hint
+expected_gaps: []
+anomaly_expected: true
+anomaly_pattern: 'taetigkeit_beginn_abstand_tage: der Abstand zwischen Beginn der
+  Taetigkeit und Eingang des Antrags betraegt mehr als 6000 Tage. Analog zu ar-0041;
+  fachlich relevant, weil die Beitragsnachforderung an der Verjaehrung des par. 25
+  SGB IV haengt und ein solcher Vorgang eine ganz andere Aktenlage hat als ein frischer
+  Antrag.'
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: 'Bewusst keine Regel: die Datumsgrenze ist absolut (1990-2035) und faengt diesen
+  Fall nicht ab, weil ein weit zurueckliegender Beginn zulaessig ist - nur selten.
+  Tier-No-op wie bei den beiden anderen anomalen Items.'

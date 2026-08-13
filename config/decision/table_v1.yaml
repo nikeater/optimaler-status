@@ -1,0 +1,78 @@
+# Tier decision table v1 (config/decision/).
+#
+# Rows evaluate top-down, first match wins, no match means default_tier 3
+# ("in doubt, tier 3"). Qualifying conditions may only reference the
+# non-anomaly fields in schemas.config.QUALIFYING_FIELDS; the schema rejects
+# `anomaly.*` here (one-way valve, ADR-004).
+#
+# Downgrades run after the rows and may only reference anomaly fields with
+# monotone operators and a fixed target of tier 3; the engine applies
+# max(tier, to_tier), so a downgrade can never improve a tier. They are applied
+# only when AgencyRiskConfig.scorer_mode is "enforcing"; in log_only mode the
+# engine records what would have fired and changes nothing.
+#
+# v1 changes over v0: the tier-2 row now also requires routing confidence at
+# or above 0.9. Routing arbitration (ADR-014) lowers the winner's confidence to
+# 0.6 when two rules of equal priority propose different units, so "we are not
+# sure who this belongs to" no longer produces a confident hand-off to whoever
+# happened to sort first. Both rows use the same threshold on purpose: the
+# question "is the routing trustworthy" has one answer, not one per tier.
+version: table_v1
+
+rows:
+  - row_id: tier1_clear_and_complete
+    tier: 1
+    when_all:
+      - field: routing.rule_hit
+        op: eq
+        value: true
+      - field: routing.confidence
+        op: ge
+        value: 0.9
+      - field: completeness.verdict
+        op: eq
+        value: complete
+      - field: extraction.discarded_count
+        op: eq
+        value: 0
+      - field: procedure.tier1_enabled
+        op: eq
+        value: true
+      - field: procedure.clear_cut
+        op: eq
+        value: true
+
+  - row_id: tier2_routable_incomplete
+    tier: 2
+    when_all:
+      - field: routing.rule_hit
+        op: eq
+        value: true
+      - field: routing.confidence
+        op: ge
+        value: 0.9
+      - field: completeness.verdict
+        op: eq
+        value: incomplete
+
+downgrades:
+  - row_id: downgrade_anomaly_flagged
+    when_all:
+      - field: anomaly.flagged
+        op: eq
+        value: true
+    to_tier: 3
+    reason_template: >-
+      Shadow-Scorer hat den Vorgang markiert (Schwelle {threshold_ref}):
+      {reasons}
+
+  - row_id: downgrade_anomaly_score
+    when_all:
+      - field: anomaly.score
+        op: ge
+        value: 0.85
+    to_tier: 3
+    reason_template: >-
+      Anomaliescore {score} erreicht die Downgrade-Schwelle 0.85: {reasons}
+
+default_tier: 3

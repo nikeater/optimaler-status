@@ -1,0 +1,42 @@
+{
+  "submissionId": "sf-0020-versicherungsnummer-zu-kurz",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-29T11:37:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "antrag": {
+      "antragsart": "feststellung_nach_aufnahme",
+      "taetigkeit_beginn": " 2025-07-01  ",
+      "taetigkeit_bezeichnung": " Gebaeudereinigung im Auftrag  ",
+      "antragsteller_rolle": "auftragnehmer",
+      "arbeitsort": "beim_auftraggeber",
+      "hinweistext": "Hallo, ich schicke Ihnen hier meinen Antrag. Ich hoffe, so ist alles richtig ausgefuellt. Eine Eingangsbestaetigung waere mir wichtig. Vielen Dank vorab.",
+      "weitere_auftraggeber": " \tnein ",
+      "honorar_modell": "nach_stunden"
+    },
+    "antragsteller": {
+      "versicherungsnummer": "11190880S07",
+      "anschrift": {
+        "ort": "Musterdorf",
+        "plz": "70173",
+        "strasse": " \tFeldstrasse \t",
+        "hausnummer": "45"
+      },
+      "geburtsdatum": "1980-08-19"
+    },
+    "auftraggeber": {
+      "betriebsnummer": "89012345",
+      "firmenname": " \tKlarblick Gebaeudedienste GmbH  "
+    },
+    "meta": {
+      "bearbeitungswunsch": "Eine Eingangsbestaetigung waere mir wichtig.",
+      "eingangsdatum": "29.07.2026"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "statusfeststellung"
+}

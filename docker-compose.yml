@@ -1,0 +1,57 @@
+# The demo profile: one service, one named volume, the five state env vars.
+#
+#   docker compose up --build          # the public demo posture, ingest closed
+#   docker compose down -v             # and the state with it
+#
+# The volume exists so a `docker compose restart` is visibly a RESET rather
+# than a fresh filesystem that happens to look the same: the entrypoint wipes
+# the volume's contents and re-seeds them from the frozen corpus on every boot.
+# Keeping the state on a volume also keeps the container's own layer read-only
+# in practice, which is the posture a production deployment wants.
+
+services:
+  eingangslotse:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: eingangslotse:local
+    ports:
+      - "8000:8000"
+    environment:
+      # The public posture (engine/demo/mode.py). DEMO_MODE=1 closes ingest,
+      # banners every page and turns GET / into the landing page.
+      EINGANGSLOTSE_DEMO_MODE: "1"
+      # Deliberately UNSET below, not set to an empty string with a comment:
+      # no EINGANGSLOTSE_INGEST_TOKEN means POST /ingest is refused outright,
+      # which is the state a public demo should be in. Uncomment and put a
+      # long random value here only if you have a reason to keep ingest open.
+      # EINGANGSLOTSE_INGEST_TOKEN: "change-me-and-rotate-per-deployment"
+      #
+      # Where the repository lives, for the landing page's link.
+      EINGANGSLOTSE_REPO_URL: "https://github.com/OWNER/eingangslotse"
+      # All five state directories, on the volume. engine.demo.seed refuses a
+      # partial set on purpose.
+      EINGANGSLOTSE_JOURNAL_DIR: /var/lib/eingangslotse/journal
+      EINGANGSLOTSE_VAULT_DIR: /var/lib/eingangslotse/vault
+      EINGANGSLOTSE_OUTBOX_DIR: /var/lib/eingangslotse/outbox
+      EINGANGSLOTSE_DRAFTS_DIR: /var/lib/eingangslotse/drafts
+      EINGANGSLOTSE_DISPATCH_DIR: /var/lib/eingangslotse/dispatch
+      # The image ships without the [redact] extra, so the NER member of the
+      # detector union cannot load. Stated rather than implied.
+      EINGANGSLOTSE_TEXT_NER: "0"
+    volumes:
+      - eingangslotse-state:/var/lib/eingangslotse
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/healthz').read()
+      interval: 30s
+      timeout: 5s
+      start_period: 90s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  eingangslotse-state:

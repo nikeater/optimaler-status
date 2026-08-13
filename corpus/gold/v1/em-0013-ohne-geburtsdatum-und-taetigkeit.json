@@ -1,0 +1,33 @@
+{
+  "submissionId": "em-0013-ohne-geburtsdatum-und-taetigkeit",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-29T11:37:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {
+    "antragsteller": {
+      "anschrift": {
+        "ort": "Musterdorf",
+        "plz": "70173",
+        "strasse": "  Feldstrasse  ",
+        "hausnummer": "45"
+      },
+      "versicherungsnummer": "05107519F038"
+    },
+    "antrag": {
+      "eintritt_erwerbsminderung": "2026-03-11",
+      "rentenart": " \terwerbsminderungsrente_voll \t",
+      "gutachten_status": "  ausstehend \t",
+      "auslandsbezug": "nein",
+      "hinweistext": "  Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir. Eine Eingangsbestaetigung waere mir wichtig. \t"
+    },
+    "meta": {
+      "eingangsdatum": "29. Juli 2026"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "erwerbsminderungsrente"
+}

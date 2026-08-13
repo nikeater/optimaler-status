@@ -1,0 +1,293 @@
+{
+  "$defs": {
+    "Channel": {
+      "description": "Inbound channel the item arrived through.",
+      "enum": [
+        "fit_connect",
+        "email",
+        "scan"
+      ],
+      "title": "Channel",
+      "type": "string"
+    },
+    "ContentPart": {
+      "additionalProperties": false,
+      "description": "One redacted, model-visible unit of content (body, attachment text).",
+      "properties": {
+        "part_id": {
+          "title": "Part Id",
+          "type": "string"
+        },
+        "source_type": {
+          "$ref": "#/$defs/SourceType"
+        },
+        "media_type": {
+          "default": "text/plain",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "redacted_text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Redacted free text; None for structured parts",
+          "title": "Redacted Text"
+        },
+        "structured_payload": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Redacted structured payload (FIM/XOEV-shaped JSON); None for free-text parts",
+          "title": "Structured Payload"
+        }
+      },
+      "required": [
+        "part_id",
+        "source_type"
+      ],
+      "title": "ContentPart",
+      "type": "object"
+    },
+    "RawRef": {
+      "additionalProperties": false,
+      "description": "Pointer to an original inbound artifact kept outside the model path.",
+      "properties": {
+        "ref_id": {
+          "title": "Ref Id",
+          "type": "string"
+        },
+        "media_type": {
+          "description": "e.g. application/json, application/pdf",
+          "title": "Media Type",
+          "type": "string"
+        },
+        "filename": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Filename"
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sha256"
+        }
+      },
+      "required": [
+        "ref_id",
+        "media_type"
+      ],
+      "title": "RawRef",
+      "type": "object"
+    },
+    "SourceType": {
+      "description": "Origin quality of a text part; selects span-match mode.",
+      "enum": [
+        "born_digital",
+        "ocr"
+      ],
+      "title": "SourceType",
+      "type": "string"
+    },
+    "VersionStamp": {
+      "additionalProperties": false,
+      "description": "Versions of everything that produced an artifact; journal-stamped.",
+      "properties": {
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "taxonomy_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Taxonomy Version"
+        },
+        "rules_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rules Version"
+        },
+        "decision_table_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Decision Table Version"
+        },
+        "thresholds_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Thresholds Version"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Version"
+        },
+        "model_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Id"
+        },
+        "feature_set_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Feature Set Version"
+        }
+      },
+      "required": [
+        "schema_version"
+      ],
+      "title": "VersionStamp",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The normalized inbound item after ingest + redaction.",
+  "properties": {
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "versions": {
+      "$ref": "#/$defs/VersionStamp"
+    },
+    "envelope_id": {
+      "title": "Envelope Id",
+      "type": "string"
+    },
+    "case_id": {
+      "description": "Journal aggregate id",
+      "title": "Case Id",
+      "type": "string"
+    },
+    "channel": {
+      "$ref": "#/$defs/Channel"
+    },
+    "procedure_hint": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Procedure id claimed by the channel, if any",
+      "title": "Procedure Hint"
+    },
+    "raw_refs": {
+      "items": {
+        "$ref": "#/$defs/RawRef"
+      },
+      "title": "Raw Refs",
+      "type": "array"
+    },
+    "vault_ref": {
+      "description": "Opaque handle to the sealed identity record; the vault is only dereferenced at outbound template rendering",
+      "title": "Vault Ref",
+      "type": "string"
+    },
+    "parts": {
+      "items": {
+        "$ref": "#/$defs/ContentPart"
+      },
+      "minItems": 1,
+      "title": "Parts",
+      "type": "array"
+    },
+    "redaction_verified": {
+      "description": "True only after the post-redaction verification pass (second detector over redacted text) found nothing",
+      "title": "Redaction Verified",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "created_at",
+    "versions",
+    "envelope_id",
+    "case_id",
+    "channel",
+    "vault_ref",
+    "parts",
+    "redaction_verified"
+  ],
+  "title": "Envelope",
+  "type": "object",
+  "$id": "https://opencode.de/eingangslotse/schemas/v0.1.0/Envelope.schema.json"
+}

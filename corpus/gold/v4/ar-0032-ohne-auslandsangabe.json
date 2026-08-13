@@ -1,0 +1,32 @@
+{
+  "submissionId": "ar-0032-ohne-auslandsangabe",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-06T07:21:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antragsteller": {
+      "anschrift": {
+        "strasse": "Musterweg",
+        "hausnummer": " \t3 ",
+        "ort": "Musterstadt",
+        "plz": "  10115  "
+      },
+      "versicherungsnummer": " 17250358R073  ",
+      "geburtsdatum": "1958-03-25"
+    },
+    "meta": {
+      "eingangsdatum": "06.08.2026"
+    },
+    "antrag": {
+      "rentenbeginn": " \t2026-10-01  ",
+      "hinweistext": "Antrag wie besprochen online eingereicht.",
+      "rentenart": "regelaltersrente"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

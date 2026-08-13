@@ -1,0 +1,65 @@
+{
+  "submissionId": "sf-0064-email-antragsart-gruppenfeststellung",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "email",
+  "submittedAt": "2026-08-06T07:21:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {},
+  "attachments": [],
+  "bodyText": "Betreff: Antrag auf Statusfeststellung fuer mehrere Auftragnehmer\n\nSehr geehrte Damen und Herren,\n\nwir bitten um eine Feststellung des Erwerbsstatus fuer eine ganze Gruppe von Auftragnehmerinnen und Auftragnehmern.\n\nAbsender: Herr Jonas Musterling\nAnschrift: Kirchgasse 2, 24103 Beispielstadt\nGeburtsdatum: 1987-04-23\nVersicherungsnummer: 13230487Y038\nAntragsart: gruppenfeststellung\nRolle im Auftragsverhaeltnis: auftraggeber\nTaetigkeit: Kurierfahrten\nTaetigkeit seit: 2026-04-01\nAuftraggeber: Musterkurier Rhein GmbH\n\nMit freundlichen Gruessen\nHerr Jonas Musterling",
+  "extractionFixture": [
+    {
+      "field": "geburtsdatum",
+      "part_id": "part-text-0",
+      "anchor": "Geburtsdatum:",
+      "mode": "sealed"
+    },
+    {
+      "field": "versicherungsnummer",
+      "part_id": "part-text-0",
+      "anchor": "Versicherungsnummer:",
+      "mode": "sealed"
+    },
+    {
+      "field": "antragsart",
+      "part_id": "part-text-0",
+      "anchor": "Antragsart:",
+      "mode": "literal",
+      "value": "gruppenfeststellung",
+      "quote": "Antragsart: gruppenfeststellung"
+    },
+    {
+      "field": "antragsteller_rolle",
+      "part_id": "part-text-0",
+      "anchor": "Rolle im Auftragsverhaeltnis:",
+      "mode": "literal",
+      "value": "auftraggeber",
+      "quote": "Rolle im Auftragsverhaeltnis: auftraggeber"
+    },
+    {
+      "field": "taetigkeit_bezeichnung",
+      "part_id": "part-text-0",
+      "anchor": "Taetigkeit:",
+      "mode": "literal",
+      "value": "Kurierfahrten",
+      "quote": "Taetigkeit: Kurierfahrten"
+    },
+    {
+      "field": "taetigkeit_beginn",
+      "part_id": "part-text-0",
+      "anchor": "Taetigkeit seit:",
+      "mode": "literal",
+      "value": "2026-04-01",
+      "quote": "Taetigkeit seit: 2026-04-01"
+    },
+    {
+      "field": "auftraggeber_name",
+      "part_id": "part-text-0",
+      "anchor": "Auftraggeber:",
+      "mode": "sealed"
+    }
+  ]
+}

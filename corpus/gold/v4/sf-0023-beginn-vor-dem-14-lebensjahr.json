@@ -1,0 +1,42 @@
+{
+  "submissionId": "sf-0023-beginn-vor-dem-14-lebensjahr",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-06T07:21:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "antrag": {
+      "honorar_modell": "nach_stunden",
+      "arbeitsort": " beim_auftraggeber ",
+      "weitere_auftraggeber": "nein",
+      "antragsart": "feststellung_nach_aufnahme",
+      "taetigkeit_beginn": "2020-09-01",
+      "taetigkeit_bezeichnung": "Aushilfe im Ladengeschaeft",
+      "hinweistext": " \tIch habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir. Eine Eingangsbestaetigung waere mir wichtig. ",
+      "antragsteller_rolle": "auftragnehmer"
+    },
+    "auftraggeber": {
+      "betriebsnummer": "11223344",
+      "firmenname": "Dorfladen Wiesengrund GmbH"
+    },
+    "antragsteller": {
+      "versicherungsnummer": " \t15200608H037 ",
+      "geburtsdatum": "2008-06-20",
+      "anschrift": {
+        "plz": "04109",
+        "hausnummer": "17a",
+        "strasse": " Lindenallee ",
+        "ort": "Beispielau"
+      }
+    },
+    "meta": {
+      "bearbeitungswunsch": "Bitte antworten Sie schriftlich, nicht telefonisch.",
+      "eingangsdatum": "06.08.2026"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "statusfeststellung"
+}

@@ -1,0 +1,33 @@
+{
+  "submissionId": "em-0051-ohne-verfahrenshinweis-unvollstaendig",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-27T08:04:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {
+    "meta": {
+      "eingangsdatum": "2026-07-27"
+    },
+    "antrag": {
+      "eintritt_erwerbsminderung": " \t2025-10-08 \t",
+      "auslandsbezug": "nein",
+      "gutachten_status": "liegt_nicht_vor",
+      "rentenart": " erwerbsminderungsrente_teilweise ",
+      "hinweistext": "Hallo, ich schicke Ihnen hier meinen Antrag. Ich hoffe, so ist alles richtig ausgefuellt. Vielen Dank vorab."
+    },
+    "antragsteller": {
+      "anschrift": {
+        "ort": "  Musterdorf  ",
+        "strasse": "Feldstrasse",
+        "plz": " \t70173 \t",
+        "hausnummer": "45"
+      },
+      "versicherungsnummer": "19190782R072",
+      "geburtsdatum": "  1982-07-19 \t"
+    }
+  },
+  "attachments": []
+}

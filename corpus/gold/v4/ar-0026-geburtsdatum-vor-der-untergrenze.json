@@ -1,0 +1,34 @@
+{
+  "submissionId": "ar-0026-geburtsdatum-vor-der-untergrenze",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-29T11:37:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antrag": {
+      "auslandsbezug": " \tnein  ",
+      "rentenart": " \tregelaltersrente  ",
+      "hinweistext": " Sehr geehrte Damen und Herren, hiermit reiche ich den beigefuegten Antrag ein und bitte um Bearbeitung. Fuer Rueckfragen stehe ich Ihnen zur Verfuegung. \t",
+      "rentenbeginn": "2026-11-01"
+    },
+    "meta": {
+      "eingangsdatum": " 29. Juli 2026 \t",
+      "bearbeitungswunsch": "Bitte antworten Sie schriftlich, nicht telefonisch."
+    },
+    "antragsteller": {
+      "versicherungsnummer": "12170489C063",
+      "anschrift": {
+        "ort": " Musterstadt  ",
+        "plz": "10115",
+        "hausnummer": "3",
+        "strasse": "Musterweg"
+      },
+      "geburtsdatum": "1889-04-17"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

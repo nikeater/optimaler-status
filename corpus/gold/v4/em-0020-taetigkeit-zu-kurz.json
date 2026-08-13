@@ -1,0 +1,36 @@
+{
+  "submissionId": "em-0020-taetigkeit-zu-kurz",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {
+    "meta": {
+      "bearbeitungswunsch": "Eine Eingangsbestaetigung waere mir wichtig.",
+      "eingangsdatum": "2026-08-05"
+    },
+    "antragsteller": {
+      "versicherungsnummer": " \t19050879G044 ",
+      "geburtsdatum": "1979-08-05",
+      "anschrift": {
+        "strasse": "  Am Hang ",
+        "plz": "99084",
+        "ort": "Musterhausen",
+        "hausnummer": "8"
+      }
+    },
+    "antrag": {
+      "eintritt_erwerbsminderung": "2025-12-01",
+      "gutachten_status": "liegt_nicht_vor",
+      "hinweistext": "Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir. Ich bin ab kommender Woche im Urlaub.",
+      "letzte_taetigkeit": "IT",
+      "rentenart": " erwerbsminderungsrente_voll ",
+      "auslandsbezug": "nein"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "erwerbsminderungsrente"
+}

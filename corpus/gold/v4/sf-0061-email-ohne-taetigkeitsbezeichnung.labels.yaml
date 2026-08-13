@@ -1,0 +1,19 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: sf-0061-email-ohne-taetigkeitsbezeichnung
+procedure_id: statusfeststellung
+scenario_kind: missing_field
+expected_unit_id: Referat_340_Clearingstelle
+expected_tier: 2
+derived_procedure_id: statusfeststellung
+derivation_source: hint
+expected_gaps:
+- requirement_id: taetigkeit_bezeichnung
+  status: missing
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: none
+known_divergence: []
+divergence_reason: null
+notes: 'Anschreiben ohne Bezeichnung der Taetigkeit: ohne sie laesst sich das Auftragsverhaeltnis
+  nicht wuerdigen.'

@@ -1,0 +1,221 @@
+{
+  "$defs": {
+    "DecisionReason": {
+      "additionalProperties": false,
+      "description": "Machine-readable reason, renderable to caseworkers.",
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/ReasonKind"
+        },
+        "rule_id": {
+          "description": "Decision-table row or downgrade id",
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "detail": {
+          "description": "Human-readable rendering",
+          "title": "Detail",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "rule_id",
+        "detail"
+      ],
+      "title": "DecisionReason",
+      "type": "object"
+    },
+    "ReasonKind": {
+      "enum": [
+        "qualified",
+        "failed",
+        "downgraded",
+        "defaulted",
+        "errored",
+        "sampled"
+      ],
+      "title": "ReasonKind",
+      "type": "string"
+    },
+    "Tier": {
+      "description": "Triage tier. Higher number = more human oversight.\n\nMonotonicity convention used everywhere: anomaly evidence may only\nINCREASE the tier number (add oversight), never decrease it.",
+      "enum": [
+        1,
+        2,
+        3
+      ],
+      "title": "Tier",
+      "type": "integer"
+    },
+    "VersionStamp": {
+      "additionalProperties": false,
+      "description": "Versions of everything that produced an artifact; journal-stamped.",
+      "properties": {
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "taxonomy_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Taxonomy Version"
+        },
+        "rules_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rules Version"
+        },
+        "decision_table_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Decision Table Version"
+        },
+        "thresholds_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Thresholds Version"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Prompt Version"
+        },
+        "model_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Model Id"
+        },
+        "feature_set_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Feature Set Version"
+        }
+      },
+      "required": [
+        "schema_version"
+      ],
+      "title": "VersionStamp",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "The tier decision for one envelope.",
+  "properties": {
+    "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+    },
+    "versions": {
+      "$ref": "#/$defs/VersionStamp"
+    },
+    "envelope_id": {
+      "title": "Envelope Id",
+      "type": "string"
+    },
+    "case_id": {
+      "title": "Case Id",
+      "type": "string"
+    },
+    "tier": {
+      "$ref": "#/$defs/Tier"
+    },
+    "pre_downgrade_tier": {
+      "$ref": "#/$defs/Tier",
+      "description": "Tier from qualifying conditions alone; tier >= this value always (one-way valve invariant, property-tested)"
+    },
+    "routed_unit_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Chosen organizational unit (never a person)",
+      "title": "Routed Unit Id"
+    },
+    "reasons": {
+      "items": {
+        "$ref": "#/$defs/DecisionReason"
+      },
+      "minItems": 1,
+      "title": "Reasons",
+      "type": "array"
+    },
+    "decision_table_version": {
+      "title": "Decision Table Version",
+      "type": "string"
+    },
+    "risk_config_version": {
+      "title": "Risk Config Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "created_at",
+    "versions",
+    "envelope_id",
+    "case_id",
+    "tier",
+    "pre_downgrade_tier",
+    "reasons",
+    "decision_table_version",
+    "risk_config_version"
+  ],
+  "title": "DecisionRecord",
+  "type": "object",
+  "$id": "https://opencode.de/eingangslotse/schemas/v0.1.0/DecisionRecord.schema.json"
+}

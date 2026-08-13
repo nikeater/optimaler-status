@@ -1,0 +1,45 @@
+{
+  "submissionId": "sf-0004-antrag-des-auftraggebers",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-29T11:37:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "antrag": {
+      "antragsteller_rolle": "auftraggeber",
+      "umsatzanteil_hauptauftraggeber": "100",
+      "taetigkeit_beginn": "  2026-03-02 ",
+      "hinweistext": " Antrag wie besprochen online eingereicht. Eine Eingangsbestaetigung waere mir wichtig. ",
+      "weisungsgebunden": "ja",
+      "weitere_auftraggeber": "nein",
+      "antragsart": "feststellung_nach_aufnahme",
+      "taetigkeit_bezeichnung": " \tFahrdienst im Werkverkehr \t",
+      "arbeitsort": " beim_auftraggeber  ",
+      "honorar_modell": "nach_stunden",
+      "eingliederung_arbeitsorganisation": " ja \t",
+      "rahmenvertrag": "ja"
+    },
+    "antragsteller": {
+      "anschrift": {
+        "ort": " Musterhausen ",
+        "strasse": "Am Hang",
+        "hausnummer": "8",
+        "plz": "99084"
+      },
+      "versicherungsnummer": "16170282N056",
+      "geburtsdatum": "1982-02-17"
+    },
+    "auftraggeber": {
+      "firmenname": "Rheinlogistik Speditions GmbH",
+      "betriebsnummer": "45678901"
+    },
+    "meta": {
+      "eingangsdatum": "29.07.2026"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "statusfeststellung"
+}

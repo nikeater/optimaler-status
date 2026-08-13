@@ -1,0 +1,8 @@
+# Ground truth for s1-0001. PRE-GOLD SCAFFOLDING, superseded by part 02.
+item_id: s1-0001-altersrente-complete
+expected_unit_id: Referat_312_Renten
+expected_tier: 1
+expected_gaps: []
+notes: >-
+  Vollstaendiger Regelaltersrentenantrag ohne Auslandsbezug: Regel greift,
+  Pflichtangaben vorhanden, Klarfallkriterien erfuellt, also Tier 1.

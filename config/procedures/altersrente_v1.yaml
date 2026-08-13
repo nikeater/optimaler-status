@@ -1,0 +1,201 @@
+# Procedure config v1 for "altersrente" (config/procedures/).
+#
+# One file per procedure, six blocks:
+#   flags         -> schemas.config.ProcedureFlags (legal gates; the loader
+#                    assembles AgencyRiskConfig.procedures from these, so the
+#                    flag has exactly one home)
+#   requirements  -> schemas.config.RequirementList (completeness evaluation)
+#   field_map     -> payload path to field id map for the structured mapper
+#   clear_cut     -> declarative criteria evaluated by deterministic code in the
+#                    evidence plane; the boolean result is fed to the decision
+#                    table as `procedure.clear_cut` (see ADR-007)
+#   derivation    -> content signals that identify this procedure when the
+#                    channel hint is absent or unknown (ADR-013); read against
+#                    the raw payload, because nothing is extracted yet
+#   nachforderung -> caseworker-facing wording per requirement, rendered by
+#                    engine/evidence/nachforderung.py and consumed by part 08
+#
+# Validation vocabulary (engine/config_loader.SUPPORTED_VALIDATION_KEYS):
+#   pattern, one_of, min_length, max_length, date, cross_field.
+# Date bounds are ABSOLUTE dates, never "today minus n": completeness is a pure
+# function of the item, and a validator that read the clock would make a frozen
+# gold set start failing on a Tuesday.
+#
+# PLACEHOLDER: requirement wording, validation bounds, the clear-cut criteria
+# and the Nachforderung wording are derived from public law, not from a design
+# partner's Fachverfahren. Review with the Fachbereich before any pilot.
+#
+# Why fully_automated stays false here, stated correctly (compliance backlog
+# C-11; this header never carried the wrong version, the erwerbsminderungsrente
+# one did). Par. 35 SGB VI is a gebundener Anspruch, and par. 31a SGB X is
+# self-authorizing - it has no Rechtsvorschrift-Vorbehalt, unlike par. 35a
+# VwVfG, which does not apply to the DRV anyway. Regelaltersrente is therefore
+# the ONE procedure in this repo where full automation is doctrinally reachable.
+# What blocks it is substantive, not the absence of a norm: the "kein Anlass"
+# filter needs documented risk management (random sampling, risk rules), par.
+# 31a S. 2 requires that free-text submissions force human processing, Art. 22
+# Abs. 2 lit. b DSGVO requires safeguards, and the Konto must be geklaert. That
+# package is tracked as C-12 and the flag stays false until every item of it
+# exists.
+#
+# v1 changes over v0: date plausibility on both dates, a Versicherungsnummer
+# that is checked against the birth date it encodes, a minimum age between
+# birth and Rentenbeginn, the derivation block, and the Nachforderung wording.
+procedure_id: altersrente
+
+flags:
+  procedure_id: altersrente
+  tier1_enabled: true
+  fully_automated: false
+
+requirements:
+  procedure_id: altersrente
+  version: altersrente_requirements_v1
+  requirements:
+    - requirement_id: geburtsdatum
+      description: Geburtsdatum der antragstellenden Person (ISO-Datum).
+      kind: field
+      validation:
+        pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        # 1900 is below any living Rentenantrag; 2010 is above any possible
+        # one. Deliberately wide: an implausible but possible age is the
+        # shadow scorer's business (part 06), not a hard rejection.
+        date:
+          min: "1900-01-01"
+          max: "2010-12-31"
+
+    - requirement_id: versicherungsnummer
+      description: >-
+        Versicherungsnummer (12 Stellen: Bereichsnummer, Geburtsdatum TTMMJJ,
+        Anfangsbuchstabe des Geburtsnamens, Seriennummer, Pruefziffer).
+      kind: field
+      validation:
+        pattern: "^[0-9]{8}[A-Z][0-9]{3}$"
+        cross_field:
+          - kind: birthdate_in_vsnr
+            field: geburtsdatum
+            detail: >-
+              Die Versicherungsnummer traegt an den Stellen 3 bis 8 ein anderes
+              Geburtsdatum als das im Antrag angegebene.
+
+    - requirement_id: rentenart
+      description: Beantragte Rentenart.
+      kind: field
+      validation:
+        one_of:
+          - regelaltersrente
+          - altersrente_langjaehrig
+          - altersrente_schwerbehinderung
+
+    - requirement_id: rentenbeginn
+      description: Gewuenschter Rentenbeginn (ISO-Datum).
+      kind: field
+      validation:
+        pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        date:
+          min: "1990-01-01"
+          max: "2050-12-31"
+        cross_field:
+          # 60 is the earliest Altersrente German pension law has ever allowed
+          # (par. 237a SGB VI, Jahrgaenge bis 1951). Below that the two dates
+          # cannot both be right; how far ABOVE it a Rentenbeginn sits is a
+          # plausibility question and stays with the scorer.
+          - kind: min_years_after
+            field: geburtsdatum
+            years: 60
+            detail: >-
+              Zwischen Geburtsdatum und gewuenschtem Rentenbeginn liegen
+              weniger als 60 Jahre; eine Altersrente ist fruehestens ab dem
+              60. Lebensjahr moeglich.
+
+field_map:
+  - path: antragsteller.geburtsdatum
+    field: geburtsdatum
+  - path: antragsteller.versicherungsnummer
+    field: versicherungsnummer
+  - path: antrag.rentenart
+    field: rentenart
+  - path: antrag.rentenbeginn
+    field: rentenbeginn
+  - path: antrag.auslandsbezug
+    field: auslandsbezug
+
+clear_cut:
+  criteria_id: altersrente_clear_cut_v0
+  description: >-
+    Klarfall nur bei Regelaltersrente ohne Auslandsbezug. Alles andere
+    braucht fachliche Wuerdigung und darf Tier 1 nicht erreichen.
+  predicate:
+    all:
+      - field: extraction.rentenart
+        op: eq
+        value: regelaltersrente
+      - field: extraction.auslandsbezug
+        op: eq
+        value: nein
+
+derivation:
+  signal_id: altersrente_content_v2
+  description: >-
+    Eine angekreuzte Altersrentenart ODER ein gewuenschter Rentenbeginn machen
+    den Vorgang inhaltlich zu einem Altersrentenantrag. Beide Signale sind
+    bewusst breit: sie muessen auch dann greifen, wenn der Kanal gar nichts
+    meldet. Trifft gleichzeitig ein Signal eines anderen Verfahrens zu, wird
+    NICHT geraten - der Vorgang bleibt ohne Verfahren und damit Tier 3.
+    v2 ergaenzt dieselbe Signatur im Freitext (ADR-020): ein Anschreiben ohne
+    strukturierte Daten war bis Teil 05 grundsaetzlich nicht ableitbar und
+    damit immer Tier 3.
+  predicate:
+    any:
+      - field: payload.antrag.rentenart
+        op: in
+        value:
+          - regelaltersrente
+          - altersrente_langjaehrig
+          - altersrente_schwerbehinderung
+      - field: payload.antrag.rentenbeginn
+        op: ne
+        value: null
+      # Freitext-Signale. `text.normalized` ist der zusammengefuehrte, bereits
+      # GESCHWAERZTE Text aller Teile des Eingangs; wo eine Identitaetsangabe
+      # stand, steht jetzt ein Platzhalter. Deshalb darf in einer Textregel nie
+      # der Wert einer Person stehen - der Config-Lint prueft das mit denselben
+      # Erkennern, die auch entscheiden, was geschwaerzt wird.
+      # Beide Operatoren vergleichen ohne Ruecksicht auf Gross-/Kleinschreibung.
+      - field: text.normalized
+        op: matches
+        # Ohne abschliessende Wortgrenze, damit auch "Altersrentenantrag" und
+        # "altersrente_langjaehrig" greifen; die fuehrende Wortgrenze verhindert
+        # Treffer mitten in einem anderen Wort.
+        value: '\b(regel)?altersrente'
+      - field: text.normalized
+        op: contains
+        value: Rentenbeginn
+
+nachforderung:
+  - requirement_id: geburtsdatum
+    missing: >-
+      Bitte teilen Sie uns Ihr Geburtsdatum mit (Tag, Monat und Jahr).
+    invalid: >-
+      Bitte pruefen Sie Ihr Geburtsdatum: die Angabe ist so nicht verwertbar
+      ({problem}).
+  - requirement_id: versicherungsnummer
+    missing: >-
+      Bitte teilen Sie uns Ihre Versicherungsnummer mit. Sie finden sie auf
+      Ihrem Sozialversicherungsausweis und auf jeder Renteninformation.
+    invalid: >-
+      Bitte pruefen Sie Ihre Versicherungsnummer: die Angabe passt nicht zu
+      einer gueltigen Versicherungsnummer ({problem}).
+  - requirement_id: rentenart
+    missing: >-
+      Bitte geben Sie an, welche Altersrente Sie beantragen
+      (Regelaltersrente, Altersrente fuer langjaehrig Versicherte oder
+      Altersrente fuer schwerbehinderte Menschen).
+    invalid: >-
+      Die angegebene Rentenart gehoert nicht zu den Altersrenten
+      ({problem}). Bitte geben Sie an, welche Altersrente Sie beantragen.
+  - requirement_id: rentenbeginn
+    missing: >-
+      Bitte geben Sie an, ab wann Sie Ihre Rente beziehen moechten.
+    invalid: >-
+      Bitte pruefen Sie den gewuenschten Rentenbeginn ({problem}).

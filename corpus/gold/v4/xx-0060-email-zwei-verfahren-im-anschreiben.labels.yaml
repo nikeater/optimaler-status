@@ -1,0 +1,17 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: xx-0060-email-zwei-verfahren-im-anschreiben
+procedure_id: null
+scenario_kind: ambiguous_conflicting
+expected_unit_id: null
+expected_tier: 3
+derived_procedure_id: null
+derivation_source: none
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: none
+known_divergence: []
+divergence_reason: null
+notes: 'Die Hausregel aus Teil 03, jetzt in Prosa: Signale zweier Verfahren bedeuten
+  kein Verfahren, keine Vollstaendigkeitspruefung und Tier 3.'

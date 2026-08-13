@@ -1,0 +1,40 @@
+{
+  "submissionId": "sf-0013-ohne-antragsart-und-beginn",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-06T07:21:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Feststellung des Erwerbsstatus",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000002"
+  },
+  "data": {
+    "meta": {
+      "bearbeitungswunsch": "Ich bin ab kommender Woche im Urlaub.",
+      "eingangsdatum": " \t6. August 2026  "
+    },
+    "auftraggeber": {
+      "firmenname": "Stadtkurier Meissner GmbH",
+      "betriebsnummer": "78901234"
+    },
+    "antragsteller": {
+      "anschrift": {
+        "ort": "Beispielstadt",
+        "strasse": "Kirchgasse",
+        "hausnummer": "  2 ",
+        "plz": "24103"
+      },
+      "geburtsdatum": "1993-04-26",
+      "versicherungsnummer": "19260493R089"
+    },
+    "antrag": {
+      "weitere_auftraggeber": "nein",
+      "arbeitsort": "wechselnd",
+      "antragsteller_rolle": "gemeinsam",
+      "taetigkeit_bezeichnung": " \tKurierfahrten im Stadtgebiet  ",
+      "honorar_modell": "  nach_ergebnis ",
+      "hinweistext": "Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir. Eine Eingangsbestaetigung waere mir wichtig."
+    }
+  },
+  "attachments": [],
+  "procedureHint": "statusfeststellung"
+}

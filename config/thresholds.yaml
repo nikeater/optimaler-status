@@ -1,0 +1,21 @@
+# Agency risk config v0 (schemas.config.AgencyRiskConfig).
+#
+# scorer_mode starts at log_only and may only move to "enforcing" once reviewed
+# flag precision justifies it (ADR-004). downgrade_rate_budget caps the share of
+# tier-1-eligible items the scorer may downgrade before it must return to
+# log-only.
+#
+# `procedures` is deliberately NOT listed here: ProcedureFlags live in
+# config/procedures/<procedure>_v0.yaml and the loader assembles them into this
+# config, so a flag has exactly one editable home.
+#
+# PLACEHOLDER: the threshold value is uncalibrated. Calibration needs the
+# frozen gold set from part 02 and the scorer from part 06.
+version: risk_v0
+scorer_mode: log_only
+thresholds:
+  - threshold_id: anomaly_default_v0
+    value: 0.85
+    calibrated_on: >-
+      uncalibrated placeholder; needs the frozen gold set (part 02)
+downgrade_rate_budget: 0.15

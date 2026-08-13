@@ -1,0 +1,458 @@
+# Demo personas v1 (config/demo/) - part 13, the guided showcase.
+#
+# ITS OWN VERSIONED FILE, and the reason is the standing lesson of parts 06 to
+# 12: `config/thresholds.yaml`, `config/rules/`, `config/decision/` and
+# `config/taxonomy/` carry version strings that are frozen into
+# `corpus/gold/v4/MANIFEST.yaml`, and a gold set is verified by a byte-identical
+# rebuild. A persona added to one of those files would either invalidate a
+# frozen corpus or ship under a version string that no longer describes the
+# file. So this is a NEW file with a NEW id, and `engine.config_loader` does not
+# read `config/demo/` at all: nothing here can reach the pipeline, the decision
+# table or a version stamp. It is read by `engine/demo/personas.py`, which is
+# imported only by the demo routes, which exist only when
+# EINGANGSLOTSE_DEMO_MODE=1.
+#
+# WHAT A PERSONA IS. A fictional applicant whose submission is PII-SHAPED BY
+# DESIGN. Sealing it live is the demonstration: the visitor watches their own
+# typed Versicherungsnummer disappear behind a placeholder before anything
+# downstream sees it. Every value below is invented for this file.
+#
+# THE NAMING RULE, and it is a rule rather than a preference. Every persona name
+# is Mustermann-class - unmistakably fictional to a German reader, the way
+# "Erika Mustermann" is on the specimen Personalausweis. A demo persona called
+# "Michael Weber" would be indistinguishable from a real person's data on a
+# screenshot, and a screenshot is exactly what a demo produces.
+#
+# THE COLLISION RULE. No value here may equal a value in `corpus/pii_golden/`
+# (the redaction-recall canaries) or an identity value in `corpus/gold/`. Two
+# reasons, and the second one is the load-bearing one:
+#   1. A persona that reused a canary string would make the canary sweep over
+#      the demo pages meaningless - it would find the string and could not tell
+#      a leak from a persona.
+#   2. A recall measurement over a corpus that shares values with a live demo
+#      is a measurement that can be gamed by memorisation.
+# `tests/test_demo_personas.py::test_no_persona_value_collides_with_a_frozen_set`
+# asserts it over every value in this file, so the rule is checked rather than
+# promised.
+#
+# THE VERSICHERUNGSNUMMER RULE. Each one is checksum-VALID (the weighted
+# modulo-10 scheme in `engine/redact/recognizers.py`) and carries its persona's
+# birth date in positions 3 to 8. Both are necessary: the deterministic
+# recognizer is checksum-gated in prose, so an invented number with a broken
+# check digit would not be sealed out of a letter, and the completeness
+# checker's `birthdate_in_vsnr` cross-field check reads the real value through
+# the transient witness.
+#
+# THE LETTER RULE. Every letter names the person behind a salutation
+# ("Frau ...", "Herrn ..."), writes the address as "<Strasse> <Nr>, <PLZ> <Ort>"
+# and labels the birth date. That is not decoration: those are the shapes the
+# deterministic detector union recognises without the optional NER model
+# (ADR-019, ruling 2), and the hosted demo image ships without it. A letter that
+# needed spaCy to be sealed clean would be refused by the boundary on the demo
+# and accepted on a developer machine.
+version: personas_v1
+
+#: What the intake page says above the picker. One sentence, and it is the same
+#: sentence whether or not anybody reads the banner.
+note: >-
+  Alle Personen auf dieser Seite sind frei erfunden. Namen, Geburtsdaten,
+  Versicherungsnummern und Anschriften wurden fuer diese Demonstration
+  konstruiert und gehoeren zu keinem Menschen.
+
+#: Suggestions shown next to every form, in the "was Sie ausprobieren koennen"
+#: panel. Each one produces a DIFFERENT, real behaviour of the pipeline, which
+#: is the point: a demo you cannot break teaches nothing.
+hints:
+  - label: Versicherungsnummer loeschen
+    detail: >-
+      Leeren Sie das Feld. Die Vollstaendigkeitspruefung meldet eine Luecke,
+      der Vorgang faellt auf Tier 2 und es entsteht eine Nachforderung mit
+      genau dem Satz, den die Verfahrenskonfiguration dafuer vorsieht.
+  - label: Geburtsdatum unplausibel setzen
+    detail: >-
+      Tragen Sie 1902-01-01 ein. Die Versicherungsnummer traegt das
+      Geburtsdatum in den Stellen 3 bis 8 und passt dann nicht mehr dazu: die
+      Kreuzpruefung schlaegt an, ohne dass irgendetwas entsiegelt wird.
+  - label: Rentenbeginn weit in die Zukunft legen
+    detail: >-
+      Setzen Sie 2048-01-01. Die Kalendergrenzen der Verfahrenskonfiguration
+      fangen das bewusst nicht ab - das ist die Aufgabe des Schattenscorers,
+      der den Vorgang markiert und seinen Grund im Klartext nennt.
+  - label: Auslandsbezug auf "ja" setzen
+    detail: >-
+      Die Zustaendigkeitsregel mit Prioritaet 10 gewinnt gegen die
+      Rentenart-Regel: der Vorgang geht an das Referat Auslandsrenten, und die
+      unterlegenen Vorschlaege bleiben als Konflikt im Journal stehen.
+  - label: Rentenart auf etwas Unbekanntes setzen
+    detail: >-
+      Schreiben Sie "grundrente" hinein. Der Wert steht nicht in der erlaubten
+      Liste, die Angabe gilt als ungueltig und der Klarfall entfaellt.
+
+personas:
+  # ------------------------------------------------------------ arc 1: tier 1 --
+  - persona_id: mustermann_regelaltersrente
+    display_name: Renate Mustermann
+    headline: Regelaltersrente, vollstaendig
+    procedure_hint: altersrente
+    story: >-
+      Frau Mustermann wird im Dezember 66 und stellt ihren Antrag auf
+      Regelaltersrente online. Alle vier Pflichtangaben stehen im Formular, es
+      gibt keinen Auslandsbezug.
+    expectation: >-
+      Vollstaendig, klar zugeordnet, Klarfall: Tier 1 beim Referat 312. In
+      Phase 3 wartet ein Bewilligungsentwurf auf die Bestaetigung eines
+      Menschen - vorbereitet, nicht erlassen.
+    fields:
+      - field_id: name
+        label: Name
+        path: antragsteller.name
+        value: Renate Mustermann
+        kind: NAME
+      - field_id: geburtsdatum
+        label: Geburtsdatum
+        path: antragsteller.geburtsdatum
+        value: "1960-06-26"
+        kind: GEBDAT
+      - field_id: versicherungsnummer
+        label: Versicherungsnummer
+        path: antragsteller.versicherungsnummer
+        value: 65260660M123
+        kind: VSNR
+      - field_id: strasse
+        label: Strasse
+        path: antragsteller.anschrift.strasse
+        value: Lotsenweg
+        kind: ADDR
+        group: anschrift
+      - field_id: hausnummer
+        label: Hausnummer
+        path: antragsteller.anschrift.hausnummer
+        value: "7"
+        kind: ADDR
+        group: anschrift
+      - field_id: plz
+        label: Postleitzahl
+        path: antragsteller.anschrift.plz
+        value: "21029"
+        kind: ADDR
+        group: anschrift
+      - field_id: ort
+        label: Ort
+        path: antragsteller.anschrift.ort
+        value: Musterhafen
+        kind: ADDR
+        group: anschrift
+      - field_id: rentenart
+        label: Rentenart
+        path: antrag.rentenart
+        value: regelaltersrente
+        help: >-
+          regelaltersrente, altersrente_langjaehrig oder
+          altersrente_schwerbehinderung
+      - field_id: rentenbeginn
+        label: Gewuenschter Rentenbeginn
+        path: antrag.rentenbeginn
+        value: "2026-12-01"
+      - field_id: auslandsbezug
+        label: Auslandsbezug
+        path: antrag.auslandsbezug
+        value: nein
+        help: ja oder nein
+    letter: |
+      Betreff: Antrag auf Regelaltersrente
+
+      Sehr geehrte Damen und Herren,
+
+      hiermit beantrage ich meine Regelaltersrente und bitte um Bearbeitung
+      meines Antrags.
+
+      Mein Name ist Frau Renate Mustermann, geboren am 1960-06-26.
+      Meine Anschrift: Lotsenweg 7, 21029 Musterhafen.
+      Meine Versicherungsnummer lautet 65260660M123.
+
+      Rentenart: regelaltersrente
+      Rentenbeginn: 2026-12-01
+      Auslandsbezug: nein
+
+      Mit freundlichen Gruessen
+      Frau Renate Mustermann
+
+  # ------------------------------------------- arc 2: tier 2, Nachforderung --
+  - persona_id: beispielmann_ohne_rentenbeginn
+    display_name: Bernd Beispielmann
+    headline: Altersrente ohne Rentenbeginn
+    procedure_hint: altersrente
+    story: >-
+      Herr Beispielmann fuellt das Formular aus, laesst aber offen, ab wann er
+      seine Rente beziehen moechte. Sonst ist alles da.
+    expectation: >-
+      Zuordenbar, aber unvollstaendig: Tier 2 beim Referat 312. Es entsteht
+      eine Nachforderung, die genau die fehlende Angabe abfragt - im Wortlaut
+      der Verfahrenskonfiguration, nicht in einem erzeugten Satz.
+    fields:
+      - field_id: name
+        label: Name
+        path: antragsteller.name
+        value: Bernd Beispielmann
+        kind: NAME
+      - field_id: geburtsdatum
+        label: Geburtsdatum
+        path: antragsteller.geburtsdatum
+        value: "1961-02-11"
+        kind: GEBDAT
+      - field_id: versicherungsnummer
+        label: Versicherungsnummer
+        path: antragsteller.versicherungsnummer
+        value: 19110261B426
+        kind: VSNR
+      - field_id: strasse
+        label: Strasse
+        path: antragsteller.anschrift.strasse
+        value: Deichsteig
+        kind: ADDR
+        group: anschrift
+      - field_id: hausnummer
+        label: Hausnummer
+        path: antragsteller.anschrift.hausnummer
+        value: "12"
+        kind: ADDR
+        group: anschrift
+      - field_id: plz
+        label: Postleitzahl
+        path: antragsteller.anschrift.plz
+        value: "25813"
+        kind: ADDR
+        group: anschrift
+      - field_id: ort
+        label: Ort
+        path: antragsteller.anschrift.ort
+        value: Musterkoog
+        kind: ADDR
+        group: anschrift
+      - field_id: rentenart
+        label: Rentenart
+        path: antrag.rentenart
+        value: regelaltersrente
+        help: >-
+          regelaltersrente, altersrente_langjaehrig oder
+          altersrente_schwerbehinderung
+      - field_id: rentenbeginn
+        label: Gewuenschter Rentenbeginn
+        path: antrag.rentenbeginn
+        value: ""
+        help: bewusst leer gelassen - das ist die Luecke dieser Person
+      - field_id: auslandsbezug
+        label: Auslandsbezug
+        path: antrag.auslandsbezug
+        value: nein
+        help: ja oder nein
+    letter: |
+      Betreff: Antrag auf Altersrente
+
+      Sehr geehrte Damen und Herren,
+
+      ich moechte meine Altersrente beantragen. Wann genau ich in Rente gehen
+      will, weiss ich noch nicht - bitte melden Sie sich dazu bei mir.
+
+      Mein Name ist Herr Bernd Beispielmann, geboren am 1961-02-11.
+      Meine Anschrift: Deichsteig 12, 25813 Musterkoog.
+      Meine Versicherungsnummer lautet 19110261B426.
+
+      Rentenart: regelaltersrente
+      Auslandsbezug: nein
+
+      Mit freundlichen Gruessen
+      Herr Bernd Beispielmann
+
+  # ------------------------------- arc 3: Statusfeststellung, Clearingstelle --
+  - persona_id: musterfrau_statusfeststellung
+    display_name: Sabine Musterfrau
+    headline: Statusfeststellung nach par. 7a SGB IV
+    procedure_hint: null
+    story: >-
+      Frau Musterfrau arbeitet seit Januar als freie IT-Beraterin fuer einen
+      einzigen groesseren Auftraggeber und will wissen, ob das eine
+      selbstaendige Taetigkeit ist. Sie schreibt einen Brief, kein Formular,
+      und nennt das Verfahren nicht beim Namen.
+    expectation: >-
+      Ohne Kanalhinweis: das Verfahren wird aus dem INHALT abgeleitet
+      (Auftraggeber und Taetigkeit gemeinsam benannt) und der Vorgang geht an
+      die Clearingstelle, Referat 340. Par. 7a verlangt eine Gesamtwuerdigung
+      und keine Checkliste - deshalb ist fuer dieses Verfahren Tier 1 gar nicht
+      freigeschaltet und der Vorgang landet vollstaendig bei einem Menschen.
+    fields:
+      - field_id: name
+        label: Name
+        path: antragsteller.name
+        value: Sabine Musterfrau
+        kind: NAME
+      - field_id: geburtsdatum
+        label: Geburtsdatum
+        path: antragsteller.geburtsdatum
+        value: "1957-03-19"
+        kind: GEBDAT
+      - field_id: versicherungsnummer
+        label: Versicherungsnummer
+        path: antragsteller.versicherungsnummer
+        value: 42190357M724
+        kind: VSNR
+      - field_id: strasse
+        label: Strasse
+        path: antragsteller.anschrift.strasse
+        value: Ankerpfad
+        kind: ADDR
+        group: anschrift
+      - field_id: hausnummer
+        label: Hausnummer
+        path: antragsteller.anschrift.hausnummer
+        value: "3"
+        kind: ADDR
+        group: anschrift
+      - field_id: plz
+        label: Postleitzahl
+        path: antragsteller.anschrift.plz
+        value: "18055"
+        kind: ADDR
+        group: anschrift
+      - field_id: ort
+        label: Ort
+        path: antragsteller.anschrift.ort
+        value: Musterwiek
+        kind: ADDR
+        group: anschrift
+      - field_id: auftraggeber_name
+        label: Auftraggeber
+        path: auftraggeber.firmenname
+        value: Seezeichen Beispielwerk GmbH
+        kind: ORG
+      - field_id: antragsart
+        label: Antragsart
+        path: antrag.antragsart
+        value: feststellung_nach_aufnahme
+        help: feststellung_nach_aufnahme oder prognose_vor_aufnahme
+      - field_id: antragsteller_rolle
+        label: Wer stellt den Antrag
+        path: antrag.antragsteller_rolle
+        value: auftragnehmer
+        help: auftragnehmer, auftraggeber oder gemeinsam
+      - field_id: taetigkeit_bezeichnung
+        label: Bezeichnung der Taetigkeit
+        path: antrag.taetigkeit_bezeichnung
+        value: IT-Beratung und Datenmigration
+      - field_id: taetigkeit_beginn
+        label: Beginn der Taetigkeit
+        path: antrag.taetigkeit_beginn
+        value: "2026-01-08"
+    letter: |
+      Betreff: Bitte um Klaerung meines Erwerbsstatus
+
+      Sehr geehrte Damen und Herren,
+
+      seit Anfang des Jahres arbeite ich als freie Beraterin. Ich bin nicht
+      sicher, wie mein Erwerbsstatus zu beurteilen ist, und bitte um eine
+      Feststellung.
+
+      Auftraggeber: Seezeichen Beispielwerk GmbH
+      Taetigkeit: IT-Beratung und Datenmigration
+      Beginn der Taetigkeit: 2026-01-08
+      Antragsart: feststellung_nach_aufnahme
+      Ich stelle den Antrag als: auftragnehmer
+
+      Mein Name ist Frau Sabine Musterfrau, geboren am 1957-03-19.
+      Meine Anschrift: Ankerpfad 3, 18055 Musterwiek.
+      Meine Versicherungsnummer lautet 42190357M724.
+
+      Mit freundlichen Gruessen
+      Frau Sabine Musterfrau
+
+  # ------------------------------------------------ arc 4: anomaly-primed --
+  - persona_id: musterkind_rentenbeginn_2048
+    display_name: Theo Musterkind
+    headline: Altersrente mit Rentenbeginn weit voraus
+    procedure_hint: altersrente
+    story: >-
+      Herr Musterkind fuellt das Formular vollstaendig und regelkonform aus -
+      und traegt als gewuenschten Rentenbeginn ein Datum weit in der Zukunft
+      ein. Jede einzelne Angabe ist zulaessig.
+    expectation: >-
+      Die Kalendergrenzen der Verfahrenskonfiguration sind absolut und weit;
+      sie fangen "moeglich, aber ungewoehnlich" bewusst nicht ab. Genau das ist
+      die Aufgabe des Schattenscorers: er markiert den Vorgang und nennt seinen
+      Grund im Klartext. Weil der Scorer im Modus log_only laeuft, BEWEGT die
+      Markierung nichts - die Seite zeigt an, welches Tier ein scharfgestellter
+      Scorer gesetzt haette, und dass die Entscheidung ohne ihn zustande kam.
+    fields:
+      - field_id: name
+        label: Name
+        path: antragsteller.name
+        value: Theo Musterkind
+        kind: NAME
+      - field_id: geburtsdatum
+        label: Geburtsdatum
+        path: antragsteller.geburtsdatum
+        value: "1959-09-07"
+        kind: GEBDAT
+      - field_id: versicherungsnummer
+        label: Versicherungsnummer
+        path: antragsteller.versicherungsnummer
+        value: 12070959L221
+        kind: VSNR
+      - field_id: strasse
+        label: Strasse
+        path: antragsteller.anschrift.strasse
+        value: Baakenufer
+        kind: ADDR
+        group: anschrift
+      - field_id: hausnummer
+        label: Hausnummer
+        path: antragsteller.anschrift.hausnummer
+        value: "5"
+        kind: ADDR
+        group: anschrift
+      - field_id: plz
+        label: Postleitzahl
+        path: antragsteller.anschrift.plz
+        value: "26506"
+        kind: ADDR
+        group: anschrift
+      - field_id: ort
+        label: Ort
+        path: antragsteller.anschrift.ort
+        value: Musterdeich
+        kind: ADDR
+        group: anschrift
+      - field_id: rentenart
+        label: Rentenart
+        path: antrag.rentenart
+        value: regelaltersrente
+        help: >-
+          regelaltersrente, altersrente_langjaehrig oder
+          altersrente_schwerbehinderung
+      - field_id: rentenbeginn
+        label: Gewuenschter Rentenbeginn
+        path: antrag.rentenbeginn
+        value: "2048-01-01"
+        help: bewusst weit in der Zukunft - das ist die Auffaelligkeit
+      - field_id: auslandsbezug
+        label: Auslandsbezug
+        path: antrag.auslandsbezug
+        value: nein
+        help: ja oder nein
+    letter: |
+      Betreff: Antrag auf Regelaltersrente
+
+      Sehr geehrte Damen und Herren,
+
+      hiermit beantrage ich meine Regelaltersrente. Den Beginn moechte ich
+      moeglichst weit nach hinten legen.
+
+      Mein Name ist Herr Theo Musterkind, geboren am 1959-09-07.
+      Meine Anschrift: Baakenufer 5, 26506 Musterdeich.
+      Meine Versicherungsnummer lautet 12070959L221.
+
+      Rentenart: regelaltersrente
+      Rentenbeginn: 2048-01-01
+      Auslandsbezug: nein
+
+      Mit freundlichen Gruessen
+      Herr Theo Musterkind

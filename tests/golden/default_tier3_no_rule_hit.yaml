@@ -1,0 +1,26 @@
+description: >-
+  Nothing routed the item, so no row can qualify: the default tier applies and
+  the record says so with a DEFAULTED reason.
+evidence:
+  routing: []
+  completeness:
+    verdict: complete
+    gap_ids: []
+  min_confidence: 1.0
+  discarded_count: 0
+flags:
+  procedure_id: altersrente
+  tier1_enabled: true
+  fully_automated: false
+clear_cut: true
+anomaly: null
+scorer_mode: log_only
+expect:
+  tier: 3
+  pre_downgrade_tier: 3
+  routed_unit_id: null
+  reason_kinds: [failed, failed, defaulted]
+  reason_rule_ids:
+    - tier1_clear_and_complete
+    - tier2_routable_incomplete
+    - default

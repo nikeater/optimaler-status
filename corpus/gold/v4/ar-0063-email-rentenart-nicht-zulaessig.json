@@ -1,0 +1,51 @@
+{
+  "submissionId": "ar-0063-email-rentenart-nicht-zulaessig",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "email",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {},
+  "attachments": [],
+  "bodyText": "Betreff: Rentenantrag mit Angaben\n\nSehr geehrte Damen und Herren,\n\nich beantrage eine Rente und bitte um Pruefung der unten stehenden Angaben.\n\nAbsender: Frau Nadja Musterkamp\nAnschrift: Feldstrasse 45, 70173 Musterdorf\nGeburtsdatum: 1962-03-14\nVersicherungsnummer: 19140362D007\nRentenart: witwenrente\nRentenbeginn: 2027-04-01\nAuslandsbezug: nein\n\nMit freundlichen Gruessen\nFrau Nadja Musterkamp",
+  "extractionFixture": [
+    {
+      "field": "geburtsdatum",
+      "part_id": "part-text-0",
+      "anchor": "Geburtsdatum:",
+      "mode": "sealed"
+    },
+    {
+      "field": "versicherungsnummer",
+      "part_id": "part-text-0",
+      "anchor": "Versicherungsnummer:",
+      "mode": "sealed"
+    },
+    {
+      "field": "rentenart",
+      "part_id": "part-text-0",
+      "anchor": "Rentenart:",
+      "mode": "literal",
+      "value": "witwenrente",
+      "quote": "Rentenart: witwenrente"
+    },
+    {
+      "field": "rentenbeginn",
+      "part_id": "part-text-0",
+      "anchor": "Rentenbeginn:",
+      "mode": "literal",
+      "value": "2027-04-01",
+      "quote": "Rentenbeginn: 2027-04-01"
+    },
+    {
+      "field": "auslandsbezug",
+      "part_id": "part-text-0",
+      "anchor": "Auslandsbezug:",
+      "mode": "literal",
+      "value": "nein",
+      "quote": "Auslandsbezug: nein"
+    }
+  ]
+}

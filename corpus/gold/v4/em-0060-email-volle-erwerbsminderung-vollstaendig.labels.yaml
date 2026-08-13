@@ -1,0 +1,16 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: em-0060-email-volle-erwerbsminderung-vollstaendig
+procedure_id: erwerbsminderungsrente
+scenario_kind: hint_missing
+expected_unit_id: Referat_316_Erwerbsminderungsrenten
+expected_tier: 3
+derived_procedure_id: erwerbsminderungsrente
+derivation_source: content
+expected_gaps: []
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: none
+known_divergence: []
+divergence_reason: null
+notes: Vollstaendiges Anschreiben zur Rente wegen voller Erwerbsminderung ohne Kanalhinweis.

@@ -1,0 +1,33 @@
+{
+  "submissionId": "ar-0041-rentenbeginn-rueckwirkend",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-27T08:04:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "meta": {
+      "eingangsdatum": "2026-07-27"
+    },
+    "antrag": {
+      "rentenart": "regelaltersrente",
+      "hinweistext": " \tSehr geehrte Damen und Herren, hiermit reiche ich den beigefuegten Antrag ein und bitte um Bearbeitung. Eine Eingangsbestaetigung waere mir wichtig. Fuer Rueckfragen stehe ich Ihnen zur Verfuegung.  ",
+      "rentenbeginn": "1998-01-01",
+      "auslandsbezug": "nein"
+    },
+    "antragsteller": {
+      "anschrift": {
+        "ort": "Musterdorf",
+        "strasse": "Feldstrasse",
+        "plz": "  70173  ",
+        "hausnummer": " 45  "
+      },
+      "versicherungsnummer": "18023517U024",
+      "geburtsdatum": "1935-02-18"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

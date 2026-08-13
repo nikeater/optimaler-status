@@ -1,0 +1,35 @@
+{
+  "submissionId": "em-0024-eintritt-nach-der-obergrenze",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-05T14:48:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Rente wegen Erwerbsminderung",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000001"
+  },
+  "data": {
+    "antrag": {
+      "gutachten_status": "ausstehend",
+      "auslandsbezug": "nein",
+      "letzte_taetigkeit": "Elektroniker",
+      "rentenart": " \terwerbsminderungsrente_teilweise  ",
+      "hinweistext": "Ich habe das Formular nach bestem Wissen ausgefuellt. Sollte eine Angabe fehlen oder unklar sein, melden Sie sich bitte bei mir.",
+      "eintritt_erwerbsminderung": "2038-01-01"
+    },
+    "antragsteller": {
+      "anschrift": {
+        "hausnummer": "8",
+        "ort": "Musterhausen",
+        "plz": "99084",
+        "strasse": "Am Hang"
+      },
+      "versicherungsnummer": "19220480L069",
+      "geburtsdatum": "  1980-04-22 "
+    },
+    "meta": {
+      "eingangsdatum": "2026-08-05"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "erwerbsminderungsrente"
+}

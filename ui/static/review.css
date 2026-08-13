@@ -1,0 +1,198 @@
+/* Review UI, on top of metrics.css. Plain CSS, no framework, no build step.
+   The plan named Tailwind; a build chain for four pages would add a toolchain
+   an agency has to maintain and would not change a single rendered pixel that
+   matters here. Documented deviation, cosmetic (ADR-026).
+
+   Accessibility rules this file follows, and they are rules rather than
+   preferences (EN 301 549 / WCAG 2.1 AA, P-15):
+
+   * No state is carried by colour alone. Every .flag says what it is in words;
+     the tone only changes a border and a background that both keep contrast.
+   * Focus is always visible, and never removed. :focus-visible gets a 3px
+     outline with an offset so it survives a coloured background.
+   * The skip link is real: it is the first focusable element and it moves
+     focus to <main id="inhalt">.
+   * Nothing here sets a font size below 100%, and nothing depends on hover:
+     every control is a button, a link or a labelled form field. */
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--ink);
+  color: #ffffff;
+  padding: 0.6rem 1rem;
+  z-index: 10;
+}
+
+.skip-link:focus {
+  left: 0;
+}
+
+:focus-visible {
+  outline: 3px solid #0b4f8a;
+  outline-offset: 2px;
+}
+
+/* Offscreen but READ: for the span coordinates and the tier names, which are
+   compact on screen and need a full sentence for a screen reader. Not
+   display:none, which would remove them from the accessibility tree too. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.navbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+}
+
+.picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line);
+  background: #f5f7f8;
+}
+
+.picker label {
+  font-weight: 600;
+}
+
+select,
+input[type="text"] {
+  font: inherit;
+  padding: 0.35rem 0.4rem;
+  border: 1px solid var(--muted);
+  background: var(--surface);
+  color: var(--ink);
+  max-width: 100%;
+}
+
+button {
+  font: inherit;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #000000;
+}
+
+.action-form {
+  margin: 1rem 0;
+}
+
+fieldset {
+  border: 1px solid var(--line);
+  padding: 0.75rem 1rem 1rem;
+}
+
+legend {
+  font-weight: 600;
+  padding: 0 0.35rem;
+}
+
+.field {
+  margin: 0.6rem 0;
+}
+
+.field label {
+  font-weight: 600;
+}
+
+.field input[type="checkbox"] + label {
+  font-weight: 400;
+}
+
+.help {
+  display: block;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.tag {
+  display: inline-block;
+  border: 1px solid var(--muted);
+  padding: 0 0.35rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.flags {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.flag {
+  border-left: 4px solid var(--muted);
+  padding: 0.25rem 0.5rem;
+  margin: 0.25rem 0;
+  background: #f5f7f8;
+}
+
+/* "attention" is a border and a tint. It is never the only carrier of the
+   message: the label and the sentence next to it say the same thing. */
+.flag-attention {
+  border-left-color: var(--alarm);
+  background: #fdf3f3;
+}
+
+.ok-note {
+  border-left-color: var(--ok);
+  background: #f1f7f3;
+}
+
+.alarm-note {
+  border-left-color: var(--alarm);
+  background: #fdf3f3;
+}
+
+/* A sampled case gets the calmest surface on the page, deliberately: the whole
+   of ADR-025 is that a random draw must not look like a suspicion. */
+.sample-note,
+.sample-row td,
+.sample-row th {
+  background: #f3f6fb;
+}
+
+.log-only {
+  border: 1px dashed var(--muted);
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  background: #fafbfc;
+}
+
+.log-only h3 {
+  margin-top: 0;
+}
+
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  border: 1px solid var(--line);
+  padding: 0.75rem;
+  background: #fafbfc;
+}

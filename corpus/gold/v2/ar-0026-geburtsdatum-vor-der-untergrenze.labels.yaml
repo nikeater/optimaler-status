@@ -1,0 +1,20 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: ar-0026-geburtsdatum-vor-der-untergrenze
+procedure_id: altersrente
+scenario_kind: invalid_field
+expected_unit_id: Referat_312_Renten
+expected_tier: 2
+derived_procedure_id: altersrente
+derivation_source: hint
+expected_gaps:
+- requirement_id: geburtsdatum
+  status: invalid
+anomaly_expected: false
+anomaly_pattern: null
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: Ein Geburtsdatum aus dem Jahr 1889 liegt unter der konfigurierten Untergrenze.
+  Die Versicherungsnummer traegt dieselbe zweistellige Jahresangabe und bleibt deshalb
+  widerspruchsfrei - gemeldet wird nur die Ursache.

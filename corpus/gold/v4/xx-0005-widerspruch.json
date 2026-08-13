@@ -1,0 +1,31 @@
+{
+  "submissionId": "xx-0005-widerspruch",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-03T09:12:00+00:00",
+  "serviceType": {
+    "name": "Allgemeines Anliegen",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000009"
+  },
+  "data": {
+    "meta": {
+      "eingangsdatum": "03.08.2026",
+      "bearbeitungswunsch": "  Ich bin ab kommender Woche im Urlaub. \t"
+    },
+    "antrag": {
+      "hinweistext": " \tAntrag wie besprochen online eingereicht. Eine Eingangsbestaetigung waere mir wichtig.  "
+    },
+    "antragsteller": {
+      "anschrift": {
+        "strasse": "Kirchgasse",
+        "hausnummer": "2",
+        "plz": "24103",
+        "ort": "Beispielstadt"
+      },
+      "versicherungsnummer": " \t19130862T064 ",
+      "geburtsdatum": "1962-08-13"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "widerspruch"
+}

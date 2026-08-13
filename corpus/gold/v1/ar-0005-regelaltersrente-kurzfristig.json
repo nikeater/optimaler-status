@@ -1,0 +1,34 @@
+{
+  "submissionId": "ar-0005-regelaltersrente-kurzfristig",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-06T07:21:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "meta": {
+      "bearbeitungswunsch": "Eine Eingangsbestaetigung waere mir wichtig.",
+      "eingangsdatum": "6. August 2026"
+    },
+    "antragsteller": {
+      "geburtsdatum": "1959-08-30",
+      "versicherungsnummer": " 30085917E066  ",
+      "anschrift": {
+        "strasse": "Kirchgasse",
+        "ort": "Beispielstadt",
+        "hausnummer": "2",
+        "plz": "24103"
+      }
+    },
+    "antrag": {
+      "rentenart": "regelaltersrente",
+      "auslandsbezug": " nein  ",
+      "rentenbeginn": " \t2026-09-15 \t",
+      "hinweistext": "Antrag wie besprochen online eingereicht."
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

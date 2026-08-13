@@ -1,0 +1,33 @@
+{
+  "submissionId": "ar-0010-ohne-versicherungsnummer",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-27T08:04:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "meta": {
+      "bearbeitungswunsch": "Ich bin ab kommender Woche im Urlaub.",
+      "eingangsdatum": "27. Juli 2026"
+    },
+    "antrag": {
+      "rentenbeginn": "2026-10-01",
+      "auslandsbezug": "nein",
+      "hinweistext": "Sehr geehrte Damen und Herren, hiermit reiche ich den beigefuegten Antrag ein und bitte um Bearbeitung. Fuer Rueckfragen stehe ich Ihnen zur Verfuegung.",
+      "rentenart": "  regelaltersrente \t"
+    },
+    "antragsteller": {
+      "geburtsdatum": "1958-06-21",
+      "anschrift": {
+        "ort": "Musterdorf",
+        "strasse": "Feldstrasse",
+        "plz": "70173",
+        "hausnummer": "  45 \t"
+      }
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

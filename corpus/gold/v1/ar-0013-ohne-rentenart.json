@@ -1,0 +1,33 @@
+{
+  "submissionId": "ar-0013-ohne-rentenart",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-07-29T11:37:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "antragsteller": {
+      "anschrift": {
+        "strasse": " \tKirchgasse  ",
+        "plz": "24103",
+        "hausnummer": "2",
+        "ort": " \tBeispielstadt \t"
+      },
+      "versicherungsnummer": "03056118J028",
+      "geburtsdatum": "  1961-05-03  "
+    },
+    "meta": {
+      "eingangsdatum": "29.07.2026",
+      "bearbeitungswunsch": " Eine Eingangsbestaetigung waere mir wichtig. \t"
+    },
+    "antrag": {
+      "rentenbeginn": "2027-05-01",
+      "hinweistext": "Hallo, ich schicke Ihnen hier meinen Antrag. Ich hoffe, so ist alles richtig ausgefuellt. Eine Eingangsbestaetigung waere mir wichtig. Vielen Dank vorab.",
+      "auslandsbezug": "nein"
+    }
+  },
+  "attachments": [],
+  "procedureHint": "altersrente"
+}

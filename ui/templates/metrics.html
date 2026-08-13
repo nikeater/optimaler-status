@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EingangsLotse - Metriken</title>
+  <link rel="stylesheet" href="/static/metrics.css">
+  <script src="/static/vendor/htmx.min.js" defer></script>
+</head>
+<body>
+  {% include "_demo_banner.html" %}
+  <header>
+    <h1>EingangsLotse - Eval-Metriken</h1>
+    <p>
+      Zahlen aus dem zuletzt geschriebenen Eval-Report. Diese Seite rechnet
+      nichts selbst; sie zeigt, was <code>{{ view.refresh_hint }}</code> zuletzt
+      gemessen hat.
+    </p>
+    <p>
+      <a href="/metrics"
+         hx-get="/metrics/panel"
+         hx-target="#metrics-panel"
+         hx-swap="outerHTML">Neu laden</a>
+    </p>
+  </header>
+  <main>
+    {% include "_metrics_panel.html" %}
+  </main>
+  <footer>
+    <p>
+      Report: <code>{{ view.report_path }}</code>. Das Verzeichnis
+      <code>eval/reports/</code> ist ein Build-Artefakt und liegt nicht im
+      Repository.
+    </p>
+  </footer>
+</body>
+</html>

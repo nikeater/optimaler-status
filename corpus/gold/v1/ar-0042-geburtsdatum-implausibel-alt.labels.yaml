@@ -1,0 +1,15 @@
+# Ground truth for one gold item. GENERATED - do not edit by hand.
+# Rebuild with: python -m corpus.generator.build --seed 42
+item_id: ar-0042-geburtsdatum-implausibel-alt
+procedure_id: altersrente
+scenario_kind: anomalous_rule_passing
+expected_unit_id: Referat_312_Renten
+expected_tier: 1
+expected_gaps: []
+anomaly_expected: true
+anomaly_pattern: 'alter_bei_antragstellung: rund 118 Jahre, innerhalb der Formatgrenzen
+  und ausserhalb jeder plausiblen Verteilung.'
+paraphrase: deterministic
+known_divergence: []
+divergence_reason: null
+notes: Formal einwandfreier Antrag einer angeblich 118 Jahre alten Person.

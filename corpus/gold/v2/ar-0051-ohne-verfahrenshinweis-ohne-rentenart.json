@@ -1,0 +1,32 @@
+{
+  "submissionId": "ar-0051-ohne-verfahrenshinweis-ohne-rentenart",
+  "destinationId": "drv-bund-eingang-test",
+  "channel": "fit_connect",
+  "submittedAt": "2026-08-06T07:21:00+00:00",
+  "serviceType": {
+    "name": "Antrag auf Altersrente",
+    "identifier": "urn:de:fim:leika:leistung:99000000000000000"
+  },
+  "data": {
+    "meta": {
+      "eingangsdatum": "6. August 2026",
+      "bearbeitungswunsch": " Ich bin ab kommender Woche im Urlaub. \t"
+    },
+    "antragsteller": {
+      "geburtsdatum": "1957-09-12",
+      "anschrift": {
+        "plz": "70173",
+        "strasse": "Feldstrasse",
+        "hausnummer": "  45 ",
+        "ort": "Musterdorf"
+      },
+      "versicherungsnummer": " \t12120957G067 "
+    },
+    "antrag": {
+      "auslandsbezug": " nein  ",
+      "rentenbeginn": "2027-03-01",
+      "hinweistext": " Antrag wie besprochen online eingereicht. \t"
+    }
+  },
+  "attachments": []
+}
