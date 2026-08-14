@@ -30,6 +30,8 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterator
+from dataclasses import dataclass
+from html.parser import HTMLParser
 from pathlib import Path
 
 import pytest
@@ -149,6 +151,98 @@ def templates() -> dict[str, str]:
         path.name: path.read_text(encoding="utf-8")
         for path in sorted(TEMPLATE_DIR.glob("*.html"))
     }
+
+
+#: Elements that never have an end tag, so they never open a level.
+VOID_TAGS = frozenset(
+    (
+        "area",
+        "base",
+        "br",
+        "col",
+        "embed",
+        "hr",
+        "img",
+        "input",
+        "link",
+        "meta",
+        "param",
+        "source",
+        "track",
+        "wbr",
+    )
+)
+
+
+@dataclass(frozen=True)
+class Element:
+    """One element, reduced to what a structural assertion needs."""
+
+    tag: str
+    classes: tuple[str, ...]
+    id: str
+    attrs: dict[str, str]
+
+
+class _DirectChildren(HTMLParser):
+    """The DIRECT children of the first element carrying one class name.
+
+    Written against the standard library rather than pulling in a parser: this
+    project ships no HTML-parsing dependency and a test is not the place to add
+    the first one. It counts levels rather than building a tree, which is all
+    "is this element a sibling of that one" needs.
+    """
+
+    def __init__(self, wanted: str) -> None:
+        super().__init__(convert_charrefs=True)
+        self.wanted = wanted
+        self.depth = 0
+        self.done = False
+        self.children: list[Element] = []
+
+    def _element(self, tag: str, attrs: list[tuple[str, str | None]]) -> Element:
+        values = {key: (value or "") for key, value in attrs}
+        return Element(
+            tag=tag,
+            classes=tuple(values.get("class", "").split()),
+            id=values.get("id", ""),
+            attrs=values,
+        )
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if self.done:
+            return
+        element = self._element(tag, attrs)
+        if self.depth == 0:
+            if self.wanted in element.classes:
+                self.depth = 1
+            return
+        if self.depth == 1:
+            self.children.append(element)
+        if tag not in VOID_TAGS:
+            self.depth += 1
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        # `<circle ... />` inside the SVG: a child, but never a level.
+        if self.done or self.depth == 0:
+            return
+        if self.depth == 1:
+            self.children.append(self._element(tag, attrs))
+
+    def handle_endtag(self, tag: str) -> None:
+        if self.done or self.depth == 0 or tag in VOID_TAGS:
+            return
+        if self.depth == 1:
+            self.done = True  # the element we were reading just closed
+        else:
+            self.depth -= 1
+
+
+def direct_children(html: str, class_name: str) -> list[Element]:
+    """Every direct child of the first element carrying ``class_name``."""
+    parser = _DirectChildren(class_name)
+    parser.feed(html)
+    return parser.children
 
 
 # ---------------------------------------------------------------- 1. table ---
@@ -605,13 +699,14 @@ def test_the_hero_can_be_stopped_without_a_script(
 
     The loop starts on its own, runs longer than five seconds and sits beside
     other content, so 2.2.2 is engaged and an operating-system preference is
-    not a mechanism ON this page. The control is a labelled checkbox that
-    precedes everything it pauses, which is what lets `:checked ~` reach the
-    drawing and the captions with no script at all.
+    not a mechanism ON this page.
 
     It STOPS rather than freezing, and that distinction is the test: pausing
     the animation where it stands would hold four of the five captions at
     `opacity: 0`, and a pause button that hides the text is not a pause button.
+
+    Whether the control REACHES anything is a different question and is asked
+    separately below, because this file used to ask only this one.
     """
     client = build_client(config, monkeypatch)
     body = client.get("/").text
@@ -623,10 +718,73 @@ def test_the_hero_can_be_stopped_without_a_script(
     css = Path("ui/static/demo.css").read_text(encoding="utf-8")
     rules = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
     assert "animation-play-state" not in rules, "a frozen caption is invisible"
-    paused = [line for line in css.splitlines() if ".hero-pause:checked ~" in line]
-    assert paused, "the pause control reaches nothing"
     assert ".hero-pause:checked ~ .hero-captions .hero-caption {" in css
     # The paused state IS the reduced-motion state: everything lit, all five
     # captions stacked. Both blocks say `animation: none` and `opacity: 1`.
     assert re.search(r"\.hero-pause:checked[^{]*\{\s*animation: none;", rules)
     assert re.search(r"\.hero-pause:checked[^{]*\{\s*opacity: 1;", rules)
+
+
+#: Every hero element whose animation the pause control has to stop. Named
+#: rather than counted, so adding a sixth animated thing to the drawing and
+#: forgetting to pause it is a failure and not a silent omission.
+HERO_ANIMATED = (
+    ".hero-ring",
+    ".hero-token",
+    ".hero-token-seal",
+    ".hero-shackle",
+    ".hero-gear",
+    ".hero-caption",
+)
+
+
+def test_the_pause_checkbox_is_a_sibling_of_everything_it_pauses(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The structural check, and the reason it exists is a shipped defect.
+
+    Every pause rule is written `.hero-pause:checked ~ ...`, and `~` is the
+    general SIBLING combinator: it reaches later siblings of the checkbox and
+    nothing else. Part 16 wrapped the checkbox and its label in a row `<div>`,
+    which left the checkbox a COUSIN of the drawing and of the captions. The
+    selectors matched nothing, the control did nothing in any browser, and the
+    only assertion about it - that the stylesheet contained those rules - was
+    true the whole time.
+
+    So the rendered document is parsed, and the property that actually governs
+    the mechanism is asserted on it: same parent, checkbox first. In both
+    languages, because both render this template.
+    """
+    client = build_client(config, monkeypatch)
+    pages = {"de": client.get("/").text, "en": in_english(client, "/")}
+    for lang in LANGUAGES:
+        children = direct_children(pages[lang], "hero-figure")
+        assert children, f"{lang}: no hero figure"
+        names = [
+            child.id or (child.classes[0] if child.classes else child.tag)
+            for child in children
+        ]
+        assert "hero-pause" in names, (lang, names)
+        assert "hero-svg" in names, (lang, names)
+        assert "hero-captions" in names, (lang, names)
+        checkbox = names.index("hero-pause")
+        assert checkbox < names.index("hero-svg"), (lang, names)
+        assert checkbox < names.index("hero-captions"), (lang, names)
+        # A checkbox somebody can operate, with a label bound to it.
+        control = children[checkbox]
+        assert control.tag == "input", (lang, control)
+        assert control.attrs.get("type") == "checkbox", (lang, control)
+        assert "display: none" not in (control.attrs.get("style") or "")
+        labels = [child for child in children if child.attrs.get("for") == "hero-pause"]
+        assert labels, f"{lang}: the checkbox has no label"
+
+    # And every animated thing is actually named in the paused state.
+    rules = re.sub(
+        r"/\*.*?\*/",
+        "",
+        Path("ui/static/demo.css").read_text(encoding="utf-8"),
+        flags=re.DOTALL,
+    )
+    stopped = re.findall(r"\.hero-pause:checked ~ [.\w\- ]*?(\.[\w-]+)\s*[,{]", rules)
+    for name in HERO_ANIMATED:
+        assert name in stopped, (name, sorted(set(stopped)))

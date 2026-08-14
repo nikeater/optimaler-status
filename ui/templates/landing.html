@@ -35,13 +35,21 @@
     {# WCAG 2.2.2: the loop starts on its own, runs longer than five seconds
        and sits beside other content, so a reader has to be able to stop it -
        and an operating-system preference is not a control on this page. This
-       is that control, in CSS alone: the checkbox precedes everything it
-       pauses, and `:checked ~` puts the drawing and the captions into exactly
-       the still frame `prefers-reduced-motion` produces. No script. #}
-    <div class="hero-pause-row">
-      <input type="checkbox" id="hero-pause" class="hero-pause">
-      <label for="hero-pause">{{ t("landing.hero.pause") }}</label>
-    </div>
+       is that control, in CSS alone: `:checked ~` puts the drawing and the
+       captions into exactly the still frame `prefers-reduced-motion`
+       produces. No script.
+
+       THE INPUT IS A DIRECT CHILD OF THE FIGURE AND THAT IS LOAD-BEARING.
+       `~` is the general SIBLING combinator: it reaches later siblings of the
+       checkbox and nothing else. Part 16 wrapped the checkbox and its label in
+       a row `<div>`, which left the checkbox a cousin of `.hero-svg` and
+       `.hero-captions` rather than their sibling - every pause rule in
+       `demo.css` matched nothing and the control did nothing in every browser,
+       while a test asserting the stylesheet CONTAINED the rules stayed green.
+       The label may live anywhere; only the input's position matters, so the
+       two are kept adjacent here and the layout is done in CSS. #}
+    <input type="checkbox" id="hero-pause" class="hero-pause">
+    <label class="hero-pause-label" for="hero-pause">{{ t("landing.hero.pause") }}</label>
     <svg class="hero-svg" viewBox="0 0 960 160" role="img"
          aria-labelledby="hero-titel hero-beschreibung">
       <title id="hero-titel">{{ t("landing.hero.label") }}</title>

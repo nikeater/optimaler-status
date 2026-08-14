@@ -380,33 +380,47 @@
 
 /* The pause control (WCAG 2.2.2). The loop starts on its own, runs longer than
    five seconds and sits beside other content, so a reader must be able to stop
-   it - and an operating-system preference is not a control on this page. The
-   checkbox sits before everything it pauses in the markup, which is what makes
-   `:checked ~` reach them without a script.
+   it - and an operating-system preference is not a control on this page.
+
+   THE CHECKBOX IS A DIRECT CHILD OF `.hero-figure`, WHICH IS THE WHOLE
+   MECHANISM. `~` is the general SIBLING combinator: it reaches later siblings
+   of the checkbox and nothing else. Part 16 nested the checkbox in a row
+   `<div>` beside its label, which made it a COUSIN of `.hero-svg` and
+   `.hero-captions` - every rule below matched nothing, the control was dead in
+   every browser, and the test asserting that the stylesheet CONTAINED these
+   rules stayed green throughout. The input and its label are laid out as one
+   line rather than wrapped in a box, so nothing can come between the checkbox
+   and the things it pauses again.
 
    It STOPS rather than freezing. `animation-play-state: paused` would hold
    whatever frame happened to be showing, which for four of the five captions
    is `opacity: 0` - a pause button that hides the text is not a pause button.
    So the paused state is the same still frame the reduced-motion answer
    produces: every stage lit, all five captions stacked and readable. */
-.hero-pause-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin: 0 0 var(--space-3);
-  font-size: var(--text-sm);
-}
-
-.hero-pause-row label {
-  color: var(--ink-soft);
-  font-weight: 600;
-}
-
 .hero-pause {
   width: 1rem;
   height: 1rem;
   margin: 0;
   accent-color: var(--brand-ink);
+  vertical-align: -0.12em;
+}
+
+/* Inline-block so its bottom margin counts towards the line box, which is what
+   separates the control from the drawing without a wrapper. */
+.hero-pause-label {
+  display: inline-block;
+  margin: 0 0 var(--space-3) var(--space-2);
+  color: var(--ink-soft);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* The input keeps the design system's focus ring; the label repeats the state
+   in the one place a reader is already looking. */
+.hero-pause:focus-visible + .hero-pause-label {
+  color: var(--brand-ink-strong);
+  text-decoration: underline;
 }
 
 .hero-pause:checked ~ .hero-svg .hero-ring,
@@ -468,10 +482,14 @@
     margin-bottom: 0;
   }
 
-  /* The control stays, and stays usable: a reader who set the preference and
-     wants the motion back after all is a reader this page should not fight. */
-  .hero-pause-row {
-    display: flex;
+  /* The control stays on the page rather than being hidden with the motion.
+     It is the same still frame either way, so unchecking it here changes
+     nothing - but a control that vanishes when a preference is set reads as a
+     control this page took away, and it is also the only thing on the page
+     that explains what the still frame IS. */
+  .hero-pause,
+  .hero-pause-label {
+    display: inline-block;
   }
 }
 
