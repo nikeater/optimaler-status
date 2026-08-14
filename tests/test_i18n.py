@@ -513,6 +513,34 @@ def test_the_hero_is_a_picture_with_a_name_and_no_script(
     assert "style=" not in body
 
 
+#: Which delay every staggered hero element must carry, as a table rather than
+#: as a set of values that happen to occur somewhere in the file.
+#:
+#: THIS TABLE EXISTS BECAUSE THE SET VERSION SHIPPED A BUG. Part 16 asserted
+#: only that the four values appear in the stylesheet, which is equally true of
+#: the right mapping and of its exact reverse - and the reverse is what was
+#: released: the ring walked 1, 5, 4, 3, 2 while the envelope walked forward,
+#: so the picture named one stage and the sentence beneath it named another.
+#: A delay is only meaningful next to the selector it applies to, so that is
+#: what is written down.
+#:
+#: The arithmetic, once: a stage is lit for the first fifth of `hero-beat`, a
+#: negative delay ADVANCES the clock, and stage N is wanted in the Nth fifth of
+#: a 16 second loop - so stage N needs -(16 - (N-1) * 3.2)s.
+HERO_DELAYS = (
+    (".hero-stage-2 .hero-ring", "-12.8s"),
+    (".hero-stage-3 .hero-ring", "-9.6s"),
+    (".hero-stage-4 .hero-ring", "-6.4s"),
+    (".hero-stage-5 .hero-ring", "-3.2s"),
+    (".hero-caption-2", "-12.8s"),
+    (".hero-caption-3", "-9.6s"),
+    (".hero-caption-4", "-6.4s"),
+    (".hero-caption-5", "-3.2s"),
+    # The padlock at stage 2 closes when the ring reaches stage 2.
+    (".hero-shackle", "-12.8s"),
+)
+
+
 def test_the_hero_animation_is_one_timeline_and_answers_reduced_motion() -> None:
     """The timing property, and the fallback, asserted on the stylesheet.
 
@@ -525,14 +553,40 @@ def test_the_hero_animation_is_one_timeline_and_answers_reduced_motion() -> None
     """
     css = Path("ui/static/demo.css").read_text(encoding="utf-8")
     assert "@keyframes hero-beat" in css
-    for delay in ("-3.2s", "-6.4s", "-9.6s", "-12.8s"):
-        assert f"animation-delay: {delay}" in css, delay
     # Both the ring and the caption ride the same keyframes.
     assert css.count("animation: hero-beat 16s linear infinite") == 2
     reduced = css.split("@media (prefers-reduced-motion: reduce)")[1]
     assert "animation: none" in reduced
     assert "opacity: 1" in reduced
     assert ".hero-captions {\n    display: block;\n  }" in reduced
+
+
+def test_the_hero_stages_light_in_the_order_they_are_numbered() -> None:
+    """Each staggered selector carries ITS delay, not merely some delay.
+
+    See :data:`HERO_DELAYS`: the released part-16 stylesheet satisfied a
+    value-only assertion while running the animation backwards. Reading the
+    delay out of the block the selector opens is what makes a future edit have
+    to disagree with a literal.
+    """
+    css = Path("ui/static/demo.css").read_text(encoding="utf-8")
+    rules = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
+    for selector, delay in HERO_DELAYS:
+        block = re.search(rf"(?<![-\w.]){re.escape(selector)}\s*\{{([^}}]*)\}}", rules)
+        assert block, f"no rule block for {selector}"
+        found = re.search(r"animation-delay:\s*(\S+?);", block.group(1))
+        assert found, f"{selector} carries no animation-delay"
+        assert found.group(1) == delay, (selector, found.group(1), delay)
+    # Stage 1 is the reference frame and must NOT be staggered.
+    assert not re.search(r"\.hero-stage-1 .hero-ring\s*\{[^}]*animation-delay", rules)
+    # The envelope walks forward through the five stages on its own keyframes,
+    # 192 user units apart, which is the order the rings now agree with.
+    travel = re.search(r"@keyframes hero-travel\s*\{(.*?)\n\}", rules, re.DOTALL)
+    assert travel
+    # `translateX(0)` is unitless, the rest carry `px`; both are one stop.
+    steps = [int(x) for x in re.findall(r"translateX\((\d+)(?:px)?\)", travel.group(1))]
+    assert steps == sorted(steps), steps
+    assert sorted(set(steps)) == [0, 192, 384, 576, 768]
 
 
 def test_the_hero_survives_the_reflow_and_the_resize_rules() -> None:
