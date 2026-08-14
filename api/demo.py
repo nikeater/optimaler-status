@@ -307,6 +307,47 @@ def resolve_channel(raw: str | None) -> str:
     return raw if raw in CHANNELS else CHANNEL_FORM
 
 
+#: Which persona a visitor lands on with no ``?persona=`` in the URL, and which
+#: one is offered first in the picker.
+#:
+#: A VIEW DECISION, not a configuration one. `config/demo/personas_v2.yaml` is
+#: frozen and its order is the order the personas were written in; which of
+#: them a first-time visitor should meet is a question about this page, and the
+#: answer changes with what the demonstration is trying to show. Keeping it
+#: here means the config stays a description of four applicants rather than
+#: also being a running order.
+#:
+#: Statusfeststellung is the choice because it is the richest of the four on
+#: first load: it is the persona whose form carries the three configured
+#: selects and whose story the hints panel is written against, so a visitor who
+#: touches nothing still sees the interesting screen.
+LEAD_PERSONA = "musterfrau_statusfeststellung"
+
+
+def ordered_personas(personas: PersonaSet) -> tuple[Persona, ...]:
+    """Every persona, the lead one first, the rest in their configured order.
+
+    A rotation and not a filter: all four stay present and reachable, and
+    nothing about any of them changes. A persona set that does not contain the
+    lead id is returned untouched rather than reordered around an absence.
+    """
+    lead = personas.get(LEAD_PERSONA)
+    if lead is None:
+        return personas.personas
+    return (lead, *(p for p in personas.personas if p.persona_id != LEAD_PERSONA))
+
+
+def default_persona(personas: PersonaSet) -> Persona:
+    """The persona a request that named none is answered with.
+
+    Falls back to the set's own first entry when the lead id is unknown, which
+    is the same "never half-select something" rule the channel and the unit
+    picker follow: a renamed persona shows the picker's first card again, never
+    an error and never an empty page.
+    """
+    return personas.get(LEAD_PERSONA) or personas.first
+
+
 def vocabulary(config: ConfigBundle, path: str) -> tuple[str, ...]:
     """The allowed values for a payload path, READ from the procedure configs.
 
@@ -419,10 +460,10 @@ def build_intake_view(
 ) -> IntakeView:
     """The intake page for one persona, one channel and whatever was typed."""
     context = page or GERMAN
-    persona = personas.get(persona_id) or personas.first
+    persona = personas.get(persona_id) or default_persona(personas)
     return IntakeView(
         posture=posture,
-        personas=personas.personas,
+        personas=ordered_personas(personas),
         persona=persona,
         channel=resolve_channel(channel),
         rows=field_rows(persona, dict(values or {}), config=config, page=context),

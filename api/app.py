@@ -751,7 +751,12 @@ def _mount_demo_journey(
         """Phase 1 -> 2. One submission, through the one ingest path."""
         form = await form_fields(request)
         page = page_context(request)
-        chosen = personas.get(form.get("persona")) or personas.first
+        # The same fallback the GET side uses, so a submission that names no
+        # persona lands on the one the page was showing (`demo_view
+        # .LEAD_PERSONA`) rather than on the config file's first entry.
+        chosen = personas.get(form.get("persona")) or demo_view.default_persona(
+            personas
+        )
         channel = demo_view.resolve_channel(form.get("kanal"))
         body = form.get("body", chosen.letter)
 

@@ -534,6 +534,27 @@ def test_the_pipeline_view_404s_on_a_case_it_does_not_know(
     assert client.get("/demo/case/nope/pipeline").status_code == 404
 
 
+def persona_cards(page: str) -> list[tuple[str, bool]]:
+    """Every persona card in RENDER ORDER: its id, and whether it is chosen.
+
+    Two different claims live in this markup and part 17 makes both, so both
+    are read: the chosen card carries `persona-current`, and every other card
+    links to itself. Reading only "the name is somewhere on the page" would
+    pass for any persona, since the picker lists all of them - which is exactly
+    what the assertion below used to do.
+    """
+    by_name = {p.display_name: p.persona_id for p in demo_personas().personas}
+    cards: list[tuple[str, bool]] = []
+    for classes, body in re.findall(
+        r'<li class="persona([^"]*)">(.*?)</li>', page, re.DOTALL
+    ):
+        for name, persona_id in by_name.items():
+            if name in body:
+                cards.append((persona_id, "persona-current" in classes))
+                break
+    return cards
+
+
 def test_an_unknown_persona_or_channel_falls_back_instead_of_failing(
     config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -541,11 +562,77 @@ def test_an_unknown_persona_or_channel_falls_back_instead_of_failing(
     client = build_client(config, monkeypatch=monkeypatch)
     page = client.get("/demo/antrag?persona=ghost&kanal=telepathie")
     assert page.status_code == 200
-    assert demo_personas().first.display_name in page.text
+    # The FALLBACK is the one the page defaults to, not merely a name that
+    # appears somewhere in a picker that lists every persona.
+    assert persona_cards(page.text)[0] == (demo_view.LEAD_PERSONA, True)
     assert phrase("channel.fit_connect") in page.text
     assert demo_view.resolve_channel("telepathie") == CHANNEL_FORM
     assert demo_view.resolve_channel(None) == CHANNEL_FORM
     assert demo_view.resolve_channel(CHANNEL_EMAIL) == CHANNEL_EMAIL
+
+
+def test_the_lead_persona_opens_the_picker_and_the_others_stay_reachable(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Part 17: a visitor lands on the Statusfeststellung persona.
+
+    Pinned as a RULE rather than as a name: the persona the view layer calls
+    the lead is first in the row and is the one selected when no `?persona=`
+    is given, in both languages and on both channel tabs. Renaming a persona
+    therefore cannot silently move the default, and neither can re-ordering
+    the frozen config file - which this does not touch, and which is why the
+    ordering lives in the view.
+
+    The rest of the picker is unchanged and that is half the point: all four
+    personas are present, exactly one is marked, and every other one is a
+    link that selects it.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    everyone = {p.persona_id for p in demo_personas().personas}
+    assert demo_view.LEAD_PERSONA in everyone
+
+    for path in ("/demo/antrag", "/demo/antrag?kanal=email", "/demo/antrag?kanal=x"):
+        cards = persona_cards(client.get(path).text)
+        assert [c for c, _ in cards] == list(
+            p.persona_id for p in demo_view.ordered_personas(demo_personas())
+        ), path
+        assert cards[0][0] == demo_view.LEAD_PERSONA, path
+        assert [c for c, current in cards if current] == [demo_view.LEAD_PERSONA], path
+        assert {c for c, _ in cards} == everyone, path
+
+    # English renders the same template and therefore the same running order.
+    client.get("/demo/antrag?lang=en", follow_redirects=True)
+    english = client.get("/demo/antrag").text
+    assert '<html lang="en">' in english
+    assert persona_cards(english)[0] == (demo_view.LEAD_PERSONA, True)
+    client.get("/demo/antrag?lang=de", follow_redirects=True)
+
+    # Every other persona is one click away and selecting it still works.
+    for persona_id in sorted(everyone - {demo_view.LEAD_PERSONA}):
+        page = client.get("/demo/antrag").text
+        assert f'href="/demo/antrag?persona={persona_id}' in page, persona_id
+        chosen = persona_cards(client.get(f"/demo/antrag?persona={persona_id}").text)
+        assert [c for c, current in chosen if current] == [persona_id], persona_id
+        # ... and it is still the leftmost card, so the row never reshuffles.
+        assert chosen[0][0] == demo_view.LEAD_PERSONA, persona_id
+
+
+def test_the_lead_persona_brings_its_own_controls_to_the_first_screen(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The reason it leads: the richest form of the four, with no clicks.
+
+    Statusfeststellung is the persona whose fields carry the three configured
+    selects, so making it the default is what puts the configuration's own
+    vocabulary on the screen a visitor lands on rather than one click in.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    body = client.get("/demo/antrag").text
+    for field_id in ("antragsart", "antragsteller_rolle", "taetigkeit_bezeichnung"):
+        assert f'<select id="feld-{field_id}"' in body, field_id
+    assert phrase("intake.hints.heading") in body
+    # The arc this persona produces is unchanged; the picker moved, not it.
+    assert demo_view.LEAD_PERSONA in ARCS
 
 
 # ------------------------------------------------------------ 4. the store ---
