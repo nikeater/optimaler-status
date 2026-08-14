@@ -130,6 +130,27 @@ class Unit:
     name: str
 
 
+def acting_unit_name(units: tuple[Unit, ...], unit_id: str | None) -> str:
+    """The chosen unit's name, or the empty string when none is chosen.
+
+    Deliberately empty rather than "keine Einheit gewaehlt" (which is what
+    :func:`unit_name` returns): the templates branch on it, and a page that
+    says "acting as: no unit selected" states a non-fact as a fact.
+
+    Exists because the picker looked broken. Submitting it re-rendered a page
+    whose only visible difference was which option the `<select>` had marked -
+    and since any unit may read any queue by design (ADR-026), no table moved
+    either. The choice DID take effect; nothing on the page said so. This is
+    what the page-head says it with.
+    """
+    if unit_id is None:
+        return ""
+    for unit in units:
+        if unit.unit_id == unit_id:
+            return unit.name
+    return unit_id
+
+
 @dataclass(frozen=True)
 class QueueSummary:
     """One line of the queue overview."""
@@ -154,6 +175,11 @@ class QueueOverview:
     open_items: int
     picker_note: str = PICKER_NOTE
 
+    @property
+    def acting_unit(self) -> str:
+        """The chosen unit's name, or "" - what the page-head states in words."""
+        return acting_unit_name(self.units, self.unit_id)
+
 
 @dataclass(frozen=True)
 class QueueView:
@@ -174,6 +200,11 @@ class QueueView:
     highlight: str = ""
     tier_labels: dict[int, str] = field(default_factory=lambda: dict(TIER_LABELS))
     picker_note: str = PICKER_NOTE
+
+    @property
+    def acting_unit(self) -> str:
+        """The chosen unit's name, or "" - what the page-head states in words."""
+        return acting_unit_name(self.units, self.unit_id)
 
     @property
     def highlighted(self) -> bool:
@@ -215,6 +246,11 @@ class CaseView:
     tier_labels: dict[int, str] = field(default_factory=lambda: dict(TIER_LABELS))
     picker_note: str = PICKER_NOTE
     sampled_note: str = SAMPLED_NOTE
+
+    @property
+    def acting_unit(self) -> str:
+        """The chosen unit's name, or "" - what the page-head states in words."""
+        return acting_unit_name(self.units, self.unit_id)
 
     @property
     def tier_label(self) -> str:

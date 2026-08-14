@@ -5,6 +5,16 @@
    in the design system now, because the citizen pages need exactly the same
    things and two definitions of a focus ring is one too many. */
 
+/* The way back, carrying the adopted unit (part 17). A plain row of links
+   above the first card. The site header's menu is site chrome and holds no
+   page state by design, so a "back to the queues" that keeps the picker's
+   choice has to be an in-page link rather than a nav item. */
+.backlink {
+  margin: 0 0 var(--space-4);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
 /* The classifier's ranking: present, clearly fenced, and labelled as having
    decided nothing (ADR-021). The dashed edge is the point - this block must
    not look like the tables that DID decide something, and a reader who sees a

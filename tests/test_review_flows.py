@@ -871,6 +871,75 @@ def test_the_draft_section_is_gated_by_the_unit_picker(
     )
 
 
+def test_the_picker_says_which_unit_is_acting_and_the_unit_survives_a_click(
+    client: TestClient,
+    config: ConfigBundle,
+    journal: InMemoryJournalStore,
+    vault: InMemoryVaultStore,
+    drafts: InMemoryDraftStore,
+    gold_v4_dir: Path,
+) -> None:
+    """Part 17: the picker worked and looked broken, so it now says so.
+
+    Traced in a browser first. The parameter round-trips, `resolve_unit`
+    accepts it, and the draft section really does unlock - but submitting the
+    form re-rendered a page whose only visible difference was which option the
+    `<select>` had marked, and the tables deliberately do not move because any
+    unit may read any queue (ADR-026). Nothing on the page named the unit that
+    was now acting, so pressing the button looked like pressing nothing.
+
+    Two things are pinned here. The page states the acting unit in words on
+    all three screens, and every link that leads onward or back carries the
+    unit, so an adopted unit does not fall off on the next click.
+    """
+    case_id = ingest(config, journal, vault, drafts, gold_v4_dir, TIER2_ITEM)
+    name = next(node.name for node in config.taxonomy.nodes if node.unit_id == UNIT)
+
+    pages = {
+        "overview": f"/review?unit={UNIT}",
+        "queue": f"/review/queue/{UNIT}?unit={UNIT}",
+        "case": f"/review/case/{case_id}?unit={UNIT}",
+    }
+    for where, path in pages.items():
+        body = client.get(path).text
+        assert 'id="acting-unit"' in body, where
+        assert "Aktive Einheit" in body, where
+        assert name in body, where
+        assert UNIT in body, where
+
+    # With NO unit the page says what choosing one would unlock, and does not
+    # state a non-fact as a fact.
+    for where, path in (
+        ("overview", "/review"),
+        ("queue", f"/review/queue/{UNIT}"),
+        ("case", f"/review/case/{case_id}"),
+    ):
+        body = client.get(path).text
+        assert 'id="acting-unit"' in body, where
+        assert "Aktive Einheit" not in body, where
+        assert "Entwürfe" in body, where
+
+    # Every onward and backward link keeps the unit.
+    overview = client.get(f"/review?unit={UNIT}").text
+    assert f'href="/review/queue/{UNIT}?unit={UNIT}"' in overview
+    queue = client.get(f"/review/queue/{UNIT}?unit={UNIT}").text
+    assert f'href="/review/case/{case_id}?unit={UNIT}"' in queue
+    assert f'href="/review?unit={UNIT}"' in queue
+    case = client.get(f"/review/case/{case_id}?unit={UNIT}").text
+    assert f'href="/review?unit={UNIT}"' in case
+    assert f"/review/queue/{UNIT}?unit={UNIT}" in case
+
+    # The tour's highlight survives adopting a unit: the picker is a GET form,
+    # so anything not carried as a hidden field is dropped on submit.
+    marked = client.get(f"/review/queue/{UNIT}?unit={UNIT}&highlight={case_id}").text
+    assert f'<input type="hidden" name="highlight" value="{case_id}">' in marked
+    assert "highlight" not in client.get(f"/review/queue/{UNIT}?unit={UNIT}").text
+
+    # And the picker still targets the page it is on, so submitting it stays.
+    assert f'action="/review/queue/{UNIT}"' in queue
+    assert f'action="/review/case/{case_id}"' in case
+
+
 def test_an_unknown_case_is_a_404_and_not_an_empty_page(
     client: TestClient,
 ) -> None:

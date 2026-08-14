@@ -2,7 +2,19 @@
 {% block title %}EingangsLotse - {{ view.queue.label }}{% endblock %}
 {% block heading %}{{ view.queue.label }}{% endblock %}
 {% block picker_action %}/review/queue/{{ view.queue.queue_id }}{% endblock %}
+{# The picker is a GET form, so submitting it replaces the whole query string.
+   Without this the demo tour's `highlight` fell off the moment a visitor
+   adopted a unit, and the row they had just been handed stopped being marked
+   (part 17). Display only, exactly as everywhere else. #}
+{% block picker_hidden %}
+{% if view.highlight %}
+<input type="hidden" name="highlight" value="{{ view.highlight }}">
+{% endif %}
+{% endblock %}
 {% block content %}
+<nav class="backlink" aria-label="Zurück">
+  <a href="/review{% if view.unit_id %}?unit={{ view.unit_id }}{% endif %}">Zurück zur Warteschlangen-Übersicht</a>
+</nav>
 <section aria-labelledby="queue-heading">
   <h2 id="queue-heading">Offene Vorgänge ({{ view.queue.count }})</h2>
   {% if view.queue.clearing %}

@@ -6,6 +6,19 @@
 {% block picker_action %}/review/case/{{ state.case_id }}{% endblock %}
 {% block content %}
 
+{# Back-links that carry the adopted unit (part 17). Without them a caseworker
+   who walked overview -> queue -> case and then went back lost the unit
+   silently and the drafts re-gated themselves with no explanation. The unit
+   the case is ROUTED to and the unit currently acting are two different
+   things, so both routes back are offered and neither is guessed. #}
+<nav class="backlink" aria-label="Zurück">
+  <a href="/review{% if view.unit_id %}?unit={{ view.unit_id }}{% endif %}">Zurück zur Übersicht</a>
+  {% if state.unit_id %}
+  &middot;
+  <a href="/review/queue/{{ state.unit_id }}{% if view.unit_id %}?unit={{ view.unit_id }}{% endif %}">Zur Warteschlange {{ state.unit_id }}</a>
+  {% endif %}
+</nav>
+
 <div aria-live="polite">
   {% if view.message %}<p class="notice ok-note">{{ view.message }}</p>{% endif %}
   {% if view.error %}<p class="notice alarm-note">Nicht ausgeführt: {{ view.error }}</p>{% endif %}
