@@ -144,9 +144,29 @@ scale and the spacing ladder, applied to every page from one stylesheet
 ([ADR-030](docs/adr/ADR-030-design-system-and-the-tour.md)). There is no build
 chain and **no external fetch of any kind** - no CDN, no web font, no remote
 icon: a data-protection demonstration must not phone anywhere, so the type
-stack is the operating system's own. Every colour pair that ships was computed
-against the WCAG contrast formula before it was used, and the ratios are in
+stack is the operating system's own and the icon set is inline SVG. Every
+colour pair that ships was computed against the WCAG contrast formula before it
+was used, and the ratios are in
 [`docs/accessibility-selfcheck.md`](docs/accessibility-selfcheck.md).
+
+**The site is bilingual, and the switch happens on the server**
+([ADR-031](docs/adr/ADR-031-two-languages-one-header-one-hero.md)). `?lang=de`
+or `?lang=en` in the header sets a cookie and redirects back; the cookie
+governs from then on, and nothing about it needs JavaScript, because a public
+administration UI that only works with scripting is a UI that excludes people.
+The visitor-facing pages are translated in full. **The caseworker screens stay
+German in both settings** and carry one English line saying so: they are the
+working surface of a German agency, and half-translated administrative
+vocabulary would be less usable than the German rather than more. Message
+bodies are never translated at all - they come from versioned configuration and
+are legal-text artifacts.
+
+Two consequences of the palette are worth knowing before editing a stylesheet.
+The brand sky blue `#4db2ec` measures 2.36:1 on white, so it is an ELEMENT
+colour - a fill, a rule, an edge - and never carries text; `#106393` does. The
+red `#dc0000` family is reserved for warning, refusal and alarm and is never
+decorative. Both rules are enforced by a test that greps every stylesheet
+rather than by anybody remembering them.
 
 Three procedures are configured (Altersrente, Erwerbsminderungsrente, and the
 Statusfeststellung under par. 7a SGB IV). The last of them ships no clear-cut
@@ -158,18 +178,29 @@ formally complete application still ends at tier 3, by design.
 **Start at `/demo/rundgang`.** The tour tells the whole system in six steps for
 somebody who has never seen it - the problem and the two-plane answer, what
 happens when you submit, what the machine made of it, how a caseworker decides,
-what the applicant receives, and why any of it can be trusted. German leads and
-every step carries a short English aside. Each step links to the page where it
-actually happens, and step 3 points at a case from the frozen gold set, so the
-seven stages of the glass pipeline are walkable before you have submitted
-anything - including on an instance that accepts no submissions at all.
+what the applicant receives, and why any of it can be trusted. Each step links
+to the page where it actually happens, and step 3 points at a case from the
+frozen gold set, so the seven stages of the glass pipeline are walkable before
+you have submitted anything - including on an instance that accepts no
+submissions at all.
+
+Before the tour there is `/`, which opens with the pipeline told as a picture:
+five stages on a rail, a sealed envelope travelling between them, and one
+sentence per stage that fades in with it. It is one inline SVG, one 16-second
+CSS loop and zero JavaScript; the captions are real text in the document rather
+than glyphs in the drawing, there is a checkbox above the figure that stops the
+loop, and `prefers-reduced-motion` reaches the same still frame without being
+asked.
 
 With `EINGANGSLOTSE_DEMO_MODE=1` and an ingest token set, `/demo/antrag` opens
 a three-phase journey that is the architecture told as a story. **Phase 1:** you
 pick one of four unmistakably fictional applicants, edit or deliberately break
-their prefilled application (delete the Versicherungsnummer, set a Rentenbeginn
-twenty years out, flip `auslandsbezug` to `ja`), and send it as a form or as a
-letter. **Phase 2:** `/demo/case/{id}/pipeline` narrates the seven stages that
+their prefilled application (delete the Versicherungsnummer, pick a Rentenbeginn
+twenty years out in the calendar, flip `auslandsbezug` to `ja`), and send it as
+a form or as a letter. The form asks the way an administrative form asks -
+Nachname before Vorname, native date pickers, dropdowns whose options are read
+from the procedure configuration's own allowed values - and what it submits is
+byte for byte what it always submitted. **Phase 2:** `/demo/case/{id}/pipeline` narrates the seven stages that
 just ran on YOUR submission, with the real data at each one - including the
 working copy with your own name replaced by a placeholder, side by side with
 what you typed, and the sentence that goes with it: the machine never saw your

@@ -363,10 +363,68 @@
   }
 }
 
-/* Somebody who asked for less motion gets the same diagram, standing still,
-   with all five captions readable at once. Answered HERE rather than left to
-   the design system's blanket rule, because that rule freezes an animation at
-   its last keyframe - which for these captions is `opacity: 0`. */
+/* The pause control (WCAG 2.2.2). The loop starts on its own, runs longer than
+   five seconds and sits beside other content, so a reader must be able to stop
+   it - and an operating-system preference is not a control on this page. The
+   checkbox sits before everything it pauses in the markup, which is what makes
+   `:checked ~` reach them without a script.
+
+   It STOPS rather than freezing. `animation-play-state: paused` would hold
+   whatever frame happened to be showing, which for four of the five captions
+   is `opacity: 0` - a pause button that hides the text is not a pause button.
+   So the paused state is the same still frame the reduced-motion answer
+   produces: every stage lit, all five captions stacked and readable. */
+.hero-pause-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.hero-pause-row label {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.hero-pause {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: var(--brand-ink);
+}
+
+.hero-pause:checked ~ .hero-svg .hero-ring,
+.hero-pause:checked ~ .hero-svg .hero-token,
+.hero-pause:checked ~ .hero-svg .hero-token-seal,
+.hero-pause:checked ~ .hero-svg .hero-shackle,
+.hero-pause:checked ~ .hero-svg .hero-gear,
+.hero-pause:checked ~ .hero-captions .hero-caption {
+  animation: none;
+}
+
+.hero-pause:checked ~ .hero-svg .hero-ring,
+.hero-pause:checked ~ .hero-svg .hero-token-seal,
+.hero-pause:checked ~ .hero-captions .hero-caption {
+  opacity: 1;
+}
+
+.hero-pause:checked ~ .hero-captions {
+  display: block;
+}
+
+.hero-pause:checked ~ .hero-captions .hero-caption {
+  margin-bottom: var(--space-2);
+}
+
+.hero-pause:checked ~ .hero-captions .hero-caption:last-child {
+  margin-bottom: 0;
+}
+
+/* Somebody who asked for less motion gets the same still frame without having
+   to ask again. Answered HERE rather than left to the design system's blanket
+   rule, because that rule freezes an animation at its last keyframe - which
+   for these captions is `opacity: 0`. */
 @media (prefers-reduced-motion: reduce) {
   .hero-ring,
   .hero-token,
@@ -393,6 +451,12 @@
 
   .hero-caption:last-child {
     margin-bottom: 0;
+  }
+
+  /* The control stays, and stays usable: a reader who set the preference and
+     wants the motion back after all is a reader this page should not fight. */
+  .hero-pause-row {
+    display: flex;
   }
 }
 

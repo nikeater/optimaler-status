@@ -32,6 +32,16 @@
     <a class="cta cta-secondary" href="/demo/antrag">{{ t("landing.cta.intake") }}</a>
   </p>
   <figure class="hero-figure">
+    {# WCAG 2.2.2: the loop starts on its own, runs longer than five seconds
+       and sits beside other content, so a reader has to be able to stop it -
+       and an operating-system preference is not a control on this page. This
+       is that control, in CSS alone: the checkbox precedes everything it
+       pauses, and `:checked ~` puts the drawing and the captions into exactly
+       the still frame `prefers-reduced-motion` produces. No script. #}
+    <div class="hero-pause-row">
+      <input type="checkbox" id="hero-pause" class="hero-pause">
+      <label for="hero-pause">{{ t("landing.hero.pause") }}</label>
+    </div>
     <svg class="hero-svg" viewBox="0 0 960 160" role="img"
          aria-labelledby="hero-titel hero-beschreibung">
       <title id="hero-titel">{{ t("landing.hero.label") }}</title>

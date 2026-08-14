@@ -303,6 +303,16 @@ TABLE: dict[str, tuple[str, str]] = {
         "The applicant automatically receives a receipt - rendered from a "
         "template, never from a model.",
     ),
+    "landing.hero.pause": (
+        "Animation anhalten",
+        "Pause the animation",
+    ),
+    "landing.hero.paused": (
+        "Angehalten: alle fünf Schritte stehen still und alle fünf Sätze "
+        "stehen untereinander.",
+        "Paused: all five steps stand still and all five sentences are shown "
+        "one under the other.",
+    ),
     "landing.hero.caption.label": (
         "Was in diesem Schritt passiert",
         "What happens at this step",

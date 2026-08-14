@@ -325,3 +325,28 @@ def test_the_design_system_carries_the_reflow_rules() -> None:
         # Every length that scales with the reader's font size, or the "resize
         # text to 200 percent" criterion (1.4.4) fails with it.
         assert not re.search(r"font-size:\s*\d+px", css), f"{sheet.name}: px font size"
+
+
+def test_the_two_colours_that_may_not_carry_text_never_do() -> None:
+    """1.4.3, made structural instead of remembered (part 16).
+
+    The brand sky blue measures 2.36:1 on white and the reserved red 4.32:1 on
+    the darkest surface this project ships. Both are therefore ELEMENT colours -
+    a fill, a rule, an edge - and both have a text-weight sibling in the same
+    family (`--brand-ink`, `--alarm-text`) for anything a reader has to read.
+    That is a rule somebody would eventually forget, so it is checked over
+    every stylesheet rather than written in a comment.
+
+    The regex is anchored so that `border-left-color: var(--brand)` does not
+    read as a text colour, which is the one false positive worth avoiding: it
+    is exactly the way these two tokens are SUPPOSED to be used.
+    """
+    text_colour = re.compile(r"(?<![-\w])color:\s*var\(--(brand|alarm)\)")
+    for sheet in sorted(Path("ui/static").glob("*.css")):
+        css = sheet.read_text(encoding="utf-8")
+        found = text_colour.search(css)
+        assert found is None, f"{sheet.name}: {found.group(0) if found else ''}"
+    # And the two siblings that carry the text exist and are used.
+    system = Path("ui/static/system.css").read_text(encoding="utf-8")
+    assert "--brand-ink:" in system and "--alarm-text:" in system
+    assert "color: var(--brand-ink)" in system

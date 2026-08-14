@@ -1126,6 +1126,42 @@ rather than a limitation) and the survey of the other zero-cost paths,
 including why no `fly.toml` is shipped. `docs/PUBLISHING.md` is the user
 handoff: the exact `gh` commands and the Render click path.
 
+## The user interface (from part 16)
+
+There is still no CSS build step, no bundler and no JavaScript requirement, so
+there is nothing to run: `ui/static/*.css` is plain CSS served as it is written
+and `ui/templates/*.html` is Jinja. Three things a contributor should know
+before editing either.
+
+**Sentences live in `api/i18n.py`, not in the templates.** Every visitor-facing
+string is a key into one table whose values are `(German, English)` pairs, so a
+key cannot exist in one language and not the other. A template asks for a
+phrase with `t("some.key")`, or with `m("some.key")` for the handful that carry
+inline markup - `m()` returns Markup and ESCAPES what it interpolates, which
+`|safe` on a formatted string would not. `tests/test_i18n.py` sweeps every
+template for the keys it asks for, so a typo fails the suite rather than
+printing a key on a page.
+
+The caseworker screens (`/review*`, `/metrics`) are deliberately NOT in the
+table: they stay German in both language settings and carry one English line
+saying why. Message bodies, gap sentences and letter texts are never translated
+at all - they come from versioned configuration and are legal-text artifacts.
+
+**Two colours may not carry text and a test enforces it.** `--brand` (#4db2ec)
+measures 2.36:1 on white and `--alarm` (#dc0000) 4.32:1 on the darkest surface
+here; both are element colours - a fill, a rule, an edge - and both have a
+text-weight sibling in the same family (`--brand-ink`, `--alarm-text`). The
+measured matrix is in `docs/accessibility-selfcheck.md`, and
+`tests/test_review_accessibility.py` greps every stylesheet so the rule cannot
+be forgotten.
+
+**The landing hero is the only animated thing in the project.** One 16-second
+CSS loop, five captions that are real text in the document, one keyframe set
+with five negative `animation-delay` values so the picture and the sentence
+share a clock. Both the `prefers-reduced-motion` answer and the on-page pause
+control put it into the same still frame; neither uses `animation-play-state`,
+because freezing the loop where it stands would hide four of the five captions.
+
 ## Continuous integration (from part 11)
 
 `.github/workflows/gate.yml` runs the whole gate above on every push and pull

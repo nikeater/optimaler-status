@@ -542,3 +542,37 @@ def test_the_hero_survives_the_reflow_and_the_resize_rules() -> None:
         assert not re.search(r":\s*\d{3,}px", css), name
         assert not re.search(r"font-size:\s*\d+px", css), name
         assert "outline: none" not in css and "outline: 0" not in css, name
+
+
+def test_the_hero_can_be_stopped_without_a_script(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """WCAG 2.2.2, answered with a control on the page rather than a setting.
+
+    The loop starts on its own, runs longer than five seconds and sits beside
+    other content, so 2.2.2 is engaged and an operating-system preference is
+    not a mechanism ON this page. The control is a labelled checkbox that
+    precedes everything it pauses, which is what lets `:checked ~` reach the
+    drawing and the captions with no script at all.
+
+    It STOPS rather than freezing, and that distinction is the test: pausing
+    the animation where it stands would hold four of the five captions at
+    `opacity: 0`, and a pause button that hides the text is not a pause button.
+    """
+    client = build_client(config, monkeypatch)
+    body = client.get("/").text
+    assert '<input type="checkbox" id="hero-pause"' in body
+    assert 'for="hero-pause"' in body
+    assert shown("landing.hero.pause") in body
+    assert "<script" not in body
+
+    css = Path("ui/static/demo.css").read_text(encoding="utf-8")
+    rules = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
+    assert "animation-play-state" not in rules, "a frozen caption is invisible"
+    paused = [line for line in css.splitlines() if ".hero-pause:checked ~" in line]
+    assert paused, "the pause control reaches nothing"
+    assert ".hero-pause:checked ~ .hero-captions .hero-caption {" in css
+    # The paused state IS the reduced-motion state: everything lit, all five
+    # captions stacked. Both blocks say `animation: none` and `opacity: 1`.
+    assert re.search(r"\.hero-pause:checked[^{]*\{\s*animation: none;", rules)
+    assert re.search(r"\.hero-pause:checked[^{]*\{\s*opacity: 1;", rules)
