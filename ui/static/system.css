@@ -964,6 +964,44 @@ button:hover {
   border-color: var(--brand-ink-strong);
 }
 
+/* The one call to action per step. A link styled as a button, and still a
+   link: it navigates, it works with scripting off, it is in the tab order
+   exactly once.
+
+   IN THE DESIGN SYSTEM SINCE PART 17, and it had to be. It was defined in
+   `demo.css`, which only the three citizen pages load, while `metrics.html`
+   already used it - so the metrics reload control carried `class="cta
+   cta-secondary"` on a page where no such rule existed and rendered as a plain
+   inline link. A component used by four templates across three stylesheet
+   combinations belongs in the one file every page loads. */
+.cta {
+  display: inline-block;
+  margin: var(--space-2) 0 var(--space-3);
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--brand-ink);
+  border-radius: var(--radius-sm);
+  background: var(--brand-ink);
+  color: #ffffff;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.cta:hover {
+  background: var(--brand-ink-strong);
+  border-color: var(--brand-ink-strong);
+  color: #ffffff;
+}
+
+.cta-secondary {
+  background: var(--surface);
+  color: var(--brand-ink);
+}
+
+.cta-secondary:hover {
+  background: var(--tint-brand);
+  color: var(--brand-ink-strong);
+}
+
 /* The unit picker. A demo affordance that every page says is not
    authentication, so it is deliberately styled as a toolbar and not as a
    sign-in. */
@@ -1112,6 +1150,13 @@ tbody .sample-row > td {
 @media (max-width: 40rem) {
   main {
     padding: var(--space-4) var(--space-3) var(--space-6);
+  }
+
+  /* A full-width tap target beats two half-width ones side by side. Moved
+     here with the component itself in part 17. */
+  .cta {
+    display: block;
+    text-align: center;
   }
 
   footer {

@@ -8,9 +8,11 @@
    and a translated Realakt would be a different document.
 
    It also stays the page with NO CONTROLS (ADR-005, the part-07 line). The
-   site header's menu is a `<details>` and two links, so there is still no
+   site header's menu is a `<details>` and two links, and the reload
+   affordance part 17 added is an anchor to this same URL, so there is still no
    `<form>` and no `<button>` anywhere in this document, which a test asserts
-   rather than trusts. #}
+   rather than trusts. Nothing on this page sends, edits or approves anything;
+   a reload asks the server to say again what it already said. #}
 <!DOCTYPE html>
 <html lang="{{ lang }}">
 <head>
@@ -27,6 +29,27 @@
     <div class="page-head">
       <h1>{{ t("inbox.headline") }}</h1>
       <p class="lead">{{ t("inbox.lead") }}</p>
+      {# The reload affordance (part 17). AN ANCHOR, and that is the whole
+         design: an `<a href="/inbox">` is not a `<form>` and not a `<button>`,
+         so the ADR-005 assertion that this document contains neither stays
+         intact AND stays TRUE - this page still has no control that does
+         anything to anything. It re-requests the same URL and nothing else.
+
+         Messages land here because of actions taken on the caseworker screens,
+         so a reader who has just done something elsewhere needs a way to ask
+         again; before this they had only the browser's own reload, and a judge
+         looking for the affordance on the page found none. The timestamp below
+         it is what makes the click observable: the outbox often holds exactly
+         what it held a second ago, and without a line that moves, a working
+         link is indistinguishable from a dead one. #}
+      <p>
+        <a class="cta cta-secondary" href="/inbox">{{ t("inbox.reload") }}</a>
+      </p>
+      {% if view.rendered_at %}
+      <p class="muted" id="inbox-rendered-at">
+        {{ t("inbox.rendered_at", at=view.rendered_at) }}
+      </p>
+      {% endif %}
     </div>
     <section id="inbox-panel" aria-labelledby="inbox-heading">
       <h2 id="inbox-heading">{{ t("inbox.messages") }}</h2>

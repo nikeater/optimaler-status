@@ -1625,6 +1625,16 @@ TABLE: dict[str, tuple[str, str]] = {
         "the written-form route (par. 36a SGB I) and not through this page.",
     ),
     "inbox.messages": ("Nachrichten", "Messages"),
+    # The reload affordance (part 17). A LINK, not a form and not a button:
+    # this page has neither and gains neither (ADR-005). Messages arrive here
+    # as a consequence of actions taken on other screens, so a reader does
+    # need a way to ask again - and a plain anchor to the same URL is that,
+    # with no control semantics at all.
+    "inbox.reload": ("Neu laden", "Reload"),
+    "inbox.rendered_at": (
+        "Stand dieser Anzeige: {at} (Serveruhr beim Rendern).",
+        "This view was rendered at {at} (server clock).",
+    ),
     "inbox.empty": (
         "Noch keine Nachricht zugestellt. Sobald ein Vorgang eingeht, entstehen "
         "Eingangsbestätigung und - nach der Zuordnung - der Zwischenstand.",

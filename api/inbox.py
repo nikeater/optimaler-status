@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from api.i18n import PageContext
-from api.metrics import render_template
+from api.metrics import render_clock, render_template
 from engine.notify.outbox import Outbox, OutboxEntry
 
 
@@ -36,6 +36,13 @@ class InboxView:
 
     cases: list[InboxCase]
     outbox_kind: str
+    #: When THIS RENDER happened, off the server clock. The page has no state
+    #: of its own and its messages arrive as a consequence of actions taken on
+    #: other screens, so two consecutive renders often look identical - which
+    #: makes a reload indistinguishable from a dead link. This is the line that
+    #: tells a reader the page really did ask again. Same clock and same
+    #: wording as the metrics panel, out of the same function.
+    rendered_at: str = ""
 
     @property
     def message_count(self) -> int:
@@ -51,6 +58,7 @@ def build_view(outbox: Outbox, *, case_id: str | None = None) -> InboxView:
             for known in case_ids
         ],
         outbox_kind=type(outbox).__name__,
+        rendered_at=render_clock(),
     )
 
 

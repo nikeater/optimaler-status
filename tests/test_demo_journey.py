@@ -45,6 +45,7 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from itertools import pairwise
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -52,6 +53,7 @@ from jinja2 import Environment
 from markupsafe import escape
 
 from api import demo as demo_view
+from api import inbox as inbox_view
 from api import review as review_view
 from api.app import REFUSED_ENVELOPE, REFUSED_REDACTION, create_app
 from api.i18n import phrase
@@ -972,6 +974,49 @@ def test_the_demo_adds_no_control_to_the_inbox(
         assert 'action="/inbox' not in body
         assert "/inbox" in body, "the inbox must be LINKED"
     assert client.post("/inbox", data={}).status_code in (404, 405)
+
+
+def test_the_inbox_can_be_asked_again_without_gaining_a_control(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Part 17: a reload affordance that ADR-005 does not have to bend for.
+
+    Messages arrive here because of actions taken on other screens, so a
+    reader needs a way to ask again and a judge looks for one on the page.
+    An anchor to the same URL is that, and it is not a control in the sense
+    ADR-005 forbids: this page still sends, edits and approves nothing, and
+    the assertion above that the document contains no `<form>` and no
+    `<button>` stays true rather than being relaxed.
+
+    The timestamp is what makes it observable. The outbox usually holds
+    exactly what it held a moment ago, and a reload that changes nothing on
+    screen is indistinguishable from a dead link - which is the defect this
+    part was called in to fix on the metrics page.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    submit(client, form_data("mustermann_regelaltersrente"))
+    for lang in ("de", "en"):
+        client.get(f"/inbox?lang={lang}", follow_redirects=True)
+        body = client.get("/inbox").text
+        assert (
+            f'<a class="cta cta-secondary" href="/inbox">{phrase("inbox.reload", lang)}</a>'
+            in body
+        ), lang
+        assert 'id="inbox-rendered-at"' in body, lang
+        # Still no control of any kind, in either language.
+        assert "<form" not in body, lang
+        assert "<button" not in body, lang
+    client.get("/inbox?lang=de", follow_redirects=True)
+
+    # Two renders of an unchanged outbox differ, and differ only there.
+    stand = re.compile(r'id="inbox-rendered-at">\s*[^<]*')
+    with patch.object(inbox_view, "render_clock", lambda: "2026-08-15T09:00:00+00:00"):
+        first = client.get("/inbox").text
+    with patch.object(inbox_view, "render_clock", lambda: "2026-08-15T09:01:07+00:00"):
+        second = client.get("/inbox").text
+    assert first != second, "a reload changes nothing a reader can see"
+    assert "2026-08-15T09:01:07+00:00" in second
+    assert stand.sub("STAND", first) == stand.sub("STAND", second)
 
 
 @pytest.mark.parametrize("phase", CITIZEN_PAGES)

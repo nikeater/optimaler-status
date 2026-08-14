@@ -26,36 +26,12 @@
   max-width: 68ch;
 }
 
-/* The one call to action per step. A link styled as a button, and still a
-   link: it navigates, it works with scripting off, it is in the tab order
-   exactly once. */
-.cta {
-  display: inline-block;
-  margin: var(--space-2) 0 var(--space-3);
-  padding: var(--space-3) var(--space-5);
-  border: 1px solid var(--brand-ink);
-  border-radius: var(--radius-sm);
-  background: var(--brand-ink);
-  color: #ffffff;
-  font-weight: 650;
-  text-decoration: none;
-}
-
-.cta:hover {
-  background: var(--brand-ink-strong);
-  border-color: var(--brand-ink-strong);
-  color: #ffffff;
-}
-
-.cta-secondary {
-  background: var(--surface);
-  color: var(--brand-ink);
-}
-
-.cta-secondary:hover {
-  background: var(--tint-brand);
-  color: var(--brand-ink-strong);
-}
+/* `.cta` MOVED TO system.css IN PART 17. It was defined here and used by
+   `metrics.html`, which loads system.css and metrics.css and never loaded this
+   file - so the metrics reload control asked for a class that did not exist on
+   its page and rendered as a bare inline link with no background, no border
+   and no padding. A control that does not look like one is most of the reason
+   it read as dead. It is a design-system component and now lives there. */
 
 /* ------------------------------------------------------------- the hero */
 
@@ -678,11 +654,6 @@ tbody .tour-row > td {
 /* ------------------------------------------------------------- the reflow */
 
 @media (max-width: 40rem) {
-  .cta {
-    display: block;
-    text-align: center;
-  }
-
   .hero-actions {
     display: block;
   }
