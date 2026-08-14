@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -110,7 +111,14 @@ class MetricsView:
     available: bool
     report_path: str
     problem: str | None = None
+    #: When the REPORT was computed. Baked into the image at build time and
+    #: identical on every request until a new report is written.
     generated_at: str = ""
+    #: When THIS RENDER happened, off the server clock. Two different facts,
+    #: labelled as two different facts on the page: the numbers below cannot
+    #: change between two requests, and this line is the only thing on the
+    #: panel that can, which is what makes the reload control observable.
+    rendered_at: str = ""
     gold_dir: str = ""
     item_count: int = 0
     gate_passed: bool = False
@@ -154,18 +162,33 @@ def load_report(path: Path) -> tuple[dict[str, Any] | None, str | None]:
     return document, None
 
 
+def render_clock() -> str:
+    """The server clock, at render time, to the second.
+
+    Its own function because two pages print it and one sentence of formatting
+    in two places is how the two start disagreeing. Seconds rather than
+    microseconds: this is a "you are looking at a fresh render" line for a
+    reader, not a measurement.
+    """
+    return datetime.now(UTC).replace(microsecond=0).isoformat()
+
+
 def build_view(
     document: dict[str, Any] | None, *, path: Path, problem: str | None
 ) -> MetricsView:
     """Normalize a report document into the view the template renders."""
     if document is None:
         return MetricsView(
-            available=False, report_path=str(path), problem=problem or "Kein Report."
+            available=False,
+            report_path=str(path),
+            problem=problem or "Kein Report.",
+            rendered_at=render_clock(),
         )
     return MetricsView(
         available=True,
         report_path=str(path),
         generated_at=str(document.get("generated_at", "")),
+        rendered_at=render_clock(),
         gold_dir=str(document.get("gold_dir", "")),
         item_count=int(document.get("item_count", 0)),
         gate_passed=bool(document.get("gate_passed", False)),

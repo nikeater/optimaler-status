@@ -8,13 +8,17 @@ looks fine is worse than one that says "run the eval".
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
 
+from api import metrics as metrics_view
 from api.app import create_app
 from api.metrics import (
     REPORT_ENV,
@@ -74,14 +78,77 @@ def test_panel_shows_the_breakdowns(client: TestClient, report_file: Path) -> No
     assert "Shadow-Scorer aus Teil 06" in body
 
 
+#: The one line in the panel that is allowed to differ between two renders.
+RENDERED_AT = re.compile(r"Stand dieser Anzeige: [^<]*")
+
+
+@contextmanager
+def freeze_render(when: str) -> Iterator[None]:
+    """Hold the render clock still, so two renders are comparable.
+
+    Patched at the one function that reads the clock rather than at
+    `datetime.now`, which the pipeline under this app also calls.
+    """
+    with patch.object(metrics_view, "render_clock", lambda: when):
+        yield
+
+
 def test_panel_fragment_is_the_same_section(
     client: TestClient, report_file: Path
 ) -> None:
+    """The fragment htmx swaps in IS the section the page already carries.
+
+    Compared with the render clock masked out on both sides. That line is by
+    construction different in two responses - it is the server's clock at
+    render time, and it is the only thing on the panel a reload can visibly
+    change, since the numbers come from a report that does not move while the
+    process runs. Masking it is the point of the test, not a concession: what
+    is being asserted is that the two renders are otherwise the same markup.
+    """
     fragment = client.get("/metrics/panel")
     assert fragment.status_code == 200
     assert fragment.text.strip().startswith('<section id="metrics-panel"')
     assert "<html" not in fragment.text
-    assert fragment.text.strip() in client.get("/metrics").text
+    masked = RENDERED_AT.sub("STAND", fragment.text.strip())
+    assert masked in RENDERED_AT.sub("STAND", client.get("/metrics").text)
+    # ... and both really do carry one, or the mask would hide an omission.
+    assert RENDERED_AT.search(fragment.text)
+    assert RENDERED_AT.search(client.get("/metrics").text)
+
+
+def test_the_reload_control_changes_something_a_reader_can_see(
+    client: TestClient, report_file: Path
+) -> None:
+    """Part 17: "Neu laden" looked dead, and the reason was not a broken chain.
+
+    Traced in a real browser: htmx loads, the click issues `GET
+    /metrics/panel`, and the swap lands. The panel then contained exactly the
+    markup it already had, because the eval report is written at build time and
+    never changes while the process runs - so a working control produced no
+    visible effect at all.
+
+    The render clock is the fix and this is what pins it: two renders of the
+    same unchanged report differ, and they differ ONLY there.
+    """
+    first = client.get("/metrics/panel").text
+    assert "Stand dieser Anzeige" in first
+    # The report's own timestamp is a different fact and says so.
+    assert "Zeitpunkt des Eval-Laufs" in first
+    assert RENDERED_AT.sub("STAND", first) != first
+
+    with freeze_render("2026-08-15T09:00:00+00:00"):
+        frozen_a = client.get("/metrics/panel").text
+    with freeze_render("2026-08-15T09:00:41+00:00"):
+        frozen_b = client.get("/metrics/panel").text
+    assert frozen_a != frozen_b, "the reload changes nothing a reader can see"
+    assert "2026-08-15T09:00:41+00:00" in frozen_b
+    assert RENDERED_AT.sub("STAND", frozen_a) == RENDERED_AT.sub("STAND", frozen_b)
+
+    # With scripting off the anchor is still a link to the whole page, so the
+    # same proof of life arrives by navigation.
+    page = client.get("/metrics").text
+    assert '<a class="cta cta-secondary" href="/metrics"' in page
+    assert "Stand dieser Anzeige" in page
 
 
 def test_missing_report_is_a_200_with_the_refresh_hint(

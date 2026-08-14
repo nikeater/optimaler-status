@@ -593,9 +593,8 @@ def test_the_lead_persona_opens_the_picker_and_the_others_stay_reachable(
 
     for path in ("/demo/antrag", "/demo/antrag?kanal=email", "/demo/antrag?kanal=x"):
         cards = persona_cards(client.get(path).text)
-        assert [c for c, _ in cards] == list(
-            p.persona_id for p in demo_view.ordered_personas(demo_personas())
-        ), path
+        expected = [p.persona_id for p in demo_view.ordered_personas(demo_personas())]
+        assert [c for c, _ in cards] == expected, path
         assert cards[0][0] == demo_view.LEAD_PERSONA, path
         assert [c for c, current in cards if current] == [demo_view.LEAD_PERSONA], path
         assert {c for c, _ in cards} == everyone, path

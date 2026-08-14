@@ -1,5 +1,22 @@
+{# The panel htmx swaps in. It is the WHOLE section, so anything that has to
+   change when "Neu laden" is pressed has to live inside it.
+
+   "Stand dieser Anzeige" is the one line here that can differ between two
+   requests, and that is its job. Every number below comes from an eval report
+   that is written at build time and never changes while the process runs, so a
+   reload swapped in byte-identical markup and looked like a dead control - the
+   request went out, the swap landed, and nothing on the screen moved. This
+   line is the proof of life. It is deliberately NOT the same fact as
+   "Gemessen am": that is when the numbers were computed, this is when the page
+   was drawn, and the two are labelled so they cannot be read as one. #}
 <section id="metrics-panel" aria-labelledby="metrics-heading">
   <h2 id="metrics-heading">Messwerte</h2>
+  {% if view.rendered_at %}
+  <p class="muted" id="metrics-rendered-at">
+    Stand dieser Anzeige: {{ view.rendered_at }} (Serveruhr beim Rendern).
+    Die Zahlen darunter stammen aus dem Report und ändern sich dadurch nicht.
+  </p>
+  {% endif %}
   {% if not view.available %}
   <p class="notice">
     {{ view.problem }} Report erzeugen mit:
@@ -16,7 +33,8 @@
   </p>
   <dl>
     <dt>Goldset</dt><dd>{{ view.gold_dir }} ({{ view.item_count }} Vorgänge)</dd>
-    <dt>Gemessen am</dt><dd>{{ view.generated_at }}</dd>
+    <dt>Gemessen am</dt>
+    <dd>{{ view.generated_at }} (Zeitpunkt des Eval-Laufs, nicht dieses Aufrufs)</dd>
     <dt>Scorer-Modus</dt><dd>{{ view.scorer_mode }}</dd>
     <dt>Versionen</dt>
     <dd>
