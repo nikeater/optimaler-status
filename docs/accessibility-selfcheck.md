@@ -21,9 +21,10 @@ they have. The tests behind their `automated` verdicts live in
 `tests/test_demo_journey.py`; where a criterion is answered differently for the
 two page sets, the row says so and names both.
 
-**Revised 2026-08-15 (part 17, the browser pass).** Three things changed, and
-the reason for all three is that this document described a page nobody had
-opened.
+**Revised 2026-08-15 (part 17, the browser pass).** Four things changed, and
+the reason for all four is the same: this document described pages that had
+been asserted about but never opened. Everything below was found by rendering
+them in a real browser and looking.
 
 1. **2.2.2 was answered on paper only and is now answered in fact.** The pause
    control shipped inside a wrapper `<div>`, which made it a cousin rather than
@@ -41,12 +42,39 @@ opened.
    meaning to a bar that says "this is a demonstration". Three new tokens,
    measured like every other pair and added to the table below. The red is
    unchanged everywhere it still means alarm.
-3. **1.4.10 and 2.2.2 gained real browser evidence.** Every page in the suite
-   was rendered at 1920 and at 390 CSS px in both languages and looked at, and
-   the three-phase step indicator's geometry was measured at 320, 768, 1024,
-   1440 and 1920 px. This does not close the rows that need an external audit
-   and assistive technology; it does mean the static checks are no longer the
-   only thing behind them.
+3. **1.4.10 was measured in a browser for the first time, and three pages
+   failed it.** Every page in the suite was rendered at 1920, 390 and 320 CSS
+   px in both languages and looked at, and `document.scrollWidth` was compared
+   against the viewport on each. Three real two-axis scrolls came out, all of
+   them older than this part and all of them invisible to a check that reads
+   markup:
+   - `/review` reached **545 CSS px** on a 320 px viewport. `.sr-only` is
+     `position: absolute`, and with no positioned ancestor its containing block
+     was the initial one - so the offscreen sentences inside a 662px queue
+     table escaped their `overflow-x: auto` box and took the document with
+     them. `.scroll-x` is positioned now.
+   - `/review/case/{id}` reached **612 CSS px**. A `fieldset` does not shrink
+     below its min-content width and a `<select>` sizes to its longest option
+     ("Geschaeftsbereich Versicherung und Rente"), so the correction form held
+     the page open. `fieldset` takes `min-width: 0` now.
+   - `/demo/antrag` reached **325 CSS px**, from a `white-space: nowrap` badge
+     reading "wird versiegelt: Organisation / Auftraggeber". Badges wrap below
+     40rem now.
+
+   All ten pages measure exactly the viewport width at 320 and at 390 px after
+   the fix. The static check stays, because it catches a different mistake; it
+   is no longer the only thing behind this row. The step indicator's connector
+   geometry was measured the same way at 320, 768, 1024, 1440 and 1920 px.
+
+4. **The reading measure is now the container.** Every flowing text element
+   carried a `ch` cap - 68ch on a paragraph, 78ch on a notice, 72ch on a hero
+   caption - which on an 80rem container put every page's text in a column down
+   the left half of a wide screen. The caps are gone and `body` line-height
+   rises from 1.55 to 1.65 to carry the longer line. Tables, form fields and
+   field help keep their widths. This is a legibility trade made deliberately
+   and against the orthodoxy: a measure of 100-odd characters is longer than a
+   typographer would choose, and the layout reading as broken to every person
+   who opened it was the larger failure.
 
 **Revised 2026-08-14 (part 16, the bilingual overhaul).** Four things changed
 and one of them is a new criterion this project had never engaged before.
@@ -204,9 +232,9 @@ by requiring words next to every tone.
 | 1.4.3 Contrast (minimum) | reviewed, with measured ratios | The palette is in `ui/static/system.css` as custom properties, and every pair that actually ships was computed before it was used. The full matrix is the section "Measured contrast ratios" below. The lowest text ratio anywhere on any surface is **5.06:1** (`--muted` on the sunken surface), against a 4.5:1 requirement. (This row said 6.19:1 until part 17: a part-15 number that the part-16 re-measurement replaced in the table below without updating the sentence up here. Corrected against the table, which is the computed one.) **Measured by calculation against the WCAG 2.1 relative-luminance formula, not with a tool, and not verified on a real display.** |
 | 1.4.4 Resize text | automated (partly) | All sizes are `rem`, `em`, `ch` or unitless; the type scale is seven `rem` tokens. A test asserts that no stylesheet in `ui/static` contains a `px` font size or a fixed pixel length of three digits or more - the pill radius is `62em` rather than the conventional `999px` for exactly that reason. Whether the pages are USABLE at 200 percent is a browser measurement nobody has made. |
 | 1.4.5 Images of text | automated | There are no images. |
-| 1.4.10 Reflow | automated (static), every page | **Closed for the caseworker pages in part 15, and closed by fixing the cause rather than the symptom.** The rules that make reflow possible used to live in `demo.css`, which only the three citizen-facing pages loaded - which is precisely why this row was open on the others. They are in the design system now, so every page gets them: every wide table sits in its own `overflow-x: auto` container so the container scrolls and the document body never does, `dl` drops from two columns to one below 40rem (the two-column definition list is what actually overflows at 320 px), `overflow-wrap: break-word` on `body` keeps a case id or a placeholder token from pushing the page wider, and no stylesheet carries a fixed pixel length. Asserted per page in `tests/test_review_accessibility.py` (`/review`, both queue variants, the case view, `/metrics`, `/inbox`) and in `tests/test_demo_journey.py` (`/demo/rundgang`, `/demo/antrag`, the pipeline view). **This is a static check of the markup and the CSS and NOT a measurement in a browser at 320 CSS px.** Nobody has read these pages on a real phone; that stays in the open list. |
+| 1.4.10 Reflow | automated (static) plus a measured browser pass, every page | **Closed for the caseworker pages in part 15, and closed by fixing the cause rather than the symptom.** The rules that make reflow possible used to live in `demo.css`, which only the three citizen-facing pages loaded - which is precisely why this row was open on the others. They are in the design system now, so every page gets them: every wide table sits in its own `overflow-x: auto` container so the container scrolls and the document body never does, `dl` drops from two columns to one below 40rem (the two-column definition list is what actually overflows at 320 px), `overflow-wrap: break-word` on `body` keeps a case id or a placeholder token from pushing the page wider, and no stylesheet carries a fixed pixel length. Asserted per page in `tests/test_review_accessibility.py` (`/review`, both queue variants, the case view, `/metrics`, `/inbox`) and in `tests/test_demo_journey.py` (`/demo/rundgang`, `/demo/antrag`, the pipeline view). **Part 17 added the measurement the previous sentence used to say did not exist**: every page was rendered at 320 and 390 CSS px and `scrollWidth` compared against the viewport. Three pages failed and were fixed - see the part-17 note at the top for the three causes, none of which a markup check could have seen. All ten now measure exactly the viewport width at both sizes. What is still open is a real phone in a real hand: this is a headless engine at a set viewport, not a device test, and no person has read these pages on one. |
 | 1.4.11 Non-text contrast | reviewed, with measured ratios | Two border weights exist so the floor cannot be missed by accident. `--line-strong` (`#6f7c85`) draws every control boundary - inputs, selects, the button and menu outline, the table frame - and is at or above **3.56:1** against every surface it is used on, white included (4.29:1). `--line` (`#d8dee3`, 1.36:1 on white) is decorative only: it separates rows inside a card and identifies no component. The focus ring is `--focus` (`#0c4e73`) at 3px with a 2px offset, at or above **7.42:1** on every surface. Two honest notes rather than one. The `.tag` badge's border sits below 3:1 against the brand tint when a tag is inside a selected persona card - a badge is not an interactive component and its text carries 13:1 or better, so 1.4.11 is not engaged, but it is stated rather than left to be found. And the current step's circle is a `--brand` fill inside a `--brand-ink` border: the border measures 6.51:1 against the card BEHIND it, which is the comparison this criterion asks for (is the component distinguishable from its surroundings), and only 2.76:1 against the fill it encloses, which is not - stated here because the second number is the one a reader computing from the table would find first. |
-| 1.4.12 Text spacing | reviewed | No fixed heights, no `!important` on line-height; `line-height: 1.5` on body. |
+| 1.4.12 Text spacing | reviewed | No fixed heights, no `!important` on line-height. `body` carries `line-height: 1.65`, raised from 1.55 in part 17 to carry the wider measure; every heading keeps 1.2. |
 | 1.4.13 Content on hover or focus | automated | Nothing appears on hover or focus; the test asserts no `onmouseover` anywhere. |
 
 ## Operable

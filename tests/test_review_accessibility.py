@@ -327,6 +327,45 @@ def test_the_design_system_carries_the_reflow_rules() -> None:
         assert not re.search(r"font-size:\s*\d+px", css), f"{sheet.name}: px font size"
 
 
+def test_the_three_things_a_static_reflow_check_could_not_see() -> None:
+    """Part 17: measured at 320 px in a browser, and three pages failed.
+
+    THIS TEST CANNOT MEASURE A VIEWPORT and does not pretend to. It pins the
+    three declarations that fixed three real two-axis scrolls, so that removing
+    one has to be deliberate. The measurement itself needs a browser and was
+    made in one; the row in `docs/accessibility-selfcheck.md` says so.
+
+    What the test above checks is that wide content sits in a scroll container.
+    All three failures were things that sat OUTSIDE the layout the check knows
+    how to look at:
+
+    1. `.sr-only` is `position: absolute`, and with no positioned ancestor its
+       containing block was the initial one. The offscreen sentences inside a
+       662px-wide queue table therefore escaped `.scroll-x` and pushed the
+       document to 545 CSS px on a 320 px viewport.
+    2. A `fieldset` does not shrink below its min-content width, and a `select`
+       sizes to its longest option, so the case view's correction form held the
+       document at 612 CSS px.
+    3. `.tag` is `white-space: nowrap`, which is right for a two-word badge and
+       wrong for the intake form's "wird versiegelt: ..." labels.
+    """
+    system = Path("ui/static/system.css").read_text(encoding="utf-8")
+    scroll_x = re.search(r"\.scroll-x\s*\{([^}]*)\}", system)
+    assert scroll_x and "position: relative" in scroll_x.group(1), (
+        "an absolutely positioned .sr-only inside a wide table escapes an "
+        "unpositioned scroll container and takes the document with it"
+    )
+    fieldset = re.search(r"\bfieldset\s*\{([^}]*)\}", system)
+    assert fieldset and "min-width: 0" in fieldset.group(1), (
+        "a fieldset holds its min-content width and a select sizes to its "
+        "longest option"
+    )
+    narrow = system.split("@media (max-width: 40rem)")[1]
+    assert re.search(r"\.tag\s*\{\s*white-space: normal;", narrow), (
+        "a nowrap badge longer than the viewport pushes the page sideways"
+    )
+
+
 #: The element colours: too weak for text against at least one surface this
 #: project ships, and each with a text-weight sibling in the same family.
 #: Part 17 added the third when the demo ribbon left the red family.

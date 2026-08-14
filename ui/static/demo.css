@@ -23,7 +23,6 @@
 .lead {
   font-size: var(--text-md);
   color: var(--ink-soft);
-  max-width: 68ch;
 }
 
 /* `.cta` MOVED TO system.css IN PART 17. It was defined here and used by
@@ -42,7 +41,6 @@
 .hero-lead {
   font-size: var(--text-md);
   color: var(--ink-soft);
-  max-width: 62ch;
 }
 
 .hero-actions {
@@ -191,7 +189,6 @@
 .hero-caption {
   grid-area: 1 / 1;
   margin: 0;
-  max-width: 72ch;
   color: var(--ink);
   opacity: 0;
   animation: hero-beat 16s linear infinite;
@@ -599,7 +596,6 @@
   background: var(--tint-brand);
   font-size: var(--text-md);
   font-weight: 600;
-  max-width: 68ch;
 }
 
 /* The queue row a visitor was handed to. Display only: the marker is the words

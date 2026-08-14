@@ -153,7 +153,9 @@ body {
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: var(--text-base);
-  line-height: 1.55;
+  /* Raised from 1.55 with the width pass: a full-measure line needs more
+     air between rows so a reader's eye does not drop one. */
+  line-height: 1.65;
   /* A case id, a placeholder token or a URL must not be able to push the page
      wider than the viewport. Part of 1.4.10, and the cheapest part. */
   overflow-wrap: break-word;
@@ -191,9 +193,32 @@ h4 {
   font-size: var(--text-base);
 }
 
+/* THE MEASURE IS THE CONTAINER, NOT A CHARACTER COUNT (part 17).
+
+   Every flowing text element used to carry a `ch` cap - 68ch on a paragraph
+   and a list item, 78ch on a notice, 72ch on a hero caption. Typographically
+   that is the orthodox answer and on this layout it was the wrong one: the
+   container is 80rem, a 68ch cap resolves to roughly 34rem, and the result was
+   a column of text down the left half of a wide screen with white space to the
+   right of everything. The user walked the site and read that as a broken
+   layout rather than as a reading measure, which is the only verdict that
+   matters for a page meant to be judged in a browser.
+
+   So the measure is `--measure` on the container and nothing narrower inside
+   it. The one typographic compensation is on `body`: 1.55 to 1.65, because a
+   longer line needs more room between lines to keep a reader's eye from
+   dropping a row. No other type decision is made here; part 18 owns the rest.
+
+   THE CAPS WERE MAX-WIDTHS, WHICH IS WHY REMOVING THEM CANNOT BREAK THE
+   REFLOW. A block element is already as wide as its container; a `max-width`
+   only ever made it narrower. Removing one can therefore widen an element up
+   to the container and never beyond it, and at 320 px the container is the one
+   that binds. Checked in a browser at 320 and 390 px all the same.
+
+   What KEEPS its width: tables and everything in them, form fields, selects,
+   textareas and `.help` (which belongs to a field and reads with it). */
 p {
   margin: 0 0 var(--space-3);
-  max-width: 68ch;
 }
 
 ul,
@@ -204,7 +229,6 @@ ol {
 
 li {
   margin-bottom: var(--space-2);
-  max-width: 68ch;
 }
 
 a {
@@ -614,9 +638,10 @@ article h3 {
 
 /* A letter is read in full, so it gets the letter's own measure rather than a
    paragraph's - on the case view, in the inbox and on the pipeline page. */
+/* A letter fills the card it is read in. Its own line breaks come from the
+   template that drafted it, so a wider box wraps less rather than more. */
 article > pre {
   background: var(--surface);
-  max-width: 80ch;
 }
 
 footer {
@@ -626,10 +651,6 @@ footer {
   border-top: 1px solid var(--line-strong);
   color: var(--muted);
   font-size: var(--text-sm);
-}
-
-footer p {
-  max-width: 78ch;
 }
 
 footer p:last-child {
@@ -802,6 +823,18 @@ dd {
    of these, which is what closes 1.4.10 for the caseworker pages too. */
 .scroll-x {
   overflow-x: auto;
+  /* POSITIONED SO THE BOX ACTUALLY CONTAINS WHAT IT SCROLLS (part 17, found in
+     a browser at 320 px). The tables inside carry `.sr-only` spans - the
+     offscreen sentences that give a flag or a tier its meaning in words - and
+     `.sr-only` is `position: absolute`. With no positioned ancestor its
+     containing block was the initial one, so it sat at its static position
+     deep inside a 662px-wide table, escaped this box entirely and pushed the
+     DOCUMENT to 545 CSS px on a 320 px viewport: the two-axis scroll 1.4.10
+     forbids, on the caseworker overview, under a green test suite. The static
+     check counts tables against scroll containers and cannot see this.
+     Positioning this box makes it the containing block, so the offscreen text
+     scrolls with its table and the page does not. */
+  position: relative;
   margin: 0 0 var(--space-4);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
@@ -862,6 +895,14 @@ td {
 /* ------------------------------------------------------------------ forms */
 
 fieldset {
+  /* A fieldset does not shrink below its min-content width on its own, and a
+     `<select>` sizes to its longest option. On the case view that option is
+     "Geschaeftsbereich Versicherung und Rente", which held the correction
+     fieldset at 583px and the document at 612px on a 320px viewport - the
+     second two-axis scroll the browser pass found and the static test could
+     not (part 17). With this the fieldset takes its container's width and the
+     `max-width: 100%` already on `select` does the rest. */
+  min-width: 0;
   margin: 0 0 var(--space-4);
   padding: var(--space-4);
   border: 1px solid var(--line-strong);
@@ -1030,7 +1071,6 @@ button:hover {
   border-left: 4px solid var(--line-strong);
   border-radius: var(--radius);
   background: var(--surface-alt);
-  max-width: 78ch;
 }
 
 .notice > *:last-child {
@@ -1078,7 +1118,6 @@ tbody .sample-row > td {
   border-radius: var(--radius-sm);
   background: var(--surface-alt);
   font-size: var(--text-sm);
-  max-width: 68ch;
 }
 
 .flag:last-child {
@@ -1229,6 +1268,15 @@ tbody .sample-row > td {
 
   .phase::before {
     content: none;
+  }
+
+  /* A tag is `white-space: nowrap` so a two-word badge never breaks in half.
+     The intake form's sealing badges are not two words - "wird versiegelt:
+     Organisation / Auftraggeber" is 279px that cannot break - and they pushed
+     the document 5px past a 320px viewport. Above this breakpoint they fit and
+     keep their nowrap; here they wrap rather than take the page with them. */
+  .tag {
+    white-space: normal;
   }
 
   th,
