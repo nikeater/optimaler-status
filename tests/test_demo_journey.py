@@ -1114,6 +1114,33 @@ def test_the_new_pages_are_built_to_reflow_at_320_css_pixels(
         assert "outline: none" not in css and "outline: 0" not in css
 
 
+def test_the_phase_connector_stops_at_the_edge_of_the_circles() -> None:
+    """The line between two steps runs edge to edge, not centre to centre.
+
+    A connector from `left: -50%` to `right: 50%` reaches the MIDDLE of the
+    circle on either side and crosses both discs. It shipped that way and was
+    visible wherever a circle renders as a ring rather than as a fill - and it
+    paints on TOP of the previous circle, because the pseudo-element belongs to
+    a later sibling than the circle it overlaps.
+
+    This is a literal pin and it is honest about being one: it cannot measure a
+    box. Whether the gap is really there is a browser question and was answered
+    in a browser at 320, 768, 1024, 1440 and 1920 px.
+    """
+    system = Path("ui/static/system.css").read_text(encoding="utf-8")
+    connector = re.search(r"\.phase::before\s*\{([^}]*)\}", system)
+    assert connector, "no connector rule"
+    body = connector.group(1)
+    # The mark is 2.2rem across, so each end pulls back by its 1.1rem radius
+    # plus one step of breathing room.
+    assert "left: calc(-50% + 1.1rem + var(--space-2))" in body, body
+    assert "right: calc(50% + 1.1rem + var(--space-2))" in body, body
+    assert re.search(r"width:\s*2\.2rem", system), "the mark's size moved"
+    # The stacked variant below 40rem has no connectors and keeps none.
+    narrow = system.split("@media (max-width: 40rem)")[1]
+    assert re.search(r"\.phase::before\s*\{\s*content: none;", narrow)
+
+
 def _rows(page: str) -> list[str]:
     """The case ids in a queue table, in the order they are rendered."""
     return re.findall(r'href="/review/case/([^"?]+)', page)
