@@ -1,93 +1,75 @@
 {% extends "demo_base.html" %}
 {% set state = view.state %}
 {% set case = state.case %}
-{% block title %}EingangsLotse - Was mit Ihrem Antrag passiert ist{% endblock %}
-{% block heading %}Phase 2: Was mit Ihrem Antrag passiert ist{% endblock %}
+{% block title %}{{ t("pipeline.title") }}{% endblock %}
+{% block heading %}{{ t("pipeline.headline") }}{% endblock %}
 {% block content %}
 
 <section aria-labelledby="ueberblick-heading">
-  <h2 id="ueberblick-heading">Ueberblick</h2>
-  <p>
-    Sieben Schritte, in der Reihenfolge, in der sie gelaufen sind. Jede Zahl und
-    jeder Satz auf dieser Seite kommt aus dem Journal Ihres Vorgangs oder aus
-    einer Ablage, die es ohnehin gibt. Diese Seite rechnet nichts nach: sie
-    kann dem, was tatsaechlich passiert ist, nicht widersprechen.
-  </p>
+  <h2 id="ueberblick-heading">{{ t("pipeline.overview.heading") }}</h2>
+  <p>{{ t("pipeline.overview.body") }}</p>
   {% if not view.held %}
-  <p class="notice">{{ view.expired_note }}</p>
+  <p class="notice">{{ t("pipeline.expired") }}</p>
   {% endif %}
   {% if view.sampled %}
-  <p class="notice sample-note">
-    Dieser Vorgang wurde zufaellig zur Qualitaetssicherung ausgewaehlt. Das ist
-    KEIN Auffaelligkeitsbefund: die Ziehung haengt allein an der
-    Vorgangskennung und sagt nichts ueber Sie oder Ihren Antrag aus.
-  </p>
+  <p class="notice sample-note">{{ t("pipeline.sampled") }}</p>
   {% endif %}
 </section>
 
 <section aria-labelledby="a-heading" class="stage">
-  <h2 id="a-heading">a) Eingang</h2>
-  <p>
-    Ihr Antrag ist angekommen und hat eine Vorgangskennung bekommen; ab hier ist
-    jeder Schritt einzeln nachlesbar.
-  </p>
+  <h2 id="a-heading">{{ t("pipeline.a.heading") }}</h2>
+  <p>{{ t("pipeline.a.body") }}</p>
   <dl>
-    <dt>Vorgang</dt><dd><code>{{ view.case_id }}</code></dd>
-    <dt>Weg</dt><dd>{{ view.channel_label }}</dd>
-    <dt>Eingang am</dt>
-    <dd>{{ case.received_at.isoformat() if case.received_at else "unbekannt" }}</dd>
-    <dt>Eingereicht als</dt>
-    <dd>{{ view.persona_label or "erfundene Person" }}</dd>
-    <dt>Ereignisse im Journal</dt><dd>{{ case.event_count }}</dd>
+    <dt>{{ t("pipeline.a.case") }}</dt><dd><code>{{ view.case_id }}</code></dd>
+    <dt>{{ t("pipeline.a.channel") }}</dt><dd>{{ view.channel_label }}</dd>
+    <dt>{{ t("pipeline.a.received") }}</dt>
+    <dd>{{ case.received_at.isoformat() if case.received_at else t("pipeline.d.unknown") }}</dd>
+    <dt>{{ t("pipeline.a.as") }}</dt>
+    <dd>{{ view.persona_label or t("pipeline.a.persona") }}</dd>
+    <dt>{{ t("pipeline.a.events") }}</dt><dd>{{ case.event_count }}</dd>
   </dl>
 </section>
 
 <section aria-labelledby="b-heading" class="stage">
-  <h2 id="b-heading">b) Versiegelung</h2>
-  <p>{{ view.seal_sentence }}</p>
+  <h2 id="b-heading">{{ t("pipeline.b.heading") }}</h2>
+  <p>{{ t("pipeline.b.seal_sentence") }}</p>
   <dl>
-    <dt>Versiegelte Werte</dt>
+    <dt>{{ t("pipeline.b.sealed") }}</dt>
     <dd>{{ case.sealed_count if case.sealed_count is not none else "-" }}</dd>
-    <dt>Nachpruefung</dt>
+    <dt>{{ t("pipeline.b.verified") }}</dt>
     <dd>
       {% if case.redaction_verified %}
-      bestanden - ein zweiter, unabhaengiger Erkennerlauf ueber die Arbeitskopie
-      fand nichts mehr
+      {{ t("pipeline.b.verified.yes") }}
       {% else %}
-      nicht bestanden oder nicht protokolliert
+      {{ t("pipeline.b.verified.no") }}
       {% endif %}
     </dd>
   </dl>
 
   {% if view.pairings %}
-  <h3>Ihre Eingabe und das, was die Maschine bekommen hat</h3>
-  <p>
-    Links steht, was Sie selbst eingetippt haben. Rechts steht, was an dieser
-    Stelle in der Arbeitskopie steht. Der Klartext wurde nicht aus dem Tresor
-    geholt, um diese Tabelle zu bauen - er stammt aus Ihrer eigenen Eingabe von
-    eben und wird nur fuer kurze Zeit im Arbeitsspeicher gehalten.
-  </p>
+  <h3>{{ t("pipeline.b.pairs.heading") }}</h3>
+  <p>{{ t("pipeline.b.pairs.body") }}</p>
   <div class="scroll-x">
     <table>
-      <caption>Gegenueberstellung: eingegebener Wert und Platzhalter</caption>
+      <caption>{{ t("pipeline.b.pairs.caption") }}</caption>
       <thead>
         <tr>
-          <th scope="col">Angabe</th>
-          <th scope="col">Von Ihnen eingegeben</th>
-          <th scope="col">In der Arbeitskopie</th>
+          <th scope="col">{{ t("pipeline.b.pairs.col1") }}</th>
+          <th scope="col">{{ t("pipeline.b.pairs.col2") }}</th>
+          <th scope="col">{{ t("pipeline.b.pairs.col3") }}</th>
         </tr>
       </thead>
       <tbody>
         {% for pair in view.pairings %}
         <tr>
-          <th scope="row">{{ pair.label }}</th>
+          <th scope="row">{{ t("kind." ~ pair.kind) }}</th>
           <td>{{ pair.typed }}</td>
           <td>
             {% if pair.placeholder %}
             <code class="placeholder">{{ pair.placeholder }}</code>
-            <span class="sr-only">Platzhalter der Art {{ pair.kind_label }}</span>
+            <span class="sr-only">{{ t("pipeline.b.pairs.sr", kind=t("kind." ~ pair.kind)) }}</span>
             {% else %}
-            <span class="muted">kein Platzhalter dieser Art in der Arbeitskopie</span>
+            <span class="muted">{{ t("pipeline.b.pairs.none") }}</span>
             {% endif %}
           </td>
         </tr>
@@ -98,32 +80,23 @@
   {% endif %}
 
   {% if view.echo_body %}
-  <h3>Ihr Anschreiben, vorher und nachher</h3>
-  <p>
-    Dieselben Zeichen, einmal wie Sie sie geschrieben haben und einmal wie die
-    Maschine sie bekommen hat. Im Fliesstext wird SPANNE FUER SPANNE versiegelt,
-    nicht der ganze Absatz: ein Brief ohne seine Verben liesse sich nicht
-    triagieren.
-  </p>
+  <h3>{{ t("pipeline.b.letter.heading") }}</h3>
+  <p>{{ t("pipeline.b.letter.body") }}</p>
   <div class="side-by-side">
     <div>
-      <h4>Was Sie geschrieben haben</h4>
+      <h4>{{ t("pipeline.b.letter.yours") }}</h4>
       <pre>{{ view.echo_body }}</pre>
     </div>
     <div>
-      <h4>Was die Maschine gelesen hat</h4>
+      <h4>{{ t("pipeline.b.letter.machine") }}</h4>
       {% for part in view.parts %}
       <pre>{% for segment in part.segments %}{% if segment.placeholder %}<mark class="placeholder">{{ segment.text }}</mark>{% else %}{{ segment.text }}{% endif %}{% endfor %}</pre>
       {% endfor %}
     </div>
   </div>
   {% elif view.parts %}
-  <h3>Die Arbeitskopie, wie sie weitergereicht wurde</h3>
-  <p>
-    Jede Stelle, an der ein Platzhalter steht, hat vorher eine Ihrer Angaben
-    getragen. Alles danach - Ableitung, Auslesen, Regeln, Entscheidung, Scorer -
-    hat ausschliesslich diese Fassung gelesen.
-  </p>
+  <h3>{{ t("pipeline.b.copy.heading") }}</h3>
+  <p>{{ t("pipeline.b.copy.body") }}</p>
   {% for part in view.parts %}
   <p class="muted"><code>{{ part.part_id }}</code></p>
   <pre>{% for segment in part.segments %}{% if segment.placeholder %}<mark class="placeholder">{{ segment.text }}</mark>{% else %}{{ segment.text }}{% endif %}{% endfor %}</pre>
@@ -133,11 +106,17 @@
   {% if view.sealed_kinds %}
   <div class="scroll-x">
     <table>
-      <caption>Was im Fliesstext versiegelt wurde, nach Art. Werte erscheinen hier nie.</caption>
-      <thead><tr><th scope="col">Art</th><th scope="col">Bedeutung</th><th scope="col">Anzahl</th></tr></thead>
+      <caption>{{ t("pipeline.b.kinds.caption") }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ t("pipeline.b.kinds.col1") }}</th>
+          <th scope="col">{{ t("pipeline.b.kinds.col2") }}</th>
+          <th scope="col">{{ t("pipeline.b.kinds.col3") }}</th>
+        </tr>
+      </thead>
       <tbody>
         {% for kind, label, count in view.sealed_kinds %}
-        <tr><th scope="row"><code>{{ kind }}</code></th><td>{{ label }}</td><td>{{ count }}</td></tr>
+        <tr><th scope="row"><code>{{ kind }}</code></th><td>{{ t("kind." ~ kind) }}</td><td>{{ count }}</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -146,54 +125,48 @@
 </section>
 
 <section aria-labelledby="c-heading" class="stage">
-  <h2 id="c-heading">c) Extraktion</h2>
-  <p>
-    Jetzt wird gelesen, was in der Arbeitskopie steht - und jede gefundene
-    Angabe muss zweifach belegt sein: das Zitat UND die Zeichenposition,
-    unabhaengig voneinander gegen dieselbe Textfassung geprueft.
-  </p>
+  <h2 id="c-heading">{{ t("pipeline.c.heading") }}</h2>
+  <p>{{ t("pipeline.c.body") }}</p>
   <dl>
-    <dt>Gefundene Felder</dt>
+    <dt>{{ t("pipeline.c.found") }}</dt>
     <dd>
       {% if case.extracted_fields %}
       {{ case.extracted_fields | join(", ") }}
       {% else %}
-      keine
+      {{ t("pipeline.c.none") }}
       {% endif %}
     </dd>
-    <dt>Verworfen</dt>
+    <dt>{{ t("pipeline.c.discarded") }}</dt>
     <dd>
       {{ case.discarded_count if case.discarded_count is not none else 0 }} -
-      ein VERWORFENER Vorschlag ist ein Wert, dessen Fundstelle die Pruefung
-      nicht bestanden hat. Er wird nicht uebernommen und schiebt den Vorgang
-      Richtung Tier 3.
+      {{ t("pipeline.c.discarded.note") }}
     </dd>
   </dl>
   {% if not case.extracted_fields and case.channel == "email" %}
-  <p class="notice">{{ view.no_extraction_note }}</p>
+  <p class="notice">{{ t("pipeline.c.no_extraction") }}</p>
   {% endif %}
   {% if case.spans %}
   <div class="scroll-x">
     <table>
-      <caption>Fundstellen: Teil und Zeichenbereich, nie der Wert</caption>
+      <caption>{{ t("pipeline.c.spans.caption") }}</caption>
       <thead>
         <tr>
-          <th scope="col">Feld</th>
-          <th scope="col">Textteil</th>
-          <th scope="col">Zeichenbereich</th>
-          <th scope="col">Pruefart</th>
+          <th scope="col">{{ t("pipeline.c.spans.col1") }}</th>
+          <th scope="col">{{ t("pipeline.c.spans.col2") }}</th>
+          <th scope="col">{{ t("pipeline.c.spans.col3") }}</th>
+          <th scope="col">{{ t("pipeline.c.spans.col4") }}</th>
         </tr>
       </thead>
       <tbody>
         {% for span in case.spans %}
         <tr>
           <th scope="row">{{ span.get("field") }}</th>
-          <td>{{ span.get("part_id") or "strukturiertes Feld" }}</td>
+          <td>{{ span.get("part_id") or t("pipeline.c.spans.structured") }}</td>
           <td>
             {% if span.get("start") is not none %}
-            {{ span.get("start") }} bis {{ span.get("end") }}
+            {{ t("pipeline.c.spans.range", start=span.get("start"), end=span.get("end")) }}
             {% else %}
-            <span class="muted">ohne Textfundstelle</span>
+            <span class="muted">{{ t("pipeline.c.spans.nospan") }}</span>
             {% endif %}
           </td>
           <td>{{ span.get("match_mode") }}</td>
@@ -206,36 +179,33 @@
 </section>
 
 <section aria-labelledby="d-heading" class="stage">
-  <h2 id="d-heading">d) Evidenz</h2>
-  <p>
-    Aus den belegten Werten wird die Beweislage: welches Verfahren, was fehlt,
-    wer zustaendig ist. Alles davon ist nachlesbar begruendet - nichts davon ist
-    schon eine Entscheidung.
-  </p>
+  <h2 id="d-heading">{{ t("pipeline.d.heading") }}</h2>
+  <p>{{ t("pipeline.d.body") }}</p>
   <dl>
-    <dt>Verfahren</dt>
+    <dt>{{ t("pipeline.d.procedure") }}</dt>
     <dd>
-      {{ case.procedure_id or "nicht abgeleitet" }}
-      (abgeleitet aus: {{ case.derivation.get("source") or "unbekannt" }};
-      Kanalhinweis: {{ case.procedure_hint or "keiner" }})
+      {{ case.procedure_id or t("pipeline.d.procedure.none") }}
+      ({{ t("pipeline.d.derived",
+             source=case.derivation.get("source") or t("pipeline.d.unknown"),
+             hint=case.procedure_hint or t("pipeline.d.nohint")) }})
     </dd>
-    <dt>Vollstaendigkeit</dt>
-    <dd>{{ case.completeness_verdict or "unbekannt" }}</dd>
-    <dt>Klarfall</dt>
+    <dt>{{ t("pipeline.d.completeness") }}</dt>
+    <dd>{{ case.completeness_verdict or t("pipeline.d.unknown") }}</dd>
+    <dt>{{ t("pipeline.d.clearcut") }}</dt>
     <dd>
-      {% if case.clear_cut %}ja{% elif case.clear_cut is none %}nicht geprueft{% else %}nein{% endif %}
+      {% if case.clear_cut %}{{ t("pipeline.d.yes") }}{% elif case.clear_cut is none %}{{ t("pipeline.d.unchecked") }}{% else %}{{ t("pipeline.d.no") }}{% endif %}
     </dd>
   </dl>
   {% if case.gaps %}
-  <h3>Was fehlt, und was Sie dazu gefragt werden</h3>
+  <h3>{{ t("pipeline.d.gaps.heading") }}</h3>
   <div class="scroll-x">
     <table>
-      <caption>Gemeldete Luecken mit dem Satz, den die Nachforderung dazu stellt</caption>
+      <caption>{{ t("pipeline.d.gaps.caption") }}</caption>
       <thead>
         <tr>
-          <th scope="col">Angabe</th>
-          <th scope="col">Status</th>
-          <th scope="col">Formulierung im Schreiben</th>
+          <th scope="col">{{ t("pipeline.d.gaps.col1") }}</th>
+          <th scope="col">{{ t("pipeline.d.gaps.col2") }}</th>
+          <th scope="col">{{ t("pipeline.d.gaps.col3") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -250,23 +220,18 @@
     </table>
   </div>
   {% endif %}
-  <h3>Zuordnung</h3>
-  <p>
-    <strong>Zugeordnet wurde: {{ state.machine_unit_id or "keine Einheit" }}.</strong>
-    Das ist die Antwort der Entscheidungsebene und die einzige, die den Vorgang
-    tatsaechlich in eine Warteschlange gelegt hat. Die Tabelle darunter zeigt
-    ALLE Belege, auch die unterlegenen.
-  </p>
+  <h3>{{ t("pipeline.d.routing.heading") }}</h3>
+  <p>{{ m("pipeline.d.routing.body", unit=state.machine_unit_id or t("pipeline.d.routing.nounit")) }}</p>
   {% if case.routing %}
   <div class="scroll-x">
     <table>
-      <caption>Zuordnungsbelege mit Quelle; die zugeordnete Einheit ist gekennzeichnet</caption>
+      <caption>{{ t("pipeline.d.routing.caption") }}</caption>
       <thead>
         <tr>
-          <th scope="col">Einheit</th>
-          <th scope="col">Quelle</th>
-          <th scope="col">Regel</th>
-          <th scope="col">Konfidenz</th>
+          <th scope="col">{{ t("pipeline.d.routing.col1") }}</th>
+          <th scope="col">{{ t("pipeline.d.routing.col2") }}</th>
+          <th scope="col">{{ t("pipeline.d.routing.col3") }}</th>
+          <th scope="col">{{ t("pipeline.d.routing.col4") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -275,7 +240,7 @@
           <th scope="row">
             {{ suggestion.get("unit_id") }}
             {% if suggestion.get("unit_id") == state.machine_unit_id %}
-            <span class="tag">zugeordnet</span>
+            <span class="tag">{{ t("pipeline.d.routing.routed") }}</span>
             {% endif %}
           </th>
           <td>{{ suggestion.get("source") }}</td>
@@ -290,20 +255,22 @@
 </section>
 
 <section aria-labelledby="e-heading" class="stage">
-  <h2 id="e-heading">e) Entscheidung</h2>
-  <p>
-    Die Entscheidungsebene liest nur, was belegt ist, und wertet eine
-    versionierte Tabelle Zeile fuer Zeile aus. Sie entscheidet nichts ueber Sie:
-    sie entscheidet, wie genau ein Mensch hinsehen muss.
-  </p>
+  <h2 id="e-heading">{{ t("pipeline.e.heading") }}</h2>
+  <p>{{ t("pipeline.e.body") }}</p>
   <dl>
-    <dt>Ergebnis</dt><dd>{{ view.tier_label }}</dd>
-    <dt>Zugeordnete Einheit</dt><dd>{{ state.unit_id or "keine (Zentrale Klaerung)" }}</dd>
+    <dt>{{ t("pipeline.e.result") }}</dt><dd>{{ t("tier." ~ state.tier) if state.tier else "-" }}</dd>
+    <dt>{{ t("pipeline.e.unit") }}</dt><dd>{{ state.unit_id or t("pipeline.e.unit.none") }}</dd>
   </dl>
   <div class="scroll-x">
     <table>
-      <caption>Begruendungen der Entscheidungstabelle, in Auswertungsreihenfolge</caption>
-      <thead><tr><th scope="col">Art</th><th scope="col">Zeile</th><th scope="col">Begruendung</th></tr></thead>
+      <caption>{{ t("pipeline.e.reasons.caption") }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ t("pipeline.e.reasons.col1") }}</th>
+          <th scope="col">{{ t("pipeline.e.reasons.col2") }}</th>
+          <th scope="col">{{ t("pipeline.e.reasons.col3") }}</th>
+        </tr>
+      </thead>
       <tbody>
         {% for reason in case.reasons %}
         <tr {% if reason.get("kind") == "sampled" %}class="sample-row"{% endif %}>
@@ -312,63 +279,55 @@
           <td>{{ reason.get("detail") }}</td>
         </tr>
         {% else %}
-        <tr><td colspan="3">Keine Begruendung protokolliert.</td></tr>
+        <tr><td colspan="3">{{ t("pipeline.e.reasons.none") }}</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
   {% if view.downgraded %}
-  <p class="notice alarm-note">{{ view.valve_note }}</p>
+  <p class="notice alarm-note">
+    {{ t("pipeline.e.valve", before=case.pre_downgrade_tier, after=case.tier) }}
+  </p>
   {% endif %}
-  <h3>Auffaelligkeitspruefung</h3>
+  <h3>{{ t("pipeline.e.anomaly.heading") }}</h3>
   {% if case.anomaly %}
   <dl>
-    <dt>Score</dt>
+    <dt>{{ t("pipeline.e.anomaly.score") }}</dt>
     <dd>{{ "%.3f"|format(case.anomaly.get("score")) if case.anomaly.get("score") is not none else "-" }}</dd>
-    <dt>Markiert</dt>
-    <dd>{% if case.anomaly.get("flagged") %}ja{% else %}nein{% endif %}</dd>
-    <dt>Betriebsart</dt><dd>{{ case.anomaly.get("mode") or "-" }}</dd>
+    <dt>{{ t("pipeline.e.anomaly.flagged") }}</dt>
+    <dd>{% if case.anomaly.get("flagged") %}{{ t("pipeline.d.yes") }}{% else %}{{ t("pipeline.d.no") }}{% endif %}</dd>
+    <dt>{{ t("pipeline.e.anomaly.mode") }}</dt><dd>{{ case.anomaly.get("mode") or "-" }}</dd>
   </dl>
   {% if view.anomaly_reasons %}
-  <p>
-    Eine Markierung ist eine Beobachtung am VORGANG gegen einen Referenzbestand,
-    kein Befund ueber eine Person. Der Scorer rechnet ausserdem auf nichts, was
-    Sie identifiziert: Geburtsdatum, Versicherungsnummer und Anschrift waren zu
-    diesem Zeitpunkt laengst versiegelt.
-  </p>
+  <p>{{ t("pipeline.e.anomaly.body") }}</p>
   <ul class="flags">
     {% for reason in view.anomaly_reasons %}
     <li class="flag">{{ reason.text }}</li>
     {% endfor %}
   </ul>
   {% if view.flagged_but_log_only %}
-  <p class="notice">{{ view.log_only_note }}</p>
+  <p class="notice">{{ t("pipeline.e.log_only") }}</p>
   {% endif %}
   {% else %}
-  <p class="muted">Keine Merkmalsbegruendung protokolliert.</p>
+  <p class="muted">{{ t("pipeline.e.anomaly.noreasons") }}</p>
   {% endif %}
   {% else %}
-  <p class="muted">Keine Auffaelligkeitspruefung protokolliert.</p>
+  <p class="muted">{{ t("pipeline.e.anomaly.none") }}</p>
   {% endif %}
 </section>
 
 <section aria-labelledby="f-heading" class="stage">
-  <h2 id="f-heading">f) Nachricht</h2>
-  <p>
-    Was Sie als antragstellende Person bekommen haetten. Diese Nachrichten
-    entstehen automatisch aus dem Journal und durchlaufen keine menschliche
-    Pruefung - genau deshalb gibt es hier und im Postfach keine Bedienung, mit
-    der jemand eine davon ausloesen, aendern oder erneut senden koennte.
-  </p>
+  <h2 id="f-heading">{{ t("pipeline.f.heading") }}</h2>
+  <p>{{ t("pipeline.f.body") }}</p>
   {% if view.notifications %}
   <div class="scroll-x">
     <table>
-      <caption>Zugestellte Nachrichten zu diesem Vorgang</caption>
+      <caption>{{ t("pipeline.f.caption") }}</caption>
       <thead>
         <tr>
-          <th scope="col">Vorlage</th>
-          <th scope="col">Betreff</th>
-          <th scope="col">Zugestellt</th>
+          <th scope="col">{{ t("pipeline.f.col1") }}</th>
+          <th scope="col">{{ t("pipeline.f.col2") }}</th>
+          <th scope="col">{{ t("pipeline.f.col3") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -383,35 +342,25 @@
     </table>
   </div>
   <p>
-    Im Postfach nachlesen:
-    <a href="/inbox">Postfach (nur Ansicht)</a> oder
-    <a href="/inbox/{{ view.case_id }}">nur dieser Vorgang als JSON</a>.
+    {{ t("pipeline.f.link") }}
+    <a href="/inbox">{{ t("pipeline.f.link.inbox") }}</a> /
+    <a href="/inbox/{{ view.case_id }}">{{ t("pipeline.f.link.json") }}</a>.
   </p>
   {% else %}
-  <p class="muted">Zu diesem Vorgang wurde keine Nachricht zugestellt.</p>
+  <p class="muted">{{ t("pipeline.f.none") }}</p>
   {% endif %}
 </section>
 
 <section aria-labelledby="g-heading" class="stage">
-  <h2 id="g-heading">g) Warteschlange</h2>
-  <p>
-    Ihr Vorgang liegt jetzt in der Warteschlange von
-    <strong>{{ view.queue_label }}</strong> und wartet auf einen Menschen. Im
-    naechsten Schritt sind Sie dieser Mensch.
-  </p>
-  <p class="notice">
-    Die Warteschlange ist nach Alter geordnet, aeltester Vorgang zuerst. Ihr
-    Vorgang wird dort gekennzeichnet, damit Sie ihn finden - die Kennzeichnung
-    ist reine Anzeige und veraendert die Reihenfolge nicht.
-  </p>
+  <h2 id="g-heading">{{ t("pipeline.g.heading") }}</h2>
+  <p>{{ m("pipeline.g.body", queue=view.queue_label) }}</p>
+  <p class="notice">{{ t("pipeline.g.note") }}</p>
   <p class="handover">
-    <a href="{{ view.queue_href }}">Weiter zu Phase 3: Vorgang bearbeiten</a>
+    <a href="{{ view.queue_href }}">{{ t("pipeline.g.handover") }}</a>
   </p>
   <p>
-    Dort koennen Sie bestaetigen, umsteuern oder eskalieren. Jede dieser
-    Aktionen schreibt ein neues Journalereignis; keine aendert ein altes. Danach
-    schliesst sich der Kreis im
-    <a href="/inbox/{{ view.case_id }}">Postfach dieses Vorgangs</a>.
+    {{ t("pipeline.g.after") }}
+    <a href="/inbox/{{ view.case_id }}">{{ t("pipeline.g.after.link") }}</a>.
   </p>
 </section>
 

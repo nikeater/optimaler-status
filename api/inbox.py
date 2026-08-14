@@ -17,7 +17,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from api.metrics import environment
+from api.i18n import PageContext
+from api.metrics import render_template
 from engine.notify.outbox import Outbox, OutboxEntry
 
 
@@ -53,9 +54,9 @@ def build_view(outbox: Outbox, *, case_id: str | None = None) -> InboxView:
     )
 
 
-def render_page(view: InboxView) -> str:
+def render_page(view: InboxView, page: PageContext | None = None) -> str:
     """The whole inbox page."""
-    return environment().get_template("inbox.html").render(view=view)
+    return render_template("inbox.html", view, page)
 
 
 def as_payload(entry: OutboxEntry) -> dict[str, Any]:

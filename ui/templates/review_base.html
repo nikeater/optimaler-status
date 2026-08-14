@@ -1,58 +1,65 @@
+{# Base for the caseworker screens.
+
+   GERMAN IN BOTH LANGUAGE SETTINGS, and `<html lang="de">` says so rather than
+   following the toggle. The site header around it is chrome and does follow
+   the toggle, which is why the header element carries its own `lang`; the one
+   English line under the page title explains the split to somebody who just
+   switched. See `_german_note.html`.
+
+   The unit picker moved out of the header and into `.page-head` in part 16: it
+   is a property of THIS page, not of the site, and the site header now carries
+   the wordmark, the language toggle and the menu for every page in the
+   project. #}
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}EingangsLotse - Bearbeitung{% endblock %}</title>
+  <title>{% block title %}EingangsLotse - Sachbearbeitung{% endblock %}</title>
   <link rel="stylesheet" href="/static/system.css">
   <link rel="stylesheet" href="/static/review.css">
   <script src="/static/vendor/htmx.min.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#inhalt">Direkt zum Inhalt</a>
-  {% include "_demo_banner.html" %}
-  <header>
-    <h1>{% block heading %}EingangsLotse - Bearbeitung{% endblock %}</h1>
-    <nav aria-label="Bereiche">
-      <ul class="navbar">
-        <li><a href="/review{% if view.unit_id %}?unit={{ view.unit_id }}{% endif %}">Uebersicht</a></li>
-        <li><a href="/metrics">Eval-Metriken</a></li>
-        <li><a href="/inbox">Postfach (nur Ansicht)</a></li>
-      </ul>
-    </nav>
-    <form class="picker" method="get" action="{% block picker_action %}/review{% endblock %}">
-      {% block picker_hidden %}{% endblock %}
-      <label for="unit">Bearbeitende Einheit</label>
-      <select id="unit" name="unit">
-        <option value="">-- keine Einheit gewaehlt --</option>
-        {% for unit in view.units %}
-        <option value="{{ unit.unit_id }}" {% if unit.unit_id == view.unit_id %}selected{% endif %}>
-          {{ unit.name }}
-        </option>
-        {% endfor %}
-      </select>
-      <button type="submit">Einheit uebernehmen</button>
-    </form>
-    <p class="notice" id="picker-note">{{ view.picker_note }}</p>
-  </header>
+  {% include "_site_header.html" %}
+  {% include "_demo_ribbon.html" %}
   <main id="inhalt">
+    <div class="page-head">
+      <h1>{% block heading %}EingangsLotse - Sachbearbeitung{% endblock %}</h1>
+      {% include "_german_note.html" %}
+      <form class="picker" method="get" action="{% block picker_action %}/review{% endblock %}">
+        {% block picker_hidden %}{% endblock %}
+        <label for="unit">Bearbeitende Einheit</label>
+        <select id="unit" name="unit">
+          <option value="">-- keine Einheit gewählt --</option>
+          {% for unit in view.units %}
+          <option value="{{ unit.unit_id }}" {% if unit.unit_id == view.unit_id %}selected{% endif %}>
+            {{ unit.name }}
+          </option>
+          {% endfor %}
+        </select>
+        <button type="submit">Einheit übernehmen</button>
+      </form>
+      <p class="notice" id="picker-note">{{ view.picker_note }}</p>
+    </div>
     {% block content %}{% endblock %}
   </main>
   <footer>
     <p>
       Jede Aktion auf diesen Seiten schreibt ein neues Journalereignis. Es wird
-      kein vergangenes Ereignis geaendert und keines geloescht: eine Korrektur
+      kein vergangenes Ereignis geändert und keines gelöscht: eine Korrektur
       ist ein Eintrag neben dem alten, nicht an seiner Stelle (ADR-008).
     </p>
     <p>
-      Diese Oberflaeche erzeugt keine Nachricht an antragstellende Personen.
-      Eingangsbestaetigung und Zwischenstand entstehen automatisch aus dem
-      Journal und durchlaufen keine Pruefung (ADR-005); <code>/inbox</code> ist
+      Diese Oberfläche erzeugt keine Nachricht an antragstellende Personen.
+      Eingangsbestätigung und Zwischenstand entstehen automatisch aus dem
+      Journal und durchlaufen keine Prüfung (ADR-005); <code>/inbox</code> ist
       und bleibt reine Ansicht.
     </p>
     <p>
-      Barrierefreiheit: Selbsteinschaetzung nach EN 301 549 / WCAG 2.1 AA in
-      <code>docs/accessibility-selfcheck.md</code>. Eine externe Pruefung nach
+      Barrierefreiheit: Selbsteinschätzung nach EN 301 549 / WCAG 2.1 AA in
+      <code>docs/accessibility-selfcheck.md</code>. Eine externe Prüfung nach
       BITV 2.0 hat nicht stattgefunden und ist Pilotvoraussetzung (P-15).
     </p>
   </footer>

@@ -25,7 +25,7 @@
   border: 1px solid var(--alarm);
   border-left: 4px solid var(--alarm);
   background: var(--tint-alarm);
-  color: var(--alarm);
+  color: var(--alarm-text);
   font-weight: 700;
 }
 
@@ -38,29 +38,31 @@
 }
 
 .gate-row > th {
-  border-left: 4px solid var(--accent);
+  border-left: 4px solid var(--brand);
 }
 
 /* The per-case detail list is long and collapsed by default. `details` is a
-   native disclosure widget: keyboard operable, announced as one, no script. */
-details {
+   native disclosure widget: keyboard operable, announced as one, no script.
+   Scoped to `main` since part 16: the site header uses the same element for
+   its menu, and a panel styled like a metrics disclosure would be wrong. */
+main details {
   margin: var(--space-4) 0 0;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
   background: var(--surface-alt);
 }
 
-summary {
+main summary {
   padding: var(--space-3) var(--space-4);
   font-weight: 600;
   cursor: pointer;
 }
 
-details[open] > summary {
+main details[open] > summary {
   border-bottom: 1px solid var(--line-strong);
 }
 
-details > .scroll-x {
+main details > .scroll-x {
   margin: 0;
   border: 0;
   border-radius: 0 0 var(--radius) var(--radius);

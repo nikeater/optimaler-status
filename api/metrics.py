@@ -24,7 +24,8 @@ from typing import Any
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from engine.demo import DemoPosture, demo_posture
+from api.i18n import GERMAN, PageContext
+from engine.demo import REPO_URL_PLACEHOLDER, DemoPosture, demo_posture
 from eval.harness import DEFAULT_REPORT_PATH
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -221,10 +222,20 @@ def current_view() -> MetricsView:
 def environment() -> Environment:
     """The Jinja environment every page in this project renders through.
 
-    Carries one global, ``demo``: the part-11 posture, so ``_demo_banner.html``
-    can be included from every page without four view objects growing the same
-    field. Outside demo mode the include renders exactly zero bytes, which is
-    asserted rather than assumed (``tests/test_demo_mode.py``).
+    Carries the globals every template may assume exist, whatever view object
+    it was handed:
+
+    * ``demo`` - the part-11 posture, so ``_demo_ribbon.html`` and the site
+      header's demo-gated menu items can be included from every page without
+      six view objects growing the same field. Outside demo mode both render
+      exactly zero bytes, which is asserted rather than assumed
+      (``tests/test_demo_mode.py``).
+    * ``repo_url`` - the CONFIGURED source address, or the empty string. Not
+      the placeholder: a menu item pointing at ``github.com/OWNER/...`` would
+      be a broken link in the one place a reader looks for the code.
+    * ``page``, ``t``, ``m``, ``lang`` - the part-16 language context. Defaulted
+      to German here so that a template rendered without one (a test, the htmx
+      fragment) still renders rather than raising on an undefined callable.
     """
     env = Environment(
         loader=FileSystemLoader(TEMPLATE_DIR),
@@ -232,8 +243,22 @@ def environment() -> Environment:
         trim_blocks=True,
         lstrip_blocks=True,
     )
-    env.globals["demo"] = demo_posture()
+    _install(env, demo_posture())
     return env
+
+
+def _install(env: Environment, posture: DemoPosture) -> None:
+    """Write the posture and the default language context into the globals."""
+    env.globals["demo"] = posture
+    env.globals["repo_url"] = (
+        "" if posture.repo_url == REPO_URL_PLACEHOLDER else posture.repo_url
+    )
+    env.globals.update(page_globals(GERMAN))
+
+
+def page_globals(page: PageContext) -> dict[str, Any]:
+    """What one page's language context looks like to a template."""
+    return {"page": page, "t": page.t, "m": page.m, "lang": page.lang}
 
 
 def set_demo_posture(posture: DemoPosture) -> None:
@@ -243,17 +268,33 @@ def set_demo_posture(posture: DemoPosture) -> None:
     the two in step in a test process that builds several apps. In a deployment
     it is called once, with the same posture ``environment()`` already read.
     """
-    environment().globals["demo"] = posture
+    _install(environment(), posture)
 
 
-def render_page(view: MetricsView) -> str:
+def render_template(name: str, view: object, page: PageContext | None = None) -> str:
+    """Render one page in one language.
+
+    The single place a template is handed a language, so the four view modules
+    do not each grow their own copy of the same three keyword arguments. The
+    context is passed per render rather than mutated into the globals: the
+    environment is process-wide, and a language written into it would be a
+    language the next request inherits.
+    """
+    return (
+        environment()
+        .get_template(name)
+        .render(view=view, **page_globals(page or GERMAN))
+    )
+
+
+def render_page(view: MetricsView, page: PageContext | None = None) -> str:
     """The whole page."""
-    return environment().get_template("metrics.html").render(view=view)
+    return render_template("metrics.html", view, page)
 
 
-def render_panel(view: MetricsView) -> str:
+def render_panel(view: MetricsView, page: PageContext | None = None) -> str:
     """Just the panel fragment, for the htmx swap."""
-    return environment().get_template("_metrics_panel.html").render(view=view)
+    return render_template("_metrics_panel.html", view, page)
 
 
 def _dig(document: dict[str, Any], path: tuple[str, ...]) -> object:

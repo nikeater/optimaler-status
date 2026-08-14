@@ -938,6 +938,7 @@ def test_no_canary_reaches_the_demo_landing_page_or_the_banner(
             case_id = created.json()["case_id"]
             for path in (
                 "/",
+                "/hinweise",
                 "/review",
                 f"/review/queue/{REVIEW_UNIT}",
                 f"/review/case/{case_id}",
@@ -946,7 +947,7 @@ def test_no_canary_reaches_the_demo_landing_page_or_the_banner(
             ):
                 page = demo_client.get(path)
                 assert page.status_code == 200, path
-                assert 'id="demo-banner"' in page.text, path
+                assert 'id="demo-ribbon"' in page.text, path
                 assert_no_canary(page.text, f"the demo page {path}")
             # And the refusal body, which is the one response a stranger who
             # POSTed real data would read back.

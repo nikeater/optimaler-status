@@ -8,7 +8,7 @@
 
 <div aria-live="polite">
   {% if view.message %}<p class="notice ok-note">{{ view.message }}</p>{% endif %}
-  {% if view.error %}<p class="notice alarm-note">Nicht ausgefuehrt: {{ view.error }}</p>{% endif %}
+  {% if view.error %}<p class="notice alarm-note">Nicht ausgeführt: {{ view.error }}</p>{% endif %}
 </div>
 
 <section aria-labelledby="stand-heading">
@@ -16,29 +16,29 @@
   <dl>
     <dt>Zugeordnete Einheit</dt>
     <dd>
-      {{ state.unit_id or "keine (Zentrale Klaerung)" }}
+      {{ state.unit_id or "keine (Zentrale Klärung)" }}
       {% if state.rerouted %}
-      <span class="tag">manuell geaendert, maschinell: {{ state.machine_unit_id or "keine" }}</span>
+      <span class="tag">manuell geändert, maschinell: {{ state.machine_unit_id or "keine" }}</span>
       {% endif %}
     </dd>
     <dt>Tier</dt>
     <dd>
       {{ view.tier_label }}
       {% if state.tier_changed %}
-      <span class="tag">manuell geaendert, maschinell: {{ view.machine_tier_label }}</span>
+      <span class="tag">manuell geändert, maschinell: {{ view.machine_tier_label }}</span>
       {% endif %}
     </dd>
     <dt>Eingang</dt>
-    <dd>{{ case.received_at.isoformat() if case.received_at else "unbekannt" }} ueber {{ case.channel or "unbekannt" }}</dd>
+    <dd>{{ case.received_at.isoformat() if case.received_at else "unbekannt" }} über {{ case.channel or "unbekannt" }}</dd>
     <dt>Verfahren</dt>
     <dd>{{ case.procedure_id or "nicht abgeleitet" }} (Hinweis: {{ case.procedure_hint or "keiner" }})</dd>
     <dt>Status</dt>
     <dd>
       {% if state.confirmed %}
-      bestaetigt am {{ state.confirmed_at.isoformat() }} durch Einheit
+      bestätigt am {{ state.confirmed_at.isoformat() }} durch Einheit
       {{ case.confirmed_unit_id or "unbekannt" }}
       {% else %}
-      offen, wartet auf menschliche Bestaetigung
+      offen, wartet auf menschliche Bestätigung
       {% endif %}
     </dd>
   </dl>
@@ -50,16 +50,16 @@
 <section aria-labelledby="copy-heading">
   <h2 id="copy-heading">Arbeitskopie: was die Maschine gesehen hat</h2>
   <p>
-    Vor jeder Auswertung hat die Datenschutzgrenze die Identitaetsangaben durch
+    Vor jeder Auswertung hat die Datenschutzgrenze die Identitätsangaben durch
     Platzhalter der Form <code>[[PII|ART|Token]]</code> ersetzt. Jede
     nachgelagerte Stufe - Ableitung, Extraktion, Regeln, Entscheidung, Scorer -
-    hat ausschliesslich diese Fassung gelesen. Der Klartext liegt im
-    Identitaetstresor und wird nur beim Rendern eines Schreibens
-    zurueckgeschrieben (ADR-002, ADR-017).
+    hat ausschließlich diese Fassung gelesen. Der Klartext liegt im
+    Identitätstresor und wird nur beim Rendern eines Schreibens
+    zurückgeschrieben (ADR-002, ADR-017).
   </p>
   <dl>
     <dt>Versiegelte Werte insgesamt</dt><dd>{{ case.sealed_count if case.sealed_count is not none else "-" }}</dd>
-    <dt>Nachpruefung der Versiegelung</dt>
+    <dt>Nachprüfung der Versiegelung</dt>
     <dd>
       {% if case.redaction_verified %}bestanden (zweiter Erkennerlauf fand nichts)
       {% else %}nicht bestanden oder nicht protokolliert{% endif %}
@@ -68,7 +68,7 @@
   {% if view.sealed_kinds %}
   <div class="scroll-x">
     <table>
-      <caption>Was im Fliesstext versiegelt wurde, nach Art. Werte erscheinen hier nie.</caption>
+      <caption>Was im Fließtext versiegelt wurde, nach Art. Werte erscheinen hier nie.</caption>
       <thead><tr><th scope="col">Art</th><th scope="col">Bedeutung</th><th scope="col">Anzahl</th></tr></thead>
       <tbody>
         {% for kind, label, count in view.sealed_kinds %}
@@ -78,12 +78,12 @@
     </table>
   </div>
   {% else %}
-  <p class="muted">Im Fliesstext wurde nichts versiegelt (strukturierter Eingang oder kein Identitaetsbezug im Text).</p>
+  <p class="muted">Im Fließtext wurde nichts versiegelt (strukturierter Eingang oder kein Identitätsbezug im Text).</p>
   {% endif %}
   {% if case.text_layer.get("parts") %}
   <div class="scroll-x">
     <table>
-      <caption>Normalisierte Textteile, gegen die jede Fundstelle geprueft wurde</caption>
+      <caption>Normalisierte Textteile, gegen die jede Fundstelle geprüft wurde</caption>
       <thead><tr><th scope="col">Teil</th><th scope="col">Quelle</th><th scope="col">Zeichen</th></tr></thead>
       <tbody>
         {% for part in case.text_layer.get("parts", []) %}
@@ -99,30 +99,30 @@
   {% endif %}
   <p class="notice">
     Der Wortlaut der Arbeitskopie steht bewusst NICHT im Journal: das Journal
-    haelt Tatsachen ueber den Vorgang, keinen Vorgangsinhalt, und es
+    hält Tatsachen über den Vorgang, keinen Vorgangsinhalt, und es
     unterliegt einer anderen Aufbewahrungsfrist als der Tresor. Wer den Text
-    lesen muss, oeffnet die Akte - nicht diese Seite.
+    lesen muss, öffnet die Akte - nicht diese Seite.
   </p>
 </section>
 
 <section aria-labelledby="spans-heading">
   <h2 id="spans-heading">Fundstellen der ausgelesenen Felder</h2>
   <p>
-    Jeder Wert traegt eine Fundstelle, die zweifach geprueft wurde: das Zitat
-    und die Zeichenposition, unabhaengig voneinander gegen dieselbe
+    Jeder Wert trägt eine Fundstelle, die zweifach geprüft wurde: das Zitat
+    und die Zeichenposition, unabhängig voneinander gegen dieselbe
     normalisierte Textfassung (ADR-020). Was hier steht, sind die Koordinaten -
-    Teil und Zeichenbereich - und die Pruefart. Der Wert selbst steht nicht im
+    Teil und Zeichenbereich - und die Prüfart. Der Wert selbst steht nicht im
     Journal.
   </p>
   <div class="scroll-x">
     <table>
-      <caption>Ausgelesene Felder mit Fundstelle und Pruefart</caption>
+      <caption>Ausgelesene Felder mit Fundstelle und Prüfart</caption>
       <thead>
         <tr>
           <th scope="col">Feld</th>
           <th scope="col">Textteil</th>
           <th scope="col">Zeichenbereich</th>
-          <th scope="col">Pruefart</th>
+          <th scope="col">Prüfart</th>
           <th scope="col">Konfidenz</th>
         </tr>
       </thead>
@@ -154,19 +154,19 @@
   </div>
   <p>
     Verworfen: {{ case.discarded_count if case.discarded_count is not none else 0 }}.
-    Ein verworfener Vorschlag ist ein Wert, dessen Fundstelle die Pruefung nicht
-    bestanden hat; er wird nicht uebernommen und schiebt den Vorgang Richtung
+    Ein verworfener Vorschlag ist ein Wert, dessen Fundstelle die Prüfung nicht
+    bestanden hat; er wird nicht übernommen und schiebt den Vorgang Richtung
     Tier 3.
   </p>
 </section>
 
 <section aria-labelledby="gaps-heading">
-  <h2 id="gaps-heading">Vollstaendigkeit</h2>
+  <h2 id="gaps-heading">Vollständigkeit</h2>
   <p>Verdikt: <strong>{{ case.completeness_verdict or "unbekannt" }}</strong>.</p>
   {% if case.gaps %}
   <div class="scroll-x">
     <table>
-      <caption>Gemeldete Luecken mit dem Satz, den die Nachforderung dazu stellt</caption>
+      <caption>Gemeldete Lücken mit dem Satz, den die Nachforderung dazu stellt</caption>
       <thead>
         <tr>
           <th scope="col">Anforderung</th>
@@ -188,7 +188,7 @@
     </table>
   </div>
   {% else %}
-  <p class="muted">Keine Luecke gemeldet.</p>
+  <p class="muted">Keine Lücke gemeldet.</p>
   {% endif %}
 </section>
 
@@ -197,7 +197,7 @@
   <p>
     <strong>Zugeordnet wurde: {{ state.machine_unit_id or "keine Einheit" }}.</strong>
     Das ist die Antwort der Entscheidungsebene und die einzige, die den Vorgang
-    tatsaechlich in eine Warteschlange gelegt hat.
+    tatsächlich in eine Warteschlange gelegt hat.
   </p>
   {% if case.routing %}
   <div class="scroll-x">
@@ -230,8 +230,8 @@
     <p>
       Ein Aehnlichkeitsmodell hat die folgende Rangfolge vorgeschlagen. Sie hat
       diesen Vorgang NICHT zugeordnet und kein Tier bewegt: die
-      Entscheidungsebene baut ausschliesslich auf Regelbelegen auf, solange die
-      Behoerde die Quelle nicht ausdruecklich zulaesst (ADR-021). Die Rangfolge
+      Entscheidungsebene baut ausschließlich auf Regelbelegen auf, solange die
+      Behörde die Quelle nicht ausdrücklich zulässt (ADR-021). Die Rangfolge
       steht hier, damit sie widersprochen werden kann, nicht damit sie
       mitentscheidet.
     </p>
@@ -258,8 +258,8 @@
   <h2 id="tier-heading">Warum dieses Tier</h2>
   <div class="scroll-x">
     <table>
-      <caption>Begruendungen der Entscheidungstabelle, in Auswertungsreihenfolge</caption>
-      <thead><tr><th scope="col">Art</th><th scope="col">Zeile</th><th scope="col">Begruendung</th></tr></thead>
+      <caption>Begründungen der Entscheidungstabelle, in Auswertungsreihenfolge</caption>
+      <thead><tr><th scope="col">Art</th><th scope="col">Zeile</th><th scope="col">Begründung</th></tr></thead>
       <tbody>
         {% for reason in case.reasons %}
         <tr {% if reason.get("kind") == "sampled" %}class="sample-row"{% endif %}>
@@ -268,7 +268,7 @@
           <td>{{ reason.get("detail") }}</td>
         </tr>
         {% else %}
-        <tr><td colspan="3">Keine Begruendung protokolliert.</td></tr>
+        <tr><td colspan="3">Keine Begründung protokolliert.</td></tr>
         {% endfor %}
       </tbody>
     </table>
@@ -276,7 +276,7 @@
 </section>
 
 <section aria-labelledby="anomaly-heading">
-  <h2 id="anomaly-heading">Auffaelligkeitspruefung</h2>
+  <h2 id="anomaly-heading">Auffälligkeitsprüfung</h2>
   {% if case.anomaly %}
   <dl>
     <dt>Score</dt><dd>{{ "%.3f"|format(case.anomaly.get("score")) if case.anomaly.get("score") is not none else "-" }}</dd>
@@ -286,7 +286,7 @@
   {% if view.anomaly_reasons %}
   <p>
     Eine Markierung ist eine Beobachtung am Vorgang gegen einen
-    Referenzbestand, kein Befund ueber eine Person, und im Protokollbetrieb
+    Referenzbestand, kein Befund über eine Person, und im Protokollbetrieb
     bewegt sie kein Tier.
   </p>
   <ul>
@@ -295,10 +295,10 @@
     {% endfor %}
   </ul>
   {% else %}
-  <p class="muted">Keine Merkmalsbegruendung protokolliert.</p>
+  <p class="muted">Keine Merkmalsbegründung protokolliert.</p>
   {% endif %}
   {% else %}
-  <p class="muted">Keine Auffaelligkeitspruefung protokolliert.</p>
+  <p class="muted">Keine Auffälligkeitsprüfung protokolliert.</p>
   {% endif %}
 </section>
 
@@ -306,9 +306,9 @@
   <h2 id="drafts-heading">Vorbereitete Schreiben</h2>
   {% if view.drafts_gated %}
   <p class="notice">
-    Vorbereitete Schreiben enthalten die zurueckgeschriebenen Identitaetsdaten
+    Vorbereitete Schreiben enthalten die zurückgeschriebenen Identitätsdaten
     der antragstellenden Person. Sie werden erst angezeigt, wenn oben eine
-    bearbeitende Einheit gewaehlt ist. Das ist die Demo-Fassung des
+    bearbeitende Einheit gewählt ist. Das ist die Demo-Fassung des
     Berechtigungskonzepts (C-5), nicht seine Umsetzung.
   </p>
   {% elif view.drafts %}
@@ -338,18 +338,18 @@
 
   <form method="post" action="/review/case/{{ state.case_id }}/confirm" class="action-form">
     <fieldset>
-      <legend>Bestaetigen{% if view.has_nachforderung %} und versenden{% endif %}</legend>
+      <legend>Bestätigen{% if view.has_nachforderung %} und versenden{% endif %}</legend>
       <input type="hidden" name="unit" value="{{ view.unit_id or '' }}">
       <p class="field">
         <input type="checkbox" id="draft_edited" name="draft_edited" value="1">
-        <label for="draft_edited">Ich habe den Entwurf inhaltlich geaendert</label>
+        <label for="draft_edited">Ich habe den Entwurf inhaltlich geändert</label>
       </p>
       <p class="field">
         <input type="checkbox" id="rechtsfolgenhinweis" name="rechtsfolgenhinweis" value="1">
         <label for="rechtsfolgenhinweis">
           Rechtsfolgenhinweis nach par. 66 Abs. 3 SGB I in das Schreiben
           aufnehmen (Einzelfallentscheidung; nur bei einer Nachforderung
-          wirksam, nie fuer Angaben, die die DRV selbst ermitteln kann)
+          wirksam, nie für Angaben, die die DRV selbst ermitteln kann)
         </label>
       </p>
       <p class="field">
@@ -363,19 +363,19 @@
       <p class="notice">
         Beim Festschreiben wird die absolute Frist aus dem Versanddatum
         berechnet: vier Tage Bekanntgabefiktion (par. 37 Abs. 2 SGB X), dann
-        die Antwortfrist, beides auf den naechsten Werktag geschoben
+        die Antwortfrist, beides auf den nächsten Werktag geschoben
         (par. 26 Abs. 3 SGB X). Feiertagssatz:
         <strong>{{ view.dispatch_land }}</strong> mit
         {{ view.dispatch_holidays }} hinterlegten Feiertagen. Ist das nicht das
         Bundesland des Zustellorts, stimmt die Frist nicht.
       </p>
-      <button type="submit">Bestaetigen</button>
+      <button type="submit">Bestätigen</button>
     </fieldset>
   </form>
 
   <form method="post" action="/review/case/{{ state.case_id }}/override" class="action-form">
     <fieldset>
-      <legend>Zuordnung aendern</legend>
+      <legend>Zuordnung ändern</legend>
       <input type="hidden" name="unit" value="{{ view.unit_id or '' }}">
       <input type="hidden" name="field" value="unit">
       <p class="field">
@@ -387,21 +387,21 @@
         </select>
       </p>
       <p class="field">
-        <label for="reason_unit">Begruendung (erforderlich)</label>
+        <label for="reason_unit">Begründung (erforderlich)</label>
         <input type="text" id="reason_unit" name="reason" required maxlength="500"
                aria-describedby="reason-unit-help">
         <span class="help" id="reason-unit-help">
-          Die Begruendung wird in den Korrekturpool exportiert und ist das
-          Trainingsmaterial fuer die naechste Fassung der Regeln.
+          Die Begründung wird in den Korrekturpool exportiert und ist das
+          Trainingsmaterial für die nächste Fassung der Regeln.
         </span>
       </p>
-      <button type="submit">Zuordnung aendern</button>
+      <button type="submit">Zuordnung ändern</button>
     </fieldset>
   </form>
 
   <form method="post" action="/review/case/{{ state.case_id }}/override" class="action-form">
     <fieldset>
-      <legend>Tier aendern</legend>
+      <legend>Tier ändern</legend>
       <input type="hidden" name="unit" value="{{ view.unit_id or '' }}">
       <input type="hidden" name="field" value="tier">
       <p class="field">
@@ -413,10 +413,10 @@
         </select>
       </p>
       <p class="field">
-        <label for="reason_tier">Begruendung (erforderlich)</label>
+        <label for="reason_tier">Begründung (erforderlich)</label>
         <input type="text" id="reason_tier" name="reason" required maxlength="500">
       </p>
-      <button type="submit">Tier aendern</button>
+      <button type="submit">Tier ändern</button>
     </fieldset>
   </form>
 
@@ -426,37 +426,37 @@
       <legend>Eskalieren</legend>
       <input type="hidden" name="unit" value="{{ view.unit_id or '' }}">
       <p>
-        Ein Klick hebt den Vorgang auf Tier 3 (vollstaendige Pruefung) und
+        Ein Klick hebt den Vorgang auf Tier 3 (vollständige Prüfung) und
         schreibt eine Korrektur ins Journal (P-4, par. 88 Abs. 5 Nr. 3 AO
-        analog). Eine Begruendung ist hier freiwillig: Eskalieren fuegt
-        Pruefung hinzu, und vor die sichere Richtung gehoert keine Huerde.
+        analog). Eine Begründung ist hier freiwillig: Eskalieren fügt
+        Prüfung hinzu, und vor die sichere Richtung gehört keine Hürde.
       </p>
       <p class="field">
-        <label for="reason_escalate">Begruendung (optional)</label>
+        <label for="reason_escalate">Begründung (optional)</label>
         <input type="text" id="reason_escalate" name="reason" maxlength="500">
       </p>
-      <button type="submit">Zur vollstaendigen Pruefung eskalieren</button>
+      <button type="submit">Zur vollständigen Prüfung eskalieren</button>
     </fieldset>
   </form>
   {% else %}
   <p class="notice">
-    Dieser Vorgang steht bereits in der vollstaendigen Pruefung (Tier 3). Eine
-    Eskalation wuerde eine Bewegung ins Journal schreiben, die nicht
+    Dieser Vorgang steht bereits in der vollständigen Prüfung (Tier 3). Eine
+    Eskalation würde eine Bewegung ins Journal schreiben, die nicht
     stattgefunden hat, und wird deshalb nicht angeboten.
   </p>
   {% endif %}
 </section>
 {% else %}
 <section aria-labelledby="confirmed-heading">
-  <h2 id="confirmed-heading">Bestaetigung</h2>
+  <h2 id="confirmed-heading">Bestätigung</h2>
   <p>
-    Dieser Vorgang ist bestaetigt. Es gibt keine Schaltflaeche, die das
-    rueckgaengig macht: eine Korrektur nach der Bestaetigung ist eine neue
+    Dieser Vorgang ist bestätigt. Es gibt keine Schaltfläche, die das
+    rückgängig macht: eine Korrektur nach der Bestätigung ist eine neue
     Entscheidung und kein Ueberschreiben dieser (ADR-008).
   </p>
   <div class="scroll-x">
     <table>
-      <caption>Was die Bestaetigung festgehalten hat</caption>
+      <caption>Was die Bestätigung festgehalten hat</caption>
       <thead><tr><th scope="col">Feld</th><th scope="col">Wert</th></tr></thead>
       <tbody>
         {% for key, value in (case.confirmation or {}).items() %}
@@ -481,7 +481,7 @@
           <th scope="col">Von</th>
           <th scope="col">Auf</th>
           <th scope="col">Einheit</th>
-          <th scope="col">Begruendung</th>
+          <th scope="col">Begründung</th>
         </tr>
       </thead>
       <tbody>
@@ -504,9 +504,9 @@
 <section aria-labelledby="journal-heading">
   <h2 id="journal-heading">Journal</h2>
   <p>
-    Der vollstaendige Verlauf, in der Reihenfolge, in der er geschrieben wurde.
+    Der vollständige Verlauf, in der Reihenfolge, in der er geschrieben wurde.
     Diese Liste ist die Quelle aller Angaben oben; keine Seite dieser
-    Oberflaeche haelt einen eigenen Zustand.
+    Oberfläche hält einen eigenen Zustand.
   </p>
   <div class="scroll-x">
     <table>
@@ -535,8 +535,8 @@
   </div>
   <p class="muted">
     Der Akteur ist immer das System oder eine Organisationseinheit. Eine
-    natuerliche Person steht in keinem Ereignis - das Journal hat kein Feld
-    dafuer (BPersVG par. 80 Abs. 1 Nr. 21, C-4).
+    natürliche Person steht in keinem Ereignis - das Journal hat kein Feld
+    dafür (BPersVG par. 80 Abs. 1 Nr. 21, C-4).
   </p>
 </section>
 {% endblock %}

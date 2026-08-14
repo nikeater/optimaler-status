@@ -1,385 +1,176 @@
-{# The tour (part 15). The whole system from beginning to end, for a visitor
-   who has never seen it: six steps, each one linking to the page where that
-   step actually happens.
+{# The tour. The whole system from beginning to end, for a visitor who has
+   never seen it: six steps, each one linking to the page where that step
+   actually happens.
 
-   German leads and every step carries a short English aside in the same
-   `.aside` treatment, so a reader can follow either language without losing
-   the thread. Nothing on this page is computed: the only facts read from the
-   running system are whether this deployment accepts submissions and, for the
-   seeded case the tour points at, the unit and the tier the journal already
-   recorded (see `api/demo.py::build_tour_view`). #}
+   Part 16 removed the English asides that used to ride under every German
+   paragraph. They were the right answer while the site was monolingual and the
+   wrong one once it was not: a page that carries both languages at once is
+   longer than either, and the second one always reads as a summary of the
+   first. The header's toggle now serves the whole page in one language at a
+   time, and this template holds no language of its own.
+
+   Nothing on this page is computed. The only facts read from the running
+   system are whether this deployment accepts submissions and, for the seeded
+   case the tour points at, the unit and the tier the journal already recorded
+   (see `api/demo.py::build_tour_view`). #}
 {% extends "demo_base.html" %}
-{% block title %}EingangsLotse - Rundgang{% endblock %}
-{% block heading %}Rundgang: von der Einreichung bis zum geschlossenen Kreis{% endblock %}
+{% block title %}{{ t("tour.title") }}{% endblock %}
+{% block heading %}{{ t("tour.headline") }}{% endblock %}
 {% block content %}
 
 <section aria-labelledby="uebersicht-heading">
-  <h2 id="uebersicht-heading">Die sechs Schritte</h2>
-  <p class="lead">
-    Dieser Rundgang erzaehlt das System einmal ganz durch: was das Problem ist,
-    was beim Einreichen passiert, was die Maschine daraus macht, wie ein Mensch
-    entscheidet, was die antragstellende Person davon sieht - und warum man dem
-    Gezeigten trauen kann. Jeder Schritt verlinkt die Stelle, an der er
-    tatsaechlich stattfindet. Rechnen Sie mit zehn Minuten.
-  </p>
-  <p class="aside" lang="en">
-    <span class="aside-label">In English</span>
-    A guided walk through the whole system in six steps: the problem, what
-    happens when something is submitted, what the machine makes of it, how a
-    human decides, what the applicant receives, and why any of it can be
-    trusted. Every step links to the page where it really happens. About ten
-    minutes.
-  </p>
-  <nav aria-label="Schritte des Rundgangs">
-    <ol>
-      <li><a href="#schritt-1">Das Problem und die Antwort in zwei Ebenen</a></li>
-      <li><a href="#schritt-2">Phase 1: Sie reichen etwas ein</a></li>
-      <li><a href="#schritt-3">Phase 2: Was die Maschine daraus gemacht hat</a></li>
-      <li><a href="#schritt-4">Phase 3: Ein Mensch entscheidet</a></li>
-      <li><a href="#schritt-5">Der Kreis schliesst sich im Postfach</a></li>
-      <li><a href="#schritt-6">Warum man dem trauen kann</a></li>
+  <h2 id="uebersicht-heading">{{ t("tour.overview.heading") }}</h2>
+  <p class="lead">{{ t("tour.lead") }}</p>
+  <nav aria-label="{{ t('tour.toc.label') }}">
+    <ol class="tour-toc">
+      {% for step in (1, 2, 3, 4, 5, 6) %}
+      <li><a href="#schritt-{{ step }}">{{ t("tour.toc." ~ step) }}</a></li>
+      {% endfor %}
     </ol>
   </nav>
-  <p class="notice">{{ view.ingest_note }}</p>
+  <p class="notice">{{ t(view.ingest_note_key) }}</p>
 </section>
 
-<section aria-labelledby="schritt-1-heading" id="schritt-1">
+<section aria-labelledby="schritt-1-heading" id="schritt-1" class="step">
   <h2 id="schritt-1-heading">
     <span class="step-mark" aria-hidden="true">1</span>
-    Das Problem und die Antwort in zwei Ebenen
+    {{ t("tour.toc.1") }}
   </h2>
-  <p>
-    In Massenverfahren der oeffentlichen Verwaltung entscheidet nicht die
-    schwierige Akte ueber den Rueckstand, sondern die Menge: hunderttausende
-    Eingaenge, von denen die meisten einfach sind, muessen sortiert werden,
-    bevor irgendjemand fachlich arbeiten kann. Der teuerste Fehler dabei ist
-    immer derselbe - ein Vorgang wird als "kein Mensch noetig" abgelegt, der
-    einen Menschen gebraucht haette.
-  </p>
-  <p>
-    Die Antwort dieses Systems sind zwei getrennte Ebenen: eine
-    <strong>Evidenzebene</strong>, die probabilistisch sein darf - sie liest,
-    extrahiert, ordnet zu, findet Luecken - und eine
-    <strong>Entscheidungsebene</strong>, die deterministisch ist und
-    ausschliesslich liest, was belegt ist. Zwischen beiden liegt ein
-    Einwegventil: Unsicherheit kann einen Vorgang nur zu einem Menschen
-    schieben, nie von ihm weg. Das ist keine Absichtserklaerung, sondern eine
-    Eigenschaft, die bei jedem Commit gegen die echte Entscheidungstabelle und
-    die 101 echten Evidenzsaetze des eingefrorenen Satzes geprueft wird
-    (ADR-004).
-  </p>
-  <p class="aside" lang="en">
-    <span class="aside-label">In English</span>
-    Mass procedures are broken by volume, not by hard cases, and the expensive
-    failure is always the same one: something gets cleared as "no human needed"
-    that needed a human. The answer here is two separate planes - a
-    probabilistic evidence plane that may be wrong, and a deterministic
-    decision plane that only reads what has been proven - with a one-way valve
-    between them. Uncertainty can add human review and can never remove it, and
-    that property is proved against the real decision table on every commit.
-  </p>
-  <ul class="watch-for">
-    <li>
-      <strong>Der Assistent entscheidet nichts ueber Menschen.</strong> Er
-      entscheidet, wie genau ein Mensch hinsehen muss - Tier 1 klar, Tier 2
-      unvollstaendig, Tier 3 vollstaendige Pruefung - und begruendet jede
-      dieser Einstufungen zeilenweise.
-    </li>
-    <li>
-      <strong>Kein Satz eines Sprachmodells erreicht eine antragstellende
-      Person.</strong> Nachrichten entstehen aus Vorlagen einer versionierten
-      Konfiguration, Entwuerfe warten auf die Bestaetigung eines Menschen.
-    </li>
-  </ul>
+  <div class="step-body">
+    <p>{{ t("tour.s1.p1") }}</p>
+    <p>{{ m("tour.s1.p2") }}</p>
+    <ul class="watch-for">
+      <li>{{ m("tour.s1.w1") }}</li>
+      <li>{{ m("tour.s1.w2") }}</li>
+    </ul>
+  </div>
 </section>
 
-<section aria-labelledby="schritt-2-heading" id="schritt-2">
+<section aria-labelledby="schritt-2-heading" id="schritt-2" class="step">
   <h2 id="schritt-2-heading">
     <span class="step-mark" aria-hidden="true">2</span>
-    Phase 1: Sie reichen etwas ein
+    {{ t("tour.toc.2") }}
   </h2>
-  <p>
-    Auf der Antragsseite waehlen Sie eine von vier <em>erfundenen</em> Personen
-    - Mustermann-Namen, damit ein Screenshot dieser Demo niemals wie ein echter
-    Vorgang aussieht - und bearbeiten deren vorausgefuellten Antrag. Sie duerfen
-    ihn kaputt machen: die Versicherungsnummer loeschen, den Rentenbeginn
-    zwanzig Jahre in die Zukunft schieben, den Auslandsbezug einschalten. Jede
-    dieser Aenderungen loest ein anderes, echtes Verhalten der Anlage aus.
-  </p>
-  <p>
-    Das Formular geht durch <strong>dieselbe</strong> Verarbeitung wie jeder
-    andere Eingang: dieselbe Versiegelung, dieselbe Pruefung, dasselbe Journal.
-    Es gibt keinen Demo-Pfad daneben.
-  </p>
-  <p class="aside" lang="en">
-    <span class="aside-label">In English</span>
-    Pick one of four openly fictional applicants, edit their prefilled
-    application, and break it on purpose - the panel on that page tells you
-    what to try. The submission goes through exactly the same ingest,
-    redaction, validation and journal as any other; there is no separate demo
-    path.
-  </p>
-  {% if view.ingest_open %}
-  <p>
-    <a class="cta" href="/demo/antrag">Antrag stellen (Phase 1)</a>
-  </p>
-  {% else %}
-  <p class="notice alarm-note">
-    <strong>Auf dieser Instanz ist der Eingang gesperrt.</strong> Ohne
-    konfiguriertes Ingest-Token antwortet <code>POST /ingest</code> jedem
-    Aufrufer mit 403, ohne die Anfrage zu lesen - auch der Antragsseite selbst,
-    die kein eigenes Privileg hat, sondern nur ein Token. Das ist der sichere
-    Zustand und kein Fehler. Die Seite ist trotzdem begehbar: Sie sehen dort
-    die Personen, das Formular und die Hinweise, nur der Absende-Knopf fehlt.
-  </p>
-  <p>
-    <a class="cta cta-secondary" href="/demo/antrag">Antragsseite ansehen (ohne Absenden)</a>
-  </p>
-  {% endif %}
+  <div class="step-body">
+    <p>{{ m("tour.s2.p1") }}</p>
+    <p>{{ m("tour.s2.p2") }}</p>
+    {% if view.ingest_open %}
+    <p>
+      <a class="cta" href="/demo/antrag">{{ t("tour.s2.cta") }}</a>
+    </p>
+    {% else %}
+    <p class="notice alarm-note">{{ m("tour.s2.closed") }}</p>
+    <p>
+      <a class="cta cta-secondary" href="/demo/antrag">{{ t("tour.s2.cta_closed") }}</a>
+    </p>
+    {% endif %}
+  </div>
 </section>
 
-<section aria-labelledby="schritt-3-heading" id="schritt-3">
+<section aria-labelledby="schritt-3-heading" id="schritt-3" class="step">
   <h2 id="schritt-3-heading">
     <span class="step-mark" aria-hidden="true">3</span>
-    Phase 2: Was die Maschine daraus gemacht hat
+    {{ t("tour.toc.3") }}
   </h2>
-  <p>
-    Die Glasrohr-Ansicht zeigt sieben Schritte in der Reihenfolge, in der sie
-    gelaufen sind: Eingang, Versiegelung, Extraktion, Evidenz, Entscheidung,
-    Nachricht, Warteschlange. Jede Zahl darauf kommt aus dem Journal des
-    Vorgangs. Die Seite rechnet nichts nach - sie kann dem, was tatsaechlich
-    passiert ist, gar nicht widersprechen.
-  </p>
-  <p class="aside" lang="en">
-    <span class="aside-label">In English</span>
-    The glass pipeline: seven stages in the order they ran, with the real data
-    at each one. The page recomputes nothing - it reads the case journal and
-    the same projections the caseworker screens read, so it cannot contradict
-    what actually happened.
-  </p>
-  {% if view.case_present %}
-  <p>
-    Damit die sieben Schritte begehbar sind, <em>bevor</em> Sie selbst etwas
-    eingereicht haben, zeigt dieser Rundgang einen Vorgang aus dem
-    eingefrorenen Goldsatz: einen Antrag auf Regelaltersrente, bei dem der
-    Rentenbeginn fehlt. Ergebnis: <strong>{{ view.tier_label }}</strong>,
-    zugeordnet an <strong>{{ view.unit_label }}</strong>.
-  </p>
-  <p>
-    <a class="cta" href="{{ view.pipeline_href }}">Die sieben Schritte an diesem Vorgang ansehen</a>
-  </p>
-  <h3>Worauf Sie dort achten sollten</h3>
-  <ul class="watch-for">
-    <li>
-      <strong>Schritt b, Versiegelung.</strong> Name, Geburtsdatum,
-      Versicherungsnummer und Anschrift sind ersetzt, bevor die Arbeitskopie
-      entstand. Die Tabelle nennt die ART des Versiegelten und die Anzahl -
-      niemals einen Wert. Eine zweite, unabhaengige Erkennerrunde ueber die
-      Arbeitskopie hat nichts mehr gefunden; das ist die Nachpruefung.
-    </li>
-    <li>
-      <strong>Schritt c, Extraktion.</strong> Jede ausgelesene Angabe traegt
-      eine Fundstelle, die doppelt geprueft wurde: das woertliche Zitat UND die
-      Zeichenposition, unabhaengig voneinander gegen dieselbe Textfassung. Wer
-      das nicht besteht, wird verworfen statt repariert - und ein verworfener
-      Wert schiebt den Vorgang Richtung Tier 3.
-    </li>
-    <li>
-      <strong>Schritt d, Evidenz.</strong> Die gemeldete Luecke steht mit dem
-      Satz da, den die Nachforderung dazu stellen wuerde. Der Satz kommt aus
-      der Verfahrenskonfiguration, nicht aus einem Modell.
-    </li>
-    <li>
-      <strong>Schritt e, Entscheidung.</strong> Die Begruendungen der
-      Entscheidungstabelle stehen in Auswertungsreihenfolge, mit der Zeilen-ID,
-      die gegriffen hat. Das ist der Punkt, an dem "erklaerbar" aufhoert, ein
-      Versprechen zu sein.
-    </li>
-  </ul>
-  <p class="notice">{{ view.seeded_note }}</p>
-  {% else %}
-  <p class="notice">{{ view.unseeded_note }}</p>
-  <p>
-    <a class="cta cta-secondary" href="/review">Zur Bearbeitung</a>
-  </p>
-  {% endif %}
+  <div class="step-body">
+    <p>{{ t("tour.s3.p1") }}</p>
+    {% if view.case_present %}
+    <p>{{ m("tour.s3.seeded_case", tier=view.tier_label, unit=view.unit_label) }}</p>
+    <p>
+      <a class="cta" href="{{ view.pipeline_href }}">{{ t("tour.s3.cta") }}</a>
+    </p>
+    <h3>{{ t("tour.watch") }}</h3>
+    <ul class="watch-for">
+      <li>{{ m("tour.s3.w1") }}</li>
+      <li>{{ m("tour.s3.w2") }}</li>
+      <li>{{ m("tour.s3.w3") }}</li>
+      <li>{{ m("tour.s3.w4") }}</li>
+    </ul>
+    <p class="notice">{{ t("tour.seeded") }}</p>
+    {% else %}
+    <p class="notice">{{ t("tour.unseeded") }}</p>
+    <p>
+      <a class="cta cta-secondary" href="/review">{{ t("tour.s4.review") }}</a>
+    </p>
+    {% endif %}
+  </div>
 </section>
 
-<section aria-labelledby="schritt-4-heading" id="schritt-4">
+<section aria-labelledby="schritt-4-heading" id="schritt-4" class="step">
   <h2 id="schritt-4-heading">
     <span class="step-mark" aria-hidden="true">4</span>
-    Phase 3: Ein Mensch entscheidet
+    {{ t("tour.toc.4") }}
   </h2>
-  <p>
-    Jetzt wechseln Sie die Rolle. Die Bearbeitungsoberflaeche zeigt
-    Warteschlangen je Organisationseinheit, aeltester Vorgang zuerst, plus eine
-    Zentrale Klaerung fuer alles, was keine Regel zuordnen konnte
-    (par. 16 Abs. 2 S. 1 SGB I verpflichtet die unzustaendige Stelle zur
-    unverzueglichen Weiterleitung). In der Vorgangsansicht stehen saemtliche
-    Belege ueber den drei Aktionen: bestaetigen, umsteuern, eskalieren.
-  </p>
-  <p>
-    Jede Aktion schreibt ein <em>neues</em> Journalereignis. Keine aendert ein
-    altes und keine loescht eines: eine Korrektur ist ein Eintrag neben der
-    alten Entscheidung, nicht an ihrer Stelle (ADR-008). Deshalb gibt es auch
-    keinen Knopf, der eine Bestaetigung rueckgaengig macht.
-  </p>
-  <p class="aside" lang="en">
-    <span class="aside-label">In English</span>
-    Now you change hats. Queues per organisational unit, oldest first, plus a
-    central clearing queue for anything no rule could route. The case view puts
-    every piece of evidence above the three actions - confirm, re-route,
-    escalate - and each of them appends a new journal event. Nothing is ever
-    overwritten, which is why there is no undo button.
-  </p>
-  {% if view.case_present %}
-  <p>
-    <a class="cta" href="{{ view.queue_href }}">Zur Warteschlange {{ view.unit_label }}</a>
-  </p>
-  <p>
-    Oder direkt in die Vorgangsansicht desselben Vorgangs:
-    <a href="{{ view.case_href }}">Vorgang {{ view.case_id }}</a>.
-  </p>
-  {% else %}
-  <p>
-    <a class="cta" href="/review">Zur Bearbeitung</a>
-  </p>
-  {% endif %}
-  <h3>Worauf Sie dort achten sollten</h3>
-  <ul class="watch-for">
-    <li>
-      <strong>Das Umsteuern verlangt eine Begruendung, das Eskalieren nicht.</strong>
-      Diese Asymmetrie ist dieselbe wie beim Einwegventil: vor die sichere
-      Richtung - mehr Pruefung - gehoert keine Huerde.
-    </li>
-    <li>
-      <strong>Der Aehnlichkeitsvorschlag steht sichtbar da und hat nichts
-      entschieden.</strong> Er ist eingerahmt und beschriftet, damit ihm
-      widersprochen werden kann - nicht, damit er mitentscheidet (ADR-021).
-    </li>
-    <li>
-      <strong>Im Journal steht keine natuerliche Person.</strong> Akteur ist
-      immer das System oder eine Organisationseinheit; ein Feld fuer eine
-      benannte Person gibt es nicht (BPersVG par. 80 Abs. 1 Nr. 21).
-    </li>
-    <li>
-      <strong>Vor dem Bestaetigen steht die Fristarithmetik.</strong> Vier Tage
-      Bekanntgabefiktion (par. 37 Abs. 2 SGB X), dann die Antwortfrist, beides
-      auf den naechsten Werktag geschoben (par. 26 Abs. 3 SGB X) - mit dem
-      Feiertagssatz, der dabei verwendet wird, im Klartext daneben.
-    </li>
-  </ul>
-  <p class="notice">{{ view.picker_note }}</p>
+  <div class="step-body">
+    <p>{{ t("tour.s4.p1") }}</p>
+    <p>{{ m("tour.s4.p2") }}</p>
+    {% if view.case_present %}
+    <p>
+      <a class="cta" href="{{ view.queue_href }}">{{ t("tour.s4.cta", unit=view.unit_label) }}</a>
+    </p>
+    <p>
+      {{ t("tour.s4.direct") }}
+      <a href="{{ view.case_href }}">{{ t("tour.s4.case", case_id=view.case_id) }}</a>.
+    </p>
+    {% else %}
+    <p>
+      <a class="cta" href="/review">{{ t("tour.s4.review") }}</a>
+    </p>
+    {% endif %}
+    <h3>{{ t("tour.watch") }}</h3>
+    <ul class="watch-for">
+      <li>{{ m("tour.s4.w1") }}</li>
+      <li>{{ m("tour.s4.w2") }}</li>
+      <li>{{ m("tour.s4.w3") }}</li>
+      <li>{{ m("tour.s4.w4") }}</li>
+    </ul>
+    <p class="notice">{{ t("picker.note") }}</p>
+  </div>
 </section>
 
-<section aria-labelledby="schritt-5-heading" id="schritt-5">
+<section aria-labelledby="schritt-5-heading" id="schritt-5" class="step">
   <h2 id="schritt-5-heading">
     <span class="step-mark" aria-hidden="true">5</span>
-    Der Kreis schliesst sich im Postfach
+    {{ t("tour.toc.5") }}
   </h2>
-  <p>
-    Das simulierte Postfach zeigt, was die antragstellende Person tatsaechlich
-    erhalten haette: die Eingangsbestaetigung und - nach der Zuordnung - den
-    Zwischenstand. Beide entstehen automatisch als Projektion des
-    Vorgangsjournals, beide sind rein informatorisch (Realakt, kein
-    Verwaltungsakt, ADR-005), und beider Text stammt vollstaendig aus einer
-    versionierten Konfigurationsdatei. Kein Sprachmodell ist daran beteiligt.
-  </p>
-  <p>
-    Genau deshalb gibt es auf dieser Seite <em>keine</em> Bedienung: kein
-    Formular, keine Schaltflaeche, nichts, womit jemand eine Nachricht
-    ausloesen, aendern oder erneut senden koennte. Alles mit Verfahrensfolge
-    geht den schriftformgebundenen Weg (par. 36a SGB I) und nicht ueber diese
-    Seite.
-  </p>
-  <p class="aside" lang="en">
-    <span class="aside-label">In English</span>
-    The simulated inbox shows what the applicant would actually have received:
-    the receipt, and after routing the status message. Both are automatic
-    projections of the case journal, both are informational acts with no legal
-    consequence, and every word comes from a versioned configuration file. The
-    page has no controls at all - nothing here can produce, edit or re-send a
-    message.
-  </p>
-  <p>
-    <a class="cta" href="/inbox">Zum Postfach (nur Ansicht)</a>
-  </p>
+  <div class="step-body">
+    <p>{{ t("tour.s5.p1") }}</p>
+    <p>{{ m("tour.s5.p2") }}</p>
+    <p>
+      <a class="cta" href="/inbox">{{ t("tour.s5.cta") }}</a>
+    </p>
+  </div>
 </section>
 
-<section aria-labelledby="schritt-6-heading" id="schritt-6">
+<section aria-labelledby="schritt-6-heading" id="schritt-6" class="step">
   <h2 id="schritt-6-heading">
     <span class="step-mark" aria-hidden="true">6</span>
-    Warum man dem trauen kann
+    {{ t("tour.toc.6") }}
   </h2>
-  <p>
-    Eine Demo, die nur gut aussieht, ist ein Prospekt. Was diese hier von einem
-    Prospekt unterscheidet, sind fuenf Dinge, die alle nachpruefbar sind:
-  </p>
-  <dl>
-    <dt>Alle Daten sind synthetisch</dt>
-    <dd>
-      Der gesamte Bestand stammt aus dem eingefrorenen Goldsatz
-      <code>{{ view.gold_dir }}</code>. Es gibt hier keine echte Person und
-      keinen echten Vorgang. Die erfundenen Personen der Antragsseite sind
-      zusaetzlich daraufhin geprueft, dass keiner ihrer Werte irgendwo im
-      Goldsatz oder im Kanarienvogel-Satz vorkommt - sonst koennte eine
-      Leck-Pruefung ein Leck nicht von einer Persona unterscheiden.
-    </dd>
-    <dt>Der Eingang ist bewusst verschlossen</dt>
-    <dd>
-      <code>POST /ingest</code> antwortet ohne gueltiges Token mit 403, und
-      zwar <em>bevor</em> der Anfragekoerper gelesen wird - die Pruefung ist
-      eine Middleware und keine Routen-Abhaengigkeit, weil ein Framework den
-      Koerper sonst zuerst dekodiert. Diese Instanz kann keinen echten,
-      versehentlich abgeschickten Antrag entgegennehmen.
-    </dd>
-    <dt>Vier Gates, bei jedem Commit</dt>
-    <dd>
-      Der Eval-Lauf ueber dem eingefrorenen Satz bricht ab, wenn eines von vier
-      Dingen sich bewegt: die False-Clear-Rate (Budget null, dauerhaft), der
-      Redaktions-Recall der deterministischen Erkenner, die Regressions-
-      Identitaet der rein strukturierten Teilmenge, und die Lesbarkeit jeder
-      Scorer-Markierung. Die Zahlen des letzten Laufs stehen auf der
-      Metrikseite - die Seite rechnet sie nicht, sie zeigt sie.
-    </dd>
-    <dt>Ein Neustart setzt alles zurueck</dt>
-    <dd>
-      Der Bestand wird beim Start aus dem Goldsatz neu aufgebaut. Was Sie hier
-      bestaetigen oder umsteuern, verschwindet damit wieder - deshalb sind die
-      Aktionen ueberhaupt offen. Der Zwischenspeicher der Antragsseite lebt
-      ausschliesslich im Arbeitsspeicher und ueberlebt keinen Prozess.
-    </dd>
-    <dt>Der Quellcode ist offen und vollstaendig dokumentiert</dt>
-    <dd>
-      Lizenz EUPL-1.2. Architekturentscheidungen, die Spezifikation, die
-      bekannten Fehler und die Barrierefreiheits-Selbsteinschaetzung liegen im
-      Repository: <a href="{{ view.repo_url }}">{{ view.repo_url }}</a>.
-    </dd>
-  </dl>
-  <p class="aside" lang="en">
-    <span class="aside-label">In English</span>
-    Five things separate this from a brochure, and all five are checkable: the
-    data is synthetic and comes from one frozen corpus; ingest answers 403
-    before it reads a request body, so this instance cannot receive real
-    personal data by accident; four gates fail the build if the false-clear
-    rate, the redaction recall, the structured-subset regression identity or
-    the readability of a scorer flag moves; a restart rebuilds the whole state
-    from the frozen corpus, which is why the caseworker actions can be left
-    open; and the source is EUPL-1.2 with the decision records, the
-    specification, the known errors and the accessibility self-assessment in
-    the repository.
-  </p>
-  <p>
-    <a class="cta" href="/metrics">Zu den Eval-Metriken</a>
-  </p>
-  <p class="notice">
-    Die Barrierefreiheits-Selbsteinschaetzung nach EN 301 549 / WCAG 2.1 AA ist
-    eine <strong>Selbsteinschaetzung</strong> und kein Test nach BITV 2.0. Eine
-    externe Pruefung durch eine akkreditierte Stelle hat nicht stattgefunden
-    und ist Pilotvoraussetzung. Das steht hier und nicht in einer Fussnote,
-    weil ein System, das Vertrauenswuerdigkeit behauptet, ueber seine eigenen
-    Raender ehrlich sein muss.
-  </p>
+  <div class="step-body">
+    <p>{{ t("tour.s6.p1") }}</p>
+    <dl>
+      <dt>{{ t("tour.s6.d1.title") }}</dt>
+      <dd>{{ m("tour.s6.d1.body", gold_dir=view.gold_dir) }}</dd>
+      <dt>{{ t("tour.s6.d2.title") }}</dt>
+      <dd>{{ m("tour.s6.d2.body") }}</dd>
+      <dt>{{ t("tour.s6.d3.title") }}</dt>
+      <dd>{{ t("tour.s6.d3.body") }}</dd>
+      <dt>{{ t("tour.s6.d4.title") }}</dt>
+      <dd>{{ t("tour.s6.d4.body") }}</dd>
+      <dt>{{ t("tour.s6.d5.title") }}</dt>
+      <dd>
+        {{ t("tour.s6.d5.body") }}
+        {% if repo_url %}
+        <a href="{{ repo_url }}">{{ repo_url }}</a>
+        {% endif %}
+      </dd>
+    </dl>
+    <p>
+      <a class="cta" href="/metrics">{{ t("tour.s6.cta") }}</a>
+    </p>
+    <p class="notice">{{ m("tour.s6.a11y") }}</p>
+  </div>
 </section>
 
 {% endblock %}

@@ -2,14 +2,15 @@
    Every page in this project loads THIS file first and then at most one small
    page-specific sheet (metrics.css, review.css, demo.css).
 
-   Three rules govern everything below and they are rules rather than taste.
+   Four rules govern everything below and they are rules rather than taste.
 
    1. NOTHING IS FETCHED. No CDN, no web font, no remote icon, no `@import` of
       anything that is not in this directory. This is a data-protection
       demonstration for German public administration; a page that phoned a
       third party to look pretty would contradict the product on the product's
       own screen. The type stack is the operating system's, which is also why
-      it costs zero bytes and cannot fail to load.
+      it costs zero bytes and cannot fail to load. The icon set is inline SVG
+      in `ui/templates/_icons.html`, drawn on a 24-unit grid in `currentColor`.
 
    2. CONTRAST IS A FLOOR, NOT A PREFERENCE. Every token pair this file
       actually ships is measured, and the measurements are written down in
@@ -18,50 +19,72 @@
       ring - at or above 3:1. A colour is never the only carrier of a meaning;
       where a tone appears, words appear with it.
 
+      The part-16 palette makes that rule visible in the token names. The brand
+      sky blue `--brand` measures 2.36:1 on white and therefore MAY NOT CARRY
+      TEXT: it is a fill, a rule and a decorative surface, and everything
+      textual in the blue family uses `--brand-ink` (6.51:1 on white) or
+      `--brand-ink-strong` (8.92:1). The same split exists in the red family
+      for the same arithmetic reason - see `--alarm` and `--alarm-text`.
+
    3. FOCUS IS RESTYLED, NEVER REMOVED. No stylesheet in this project contains
       the rule that switches a focus outline off, and a test asserts that over
       every file in this directory rather than over a list somebody maintains.
 
-   Layout model, in one paragraph: `body` is the centred column and paints the
-   page canvas, `header` and every `main > section` is a card on that canvas,
-   and wide content scrolls INSIDE its own `.scroll-x` box so the page body
-   never scrolls sideways at 320 CSS px. That last one is 1.4.10 and it applies
-   to every page now, the caseworker pages included. */
+   4. DESKTOP-FIRST BY BREAKPOINT, NEVER BY USER AGENT. Nothing here reads a
+      user-agent string; the layout is a single column that GAINS columns at
+      48rem, 64rem and 80rem. The 320 CSS px discipline is unchanged and still
+      tested: wide content scrolls INSIDE its own `.scroll-x` box, the
+      two-column definition list drops to one column below 40rem, and no length
+      in this file is a fixed pixel value.
+
+   Layout model, in one paragraph: `body` is full width and paints the canvas,
+   the sticky site header spans it, and the header's inner row, `main` and
+   `footer` share one centred container of `--measure`. Every `main > section`
+   is a card on that canvas. */
 
 /* ------------------------------------------------------------------ tokens */
 
 :root {
   color-scheme: light;
 
-  /* Palette. Sober govtech: slate ink, one restrained institutional blue, and
-     three status hues that are only ever a repetition of something written in
-     words. Ratios against white in the comments; the full matrix, including
-     the tinted surfaces, is in the accessibility self-check. */
-  --ink: #101720; /* 18.02:1 */
-  --ink-soft: #3d4757; /* 9.39:1 */
-  --muted: #4d5866; /* 7.23:1 */
-  --accent: #12518c; /* 8.14:1 */
-  --accent-strong: #0d3d6b; /* 11.07:1 */
-  --ok: #0d5730; /* 8.67:1 */
-  --alarm: #8c1616; /* 9.37:1 */
+  /* Palette (part 16). The sky blue of the reference, an ink that is nearly
+     black, three light surfaces and two status families. Ratios against white
+     in the comments; the full matrix, including the tinted surfaces, is in the
+     accessibility self-check. */
+  --brand: #4db2ec; /* 2.36:1 - FILLS AND RULES ONLY, never text */
+  --brand-ink: #106393; /* 6.51:1 - links and text in the brand family */
+  --brand-ink-strong: #0c4e73; /* 8.92:1 - hover, buttons, the focus ring */
+
+  --ink: #222222; /* 15.91:1 */
+  --ink-soft: #3f4a52; /* 9.08:1 */
+  --muted: #57646d; /* 6.09:1 */
+
+  --ok: #10683c; /* 6.85:1 */
+  /* The red family is RESERVED for warning, refusal and alarm and is never
+     decorative. Two members, because #dc0000 measures 4.32:1 on the sunken
+     surface: it draws rules and edges (a 3:1 floor, comfortably met) and
+     `--alarm-text` carries any small text in the family (8.03:1 or better). */
+  --alarm: #dc0000; /* 5.19:1 on white, 4.32:1 on the darkest surface */
+  --alarm-text: #8f1010; /* 9.34:1 */
   --warn: #7a4a06; /* 7.47:1 */
 
   --surface: #ffffff;
-  --surface-alt: #f4f7fa;
-  --surface-sunken: #e9eef4;
-  --canvas: #eaeef3;
+  --surface-alt: #f5f7f9;
+  --surface-sunken: #eaeaea;
+  --canvas: #eef2f5;
 
-  --tint-accent: #e7eef7;
-  --tint-ok: #eaf3ed;
-  --tint-alarm: #fbeeee;
-  --tint-sample: #eef2fa;
+  --tint-brand: #e4f2fb;
+  --tint-ok: #e8f3ec;
+  --tint-alarm: #fbeaea;
+  --tint-sample: #eef2f8;
 
   /* Two border weights on purpose. `--line` separates things inside a card and
-     is decorative; `--line-strong` (3.58:1 on white, 3.07:1 on the tints) is
-     what a control boundary is drawn with, because that one has a floor. */
-  --line: #d7dee6;
-  --line-strong: #78899d;
-  --focus: #0d3d6b;
+     is decorative; `--line-strong` (4.29:1 on white, 3.56:1 on the sunken
+     surface) is what a control boundary is drawn with, because that one has a
+     floor. */
+  --line: #d8dee3;
+  --line-strong: #6f7c85;
+  --focus: #0c4e73;
 
   /* Type scale, ~1.2 steps, in rem so it follows the reader's root size. */
   --text-xs: 0.8125rem;
@@ -71,6 +94,7 @@
   --text-lg: 1.25rem;
   --text-xl: 1.5rem;
   --text-2xl: 1.875rem;
+  --text-3xl: 2.375rem;
 
   /* Spacing scale. One ladder, used everywhere, so vertical rhythm is a
      decision made once rather than per component. */
@@ -89,14 +113,17 @@
      project may carry a fixed pixel length, and the reflow test enforces it. */
   --radius-pill: 62em;
 
-  --shadow-card: 0 1px 2px rgba(16, 23, 32, 0.06), 0 1px 8px rgba(16, 23, 32, 0.04);
+  --shadow-card: 0 1px 2px rgba(34, 34, 34, 0.06), 0 1px 8px rgba(34, 34, 34, 0.05);
+  --shadow-pop: 0 2px 4px rgba(34, 34, 34, 0.08), 0 8px 24px rgba(34, 34, 34, 0.12);
 
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, "Noto Sans", sans-serif;
   --font-mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", "Consolas",
     "Liberation Mono", monospace;
 
-  --measure: 68rem;
+  /* The desktop container. 80rem is the part-16 width; the pages breathe into
+     real columns at 48rem, 64rem and 80rem rather than growing one long line. */
+  --measure: 80rem;
 }
 
 /* -------------------------------------------------------------------- base */
@@ -108,9 +135,8 @@
 }
 
 body {
-  margin: 0 auto;
-  max-width: var(--measure);
-  padding: var(--space-5) var(--space-4) var(--space-7);
+  margin: 0;
+  padding: 0;
   background: var(--canvas);
   color: var(--ink);
   font-family: var(--font-sans);
@@ -128,13 +154,13 @@ h3,
 h4 {
   color: var(--ink);
   font-weight: 650;
-  line-height: 1.25;
+  line-height: 1.2;
   letter-spacing: -0.01em;
   text-wrap: balance;
 }
 
 h1 {
-  margin: 0 0 var(--space-2);
+  margin: 0 0 var(--space-3);
   font-size: var(--text-2xl);
 }
 
@@ -155,7 +181,7 @@ h4 {
 
 p {
   margin: 0 0 var(--space-3);
-  max-width: 62ch;
+  max-width: 68ch;
 }
 
 ul,
@@ -166,16 +192,16 @@ ol {
 
 li {
   margin-bottom: var(--space-2);
-  max-width: 62ch;
+  max-width: 68ch;
 }
 
 a {
-  color: var(--accent);
+  color: var(--brand-ink);
   text-decoration-thickness: 1px;
 }
 
 a:hover {
-  color: var(--accent-strong);
+  color: var(--brand-ink-strong);
 }
 
 strong {
@@ -216,17 +242,26 @@ hr {
   margin: var(--space-5) 0;
 }
 
+/* One icon treatment for the whole set: it inherits colour and size from the
+   text beside it, and it never sits alone. */
+.icon {
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+  vertical-align: -0.18em;
+}
+
 /* --------------------------------------------------- skip link and focus */
 
 /* The first focusable element on every page. Offscreen until focused, then a
-   solid block at the top-left that no card can hide behind. */
+   solid block at the top-left that no card and no sticky header can hide. */
 .skip-link {
   position: absolute;
   left: -9999px;
   top: 0;
-  z-index: 10;
+  z-index: 40;
   padding: var(--space-3) var(--space-4);
-  background: var(--accent-strong);
+  background: var(--brand-ink-strong);
   color: #ffffff;
   font-weight: 600;
   border-radius: 0 0 var(--radius) 0;
@@ -238,7 +273,7 @@ hr {
 }
 
 /* Restyled, never removed. 3px is the visible weight; the offset is what keeps
-   it readable on top of a tinted card. */
+   it readable on top of a tinted card or a brand fill. */
 :focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 2px;
@@ -259,26 +294,228 @@ hr {
   border: 0;
 }
 
-/* ------------------------------------------------------ the page furniture */
+/* ------------------------------------------------------- the site header */
 
-header {
-  position: relative;
-  margin-bottom: var(--space-5);
-  padding: var(--space-5) var(--space-5) var(--space-4);
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   background: var(--surface);
-  border: 1px solid var(--line);
-  border-top: 4px solid var(--accent);
-  border-radius: var(--radius-lg);
+  border-bottom: 3px solid var(--brand);
   box-shadow: var(--shadow-card);
 }
 
-header > p {
+.site-header-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-5);
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-4);
+}
+
+.wordmark {
+  display: block;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.wordmark-name {
+  display: block;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.wordmark-sub {
+  display: block;
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+
+a.wordmark:hover .wordmark-name {
+  color: var(--brand-ink-strong);
+}
+
+.site-tools {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+/* The language toggle: an icon that repeats nothing, and two names. */
+.lang-switch {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--muted);
+}
+
+.lang-switch ul {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--text-sm);
+}
+
+.lang-switch li {
+  margin: 0;
+}
+
+.lang-switch li + li {
+  border-left: 1px solid var(--line-strong);
+  padding-left: var(--space-2);
+}
+
+.lang-switch a {
+  color: var(--brand-ink);
+  font-weight: 600;
+}
+
+.lang-current {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+/* The menu. A native disclosure: no script, no focus trap, no ARIA to keep in
+   step with a state we would otherwise have to own. */
+.menu {
+  position: relative;
+}
+
+.menu-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--brand-ink);
+  border-radius: var(--radius-sm);
+  background: var(--brand-ink);
+  color: #ffffff;
+  font-size: var(--text-sm);
+  font-weight: 650;
+  cursor: pointer;
+  list-style: none;
+}
+
+.menu-summary::-webkit-details-marker {
+  display: none;
+}
+
+.menu-summary:hover {
+  background: var(--brand-ink-strong);
+  border-color: var(--brand-ink-strong);
+}
+
+.menu-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-2));
+  z-index: 30;
+  min-width: 17rem;
+  padding: var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-pop);
+}
+
+.menu-panel ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.menu-panel li {
+  margin: 0;
+  max-width: none;
+}
+
+.menu-panel a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.menu-panel a:hover {
+  background: var(--tint-brand);
+  color: var(--brand-ink-strong);
+}
+
+.menu-panel .icon {
+  color: var(--brand-ink);
+}
+
+/* ------------------------------------------------------- the demo ribbon */
+
+/* One line, on every page of a demo instance, linking the page that carries
+   the whole notice. The red family is not decoration here: it is the same
+   warning meaning it has everywhere else in this project. */
+.demo-ribbon {
+  background: var(--tint-alarm);
+  border-bottom: 2px solid var(--alarm);
+  color: var(--ink);
+  font-size: var(--text-sm);
+}
+
+.demo-ribbon p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: var(--space-2) var(--space-4);
+}
+
+.demo-ribbon .icon {
+  color: var(--alarm-text);
+}
+
+.demo-ribbon a {
+  color: var(--alarm-text);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------ the page furniture */
+
+main {
+  display: block;
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) var(--space-6);
+}
+
+/* The page's own title block: heading, the step strip or the unit picker, and
+   on the landing page the hero. A band rather than a card, so the first thing
+   under the header reads as part of the page rather than as its first item. */
+.page-head {
+  margin-bottom: var(--space-5);
+}
+
+.page-head > h1 {
+  font-size: var(--text-3xl);
+}
+
+.page-head > p {
   color: var(--ink-soft);
   font-size: var(--text-md);
 }
 
-header > p:last-child {
-  margin-bottom: 0;
+.language-note {
+  border-left-color: var(--brand);
+  background: var(--tint-brand);
 }
 
 /* Cards. Every section of every page, without a single template class: the
@@ -299,14 +536,43 @@ main > section > *:last-child {
 /* A bare `div` under `main` is the case view's `aria-live` region and nothing
    else. Deliberately NOT a card: it is present on every render so a screen
    reader has something to announce into, and an empty card would be a white
-   box saying nothing. What appears inside it is a `.notice`, which carries its
-   own surface. */
-main > div {
+   box saying nothing. */
+main > div:not(.page-head) {
   margin-bottom: var(--space-4);
 }
 
-main > div > *:last-child {
+main > div:not(.page-head) > *:last-child {
   margin-bottom: 0;
+}
+
+/* A grid of small cards. The desktop pass: one column below 48rem, two to
+   48rem, three above 64rem - by breakpoint, never by user agent. */
+.card-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+  list-style: none;
+  margin: 0 0 var(--space-4);
+  padding: 0;
+}
+
+.card-grid > .card {
+  margin: 0;
+  max-width: none;
+  padding: var(--space-4);
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--brand);
+  border-radius: var(--radius);
+}
+
+.card > *:last-child {
+  margin-bottom: 0;
+}
+
+.card h3,
+.card h4 {
+  margin-top: 0;
 }
 
 /* A nested article is a sub-card: a message in the inbox, a prepared letter. */
@@ -334,15 +600,16 @@ article > pre {
 }
 
 footer {
-  margin-top: var(--space-6);
-  padding-top: var(--space-4);
+  max-width: var(--measure);
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-4) var(--space-7);
   border-top: 1px solid var(--line-strong);
   color: var(--muted);
   font-size: var(--text-sm);
 }
 
 footer p {
-  max-width: 72ch;
+  max-width: 78ch;
 }
 
 footer p:last-child {
@@ -371,15 +638,102 @@ footer p:last-child {
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-pill);
   background: var(--surface);
-  color: var(--accent);
+  color: var(--brand-ink);
   font-size: var(--text-sm);
   font-weight: 600;
   text-decoration: none;
 }
 
 .navbar a:hover {
-  background: var(--tint-accent);
-  color: var(--accent-strong);
+  background: var(--tint-brand);
+  color: var(--brand-ink-strong);
+}
+
+/* ------------------------------------------------- the three-phase strip */
+
+.phase-strip {
+  margin: var(--space-5) 0 0;
+}
+
+.phase-strip ol {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.phase {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0 var(--space-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  text-align: center;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+
+/* The connector, drawn from the previous circle to this one. It is decoration
+   over a list that already has an order, so it carries nothing. */
+.phase::before {
+  content: "";
+  position: absolute;
+  top: 1.1rem;
+  right: 50%;
+  left: -50%;
+  height: 2px;
+  background: var(--line-strong);
+}
+
+.phase:first-child::before {
+  content: none;
+}
+
+.phase-mark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 2px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.phase-label {
+  font-weight: 600;
+}
+
+.phase-current {
+  color: var(--ink);
+}
+
+.phase-current .phase-mark {
+  background: var(--brand);
+  border-color: var(--brand-ink);
+  color: var(--ink);
+}
+
+.phase-done {
+  color: var(--ink-soft);
+}
+
+.phase-done .phase-mark {
+  background: var(--brand-ink);
+  border-color: var(--brand-ink);
+  color: #ffffff;
+}
+
+.phase-done::before,
+.phase-current::before {
+  background: var(--brand-ink);
 }
 
 /* ------------------------------------------------------------ definitions */
@@ -493,6 +847,7 @@ legend {
 
 .field {
   margin: 0 0 var(--space-3);
+  min-width: 0;
 }
 
 .field label {
@@ -509,7 +864,16 @@ legend {
   margin-right: var(--space-2);
   width: 1rem;
   height: 1rem;
-  accent-color: var(--accent);
+  accent-color: var(--brand-ink);
+}
+
+/* Fields that belong together in the persona file sit together on the page:
+   the two halves of a name, the four parts of an address. One column below
+   48rem, like everything else. */
+.field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3) var(--space-4);
 }
 
 label {
@@ -547,23 +911,23 @@ textarea {
   margin-bottom: var(--space-1);
   color: var(--muted);
   font-size: var(--text-sm);
-  max-width: 62ch;
+  max-width: 68ch;
 }
 
 button {
   font: inherit;
   font-weight: 600;
   padding: var(--space-2) var(--space-5);
-  border: 1px solid var(--accent);
+  border: 1px solid var(--brand-ink);
   border-radius: var(--radius-sm);
-  background: var(--accent);
+  background: var(--brand-ink);
   color: #ffffff;
   cursor: pointer;
 }
 
 button:hover {
-  background: var(--accent-strong);
-  border-color: var(--accent-strong);
+  background: var(--brand-ink-strong);
+  border-color: var(--brand-ink-strong);
 }
 
 /* The unit picker. A demo affordance that every page says is not
@@ -578,7 +942,7 @@ button:hover {
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
-  background: var(--surface-alt);
+  background: var(--surface);
 }
 
 .picker label {
@@ -594,7 +958,7 @@ button:hover {
   border-left: 4px solid var(--line-strong);
   border-radius: var(--radius);
   background: var(--surface-alt);
-  max-width: 72ch;
+  max-width: 78ch;
 }
 
 .notice > *:last-child {
@@ -614,15 +978,14 @@ button:hover {
 /* A sampled case gets the calmest surface on the page, deliberately: the whole
    of ADR-025 is that a random draw must not look like a suspicion. */
 .sample-note {
-  border-left-color: var(--accent);
+  border-left-color: var(--brand);
   background: var(--tint-sample);
 }
 
 /* The same rule as a table row, and it lives here rather than in one of the
-   two page sheets because ADR-025 is a promise BOTH surfaces make: the citizen
+   page sheets because ADR-025 is a promise BOTH surfaces make: the citizen
    reading the pipeline page and the caseworker reading the case view must see
-   a random draw rendered the same calm way. Declared with `tbody` so it wins
-   on the cells rather than fighting the row. */
+   a random draw rendered the same calm way. */
 tbody .sample-row > th,
 tbody .sample-row > td {
   background: var(--tint-sample);
@@ -643,7 +1006,7 @@ tbody .sample-row > td {
   border-radius: var(--radius-sm);
   background: var(--surface-alt);
   font-size: var(--text-sm);
-  max-width: 62ch;
+  max-width: 68ch;
 }
 
 .flag:last-child {
@@ -672,21 +1035,39 @@ tbody .sample-row > td {
   color: var(--muted);
 }
 
-/* The public-demo banner (part 11). Above everything on every page, and it
-   says in words what it means - the colour carries none of it. */
-.demo-banner {
-  margin: 0 0 var(--space-5);
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--alarm);
-  border-left: 8px solid var(--alarm);
-  border-radius: var(--radius);
-  background: var(--tint-alarm);
-  color: var(--ink);
+/* ------------------------------------------------ the desktop breakpoints */
+
+@media (min-width: 48rem) {
+  .card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .field-row-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .field-row-4 {
+    grid-template-columns:
+      minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr);
+  }
 }
 
-.demo-banner p {
-  margin: 0;
-  max-width: 78ch;
+@media (min-width: 64rem) {
+  main {
+    padding: var(--space-6) var(--space-5) var(--space-7);
+  }
+
+  .site-header-inner {
+    padding: var(--space-3) var(--space-5);
+  }
+
+  .card-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .card-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 /* ------------------------------------------------------------- the reflow */
@@ -695,11 +1076,40 @@ tbody .sample-row > td {
    two-column definition list, which is precisely what overflows on a narrow
    viewport, and the horizontal rows that have to become vertical stacks. */
 @media (max-width: 40rem) {
-  body {
+  main {
     padding: var(--space-4) var(--space-3) var(--space-6);
   }
 
-  header,
+  footer {
+    padding: var(--space-4) var(--space-3) var(--space-6);
+  }
+
+  .site-header-inner {
+    padding: var(--space-3);
+  }
+
+  .site-tools {
+    gap: var(--space-3);
+  }
+
+  .wordmark-sub {
+    display: none;
+  }
+
+  /* The menu panel stops floating and pushes the page instead: an absolutely
+     positioned panel wider than a 320 px viewport is exactly the two-axis
+     scroll 1.4.10 forbids. */
+  .menu-panel {
+    position: static;
+    min-width: 0;
+    margin-top: var(--space-2);
+    box-shadow: none;
+  }
+
+  .menu {
+    flex: 1 1 100%;
+  }
+
   main > section {
     padding: var(--space-4);
   }
@@ -726,6 +1136,22 @@ tbody .sample-row > td {
     width: 100%;
   }
 
+  .phase-strip ol {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .phase {
+    flex-direction: row;
+    justify-content: flex-start;
+    text-align: left;
+    padding: 0;
+  }
+
+  .phase::before {
+    content: none;
+  }
+
   th,
   td,
   caption {
@@ -733,9 +1159,11 @@ tbody .sample-row > td {
   }
 }
 
-/* Somebody who asked their system for less motion gets less motion. There is
-   nothing animated here today; this is the standing guarantee that a future
-   transition cannot ignore the setting. */
+/* Somebody who asked their system for less motion gets less motion. The one
+   animated thing in this project is the landing hero, and `demo.css` answers
+   this query for it explicitly rather than relying on the blanket rule below -
+   a hero frozen at the END of its keyframes would be a hero with no visible
+   caption at all. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

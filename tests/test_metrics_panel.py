@@ -70,7 +70,7 @@ def test_panel_shows_the_breakdowns(client: TestClient, report_file: Path) -> No
     body = client.get("/metrics").text
     assert "Nach Verfahren" in body
     assert "erwerbsminderungsrente" in body
-    assert "Auffaellige Teilmenge" in body
+    assert "Auffällige Teilmenge" in body
     assert "Shadow-Scorer aus Teil 06" in body
 
 
@@ -175,7 +175,7 @@ def test_the_panel_shows_the_derivation_metric(tmp_path: Path) -> None:
     html = render_panel(view)
     assert "Verfahrensableitung" in html
     assert "content 0.500" in html
-    assert "8 Vorgaenge tragen" in html
+    assert "8 Vorgänge tragen" in html
 
 
 def test_a_report_without_the_derivation_block_degrades_quietly(
@@ -233,10 +233,10 @@ def test_the_panel_shows_the_span_verification_and_subset_sections(
     )
     monkeypatch.setenv(REPORT_ENV, str(report))
     page = render_page(current_view())
-    assert "Spanpruefung" in page
+    assert "Spanprüfung" in page
     assert "Belegte Fundstellen" in page
     assert "quote_mismatch 1" in page
-    assert "<strong>unveraendert</strong>" in page
+    assert "<strong>unverändert</strong>" in page
     assert "0.989" in page, "the headline row reads the nested rate"
 
 
@@ -256,7 +256,7 @@ def test_the_panel_says_so_when_the_subset_invariant_is_violated(
     monkeypatch.setenv(REPORT_ENV, str(report))
     page = render_page(current_view())
     assert "<strong>VERLETZT</strong>" in page
-    assert "Kein Vorgang in diesem Satz traegt Freitext." in page
+    assert "Kein Vorgang in diesem Satz trägt Freitext." in page
 
 
 def test_the_panel_shows_the_threshold_review_and_the_classifier(

@@ -1,6 +1,6 @@
 """The demo's fictional applicants, and the submissions they turn into.
 
-Read from ``config/demo/personas_v1.yaml`` - a NEW independently versioned file
+Read from ``config/demo/personas_v2.yaml`` - a NEW independently versioned file
 that ``engine.config_loader`` deliberately does not know about. Nothing here
 reaches the pipeline, the decision table or a version stamp; the module is
 imported only by the demo routes, which exist only when the demo flag is on.
@@ -42,7 +42,7 @@ import yaml
 PERSONAS_DIR_ENV = "EINGANGSLOTSE_PERSONAS_FILE"
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_PERSONAS_FILE = REPO_ROOT / "config" / "demo" / "personas_v1.yaml"
+DEFAULT_PERSONAS_FILE = REPO_ROOT / "config" / "demo" / "personas_v2.yaml"
 
 #: The destination every demo submission declares. The same test destination the
 #: gold corpus uses, because it is not a fact about the person.
@@ -60,27 +60,11 @@ CHANNEL_FORM = "fit_connect"
 CHANNEL_EMAIL = "email"
 CHANNELS = (CHANNEL_FORM, CHANNEL_EMAIL)
 
-#: How the two tabs are labelled, and what the page says the second one is.
-CHANNEL_LABELS = {
-    CHANNEL_FORM: "Formular (FIT-Connect)",
-    CHANNEL_EMAIL: "E-Mail (simulierter Adapter)",
-}
-
-CHANNEL_NOTES = {
-    CHANNEL_FORM: (
-        "Ein strukturierter Eingang, wie ihn eine FIT-Connect-Zustellung "
-        "liefert. Die identitaetsbezogenen Felder werden als PFADE versiegelt, "
-        "bevor die Arbeitskopie entsteht."
-    ),
-    CHANNEL_EMAIL: (
-        "SIMULIERTER Adapter: es wird kein Postfach abgerufen, keine Mail "
-        "empfangen und keine Adresse betrieben. Ihr Text geht direkt in "
-        "dieselbe Verarbeitung, die ein echter Adapter beliefern wuerde - der "
-        "Adapter selbst ist Pilotumfang (P-14). Im Freitext findet die "
-        "Erkennerunion die Identitaetsangaben und versiegelt sie SPANNE FUER "
-        "SPANNE."
-    ),
-}
+#: How the two tabs are labelled and what the page says the second one is now
+#: lives in the translation table (``api/i18n.py``, keys ``channel.*``), because
+#: those two sentences are read by a visitor in one of two languages and this
+#: module has no business knowing which. What stays here is the two channel
+#: IDS, which are values in a submission and belong to no language at all.
 
 
 class PersonaError(RuntimeError):
@@ -97,6 +81,21 @@ class PersonaField:
     decide what gets sealed: that decision belongs to
     ``config/redaction/identity_fields_v1.yaml`` and to the detector union, and
     a second opinion here would be a second redaction policy.
+
+    ``control`` and ``join_order`` are part 16 and both are PRESENTATION ONLY.
+
+    ``control`` says which HTML control renders the field - a text box, a
+    native date picker, a select. None of the three changes what is submitted:
+    a date input posts the same ISO string that used to be typed, and a select
+    posts the same value typing produced.
+
+    ``join_order`` is what makes the split name work. Two fields may declare
+    the SAME ``path``; the submission builder then joins their values in
+    ``join_order`` and writes one string to that path. The form asks for the
+    Nachname first because that is how a German administrative form asks; the
+    envelope receives "Vorname Nachname" because that is the string it has
+    always received. The order on the screen and the order in the value are
+    different questions and this is where they are kept apart.
     """
 
     field_id: str
@@ -106,6 +105,11 @@ class PersonaField:
     kind: str = ""
     group: str = ""
     help: str = ""
+    label_en: str = ""
+    help_en: str = ""
+    control: str = "text"
+    options: tuple[str, ...] = ()
+    join_order: int = 0
 
     @property
     def identity(self) -> bool:
@@ -116,6 +120,14 @@ class PersonaField:
     def pair_key(self) -> str:
         """What this field pairs under: its group when it has one, else itself."""
         return self.group or self.field_id
+
+    def label_for(self, lang: str) -> str:
+        """This field's label in one language; German when none was written."""
+        return self.label_en if lang == "en" and self.label_en else self.label
+
+    def help_for(self, lang: str) -> str:
+        """This field's help sentence in one language, possibly empty."""
+        return self.help_en if lang == "en" and self.help_en else self.help
 
 
 @dataclass(frozen=True)
@@ -130,16 +142,34 @@ class Persona:
     fields: tuple[PersonaField, ...]
     letter: str
     procedure_hint: str | None = None
+    headline_en: str = ""
+    story_en: str = ""
+    expectation_en: str = ""
 
     def form_values(self) -> dict[str, str]:
         """The prefill for the Formular tab, field id to value."""
         return {field.field_id: field.value for field in self.fields}
 
     def field(self, field_id: str) -> PersonaField | None:
+        """This persona's field with that id, or None. Never an error."""
         for field in self.fields:
             if field.field_id == field_id:
                 return field
         return None
+
+    def headline_for(self, lang: str) -> str:
+        """The one-line summary in one language."""
+        return self.headline_en if lang == "en" and self.headline_en else self.headline
+
+    def story_for(self, lang: str) -> str:
+        """Who this person is, in one language."""
+        return self.story_en if lang == "en" and self.story_en else self.story
+
+    def expectation_for(self, lang: str) -> str:
+        """What the pipeline is expected to do with them, in one language."""
+        if lang == "en" and self.expectation_en:
+            return self.expectation_en
+        return self.expectation
 
 
 @dataclass(frozen=True)
@@ -150,6 +180,16 @@ class PersonaSet:
     note: str
     hints: tuple[tuple[str, str], ...]
     personas: tuple[Persona, ...]
+    note_en: str = ""
+    hints_en: tuple[tuple[str, str], ...] = ()
+
+    def note_for(self, lang: str) -> str:
+        """The sentence above the picker, in one language."""
+        return self.note_en if lang == "en" and self.note_en else self.note
+
+    def hints_for(self, lang: str) -> tuple[tuple[str, str], ...]:
+        """The "what you can try" panel, in one language."""
+        return self.hints_en if lang == "en" and self.hints_en else self.hints
 
     def get(self, persona_id: str | None) -> Persona | None:
         """The named persona, or None. An unknown id is None, never an error.
@@ -199,6 +239,8 @@ def load_personas(path: Path | None = None) -> PersonaSet:
         note=str(document.get("note", "")).strip(),
         hints=tuple(_hints(document.get("hints"))),
         personas=tuple(_persona(entry, source) for entry in entries),
+        note_en=str(document.get("note_en", "")).strip(),
+        hints_en=tuple(_hints(document.get("hints_en"))),
     )
 
 
@@ -227,13 +269,24 @@ def build_form_submission(
     checker's "missing" and "invalid" are different verdicts with different
     Nachforderung wording. Sending "" would report every blank as invalid, which
     is a worse sentence to send an applicant.
+
+    **Fields that share a path are JOINED** (part 16). The form asks for the
+    Nachname and the Vorname separately, in that order, because that is how a
+    German administrative form asks; both declare
+    ``path: antragsteller.name`` and their values are joined in ``join_order``,
+    which produces the exact "Vorname Nachname" string the envelope carried
+    before the split existed. Two consequences worth stating: the join happens
+    HERE, in the one function that builds a submission, so nothing downstream
+    learns that the form has two boxes; and a blank half is dropped rather than
+    joined, so emptying the Vorname submits a surname alone instead of a string
+    with a stray space in it.
     """
     data: dict[str, Any] = {}
-    for field in persona.fields:
-        raw = str(values.get(field.field_id, field.value)).strip()
+    for path, parts in _by_path(persona, values).items():
+        raw = " ".join(part for _order, part in sorted(parts, key=lambda p: p[0]))
         if not raw:
             continue
-        _assign(data, field.path, raw)
+        _assign(data, path, raw)
     payload: dict[str, Any] = {
         "submissionId": submission_id,
         "destinationId": DEMO_DESTINATION_ID,
@@ -277,6 +330,24 @@ def build_letter_submission(
         "attachments": [],
         "bodyText": body,
     }
+
+
+def _by_path(
+    persona: Persona, values: Mapping[str, str]
+) -> dict[str, list[tuple[int, str]]]:
+    """The submitted values grouped by the payload path they are written to.
+
+    A dict preserves insertion order, so a persona with no shared path produces
+    exactly the sequence of assignments the pre-split builder produced - which
+    is what makes the envelope byte-identical rather than merely equivalent.
+    """
+    grouped: dict[str, list[tuple[int, str]]] = {}
+    for field in persona.fields:
+        raw = str(values.get(field.field_id, field.value)).strip()
+        grouped.setdefault(field.path, [])
+        if raw:
+            grouped[field.path].append((field.join_order, raw))
+    return grouped
 
 
 def _assign(target: dict[str, Any], path: str, value: str) -> None:
@@ -328,6 +399,9 @@ def _persona(entry: object, source: Path) -> Persona:
         fields=tuple(_field(raw, persona_id) for raw in raw_fields),
         letter=letter + "\n",
         procedure_hint=str(hint).strip() if isinstance(hint, str) and hint else None,
+        headline_en=str(entry.get("headline_en", "")).strip(),
+        story_en=" ".join(str(entry.get("story_en", "")).split()),
+        expectation_en=" ".join(str(entry.get("expectation_en", "")).split()),
     )
 
 
@@ -341,6 +415,7 @@ def _field(raw: object, persona_id: str) -> PersonaField:
             f"persona {persona_id}: every field needs a field_id and a path "
             f"(got {field_id!r} / {path!r})"
         )
+    options = raw.get("options")
     return PersonaField(
         field_id=field_id,
         label=str(raw.get("label", field_id)).strip(),
@@ -349,4 +424,13 @@ def _field(raw: object, persona_id: str) -> PersonaField:
         kind=str(raw.get("kind", "")).strip(),
         group=str(raw.get("group", "")).strip(),
         help=" ".join(str(raw.get("help", "")).split()),
+        label_en=str(raw.get("label_en", "")).strip(),
+        help_en=" ".join(str(raw.get("help_en", "")).split()),
+        control=str(raw.get("control", "text")).strip() or "text",
+        options=(
+            tuple(str(option) for option in options)
+            if isinstance(options, list)
+            else ()
+        ),
+        join_order=int(raw.get("join_order", 0) or 0),
     )

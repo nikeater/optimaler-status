@@ -1,13 +1,30 @@
 {# The three-phase step indicator. Demo pages only (part 13, ruling 5): the
-   caseworker UI never learns that a tour is running. An ordered list with
-   aria-current, because "which step am I on" is a list position and not a
-   colour. #}
-<nav class="tour-steps" aria-label="Rundgang in drei Phasen">
+   caseworker UI never learns that a tour is running.
+
+   Part 16 replaced the three text pills with the shape everybody already reads
+   as "step 2 of 3": numbered circles on a connector line, the current one
+   filled, the completed ones carrying a checkmark, labels beneath. What did
+   NOT change is where the meaning lives. It is still an ordered list, the
+   current item still carries `aria-current="step"`, and every circle still has
+   an offscreen sentence naming its number and its state - so a reader who gets
+   neither the fill nor the checkmark gets "Phase 2 - aktuelle Phase" in words.
+   The circle contents are `aria-hidden`, because a number that is also the
+   list position would otherwise be announced twice. #}
+{% import "_icons.html" as icons %}
+<nav class="phase-strip" aria-label="{{ t('phase.label') }}">
   <ol>
-    {% for key, label in view.phases %}
-    <li class="tour-step{% if key == view.phase %} tour-step-current{% endif %}"
-        {% if key == view.phase %}aria-current="step"{% endif %}>
-      {{ label }}{% if key == view.phase %} <span class="sr-only">(aktuelle Phase)</span>{% endif %}
+    {% for key in view.phases %}
+    {% set done = view.phase_index > 0 and loop.index < view.phase_index %}
+    {% set current = key == view.phase %}
+    <li class="phase{% if current %} phase-current{% elif done %} phase-done{% endif %}"
+        {% if current %}aria-current="step"{% endif %}>
+      <span class="phase-mark" aria-hidden="true">
+        {% if done %}{{ icons.icon("check") }}{% else %}{{ loop.index }}{% endif %}
+      </span>
+      <span class="phase-label">{{ t("phase." ~ key) }}</span>
+      <span class="sr-only">
+        ({{ t("phase.number", number=loop.index) }}{% if current %} - {{ t("phase.current") }}{% elif done %} - {{ t("phase.done") }}{% endif %})
+      </span>
     </li>
     {% endfor %}
   </ol>

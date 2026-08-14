@@ -1,0 +1,67 @@
+{# The disclaimer page (part 16). Everything the banner used to say on every
+   page, said once, in full, on the page the ribbon links.
+
+   Demo surface like everything else the flag switches on: absent from the
+   route table and from the OpenAPI document when `EINGANGSLOTSE_DEMO_MODE` is
+   off, exactly as `/` and `/demo/*` are.
+
+   The one block on this page that is NOT translated is the deployment's own
+   notice, reproduced verbatim under "Der vollständige Hinweis". It is the
+   string the running process carries (`engine/demo/mode.py`), it already
+   contains its own English sentence, and re-typing it into the translation
+   table would create a second wording of the one sentence that has to be
+   exactly what the instance says about itself. #}
+{% extends "demo_base.html" %}
+{% block title %}{{ t("hinweise.title") }}{% endblock %}
+{% block heading %}{{ t("hinweise.headline") }}{% endblock %}
+{% block content %}
+
+<section aria-labelledby="einleitung-heading">
+  <h2 id="einleitung-heading">{{ t("hinweise.banner.heading") }}</h2>
+  <p class="lead">{{ t("hinweise.lead") }}</p>
+  <p class="notice">{{ demo.banner }}</p>
+  <p class="muted">{{ t("hinweise.banner.note") }}</p>
+</section>
+
+<section aria-labelledby="synthetisch-heading">
+  <h2 id="synthetisch-heading">{{ t("hinweise.synthetic.heading") }}</h2>
+  <p class="alarm-note notice"><strong>{{ t("hinweise.synthetic.body") }}</strong></p>
+  <p>{{ m("hinweise.gold", gold_dir=view.gold_dir) }}</p>
+</section>
+
+<section aria-labelledby="eingang-heading">
+  <h2 id="eingang-heading">{{ t("hinweise.ingest.heading") }}</h2>
+  <p>{{ t(view.ingest_note_key) }}</p>
+  <p>{{ m("hinweise.ingest.middleware") }}</p>
+</section>
+
+<section aria-labelledby="reset-heading">
+  <h2 id="reset-heading">{{ t("hinweise.reset.heading") }}</h2>
+  <p>{{ t("hinweise.reset.body") }}</p>
+  <p class="notice">{{ t("picker.note") }}</p>
+</section>
+
+<section aria-labelledby="lizenz-heading">
+  <h2 id="lizenz-heading">{{ t("hinweise.licence.heading") }}</h2>
+  <p>{{ t("hinweise.licence.body") }}</p>
+  {% if repo_url %}
+  <p>
+    {{ t("footer.source") }} <a href="{{ repo_url }}">{{ repo_url }}</a>.
+    {{ t("footer.license") }}
+  </p>
+  {% else %}
+  <p>{{ m("hinweise.licence.unset") }}</p>
+  <p>{{ t("footer.license") }}</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="barriere-heading">
+  <h2 id="barriere-heading">{{ t("hinweise.a11y.heading") }}</h2>
+  <p>{{ m("hinweise.a11y.body") }}</p>
+  <p>{{ t("hinweise.a11y.mechanical") }}</p>
+  <p>
+    <a class="cta cta-secondary" href="/">{{ t("hinweise.back") }}</a>
+  </p>
+</section>
+
+{% endblock %}

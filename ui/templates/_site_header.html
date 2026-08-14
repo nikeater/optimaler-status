@@ -1,0 +1,82 @@
+{# The site header. One partial, every page, demo and caseworker alike.
+
+   Three things live here and nothing else: the wordmark, the language toggle
+   and the menu. The page's own title, its step indicator and (on the
+   caseworker screens) the unit picker sit in `.page-head` inside `<main>`,
+   because they are properties of the page rather than of the site.
+
+   THE MENU WORKS WITHOUT JAVASCRIPT. It is a native `<details>`/`<summary>`
+   pair: the summary is focusable by construction, Enter and Space toggle it,
+   the disclosure state is exposed to assistive technology by the element
+   itself, and clicking the summary again closes it. A scripted dropdown would
+   have needed a keydown handler, a focus trap, an `aria-expanded` we maintain
+   by hand and a decision about what happens with scripting off - four ways to
+   get it wrong in exchange for nothing a visitor can see.
+
+   THE LANGUAGE TOGGLE IS TWO LINKS. `?lang=` on the current URL; the server
+   sets a cookie and redirects back (`api/i18n.py`). The current language is a
+   `<strong>` with `aria-current="true"` rather than a disabled link, so it is
+   named as the current choice instead of being a tab stop that does nothing.
+
+   DEMO GATING. Every item that only exists on a demo instance sits behind the
+   posture test. With the flag off this header links `/review`, `/inbox` and
+   `/metrics` - the three routes that exist on every instance - and nothing
+   else, so a non-demo deployment carries no link into a route that would
+   answer 404. #}
+{% import "_icons.html" as icons %}
+<header class="site-header" lang="{{ lang }}">
+  <div class="site-header-inner">
+    {% if demo.enabled %}
+    <a class="wordmark" href="/">
+      <span class="wordmark-name">EingangsLotse</span>
+      <span class="wordmark-sub">{{ t("chrome.subtitle") }}</span>
+    </a>
+    {% else %}
+    <span class="wordmark">
+      <span class="wordmark-name">EingangsLotse</span>
+      <span class="wordmark-sub">{{ t("chrome.subtitle") }}</span>
+    </span>
+    {% endif %}
+    <div class="site-tools">
+      <nav class="lang-switch" aria-label="{{ t('chrome.language') }}">
+        {{ icons.icon("globe") }}
+        <ul>
+          {% for code, name in (("de", "Deutsch"), ("en", "English")) %}
+          <li>
+            {% if code == lang %}
+            <strong class="lang-current" aria-current="true" lang="{{ code }}">{{ name }}</strong>
+            <span class="sr-only">({{ t("chrome.language.current") }})</span>
+            {% else %}
+            <a href="{{ page.switch_href(code) }}" lang="{{ code }}" hreflang="{{ code }}">{{ name }}</a>
+            {% endif %}
+          </li>
+          {% endfor %}
+        </ul>
+      </nav>
+      <details class="menu">
+        <summary class="menu-summary">
+          {{ icons.icon("menu") }}
+          <span>{{ t("chrome.menu") }}</span>
+        </summary>
+        <nav class="menu-panel" aria-label="{{ t('chrome.menu.label') }}">
+          <ul>
+            {% if demo.enabled %}
+            <li><a href="/">{{ icons.icon("home") }}<span>{{ t("chrome.nav.home") }}</span></a></li>
+            <li><a href="/demo/rundgang">{{ icons.icon("shield") }}<span>{{ t("chrome.nav.tour") }}</span></a></li>
+            <li><a href="/demo/antrag">{{ icons.icon("form") }}<span>{{ t("chrome.nav.intake") }}</span></a></li>
+            {% endif %}
+            <li><a href="/review">{{ icons.icon("queue") }}<span>{{ t("chrome.nav.review") }}</span></a></li>
+            <li><a href="/inbox">{{ icons.icon("envelope") }}<span>{{ t("chrome.nav.inbox") }}</span></a></li>
+            <li><a href="/metrics">{{ icons.icon("chart") }}<span>{{ t("chrome.nav.metrics") }}</span></a></li>
+            {% if demo.enabled %}
+            <li><a href="/hinweise">{{ icons.icon("info") }}<span>{{ t("chrome.nav.hinweise") }}</span></a></li>
+            {% endif %}
+            {% if repo_url %}
+            <li><a href="{{ repo_url }}">{{ icons.icon("code") }}<span>{{ t("chrome.nav.source") }}</span></a></li>
+            {% endif %}
+          </ul>
+        </nav>
+      </details>
+    </div>
+  </div>
+</header>

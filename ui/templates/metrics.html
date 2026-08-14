@@ -1,3 +1,5 @@
+{# The metrics panel. A caseworker/operator screen, so German in both language
+   settings for the reason `_german_note.html` states. #}
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -10,30 +12,24 @@
 </head>
 <body>
   <a class="skip-link" href="#inhalt">Direkt zum Inhalt</a>
-  {% include "_demo_banner.html" %}
-  <header>
-    <h1>EingangsLotse - Eval-Metriken</h1>
-    <p>
-      Zahlen aus dem zuletzt geschriebenen Eval-Report. Diese Seite rechnet
-      nichts selbst; sie zeigt, was <code>{{ view.refresh_hint }}</code> zuletzt
-      gemessen hat.
-    </p>
-    {# Both routes exist on every instance; `/` is demo-only and therefore not
-       in this list (see inbox.html for the same reasoning). #}
-    <nav aria-label="Bereiche">
-      <ul class="navbar">
-        <li><a href="/review">Bearbeitung</a></li>
-        <li><a href="/inbox">Postfach (nur Ansicht)</a></li>
-        <li>
-          <a href="/metrics"
-             hx-get="/metrics/panel"
-             hx-target="#metrics-panel"
-             hx-swap="outerHTML">Neu laden</a>
-        </li>
-      </ul>
-    </nav>
-  </header>
+  {% include "_site_header.html" %}
+  {% include "_demo_ribbon.html" %}
   <main id="inhalt">
+    <div class="page-head">
+      <h1>EingangsLotse - Eval-Metriken</h1>
+      <p class="lead">
+        Zahlen aus dem zuletzt geschriebenen Eval-Report. Diese Seite rechnet
+        nichts selbst; sie zeigt, was <code>{{ view.refresh_hint }}</code>
+        zuletzt gemessen hat.
+      </p>
+      {% include "_german_note.html" %}
+      <p>
+        <a class="cta cta-secondary" href="/metrics"
+           hx-get="/metrics/panel"
+           hx-target="#metrics-panel"
+           hx-swap="outerHTML">Neu laden</a>
+      </p>
+    </div>
     {% include "_metrics_panel.html" %}
   </main>
   <footer>

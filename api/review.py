@@ -33,7 +33,8 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any
 
-from api.metrics import environment
+from api.i18n import GERMAN, PageContext, phrase
+from api.metrics import render_template
 from engine.config_loader import ConfigBundle
 from engine.decide import is_audit_sample_reason
 from engine.draft.store import DraftRecord, DraftStore
@@ -56,45 +57,69 @@ from schemas.events import Event
 #: What the page says wherever the unit picker appears. One sentence, on every
 #: page, because "this is not authentication" is the kind of caveat that stops
 #: being read when it lives in a document.
-PICKER_NOTE = (
-    "Rollenwahl ist eine Demo-Funktion ohne Anmeldung: die Einheit steht in "
-    "der Adresszeile. Ein echtes Berechtigungskonzept mit Identitaetsanbieter "
-    "ist Pilotvoraussetzung (C-5) und existiert hier nicht."
-)
+#:
+#: Read out of the translation table rather than written here since part 16.
+#: The sentence appears on the caseworker screens (German, always) AND on the
+#: landing page and the tour (translated), and two copies of one sentence is
+#: how the two copies start disagreeing.
+PICKER_NOTE = phrase("picker.note")
 
 #: The one sentence a sampled case gets. Never the anomaly styling, never the
 #: word "auffaellig" (ADR-025).
 SAMPLED_NOTE = (
-    "Dieser Vorgang wurde zufaellig zur Qualitaetssicherung ausgewaehlt "
+    "Dieser Vorgang wurde zufällig zur Qualitätssicherung ausgewählt "
     "(P-1, par. 88 Abs. 5 Nr. 1 AO analog). Das ist KEIN "
-    "Auffaelligkeitsbefund: die Ziehung haengt allein an der Vorgangskennung "
-    "und sagt nichts ueber den Vorgang oder die antragstellende Person aus."
+    "Auffälligkeitsbefund: die Ziehung hängt allein an der Vorgangskennung "
+    "und sagt nichts über den Vorgang oder die antragstellende Person aus."
 )
 
 #: Human-readable tier names. Numbers alone are jargon on a screen a caseworker
-#: reads forty times a day.
-TIER_LABELS = {
-    1: "Tier 1 - klar und vollstaendig",
-    2: "Tier 2 - zuordenbar, unvollstaendig",
-    3: "Tier 3 - vollstaendige Pruefung",
-}
+#: reads forty times a day. German, for the caseworker templates; the citizen
+#: pages ask :func:`tier_label` for the reader's language.
+TIER_LABELS = {tier: phrase(f"tier.{tier}") for tier in (1, 2, 3)}
 
 #: What a sealed kind stood for, in words. The working copy shows placeholders
 #: and this is how a caseworker knows what one replaced.
 KIND_LABELS = {
-    "VSNR": "Versicherungsnummer",
-    "GEBDAT": "Geburtsdatum",
-    "ADDR": "Anschrift",
-    "NAME": "Name",
-    "ORG": "Organisation / Auftraggeber",
-    "BNR": "Betriebsnummer",
-    "IBAN": "Kontoverbindung",
-    "STID": "Steuer-Identifikationsnummer",
-    "AKTZ": "Aktenzeichen",
-    "EMAIL": "E-Mail-Adresse",
-    "TEL": "Telefonnummer",
-    "TEXT": "sonstiger Identitaetsbezug",
+    kind: phrase(f"kind.{kind}")
+    for kind in (
+        "VSNR",
+        "GEBDAT",
+        "ADDR",
+        "NAME",
+        "ORG",
+        "BNR",
+        "IBAN",
+        "STID",
+        "AKTZ",
+        "EMAIL",
+        "TEL",
+        "TEXT",
+    )
 }
+
+#: The clearing queue's label. Passed EXPLICITLY wherever a queue is built, so
+#: the overview and the queue page cannot show two spellings of one queue.
+CLEARING_LABEL_KEY = "queue.clearing"
+
+
+def clearing_label(page: PageContext | None = None) -> str:
+    """The clearing queue's name, in one language."""
+    return (page or GERMAN).t(CLEARING_LABEL_KEY)
+
+
+def tier_label(tier: int | None, page: PageContext | None = None) -> str:
+    """One tier's name, in one language. An unknown tier keeps its number."""
+    if tier in (1, 2, 3):
+        return (page or GERMAN).t(f"tier.{tier}")
+    return f"Tier {tier}"
+
+
+def channel_label(channel: str | None, page: PageContext | None = None) -> str:
+    """One channel's name, in one language. Anything else keeps its own id."""
+    if channel in ("fit_connect", "email"):
+        return (page or GERMAN).t(f"channel.{channel}")
+    return channel or (page or GERMAN).t("pipeline.d.unknown")
 
 
 @dataclass(frozen=True)
@@ -250,7 +275,15 @@ def build_overview(
         for known in _units_with_work(index)
     ]
     summaries.append(
-        _summary(build_queue(index, unit_id=None, now=moment, config=config.queues))
+        _summary(
+            build_queue(
+                index,
+                unit_id=None,
+                now=moment,
+                config=config.queues,
+                label=clearing_label(),
+            )
+        )
     )
     return QueueOverview(
         queues=tuple(summaries),
@@ -285,11 +318,7 @@ def build_queue_view(
         unit_id=target,
         now=moment,
         config=config.queues,
-        label=(
-            "Zentrale Klaerung (par. 16 Abs. 2 SGB I)"
-            if target is None
-            else unit_name(config, target)
-        ),
+        label=(clearing_label() if target is None else unit_name(config, target)),
     )
     return QueueView(
         queue=queue,
@@ -338,16 +367,16 @@ def build_case_view(
     )
 
 
-def render_overview(view: QueueOverview) -> str:
-    return environment().get_template("review_overview.html").render(view=view)
+def render_overview(view: QueueOverview, page: PageContext | None = None) -> str:
+    return render_template("review_overview.html", view, page)
 
 
-def render_queue(view: QueueView) -> str:
-    return environment().get_template("review_queue.html").render(view=view)
+def render_queue(view: QueueView, page: PageContext | None = None) -> str:
+    return render_template("review_queue.html", view, page)
 
 
-def render_case(view: CaseView) -> str:
-    return environment().get_template("review_case.html").render(view=view)
+def render_case(view: CaseView, page: PageContext | None = None) -> str:
+    return render_template("review_case.html", view, page)
 
 
 def _units_with_work(index: ReviewIndex) -> list[str]:

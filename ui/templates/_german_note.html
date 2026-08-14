@@ -1,0 +1,14 @@
+{# The one English line the caseworker screens carry in English mode.
+
+   The reason it is one line and not a translation: `/review*` and `/metrics`
+   are the working surface of a German agency, and half-translated
+   administrative vocabulary - "Nachforderung", "Bekanntgabefiktion",
+   "Zentrale Klärung" - would be less usable than the German rather than more.
+   A visitor who switched the site to English is told that, in English, and
+   keeps the real screen in front of them.
+
+   Rendered only when the page language is English, so a German reader never
+   sees an explanation of a thing that did not happen. #}
+{% if page.is_english %}
+<p class="notice language-note" lang="en">{{ t("review.english_note") }}</p>
+{% endif %}

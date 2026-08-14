@@ -4,19 +4,19 @@
 {% block picker_action %}/review/queue/{{ view.queue.queue_id }}{% endblock %}
 {% block content %}
 <section aria-labelledby="queue-heading">
-  <h2 id="queue-heading">Offene Vorgaenge ({{ view.queue.count }})</h2>
+  <h2 id="queue-heading">Offene Vorgänge ({{ view.queue.count }})</h2>
   {% if view.queue.clearing %}
   <p class="notice">
-    Vorgaenge, die keiner Fachreferat-Regel zugeordnet werden konnten. Sie
-    liegen hier, weil ein nicht zugeordneter Eingang trotzdem einen Zustaendigen
-    braucht - par. 16 Abs. 2 S. 1 SGB I verpflichtet die unzustaendige Stelle
-    zur unverzueglichen Weiterleitung. {{ view.queue.note }}
+    Vorgänge, die keiner Fachreferat-Regel zugeordnet werden konnten. Sie
+    liegen hier, weil ein nicht zugeordneter Eingang trotzdem einen Zuständigen
+    braucht - par. 16 Abs. 2 S. 1 SGB I verpflichtet die unzuständige Stelle
+    zur unverzüglichen Weiterleitung. {{ view.queue.note }}
   </p>
   {% endif %}
   <p>
-    Aeltester Vorgang zuerst. Stand {{ view.now.isoformat() }}; die Uhr wird
-    dieser Seite uebergeben und nicht abgelesen. Kein Merkmal auf dieser Seite
-    veraendert die Reihenfolge der Bearbeitung oder blendet etwas aus.
+    Ältester Vorgang zuerst. Stand {{ view.now.isoformat() }}; die Uhr wird
+    dieser Seite übergeben und nicht abgelesen. Kein Merkmal auf dieser Seite
+    verändert die Reihenfolge der Bearbeitung oder blendet etwas aus.
   </p>
   {% if view.highlight %}
   <p class="notice" id="queue-highlight-note">
@@ -24,12 +24,12 @@
     {% if view.highlighted %}
     ist in der Liste mit "Ihr Vorgang" gekennzeichnet. Die Markierung ist reine
     Anzeige: sie sortiert nichts um und blendet nichts aus - die Warteschlange
-    bleibt nach Alter geordnet, wie fuer jede andere bearbeitende Person auch.
+    bleibt nach Alter geordnet, wie für jede andere bearbeitende Person auch.
     {% else %}
     steht nicht (mehr) in dieser Warteschlange. Das ist ein normaler Zustand:
-    er ist bestaetigt oder umgesteuert worden.
+    er ist bestätigt oder umgesteuert worden.
     {% endif %}
-    Wenn Sie ihn bearbeitet haben, schliesst sich der Kreis im
+    Wenn Sie ihn bearbeitet haben, schließt sich der Kreis im
     <a href="/inbox">Postfach</a> der antragstellenden Person - dort steht, was
     sie erhalten hat.
   </p>
@@ -52,7 +52,7 @@
             <a href="/review/case/{{ row.case_id }}{% if view.unit_id %}?unit={{ view.unit_id }}{% endif %}">{{ row.case_id }}</a>
             {% if view.highlight and row.case_id == view.highlight %}
             <span class="tag">Ihr Vorgang</span>
-            <span class="sr-only">Dieser Vorgang stammt aus Ihrem Rundgang. Die Kennzeichnung ist reine Anzeige und veraendert die Reihenfolge nicht.</span>
+            <span class="sr-only">Dieser Vorgang stammt aus Ihrem Rundgang. Die Kennzeichnung ist reine Anzeige und verändert die Reihenfolge nicht.</span>
             {% endif %}
           </th>
           <td>

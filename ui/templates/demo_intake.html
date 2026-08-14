@@ -1,19 +1,34 @@
+{# Phase 1: the intake surface.
+
+   PART 16 REWORKED THE CONTROLS AND NOTHING ELSE. What a visitor submits is
+   byte for byte what they submitted before: the two name inputs are joined
+   server-side into the one string the envelope always carried, a date input
+   submits the ISO value a text input used to be typed into, and a select fills
+   its field exactly as typing filled it. The proof is the persona-arc suite,
+   which pins procedure, tier, unit and flag per persona through the REAL
+   pipeline and did not move.
+
+   The controls are grouped in rows: fields that share a group in the persona
+   file (the name, the address) sit side by side on a wide screen and stack
+   below 40rem like everything else. The "will be sealed" tag is shown once per
+   row rather than once per input, because four identical tags next to four
+   address inputs teach nothing and crowd the label they belong to. #}
 {% extends "demo_base.html" %}
-{% block title %}EingangsLotse - Antrag stellen (Phase 1){% endblock %}
-{% block heading %}Phase 1: Sie stellen einen Antrag{% endblock %}
+{% block title %}{{ t("intake.title") }}{% endblock %}
+{% block heading %}{{ t("intake.headline") }}{% endblock %}
 {% block content %}
 
 <section aria-labelledby="einleitung-heading">
-  <h2 id="einleitung-heading">Was hier passiert</h2>
-  <p>{{ view.ingest_note }}</p>
+  <h2 id="einleitung-heading">{{ t("intake.what.heading") }}</h2>
+  <p>{{ t(view.ingest_note_key) }}</p>
   <p class="notice">{{ view.note }}</p>
 </section>
 
-{% if view.error %}
+{% if view.error_key %}
 <section aria-labelledby="ablehnung-heading">
-  <h2 id="ablehnung-heading">Der Eingang wurde abgelehnt</h2>
+  <h2 id="ablehnung-heading">{{ t("intake.refusal.heading") }}</h2>
   <div class="alarm-note flag" role="alert" id="refusal">
-    <p>{{ view.error }}</p>
+    <p>{{ t(view.error_key) }}</p>
     {% if view.error_details %}
     <ul>
       {% for detail in view.error_details %}
@@ -26,44 +41,44 @@
 {% endif %}
 
 <section aria-labelledby="personen-heading">
-  <h2 id="personen-heading">Erfundene Person waehlen</h2>
+  <h2 id="personen-heading">{{ t("intake.persona.heading") }}</h2>
   <ul class="persona-list">
     {% for persona in view.personas %}
     <li class="persona{% if persona.persona_id == view.persona.persona_id %} persona-current{% endif %}">
       <h3>
         {% if persona.persona_id == view.persona.persona_id %}
-        {{ persona.display_name }} <span class="tag">gewaehlt</span>
+        {{ persona.display_name }} <span class="tag">{{ t("intake.persona.chosen") }}</span>
         {% else %}
         <a href="/demo/antrag?persona={{ persona.persona_id }}&amp;kanal={{ view.channel }}">{{ persona.display_name }}</a>
         {% endif %}
       </h3>
-      <p class="muted">{{ persona.headline }}</p>
-      <p>{{ persona.story }}</p>
-      <p><strong>Erwartetes Ergebnis:</strong> {{ persona.expectation }}</p>
+      <p class="muted">{{ persona.headline_for(lang) }}</p>
+      <p>{{ persona.story_for(lang) }}</p>
+      <p><strong>{{ t("intake.persona.expectation") }}</strong> {{ persona.expectation_for(lang) }}</p>
     </li>
     {% endfor %}
   </ul>
 </section>
 
 <section aria-labelledby="kanal-heading">
-  <h2 id="kanal-heading">Weg waehlen</h2>
+  <h2 id="kanal-heading">{{ t("intake.channel.heading") }}</h2>
   <ul class="navbar tabs">
     {% for channel in view.channels %}
     <li>
       {% if channel == view.channel %}
-      <strong class="tab-current" aria-current="page">{{ view.channel_labels[channel] }}</strong>
+      <strong class="tab-current" aria-current="page">{{ t("channel." ~ channel) }}</strong>
       {% else %}
-      <a href="/demo/antrag?persona={{ view.persona.persona_id }}&amp;kanal={{ channel }}">{{ view.channel_labels[channel] }}</a>
+      <a href="/demo/antrag?persona={{ view.persona.persona_id }}&amp;kanal={{ channel }}">{{ t("channel." ~ channel) }}</a>
       {% endif %}
     </li>
     {% endfor %}
   </ul>
-  <p class="notice">{{ view.channel_notes[view.channel] }}</p>
+  <p class="notice">{{ t("channel.note." ~ view.channel) }}</p>
 </section>
 
 <section aria-labelledby="formular-heading">
   <h2 id="formular-heading">
-    {% if view.is_email %}Anschreiben bearbeiten und absenden{% else %}Formular bearbeiten und absenden{% endif %}
+    {% if view.is_email %}{{ t("intake.letter.heading") }}{% else %}{{ t("intake.form.heading") }}{% endif %}
   </h2>
   <form class="action-form" method="post" action="/demo/antrag">
     <input type="hidden" name="persona" value="{{ view.persona.persona_id }}">
@@ -71,54 +86,60 @@
 
     {% if view.is_email %}
     <div class="field">
-      <label for="body">Ihr Anschreiben</label>
-      <span class="help" id="body-help">
-        Frei bearbeitbar. Alles, was Sie hier hineinschreiben, geht durch die
-        Erkennerunion: was wie eine Versicherungsnummer, ein Name, eine
-        Anschrift oder ein Geburtsdatum aussieht, wird versiegelt, bevor die
-        Arbeitskopie entsteht.
-      </span>
+      <label for="body">{{ t("intake.body.label") }}</label>
+      <span class="help" id="body-help">{{ t("intake.body.help") }}</span>
       <textarea id="body" name="body" rows="20" maxlength="8000" aria-describedby="body-help">{{ view.body }}</textarea>
     </div>
     {% else %}
     <fieldset>
-      <legend>Angaben von {{ view.persona.display_name }}</legend>
-      {% for field in view.fields %}
-      <div class="field">
-        <label for="feld-{{ field.field_id }}">
-          {{ field.label }}
-          {% if field.kind %}
-          <span class="tag">wird versiegelt: {{ field.kind_label }}</span>
+      <legend>{{ t("intake.form.legend", name=view.persona.display_name) }}</legend>
+      {% for row in view.rows %}
+      <div class="field-row field-row-{{ row|length }}">
+        {% for field in row %}
+        <div class="field">
+          <label for="feld-{{ field.field_id }}">
+            {{ field.label }}
+            {% if field.kind and loop.first %}
+            <span class="tag">{{ t("intake.sealed_as", kind=t("kind." ~ field.kind)) }}</span>
+            {% endif %}
+          </label>
+          {% if field.help %}
+          <span class="help" id="hilfe-{{ field.field_id }}">{{ field.help }}</span>
           {% endif %}
-        </label>
-        {% if field.help %}
-        <span class="help" id="hilfe-{{ field.field_id }}">{{ field.help }}</span>
-        {% endif %}
-        <input type="text" id="feld-{{ field.field_id }}" name="{{ field.field_id }}"
-               value="{{ field.value }}" maxlength="200"
-               {% if field.help %}aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
+          {% if field.control == "date" %}
+          <input type="date" id="feld-{{ field.field_id }}" name="{{ field.field_id }}"
+                 value="{{ field.value }}"
+                 {% if field.help %}aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
+          {% elif field.control == "select" %}
+          <select id="feld-{{ field.field_id }}" name="{{ field.field_id }}"
+                  {% if field.help %}aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
+            {% for option in field.choices %}
+            <option value="{{ option }}"{% if option == field.value %} selected{% endif %}>{{ option }}</option>
+            {% endfor %}
+          </select>
+          {% else %}
+          <input type="text" id="feld-{{ field.field_id }}" name="{{ field.field_id }}"
+                 value="{{ field.value }}" maxlength="200"
+                 {% if field.help %}aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
+          {% endif %}
+        </div>
+        {% endfor %}
       </div>
       {% endfor %}
     </fieldset>
     {% endif %}
 
     {% if view.ingest_open %}
-    <button type="submit">Antrag absenden</button>
+    <button type="submit">{{ t("intake.submit") }}</button>
     {% else %}
-    <p class="alarm-note flag">
-      Absenden ist auf dieser Instanz nicht moeglich: der Eingang ist gesperrt.
-    </p>
+    <p class="alarm-note flag">{{ t("intake.closed_button") }}</p>
     {% endif %}
   </form>
 </section>
 
 <section aria-labelledby="hinweise-heading">
-  <h2 id="hinweise-heading">Was Sie ausprobieren koennen</h2>
-  <p>
-    Aendern Sie die Angaben ruhig. Jede der folgenden Aenderungen loest ein
-    ANDERES, echtes Verhalten der Anlage aus - und Sie sehen im naechsten
-    Schritt genau, welches.
-  </p>
+  <h2 id="hinweise-heading">{{ t("intake.hints.heading") }}</h2>
+  <p>{{ t("intake.hints.lead") }}</p>
   <dl class="hints">
     {% for label, detail in view.hints %}
     <dt>{{ label }}</dt>

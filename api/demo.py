@@ -5,8 +5,9 @@ Three pages, all demo-mode-only, all server-rendered like everything else here.
 ``/demo/rundgang``
     The tour. The whole system told from beginning to end in six steps for a
     visitor who has never seen it, each step linking to the page where that
-    step actually happens. German leads and every step carries a short English
-    aside. **It derives nothing.** Every sentence is either static prose or a
+    step actually happens. Since part 16 the page is written in ONE language at
+    a time - the header's toggle switches it - rather than carrying an English
+    aside under every German paragraph. **It derives nothing.** Every sentence is either static prose or a
     fact read off the same projections the other pages read: whether this
     deployment accepts submissions at all, and - for the seeded case the tour
     points at - the unit and tier the journal already recorded. When the state
@@ -14,7 +15,7 @@ Three pages, all demo-mode-only, all server-rendered like everything else here.
     caseworker surface instead of a case that is not there.
 
 ``/demo/antrag``
-    The intake surface. A persona picker over ``config/demo/personas_v1.yaml``,
+    The intake surface. A persona picker over ``config/demo/personas_v2.yaml``,
     an EDITABLE prefilled form (Formular tab) or an editable prose letter
     (E-Mail tab), and a panel that suggests what to break. The submission goes
     through the app's own ``run_ingest`` - the same sealing, the same
@@ -24,8 +25,8 @@ Three pages, all demo-mode-only, all server-rendered like everything else here.
     gate does.
 
 ``/demo/case/{case_id}/pipeline``
-    The glass pipeline. Seven stages, one plain-German sentence each, and the
-    REAL data underneath. **It re-derives nothing.** The routing answer is the
+    The glass pipeline. Seven stages, one plain sentence each in the reader's
+    language, and the REAL data underneath. **It re-derives nothing.** The routing answer is the
     ROUTED event through ``review_state``; anomaly reasons come from
     ``api.review.anomaly_reason_lines``, which calls ``engine.score
     .render_reason`` and no other wording; a sampled case renders as
@@ -47,18 +48,19 @@ produces, edits or re-sends one.
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
-from api.metrics import environment
+from api.i18n import GERMAN, PageContext
+from api.metrics import render_template
 from api.review import (
-    KIND_LABELS,
-    PICKER_NOTE,
-    TIER_LABELS,
     ReasonLine,
     anomaly_reason_lines,
+    channel_label,
+    clearing_label,
     sealed_kinds,
+    tier_label,
     unit_name,
 )
 from engine.config_loader import ConfigBundle
@@ -66,10 +68,9 @@ from engine.demo.mode import DemoPosture
 from engine.demo.personas import (
     CHANNEL_EMAIL,
     CHANNEL_FORM,
-    CHANNEL_LABELS,
-    CHANNEL_NOTES,
     CHANNELS,
     Persona,
+    PersonaField,
     PersonaSet,
 )
 from engine.demo.store import DemoStore, DemoSubmission, TypedValue
@@ -81,73 +82,58 @@ from engine.review import CLEARING_QUEUE, review_state
 from engine.review.state import ReviewState
 
 #: The three phases, in order. Rendered on demo pages only - the caseworker UI
-#: does not learn about the tour (ruling 5).
-PHASES = (
-    ("antrag", "Phase 1: Antrag"),
-    ("maschine", "Phase 2: Maschine"),
-    ("sachbearbeitung", "Phase 3: Sachbearbeitung"),
-)
+#: does not learn about the tour (ruling 5). Keys rather than labels since part
+#: 16: the strip is translated, and a German label frozen into a view object
+#: would be a German label on an English page.
+PHASES = ("antrag", "maschine", "sachbearbeitung")
 
 #: What the intake page says when this instance accepts no submission at all.
 #: Not an error and not a bug: an unset ingest token is the SAFE state and it
 #: means closed for everybody, the demo app included (ADR-027, ruling 4).
-CLOSED_NOTE = (
-    "Diese Instanz nimmt keine Antraege entgegen: es ist kein Ingest-Token "
-    "konfiguriert, und ohne Token ist der Eingang fuer jeden Aufrufer "
-    "gesperrt - auch fuer diese Seite. Das ist der sichere Zustand und kein "
-    "Fehler. Die Phasen 2 und 3 koennen Sie trotzdem begehen: der Datenbestand "
-    "aus dem eingefrorenen Goldsatz steht in der Bearbeitung und im Postfach."
-)
+CLOSED_NOTE = "intake.ingest.closed"
 
 #: And what it says when the deployment did configure one.
-OPEN_NOTE = (
-    "Ihr Antrag geht durch dieselbe Verarbeitung wie jeder andere Eingang: "
-    "versiegeln, Arbeitskopie, Auslesen, Belegen, Entscheiden, Benachrichtigen. "
-    "Diese Seite legt das Token dieser Bereitstellung serverseitig bei; der "
-    "rohe Endpunkt POST /ingest bleibt fuer direkte Aufrufer mit 403 gesperrt."
-)
+OPEN_NOTE = "intake.ingest.open"
+
+#: What the tour says about phase 1 in each of the two postures.
+TOUR_CLOSED_NOTE = "tour.ingest.closed"
+TOUR_OPEN_NOTE = "tour.ingest.open"
+
+#: The step (c) caveat, said out loud rather than left to be noticed. A seeded
+#: case has no working copy in the demo store - that compartment holds what a
+#: VISITOR typed, for half an hour, and nobody typed this one.
+TOUR_SEEDED_NOTE = "tour.seeded"
+
+#: What step (c) says when nothing was seeded at all (a developer who started
+#: the app on an empty state directory). Honest, and not a dead link.
+TOUR_UNSEEDED_NOTE = "tour.unseeded"
+
+#: The refusal wordings the intake page renders, as keys.
+REFUSED_REDACTION_KEY = "intake.refused.redaction"
+REFUSED_ENVELOPE_KEY = "intake.refused.envelope"
 
 #: The sentence stage (b) exists for.
-SEAL_SENTENCE = (
-    "Die Maschine hat Ihren Namen nie gesehen. Was Sie oben eingegeben haben, "
-    "wurde am Eingang versiegelt - bevor die Arbeitskopie entstand, auf der "
-    "alles Weitere rechnet."
-)
+SEAL_SENTENCE = "pipeline.b.seal_sentence"
 
 #: Stage (c), when the reader had nothing to replay. Said out loud rather than
 #: shown as an empty table: the honest reason is a design decision (ADR-028).
-NO_EXTRACTION_NOTE = (
-    "Aus diesem Anschreiben wurde nichts ausgelesen, und das ist kein Fehler "
-    "dieser Seite. Der Leser fuer Freitext ist in dieser Bereitstellung ein "
-    "REPLAY aufgezeichneter Modellausgaben (ADR-028): zu einem Brief, den Sie "
-    "gerade selbst geschrieben haben, gibt es keine Aufzeichnung. Ein Modell "
-    "raten zu lassen und das Ergebnis nicht belegen zu koennen, waere die "
-    "schlechtere Antwort - der Vorgang geht deshalb unvollstaendig zu einem "
-    "Menschen."
-)
+NO_EXTRACTION_NOTE = "pipeline.c.no_extraction"
 
 #: Stage (e), when the shadow scorer flagged an item that stayed where it was.
-LOG_ONLY_NOTE = (
-    "Der Schattenscorer laeuft im Modus log_only: er hat den Vorgang markiert "
-    "und seinen Grund genannt, aber KEIN Tier bewegt. Das Einwegventil "
-    "(ADR-004) laesst Unsicherheit ohnehin nur in eine Richtung wirken - zu "
-    "einem Menschen hin, nie von ihm weg."
-)
-
-#: Stage (e), when a downgrade actually happened.
-VALVE_NOTE = (
-    "Das Einwegventil hat gegriffen: die Auffaelligkeit hat den Vorgang von "
-    "Tier {before} auf Tier {after} geschoben. Umgekehrt geht es nicht - keine "
-    "Regel dieses Systems kann ein Tier senken."
-)
+LOG_ONLY_NOTE = "pipeline.e.log_only"
 
 #: What the pipeline view says when the demo store no longer holds a submission.
-EXPIRED_NOTE = (
-    "Die Arbeitskopie zu diesem Vorgang wird nicht mehr vorgehalten. Der "
-    "Zwischenspeicher dieser Demo haelt sie nur fuer kurze Zeit und ausschliesslich "
-    "im Arbeitsspeicher; alles Uebrige auf dieser Seite kommt aus dem Journal "
-    "und bleibt lesbar."
-)
+EXPIRED_NOTE = "pipeline.expired"
+
+
+def phase_index(phase: str) -> int:
+    """Which of the three phases a view is on, 1-based; 0 for the tour.
+
+    Read by the step indicator to decide which circles are behind the reader
+    (checkmark) and which are ahead (number). One function rather than three
+    view properties saying the same thing.
+    """
+    return PHASES.index(phase) + 1 if phase in PHASES else 0
 
 
 # ------------------------------------------------------------------ the tour ---
@@ -167,48 +153,6 @@ EXPIRED_NOTE = (
 #: without demonstrating that the tiers differ.
 TOUR_ITEM_ID = "ar-0011-ohne-rentenbeginn"
 
-#: What the tour says about phase 1 when this deployment cannot accept anything.
-#: Not an apology: an unset ingest token is the safe state (ADR-027), and the
-#: tour is walkable end to end without it because the state is seeded.
-TOUR_CLOSED_NOTE = (
-    "Diese Bereitstellung nimmt zurzeit keine Antraege entgegen: ohne "
-    "konfiguriertes Ingest-Token ist der Eingang fuer jeden Aufrufer gesperrt, "
-    "auch fuer die Antragsseite selbst. Der Rundgang funktioniert trotzdem "
-    "vollstaendig - die Schritte 3 bis 6 laufen ueber den eingefrorenen "
-    "Goldsatz, der beim Start eingespielt wurde."
-)
-
-#: And when the deployment did configure one.
-TOUR_OPEN_NOTE = (
-    "Diese Bereitstellung nimmt Antraege entgegen: Sie koennen den Rundgang "
-    "mit Ihrem EIGENEN Vorgang laufen, von der Einreichung bis zur "
-    "Eingangsbestaetigung im Postfach."
-)
-
-#: The step (c) caveat, said out loud rather than left to be noticed. A seeded
-#: case has no working copy in the demo store - that compartment holds what a
-#: VISITOR typed, for half an hour, and nobody typed this one.
-TOUR_SEEDED_NOTE = (
-    "Der Vorgang, auf den dieser Schritt zeigt, stammt aus dem eingefrorenen "
-    "Goldsatz und nicht aus einer Eingabe von Ihnen. Deshalb fehlt dort die "
-    "Gegenueberstellung von eingegebenem Wert und Arbeitskopie: dieser "
-    "Zwischenspeicher haelt ausschliesslich, was eine Besucherin oder ein "
-    "Besucher selbst getippt hat, und zwar nur fuer kurze Zeit im "
-    "Arbeitsspeicher. Alles Uebrige - Versiegelung, Fundstellen, Luecken, "
-    "Zuordnung, Entscheidung, Nachrichten - kommt aus dem Journal und steht "
-    "vollstaendig da."
-)
-
-#: What step (c) says when nothing was seeded at all (a developer who started
-#: the app on an empty state directory). Honest, and not a dead link.
-TOUR_UNSEEDED_NOTE = (
-    "Auf dieser Instanz ist kein Goldsatz eingespielt, deshalb gibt es hier "
-    "keinen vorbereiteten Vorgang zum Mitlaufen. Stellen Sie einen Antrag "
-    "(Schritt 2) oder spielen Sie den Bestand mit dem Befehl "
-    "python -m engine.demo.seed ein; die Bearbeitungsoberflaeche ist in beiden "
-    "Faellen erreichbar."
-)
-
 
 @dataclass(frozen=True)
 class TourView:
@@ -217,11 +161,11 @@ class TourView:
     Three things here are read rather than written: whether this deployment
     accepts submissions (the posture), which gold set it was seeded from, and -
     when the seeded case is present - the unit and tier the journal recorded
-    for it. Everything else on the page is prose.
+    for it. Everything else on the page is prose in the translation table.
     """
 
     ingest_open: bool
-    ingest_note: str
+    ingest_note_key: str
     gold_dir: str
     repo_url: str
     case_id: str
@@ -230,13 +174,14 @@ class TourView:
     unit_label: str
     queue_id: str
     tier_label: str
-    seeded_note: str = TOUR_SEEDED_NOTE
-    unseeded_note: str = TOUR_UNSEEDED_NOTE
-    picker_note: str = PICKER_NOTE
     #: No phase is current here: the tour is the map, not a position on it, so
     #: the three-phase indicator stays off this one page (``demo_base.html``).
     phase: str = ""
-    phases: tuple[tuple[str, str], ...] = PHASES
+    phases: tuple[str, ...] = PHASES
+
+    @property
+    def phase_index(self) -> int:
+        return phase_index(self.phase)
 
     @property
     def pipeline_href(self) -> str:
@@ -257,6 +202,7 @@ def build_tour_view(
     config: ConfigBundle,
     posture: DemoPosture,
     gold_dir: str,
+    page: PageContext | None = None,
 ) -> TourView:
     """The tour for this deployment, in whichever of its two states it is in.
 
@@ -267,34 +213,27 @@ def build_tour_view(
     and the pipeline view fold - so the tour cannot state a routing answer that
     differs from the one the system gave.
     """
+    context = page or GERMAN
     case_id = case_id_for(TOUR_ITEM_ID)
     events = journal.read(case_id)
     state = review_state(case_id, events) if events else None
     unit_id = state.unit_id if state is not None else None
     return TourView(
         ingest_open=posture.ingest_open,
-        ingest_note=TOUR_OPEN_NOTE if posture.ingest_open else TOUR_CLOSED_NOTE,
+        ingest_note_key=(TOUR_OPEN_NOTE if posture.ingest_open else TOUR_CLOSED_NOTE),
         gold_dir=gold_dir,
         repo_url=posture.repo_url,
         case_id=case_id,
         case_present=state is not None,
         unit_id=unit_id or "",
-        unit_label=(
-            unit_name(config, unit_id)
-            if unit_id
-            else "Zentrale Klaerung (par. 16 Abs. 2 SGB I)"
-        ),
+        unit_label=(unit_name(config, unit_id) if unit_id else clearing_label(context)),
         queue_id=unit_id or CLEARING_QUEUE,
-        tier_label=(
-            TIER_LABELS.get(state.tier or 0, f"Tier {state.tier}")
-            if state is not None
-            else ""
-        ),
+        tier_label=(tier_label(state.tier, context) if state is not None else ""),
     )
 
 
-def render_tour(view: TourView) -> str:
-    return environment().get_template("demo_tour.html").render(view=view)
+def render_tour(view: TourView, page: PageContext | None = None) -> str:
+    return render_template("demo_tour.html", view, page)
 
 
 # --------------------------------------------------------------- the intake ---
@@ -302,17 +241,23 @@ def render_tour(view: TourView) -> str:
 
 @dataclass(frozen=True)
 class FieldView:
-    """One editable input on the intake form."""
+    """One editable input on the intake form.
+
+    ``control`` is what the browser renders - a text box, a native date picker
+    or a select - and it changes NOTHING about what is submitted: a date input
+    posts the ISO string a text box was typed into, and a select posts the same
+    value typing produced. ``choices`` is the vocabulary the select offers, read
+    from the procedure configuration or from the persona file and never
+    invented here.
+    """
 
     field_id: str
     label: str
     value: str
     help: str
     kind: str
-
-    @property
-    def kind_label(self) -> str:
-        return KIND_LABELS.get(self.kind, "")
+    control: str = "text"
+    choices: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -323,23 +268,30 @@ class IntakeView:
     personas: tuple[Persona, ...]
     persona: Persona
     channel: str
-    fields: tuple[FieldView, ...]
+    rows: tuple[tuple[FieldView, ...], ...]
     body: str
     note: str
     hints: tuple[tuple[str, str], ...]
     ingest_open: bool
-    ingest_note: str
-    error: str = ""
+    ingest_note_key: str
+    error_key: str = ""
     error_details: tuple[str, ...] = ()
     phase: str = "antrag"
-    phases: tuple[tuple[str, str], ...] = PHASES
+    phases: tuple[str, ...] = PHASES
     channels: tuple[str, ...] = CHANNELS
-    channel_labels: dict[str, str] = field(default_factory=lambda: dict(CHANNEL_LABELS))
-    channel_notes: dict[str, str] = field(default_factory=lambda: dict(CHANNEL_NOTES))
 
     @property
     def is_email(self) -> bool:
         return self.channel == CHANNEL_EMAIL
+
+    @property
+    def phase_index(self) -> int:
+        return phase_index(self.phase)
+
+    @property
+    def fields(self) -> tuple[FieldView, ...]:
+        """Every field, flattened out of its row. For tests and for callers."""
+        return tuple(field for row in self.rows for field in row)
 
 
 def resolve_channel(raw: str | None) -> str:
@@ -353,6 +305,103 @@ def resolve_channel(raw: str | None) -> str:
     return raw if raw in CHANNELS else CHANNEL_FORM
 
 
+def vocabulary(config: ConfigBundle, path: str) -> tuple[str, ...]:
+    """The allowed values for a payload path, READ from the procedure configs.
+
+    The intake page's selects are fed from here rather than from a list in the
+    template, and the difference is the whole point: ``one_of`` in
+    ``config/procedures/*.yaml`` is what the completeness checker validates
+    against, so an option this function offers is by construction an option the
+    evidence plane accepts. A hand-written list would be a second vocabulary,
+    and the first thing a second vocabulary does is drift.
+
+    The lookup goes through the procedure's own ``field_map``, which is the one
+    place that says which payload path a requirement id belongs to. Empty when
+    no procedure constrains the path - a free-text requirement, or a path no
+    procedure knows - and the caller then falls back to a text input.
+    """
+    for procedure in config.procedures.values():
+        for entry in procedure.field_map:
+            if entry.path != path:
+                continue
+            for requirement in procedure.requirements.requirements:
+                if requirement.requirement_id != entry.field:
+                    continue
+                allowed = (requirement.validation or {}).get("one_of")
+                if isinstance(allowed, list) and allowed:
+                    return tuple(str(value) for value in allowed)
+    return ()
+
+
+def _field_view(
+    entry: PersonaField,
+    *,
+    value: str,
+    config: ConfigBundle | None,
+    page: PageContext,
+) -> FieldView:
+    """One persona field as the form renders it, in one language."""
+    choices: tuple[str, ...] = ()
+    control = entry.control
+    if control == "select":
+        choices = entry.options or (
+            vocabulary(config, entry.path) if config is not None else ()
+        )
+        if not choices:
+            # A select with nothing in it would be a control a visitor cannot
+            # use. Degrade to the text input the field had before part 16.
+            control = "text"
+        elif value and value not in choices:
+            # A tampered or superseded value is KEPT and offered, because the
+            # page must not silently change what a visitor is submitting.
+            choices = (value, *choices)
+    help_text = entry.help_for(page.lang)
+    if control == "date":
+        help_text = " ".join(filter(None, (help_text, page.t("intake.date.hint"))))
+    elif control == "select":
+        help_text = " ".join(filter(None, (help_text, page.t("intake.select.hint"))))
+    return FieldView(
+        field_id=entry.field_id,
+        label=entry.label_for(page.lang),
+        value=value,
+        help=help_text,
+        kind=entry.kind,
+        control=control,
+        choices=choices,
+    )
+
+
+def field_rows(
+    persona: Persona,
+    values: Mapping[str, str],
+    *,
+    config: ConfigBundle | None,
+    page: PageContext,
+) -> tuple[tuple[FieldView, ...], ...]:
+    """The persona's fields, grouped the way the persona file groups them.
+
+    Consecutive fields sharing a ``group`` become one row - the two halves of
+    the name, the four parts of the address - so the form reads as the handful
+    of ANSWERS it is rather than as eleven separate questions. Purely visual:
+    the grouping changes no field id, no path and nothing that is submitted.
+    """
+    rows: list[list[FieldView]] = []
+    current = ""
+    for entry in persona.fields:
+        view = _field_view(
+            entry,
+            value=values.get(entry.field_id, entry.value),
+            config=config,
+            page=page,
+        )
+        if entry.group and entry.group == current and rows:
+            rows[-1].append(view)
+        else:
+            rows.append([view])
+        current = entry.group
+    return tuple(tuple(row) for row in rows)
+
+
 def build_intake_view(
     posture: DemoPosture,
     personas: PersonaSet,
@@ -361,33 +410,26 @@ def build_intake_view(
     channel: str | None = None,
     values: Mapping[str, str] | None = None,
     body: str | None = None,
-    error: str = "",
+    error_key: str = "",
     error_details: Sequence[str] = (),
+    config: ConfigBundle | None = None,
+    page: PageContext | None = None,
 ) -> IntakeView:
     """The intake page for one persona, one channel and whatever was typed."""
+    context = page or GERMAN
     persona = personas.get(persona_id) or personas.first
-    submitted = dict(values or {})
     return IntakeView(
         posture=posture,
         personas=personas.personas,
         persona=persona,
         channel=resolve_channel(channel),
-        fields=tuple(
-            FieldView(
-                field_id=field.field_id,
-                label=field.label,
-                value=submitted.get(field.field_id, field.value),
-                help=field.help,
-                kind=field.kind,
-            )
-            for field in persona.fields
-        ),
+        rows=field_rows(persona, dict(values or {}), config=config, page=context),
         body=persona.letter if body is None else body,
-        note=personas.note,
-        hints=personas.hints,
+        note=personas.note_for(context.lang),
+        hints=personas.hints_for(context.lang),
         ingest_open=posture.ingest_open,
-        ingest_note=OPEN_NOTE if posture.ingest_open else CLOSED_NOTE,
-        error=error,
+        ingest_note_key=OPEN_NOTE if posture.ingest_open else CLOSED_NOTE,
+        error_key=error_key,
         error_details=tuple(error_details),
     )
 
@@ -406,7 +448,7 @@ def echo_values(persona: Persona, values: Mapping[str, str]) -> tuple[TypedValue
     the tour and holds nothing beyond what that moment needs.
     """
     ordered: list[str] = []
-    grouped: dict[str, list[str]] = {}
+    grouped: dict[str, list[tuple[int, str]]] = {}
     labels: dict[str, str] = {}
     kinds: dict[str, str] = {}
     for entry in persona.fields:
@@ -421,9 +463,19 @@ def echo_values(persona: Persona, values: Mapping[str, str]) -> tuple[TypedValue
             grouped[key] = []
             labels[key] = entry.group.capitalize() if entry.group else entry.label
             kinds[key] = entry.kind
-        grouped[key].append(typed)
+        grouped[key].append((entry.join_order, typed))
+    # Sorted by ``join_order`` for the same reason the submission builder sorts
+    # by it: the name is ASKED for surname-first and READ back given-name-first,
+    # and the echo has to show the visitor the string the machine received, not
+    # the order the boxes were in.
     return tuple(
-        TypedValue(label=labels[key], value=" ".join(grouped[key]), kind=kinds[key])
+        TypedValue(
+            label=labels[key],
+            value=" ".join(
+                typed for _order, typed in sorted(grouped[key], key=lambda p: p[0])
+            ),
+            kind=kinds[key],
+        )
         for key in ordered
     )
 
@@ -441,10 +493,6 @@ class Segment:
     @property
     def placeholder(self) -> bool:
         return bool(self.kind)
-
-    @property
-    def kind_label(self) -> str:
-        return KIND_LABELS.get(self.kind, self.kind)
 
 
 @dataclass(frozen=True)
@@ -464,10 +512,6 @@ class Pairing:
     typed: str
     placeholder: str
     kind: str
-
-    @property
-    def kind_label(self) -> str:
-        return KIND_LABELS.get(self.kind, self.kind)
 
 
 @dataclass(frozen=True)
@@ -490,13 +534,8 @@ class PipelineView:
     unit_label: str
     held: bool
     sampled: bool
-    seal_sentence: str = SEAL_SENTENCE
-    no_extraction_note: str = NO_EXTRACTION_NOTE
-    log_only_note: str = LOG_ONLY_NOTE
-    expired_note: str = EXPIRED_NOTE
     phase: str = "maschine"
-    phases: tuple[tuple[str, str], ...] = PHASES
-    tier_labels: dict[int, str] = field(default_factory=lambda: dict(TIER_LABELS))
+    phases: tuple[str, ...] = PHASES
 
     @property
     def case(self) -> Any:
@@ -504,8 +543,8 @@ class PipelineView:
         return self.state.case
 
     @property
-    def tier_label(self) -> str:
-        return TIER_LABELS.get(self.state.tier or 0, f"Tier {self.state.tier}")
+    def phase_index(self) -> int:
+        return phase_index(self.phase)
 
     @property
     def downgraded(self) -> bool:
@@ -513,12 +552,6 @@ class PipelineView:
         before = self.state.case.pre_downgrade_tier
         after = self.state.case.tier
         return before is not None and after is not None and after > before
-
-    @property
-    def valve_note(self) -> str:
-        return VALVE_NOTE.format(
-            before=self.state.case.pre_downgrade_tier, after=self.state.case.tier
-        )
 
     @property
     def flagged_but_log_only(self) -> bool:
@@ -541,6 +574,7 @@ def build_pipeline_view(
     outbox: Outbox,
     store: DemoStore | None,
     now: datetime | None = None,
+    page: PageContext | None = None,
 ) -> PipelineView | None:
     """The pipeline view, or None when the journal knows no such case.
 
@@ -550,6 +584,7 @@ def build_pipeline_view(
     page that re-derived a routing answer would be a second answer to "who is
     responsible", and there is exactly one.
     """
+    context = page or GERMAN
     events = journal.read(case_id)
     if not events:
         return None
@@ -561,9 +596,7 @@ def build_pipeline_view(
         case_id=case_id,
         state=state,
         now=moment,
-        channel_label=CHANNEL_LABELS.get(
-            state.case.channel or "", state.case.channel or "unbekannt"
-        ),
+        channel_label=channel_label(state.case.channel, context),
         persona_label=held.persona_label if held else "",
         parts=tuple(_part_views(held)),
         pairings=_pairings(held),
@@ -573,9 +606,7 @@ def build_pipeline_view(
         notifications=tuple(outbox.entries(case_id)),
         queue_id=unit_id or CLEARING_QUEUE,
         queue_label=(
-            unit_name(config, unit_id)
-            if unit_id
-            else "Zentrale Klaerung (par. 16 Abs. 2 SGB I)"
+            unit_name(config, unit_id) if unit_id else clearing_label(context)
         ),
         unit_label=unit_name(config, unit_id),
         held=held is not None,
@@ -586,12 +617,12 @@ def build_pipeline_view(
     )
 
 
-def render_intake(view: IntakeView) -> str:
-    return environment().get_template("demo_intake.html").render(view=view)
+def render_intake(view: IntakeView, page: PageContext | None = None) -> str:
+    return render_template("demo_intake.html", view, page)
 
 
-def render_pipeline(view: PipelineView) -> str:
-    return environment().get_template("demo_pipeline.html").render(view=view)
+def render_pipeline(view: PipelineView, page: PageContext | None = None) -> str:
+    return render_template("demo_pipeline.html", view, page)
 
 
 def segments(text: str) -> tuple[Segment, ...]:

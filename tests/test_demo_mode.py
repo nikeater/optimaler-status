@@ -5,13 +5,14 @@ Two halves, and the first one matters more than the second. With
 table is the part-10 route table, ``GET /`` is still a 404, ``POST /ingest``
 still ingests, and every page renders BYTE for byte what it rendered before the
 demo include existed. That last one is checked against the same templates
-loaded through an environment where ``_demo_banner.html`` is the empty string -
+loaded through an environment where ``_demo_ribbon.html`` is the empty string -
 so "the include adds nothing" is measured rather than eyeballed.
 
 With the flag on: ingest closes (entirely, or behind a token), every rendered
-page carries the synthetic-data banner, ``GET /`` becomes the landing page, and
-the review actions deliberately keep working, because they are the product and
-the reset makes them harmless.
+page carries the synthetic-data ribbon and links the disclaimer page that
+carries the full notice, ``GET /`` becomes the landing page, and the review
+actions deliberately keep working, because they are the product and the reset
+makes them harmless.
 
 The seed is tested for the property the reset rests on: two seedings of the
 same corpus with the same base clock produce the same state, and neither of
@@ -35,6 +36,7 @@ from jinja2 import ChoiceLoader, DictLoader, Environment, FileSystemLoader
 from api import landing as landing_view
 from api import review as review_view
 from api.app import create_app
+from api.i18n import phrase
 from api.inbox import build_view as build_inbox_view
 from api.metrics import TEMPLATE_DIR, MetricsView, environment, set_demo_posture
 from engine.config_loader import ConfigBundle
@@ -125,11 +127,21 @@ def stripped_environment() -> Environment:
     environment with the posture off must produce identical bytes; if it does
     not, the demo mechanism costs something even when switched off, and the
     ruling that "nothing observable changes" is false.
+
+    Part 16 changed two things about the control group and neither weakens it.
+    The include is the RIBBON now rather than the banner, which is the same
+    demo-gated mechanism under a new name. And the globals are copied from the
+    real environment, because every page now also reads the language context
+    from there - a control group missing it would fail on an undefined callable
+    instead of measuring what it exists to measure. The one global the copy
+    does NOT neutralise is ``demo``, which is exactly the point: the posture is
+    off in both, and the header's demo-gated menu items therefore have to
+    render nothing in both.
     """
-    return Environment(
+    stripped = Environment(
         loader=ChoiceLoader(
             [
-                DictLoader({"_demo_banner.html": ""}),
+                DictLoader({"_demo_ribbon.html": ""}),
                 FileSystemLoader(TEMPLATE_DIR),
             ]
         ),
@@ -137,6 +149,8 @@ def stripped_environment() -> Environment:
         trim_blocks=True,
         lstrip_blocks=True,
     )
+    stripped.globals.update(environment().globals)
+    return stripped
 
 
 @pytest.mark.parametrize(
@@ -208,8 +222,9 @@ def test_with_the_flag_off_no_page_carries_a_demo_marker(
         "/inbox",
     ):
         body = client.get(path).text
-        assert "demo-banner" not in body, path
-        assert "Demo-Instanz" not in body, path
+        assert "demo-ribbon" not in body, path
+        assert "synthetische Daten" not in body, path
+        assert "/hinweise" not in body, path
 
 
 @pytest.mark.parametrize("value", ["", "0", "true", "yes", "on", "2", "11"])
@@ -345,9 +360,14 @@ def test_the_banner_is_on_every_rendered_page(
     ):
         response = client.get(path)
         assert response.status_code == 200, path
-        assert 'id="demo-banner"' in response.text, path
-        assert "SYNTHETISCHEN Daten" in response.text, path
-        assert "all data is synthetic" in response.text, path
+        assert 'id="demo-ribbon"' in response.text, path
+        assert "Demo - synthetische Daten." in response.text, path
+        assert 'href="/hinweise"' in response.text, path
+    # And the full notice lives on exactly one page, which the ribbon links.
+    notice = client.get("/hinweise")
+    assert notice.status_code == 200
+    assert "SYNTHETISCHEN Daten" in notice.text
+    assert "all data is synthetic" in notice.text
 
 
 def test_the_banner_states_the_ingest_posture_it_actually_has(
@@ -356,11 +376,11 @@ def test_the_banner_states_the_ingest_posture_it_actually_has(
     """A banner that said "no submissions" on a token-gated box would be false."""
     monkeypatch.setenv(DEMO_MODE_ENV, "1")
     monkeypatch.delenv(INGEST_TOKEN_ENV, raising=False)
-    closed = build_client(config, tmp_path).get("/review").text
+    closed = build_client(config, tmp_path).get("/hinweise").text
     assert "Der Eingang ist gesperrt" in closed
 
     monkeypatch.setenv(INGEST_TOKEN_ENV, TOKEN)
-    gated = build_client(config, tmp_path / "second").get("/review").text
+    gated = build_client(config, tmp_path / "second").get("/hinweise").text
     assert "nur mit Token erreichbar" in gated
 
 
@@ -390,11 +410,15 @@ def test_the_landing_page_falls_back_to_the_repo_placeholder() -> None:
     """An unset repo URL must render a visible placeholder, not an empty link."""
     view = landing_view.build_view(DemoPosture(enabled=True), gold_dir="corpus/gold/v4")
     assert view.repo_url == REPO_URL_PLACEHOLDER
-    assert landing_view.INGEST_CLOSED_NOTE in landing_view.render_page(view)
+    # The PLACEHOLDER is never rendered as a link (part 16): a menu item or a
+    # footer pointing at github.com/OWNER/... is a broken link in the one place
+    # a reader looks for the code, so an unconfigured deployment shows none.
+    assert REPO_URL_PLACEHOLDER not in landing_view.render_page(view)
+    assert phrase(landing_view.INGEST_CLOSED_NOTE) in landing_view.render_page(view)
     gated = landing_view.build_view(
         DemoPosture(enabled=True, ingest_token=TOKEN), gold_dir="corpus/gold/v4"
     )
-    assert landing_view.INGEST_TOKEN_NOTE in landing_view.render_page(gated)
+    assert phrase(landing_view.INGEST_TOKEN_NOTE) in landing_view.render_page(gated)
 
 
 def test_healthz_is_a_constant(config: ConfigBundle, tmp_path: Path) -> None:
@@ -612,7 +636,7 @@ def test_the_seeded_state_serves_the_review_ui(
     overview = client.get("/review")
     assert overview.status_code == 200
     assert "101 offene(r) Vorgang" in overview.text
-    assert 'id="demo-banner"' in overview.text
+    assert 'id="demo-ribbon"' in overview.text
     assert client.get("/inbox").status_code == 200
 
 

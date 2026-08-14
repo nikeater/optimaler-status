@@ -35,12 +35,19 @@ versions this process is running.
 
 **Demo mode (part 11) is OFF unless ``EINGANGSLOTSE_DEMO_MODE=1``.** When it is
 on, ``POST /ingest`` closes behind a token (or entirely, when no token is set),
-every rendered page gains a synthetic-data banner and ``GET /`` becomes a
-landing page. The posture is read here, once, at app construction; see
+every rendered page gains a synthetic-data ribbon (part 16; part 11's banner
+block, slimmed to one line and linking ``GET /hinweise``, which carries the
+whole notice) and ``GET /`` becomes a landing page. The posture is read here, once, at app construction; see
 ``engine/demo/mode.py`` for why each of the three exists and why the review
 actions deliberately stay open. With the flag off, none of it is observable -
 not in a response body, not in the route table and not in the middleware
-stack, because the two things demo mode adds are added conditionally.
+stack, because the things demo mode adds are added conditionally.
+
+**Two languages, resolved on the server (part 16).** ``?lang=`` sets a cookie
+and redirects back; the cookie then governs. The switch is middleware, so it
+works on any page and preserves every other query parameter, and it is
+registered UNCONDITIONALLY - the language machinery is not demo surface. What
+it does not do outside demo mode is link anything demo. See ``api/i18n.py``.
 
 **The guided showcase (part 13) rides on the same flag and adds two pages.**
 ``GET /demo/antrag`` is a citizen intake surface over fictional personas;
@@ -91,6 +98,15 @@ from api import demo as demo_view
 from api import inbox as inbox_view
 from api import landing as landing_view
 from api import review as review_view
+from api.i18n import (
+    LANG_COOKIE,
+    LANG_COOKIE_MAX_AGE,
+    LANG_PARAM,
+    LANGUAGES,
+    PageContext,
+    resolve_language,
+    strip_language,
+)
 from api.metrics import (
     STATIC_DIR,
     current_view,
@@ -152,22 +168,12 @@ INVALID_SUBMISSION = "invalid submission"
 #: What the intake page says when the boundary refused the submission. A real
 #: behaviour and the strongest one this system has: nothing was journaled, no
 #: case exists, and the page says which KINDS were still findable and where -
-#: never the residue itself.
-REFUSED_REDACTION = (
-    "Der Eingang wurde ABGELEHNT. Die Schwaerzungspruefung konnte die "
-    "Arbeitskopie nicht als sauber bestaetigen: nach dem Versiegeln waren noch "
-    "identitaetsbezogene Angaben auffindbar. Es wurde nichts gespeichert, kein "
-    "Vorgang angelegt und kein Journaleintrag geschrieben. Unten steht, welche "
-    "ART von Angabe an welcher Stelle gefunden wurde - der gefundene Wert "
-    "selbst steht bewusst nirgends."
-)
+#: never the residue itself. A translation key since part 16: the sentence is
+#: the same refusal in either language.
+REFUSED_REDACTION = demo_view.REFUSED_REDACTION_KEY
 
 #: And when the envelope itself did not validate.
-REFUSED_ENVELOPE = (
-    "Der Eingang wurde ABGELEHNT: die Einreichung entspricht nicht dem "
-    "erwarteten Aufbau. Unten steht, an welcher Stelle und welche Regel - der "
-    "eingegebene Wert steht bewusst nirgends, auch nicht in einer Fehlermeldung."
-)
+REFUSED_ENVELOPE = demo_view.REFUSED_ENVELOPE_KEY
 
 
 @dataclass(frozen=True)
@@ -239,6 +245,21 @@ def sanitize_errors(errors: Sequence[Any]) -> list[dict[str, Any]]:
             }
         )
     return sanitized
+
+
+def page_context(request: Request) -> PageContext:
+    """The language this request is answered in, and the URL to come back to.
+
+    Read from the cookie only. The ``?lang=`` parameter never reaches a route:
+    :func:`_mount_language` intercepts it, writes the cookie and redirects, so
+    by the time a page renders there is exactly one place the language can come
+    from. ``here`` is the current path with its query minus that parameter,
+    which is what the header's two toggle links append to.
+    """
+    return PageContext(
+        lang=resolve_language(request.cookies.get(LANG_COOKIE)),
+        here=strip_language(request.url.path, request.url.query),
+    )
 
 
 def create_app(
@@ -431,14 +452,14 @@ def create_app(
         }
 
     @app.get("/metrics", response_class=HTMLResponse)
-    def metrics() -> HTMLResponse:
+    def metrics(request: Request) -> HTMLResponse:
         """The metrics panel; 200 with a refresh hint when no report exists."""
-        return HTMLResponse(render_page(current_view()))
+        return HTMLResponse(render_page(current_view(), page_context(request)))
 
     @app.get("/metrics/panel", response_class=HTMLResponse)
-    def metrics_panel() -> HTMLResponse:
+    def metrics_panel(request: Request) -> HTMLResponse:
         """The panel fragment htmx swaps in; identical markup, no chrome."""
-        return HTMLResponse(render_panel(current_view()))
+        return HTMLResponse(render_panel(current_view(), page_context(request)))
 
     @app.get("/cases/{case_id}")
     def read_case(case_id: str) -> dict[str, Any]:
@@ -453,7 +474,7 @@ def create_app(
         }
 
     @app.get("/inbox", response_class=HTMLResponse)
-    def inbox() -> HTMLResponse:
+    def inbox(request: Request) -> HTMLResponse:
         """The simulated applicant inbox: everything that was delivered.
 
         Read-only, and there is no route that is not. A notification on this
@@ -461,7 +482,9 @@ def create_app(
         would quietly turn a Realakt into something a caseworker approved.
         """
         return HTMLResponse(
-            inbox_view.render_page(inbox_view.build_view(applicant_outbox))
+            inbox_view.render_page(
+                inbox_view.build_view(applicant_outbox), page_context(request)
+            )
         )
 
     @app.get("/inbox/{case_id}")
@@ -523,6 +546,7 @@ def create_app(
         vault=identity_vault,
         drafts=draft_store,
     )
+    _mount_language(app)
     _mount_ingest_gate(app, posture=posture)
     _mount_landing(app, posture=posture)
     _mount_demo_journey(
@@ -539,6 +563,46 @@ def create_app(
         app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
     return app
+
+
+def _mount_language(app: FastAPI) -> None:
+    """``?lang=`` sets the cookie and redirects back (part 16).
+
+    Middleware and not a per-route parameter, for two reasons. Every HTML route
+    would otherwise have to grow the same three lines and the same branch
+    returning a redirect instead of a page - eleven copies of one decision, and
+    the twelfth route is the one somebody forgets. And a switch that lives
+    before routing works on any URL the toggle can appear on, including the
+    ones that carry their own query (``?unit=``, ``?persona=``, ``?highlight=``),
+    which the redirect preserves verbatim.
+
+    Registered UNCONDITIONALLY, unlike the ingest gate and the demo pages: the
+    language machinery is not demo surface. What it does not do outside demo
+    mode is link anything demo - that is the header's business, and it is
+    gated there.
+
+    303 rather than 302: the parameter has done its work, the browser must GET
+    the clean URL, and a reload must not re-apply anything.
+    """
+
+    @app.middleware("http")
+    async def language_cookie(request: Request, call_next: Any) -> Any:
+        chosen = request.query_params.get(LANG_PARAM)
+        if request.method != "GET" or chosen not in LANGUAGES:
+            return await call_next(request)
+        response = RedirectResponse(
+            url=strip_language(request.url.path, request.url.query) or "/",
+            status_code=303,
+        )
+        response.set_cookie(
+            LANG_COOKIE,
+            chosen,
+            max_age=LANG_COOKIE_MAX_AGE,
+            path="/",
+            httponly=True,
+            samesite="lax",
+        )
+        return response
 
 
 def _mount_ingest_gate(app: FastAPI, *, posture: DemoPosture) -> None:
@@ -580,11 +644,30 @@ def _mount_landing(app: FastAPI, *, posture: DemoPosture) -> None:
         return
 
     @app.get("/", response_class=HTMLResponse)
-    def landing() -> HTMLResponse:
+    def landing(request: Request) -> HTMLResponse:
         """What this is, what it guarantees, and what this instance is not."""
         return HTMLResponse(
             landing_view.render_page(
-                landing_view.build_view(posture, gold_dir=str(DEFAULT_GOLD_DIR))
+                landing_view.build_view(posture, gold_dir=str(DEFAULT_GOLD_DIR)),
+                page_context(request),
+            )
+        )
+
+    @app.get("/hinweise", response_class=HTMLResponse)
+    def hinweise(request: Request) -> HTMLResponse:
+        """The disclaimer page the ribbon links from every demo page.
+
+        Demo surface like the landing page and for the same reason: a notice
+        about a demonstration instance is meaningless on an instance that is
+        not one, and "with the flag off nothing observable changes" has to hold
+        at the level of the route table.
+        """
+        return HTMLResponse(
+            landing_view.render_hinweise(
+                landing_view.build_hinweise_view(
+                    posture, gold_dir=str(DEFAULT_GOLD_DIR)
+                ),
+                page_context(request),
             )
         )
 
@@ -620,7 +703,7 @@ def _mount_demo_journey(
     personas = demo_personas()
 
     @app.get("/demo/rundgang", response_class=HTMLResponse)
-    def demo_tour() -> HTMLResponse:
+    def demo_tour(request: Request) -> HTMLResponse:
         """The tour: the whole system in six steps, for a first-time visitor.
 
         Registered with the rest of the demo surface and therefore absent -
@@ -628,6 +711,7 @@ def _mount_demo_journey(
         reads the journal once, for the seeded case it points at, and derives
         nothing else.
         """
+        page = page_context(request)
         return HTMLResponse(
             demo_view.render_tour(
                 demo_view.build_tour_view(
@@ -635,20 +719,29 @@ def _mount_demo_journey(
                     config=bundle,
                     posture=posture,
                     gold_dir=str(DEFAULT_GOLD_DIR),
-                )
+                    page=page,
+                ),
+                page,
             )
         )
 
     @app.get("/demo/antrag", response_class=HTMLResponse)
     def demo_intake(
-        persona: str | None = None, kanal: str | None = None
+        request: Request, persona: str | None = None, kanal: str | None = None
     ) -> HTMLResponse:
         """Phase 1: pick a fictional applicant and edit their submission."""
+        page = page_context(request)
         return HTMLResponse(
             demo_view.render_intake(
                 demo_view.build_intake_view(
-                    posture, personas, persona_id=persona, channel=kanal
-                )
+                    posture,
+                    personas,
+                    persona_id=persona,
+                    channel=kanal,
+                    config=bundle,
+                    page=page,
+                ),
+                page,
             )
         )
 
@@ -656,11 +749,16 @@ def _mount_demo_journey(
     async def demo_submit(request: Request) -> Response:
         """Phase 1 -> 2. One submission, through the one ingest path."""
         form = await form_fields(request)
+        page = page_context(request)
         chosen = personas.get(form.get("persona")) or personas.first
         channel = demo_view.resolve_channel(form.get("kanal"))
         body = form.get("body", chosen.letter)
 
         def refused(message: str, details: Sequence[str] = ()) -> HTMLResponse:
+            # ``message`` is a translation key for the two refusals this page
+            # owns and a ready-made sentence for the posture's own 403 detail.
+            # Both work: an unknown key resolves to itself (``api/i18n.py``),
+            # which is exactly what a sentence that is already a sentence needs.
             return HTMLResponse(
                 demo_view.render_intake(
                     demo_view.build_intake_view(
@@ -670,9 +768,12 @@ def _mount_demo_journey(
                         channel=channel,
                         values=form,
                         body=body,
-                        error=message,
+                        error_key=message,
                         error_details=details,
-                    )
+                        config=bundle,
+                        page=page,
+                    ),
+                    page,
                 ),
                 status_code=200,
             )
@@ -740,18 +841,20 @@ def _mount_demo_journey(
         )
 
     @app.get("/demo/case/{case_id}/pipeline", response_class=HTMLResponse)
-    def demo_pipeline(case_id: str) -> HTMLResponse:
+    def demo_pipeline(request: Request, case_id: str) -> HTMLResponse:
         """Phase 2: the seven stages, over the journal and nothing else."""
+        page = page_context(request)
         view = demo_view.build_pipeline_view(
             journal,
             config=bundle,
             case_id=case_id,
             outbox=outbox,
             store=demo_store,
+            page=page,
         )
         if view is None:
             raise HTTPException(status_code=404, detail=f"unknown case: {case_id}")
-        return HTMLResponse(demo_view.render_pipeline(view))
+        return HTMLResponse(demo_view.render_pipeline(view, page))
 
 
 def _finding_lines(error: RedactionRefusedError) -> tuple[str, ...]:
@@ -801,7 +904,7 @@ def _mount_review(
         )
 
     @app.get("/review", response_class=HTMLResponse)
-    def review_overview(unit: str | None = None) -> HTMLResponse:
+    def review_overview(request: Request, unit: str | None = None) -> HTMLResponse:
         """The queue overview, the unit picker and the P-6 / P-10 numbers."""
         return HTMLResponse(
             review_view.render_overview(
@@ -809,13 +912,17 @@ def _mount_review(
                     journal,
                     config=bundle,
                     unit_id=review_view.resolve_unit(bundle, unit),
-                )
+                ),
+                page_context(request),
             )
         )
 
     @app.get("/review/queue/{queue_id}", response_class=HTMLResponse)
     def review_queue(
-        queue_id: str, unit: str | None = None, highlight: str = ""
+        request: Request,
+        queue_id: str,
+        unit: str | None = None,
+        highlight: str = "",
     ) -> HTMLResponse:
         """One unit's open work, or the clearing queue.
 
@@ -832,12 +939,14 @@ def _mount_review(
                     queue_id=queue_id,
                     unit_id=review_view.resolve_unit(bundle, unit),
                     highlight=highlight,
-                )
+                ),
+                page_context(request),
             )
         )
 
     @app.get("/review/case/{case_id}", response_class=HTMLResponse)
     def review_case(
+        request: Request,
         case_id: str,
         unit: str | None = None,
         message: str = "",
@@ -855,7 +964,7 @@ def _mount_review(
         )
         if view is None:
             raise HTTPException(status_code=404, detail=f"unknown case: {case_id}")
-        return HTMLResponse(review_view.render_case(view))
+        return HTMLResponse(review_view.render_case(view, page_context(request)))
 
     @app.post("/review/case/{case_id}/confirm")
     async def review_confirm(case_id: str, request: Request) -> RedirectResponse:
@@ -924,7 +1033,7 @@ def _mount_review(
         except ReviewActionError as error:
             return _redirect(case_id, unit, error=str(error))
         return _redirect(
-            case_id, unit, message="Vorgang zur vollstaendigen Pruefung eskaliert."
+            case_id, unit, message="Vorgang zur vollständigen Prüfung eskaliert."
         )
 
 
@@ -959,20 +1068,18 @@ def _coerce(field: str, value: str) -> object:
 def _confirm_message(outcome: ConfirmOutcome) -> str:
     """What the caseworker reads back. Never a claim the journal does not hold."""
     if outcome.facts is None:
-        return (
-            f"Bestaetigt. Kein Versand: {outcome.dispatch_skipped or 'kein Entwurf'}."
-        )
+        return f"Bestätigt. Kein Versand: {outcome.dispatch_skipped or 'kein Entwurf'}."
     deadline = outcome.facts.deadline
     if deadline is None:
         return (
-            f"Bestaetigt und zum Versand vorgemerkt "
+            f"Bestätigt und zum Versand vorgemerkt "
             f"({outcome.facts.dispatch_date.isoformat()}, "
             f"{outcome.facts.dispatch_shape})."
         )
     return (
-        f"Bestaetigt und zum Versand vorgemerkt "
+        f"Bestätigt und zum Versand vorgemerkt "
         f"({outcome.facts.dispatch_date.isoformat()}, "
-        f"{outcome.facts.dispatch_shape}). Frist laeuft am "
+        f"{outcome.facts.dispatch_shape}). Frist läuft am "
         f"{deadline.deadline.isoformat()} ab (Bekanntgabe "
         f"{deadline.bekanntgabe_date.isoformat()}, par. 37 Abs. 2 SGB X)."
     )

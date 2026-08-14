@@ -22,10 +22,12 @@ repository.
 6. **Accessibility and reflow** for the citizen-facing pages, plus the two
    lines that must stay true forever: the queue is never reordered and the
    inbox never grows a control.
-7. **The tour** (part 15): six steps in order, an English aside on each, the
-   intake posture stated honestly in BOTH of its states, a link into a SEEDED
-   case so the seven stages are walkable before anybody submits, and no dead
-   link on an instance where nothing was seeded.
+7. **The tour** (part 15): six steps in order, the intake posture stated
+   honestly in BOTH of its states, a link into a SEEDED case so the seven
+   stages are walkable before anybody submits, and no dead link on an instance
+   where nothing was seeded. The inline English asides it used to carry were
+   removed in part 16 and replaced by the header's language toggle, which
+   ``tests/test_i18n.py`` covers.
 
 Every client here injects the DETERMINISTIC detector union. That is the part-10
 precedent (``tests/test_review_no_person.py``) and it is also the shipped demo's
@@ -50,6 +52,7 @@ from jinja2 import Environment
 from api import demo as demo_view
 from api import review as review_view
 from api.app import REFUSED_ENVELOPE, REFUSED_REDACTION, create_app
+from api.i18n import phrase
 from api.metrics import TEMPLATE_DIR, environment, set_demo_posture
 from engine.config_loader import ConfigBundle
 from engine.demo import DEMO_MODE_ENV, INGEST_HEADER, INGEST_TOKEN_ENV, DemoPosture
@@ -230,17 +233,26 @@ def test_with_the_flag_off_no_demo_store_exists(
 
 
 def stripped_environment() -> Environment:
-    """The part-11 control group: the demo include neutralised to nothing."""
+    """The part-11 control group: the demo include neutralised to nothing.
+
+    The globals come from the real environment for the reason
+    ``tests/test_demo_mode.py`` states at length: since part 16 every page also
+    reads its language context from there, and a control group without one
+    would raise on an undefined callable instead of measuring the bytes the
+    demo include costs.
+    """
     from jinja2 import ChoiceLoader, DictLoader, FileSystemLoader
 
-    return Environment(
+    stripped = Environment(
         loader=ChoiceLoader(
-            [DictLoader({"_demo_banner.html": ""}), FileSystemLoader(TEMPLATE_DIR)]
+            [DictLoader({"_demo_ribbon.html": ""}), FileSystemLoader(TEMPLATE_DIR)]
         ),
         autoescape=environment().autoescape,
         trim_blocks=True,
         lstrip_blocks=True,
     )
+    stripped.globals.update(environment().globals)
+    return stripped
 
 
 def test_the_queue_page_is_byte_identical_without_the_highlight(
@@ -304,8 +316,8 @@ def test_with_no_token_configured_the_intake_page_is_closed_too(
     client = build_client(config, token=None, monkeypatch=monkeypatch)
     page = client.get("/demo/antrag")
     assert page.status_code == 200
-    assert demo_view.CLOSED_NOTE in page.text
-    assert "Antrag absenden" not in page.text
+    assert phrase(demo_view.CLOSED_NOTE) in page.text
+    assert phrase("intake.submit") not in page.text
     refused = client.post(
         "/demo/antrag",
         data=form_data("mustermann_regelaltersrente"),
@@ -331,9 +343,10 @@ def test_the_whole_three_phase_journey_for_each_persona(
     intake = client.get(f"/demo/antrag?persona={persona_id}")
     assert intake.status_code == 200
     assert persona(persona_id).display_name in intake.text
-    assert "Was Sie ausprobieren koennen" in intake.text
-    assert 'id="demo-banner"' in intake.text
-    assert "Phase 1: Antrag" in intake.text
+    assert phrase("intake.hints.heading") in intake.text
+    assert 'id="demo-ribbon"' in intake.text
+    assert 'aria-current="step"' in intake.text
+    assert phrase("phase.antrag") in intake.text
 
     case_id = submit(client, form_data(persona_id))
 
@@ -343,7 +356,7 @@ def test_the_whole_three_phase_journey_for_each_persona(
     headings = re.findall(r'id="([a-g])-heading"', page.text)
     assert headings == ["a", "b", "c", "d", "e", "f", "g"]
     assert case_id in page.text
-    assert demo_view.SEAL_SENTENCE in page.text
+    assert phrase(demo_view.SEAL_SENTENCE) in page.text
     assert tier_prefix in page.text
     assert unit in page.text
     # (b) the working copy is placeholders, and the pairing shows both sides.
@@ -377,7 +390,7 @@ def test_the_letter_tab_goes_through_the_same_pipeline(
     """One pipeline, two tabs. The e-mail adapter is simulated and says so."""
     client = build_client(config, monkeypatch=monkeypatch)
     page = client.get("/demo/antrag?persona=musterfrau_statusfeststellung&kanal=email")
-    assert "simulierter Adapter" in page.text
+    assert phrase("channel.email") in page.text
     assert "SIMULIERTER Adapter" in page.text
     assert "P-14" in page.text
     assert "<textarea" in page.text
@@ -391,7 +404,7 @@ def test_the_letter_tab_goes_through_the_same_pipeline(
     assert "Referat_340_Clearingstelle" in pipeline.text
     assert "Ihr Anschreiben, vorher und nachher" in pipeline.text
     # And the honest sentence about why nothing was extracted (ADR-028).
-    assert demo_view.NO_EXTRACTION_NOTE in pipeline.text
+    assert phrase(demo_view.NO_EXTRACTION_NOTE) in pipeline.text
 
 
 def test_a_tampered_submission_fires_the_gap_and_the_flag(
@@ -415,7 +428,7 @@ def test_a_tampered_submission_fires_the_gap_and_the_flag(
     )
     flag_page = client.get(f"/demo/case/{flag_case}/pipeline").text
     assert "Merkmal leitdatum_abstand_jahre" in flag_page
-    assert demo_view.LOG_ONLY_NOTE in flag_page
+    assert phrase(demo_view.LOG_ONLY_NOTE) in flag_page
 
     # Auslandsbezug: priority 10 wins and the case changes unit.
     abroad_case = submit(
@@ -447,7 +460,7 @@ def test_a_refused_submission_renders_the_refusal_on_the_page(
         follow_redirects=False,
     )
     assert refused.status_code == 200
-    assert REFUSED_REDACTION in refused.text
+    assert phrase(REFUSED_REDACTION) in refused.text
     assert 'id="refusal"' in refused.text
     # Nothing was journaled: the refusal happened before a case existed.
     assert client.get("/review").text.count("case-demo") == 0
@@ -474,12 +487,12 @@ def test_no_refusal_ever_echoes_what_the_visitor_typed(
         follow_redirects=False,
     )
     assert refused.status_code == 200
-    assert REFUSED_REDACTION in refused.text
+    assert phrase(REFUSED_REDACTION) in refused.text
     block = refused.text.split('id="refusal"')[1].split("</div>")[0]
     assert canary not in block
     assert "nope" not in block
     # The envelope refusal has its own wording, and it is not this one.
-    assert REFUSED_ENVELOPE not in refused.text
+    assert phrase(REFUSED_ENVELOPE) not in refused.text
 
 
 def test_an_out_of_shape_value_becomes_a_gap_rather_than_an_error(
@@ -517,7 +530,7 @@ def test_an_unknown_persona_or_channel_falls_back_instead_of_failing(
     page = client.get("/demo/antrag?persona=ghost&kanal=telepathie")
     assert page.status_code == 200
     assert demo_personas().first.display_name in page.text
-    assert "Formular (FIT-Connect)" in page.text
+    assert phrase("channel.fit_connect") in page.text
     assert demo_view.resolve_channel("telepathie") == CHANNEL_FORM
     assert demo_view.resolve_channel(None) == CHANNEL_FORM
     assert demo_view.resolve_channel(CHANNEL_EMAIL) == CHANNEL_EMAIL
@@ -721,7 +734,7 @@ def test_an_expired_submission_leaves_the_journal_half_readable(
     store.reset()
     page = client.get(f"/demo/case/{case_id}/pipeline")
     assert page.status_code == 200
-    assert demo_view.EXPIRED_NOTE in page.text
+    assert phrase(demo_view.EXPIRED_NOTE) in page.text
     assert "Von Ihnen eingegeben" not in page.text
     # Everything the journal holds is still there.
     assert "Referat_312_Renten" in page.text
@@ -754,6 +767,7 @@ def test_no_page_shows_another_visitors_identity(
     for path in (
         f"/demo/case/{second}/pipeline",
         "/demo/rundgang",
+        "/hinweise",
         "/review",
         "/review/queue/Referat_312_Renten",
         f"/review/queue/Referat_312_Renten?highlight={first}",
@@ -804,8 +818,9 @@ def test_the_demo_pages_carry_the_synthetic_data_banner(
     for page in CITIZEN_PAGES:
         path = citizen_path(page, case_id)
         body = client.get(path).text
-        assert 'id="demo-banner"' in body, path
-        assert "SYNTHETISCHEN Daten" in body, path
+        assert 'id="demo-ribbon"' in body, path
+        assert phrase("ribbon.text") in body, path
+        assert 'href="/hinweise"' in body, path
     assert demo_personas().note in client.get("/demo/antrag").text
 
 
@@ -956,9 +971,10 @@ def test_the_tour_tells_the_whole_story_in_six_steps(
     assert re.findall(r'id="(schritt-\d)"', body) == [
         f"schritt-{index}" for index in range(1, 7)
     ]
-    # German leads; every step carries a short English aside in one treatment.
-    assert body.count('<p class="aside" lang="en">') >= 6
-    assert body.count("In English") >= 6
+    # Part 16: no inline English asides anywhere. The header toggle carries
+    # the whole page into English instead, which is asserted in tests/test_i18n.
+    assert 'class="aside"' not in body
+    assert "In English" not in body
     # The six destinations, and no page of this system left out.
     for href in ('href="/demo/antrag"', 'href="/inbox"', 'href="/metrics"'):
         assert href in body, href
@@ -967,7 +983,7 @@ def test_the_tour_tells_the_whole_story_in_six_steps(
         assert claim in body, claim
     # And the honesty the rest of the project keeps: the accessibility posture
     # is a self-assessment and the page says so rather than implying an audit.
-    assert "Selbsteinschaetzung" in body
+    assert "Selbsteinschätzung" in body
     assert "BITV 2.0" in body
 
 
@@ -988,11 +1004,11 @@ def test_the_tour_states_the_intake_posture_it_actually_has(
     )
     body = client.get("/demo/rundgang").text
     if open_intake:
-        assert demo_view.TOUR_OPEN_NOTE in body
+        assert phrase(demo_view.TOUR_OPEN_NOTE) in body
         assert 'class="cta" href="/demo/antrag"' in body
         assert "Eingang gesperrt" not in body
     else:
-        assert demo_view.TOUR_CLOSED_NOTE in body
+        assert phrase(demo_view.TOUR_CLOSED_NOTE) in body
         assert "Eingang gesperrt" in body
         # The page is still offered, just without the promise of a submission.
         assert 'href="/demo/antrag"' in body
@@ -1033,7 +1049,7 @@ def test_the_tour_walks_a_seeded_case_before_anybody_submits(
         assert client.get(path).status_code == 200, path
     # And it says out loud why the working-copy panel is missing over there:
     # that compartment holds what a VISITOR typed, and nobody typed this one.
-    assert demo_view.TOUR_SEEDED_NOTE in body
+    assert phrase(demo_view.TOUR_SEEDED_NOTE) in body
 
 
 def test_the_tour_links_nothing_dead_when_nothing_was_seeded(
@@ -1048,7 +1064,7 @@ def test_the_tour_links_nothing_dead_when_nothing_was_seeded(
     """
     client = build_client(config, monkeypatch=monkeypatch)
     body = client.get("/demo/rundgang").text
-    assert demo_view.TOUR_UNSEEDED_NOTE in body
+    assert phrase(demo_view.TOUR_UNSEEDED_NOTE) in body
     assert "/demo/case/" not in body
     assert 'href="/review"' in body
 

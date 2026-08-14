@@ -79,7 +79,7 @@ def run(
 
 def test_the_shipped_persona_file_loads_and_covers_the_four_arcs() -> None:
     personas = demo_personas()
-    assert personas.version == "personas_v1"
+    assert personas.version == "personas_v2"
     assert {persona.persona_id for persona in personas.personas} == set(FORM_ARCS)
     assert personas.note
     assert len(personas.hints) >= 3
@@ -283,9 +283,9 @@ def test_the_persona_file_is_not_read_by_the_config_loader(
     stamp = config.version_stamp().model_dump(mode="json")
     assert "personas" not in json.dumps(stamp)
     document = yaml.safe_load(
-        Path("config/demo/personas_v1.yaml").read_text(encoding="utf-8")
+        Path("config/demo/personas_v2.yaml").read_text(encoding="utf-8")
     )
-    assert document["version"] == "personas_v1"
+    assert document["version"] == "personas_v2"
 
 
 # ------------------------------------------------------------- the arcs ---

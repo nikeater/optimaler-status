@@ -1,160 +1,195 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>EingangsLotse - Demo</title>
-  {# system.css carries the reflow rules for every page (part 15); demo.css
-     adds what only a citizen-facing page has. This page is demo-only, so it is
-     in the same class as the tour pages: a public landing page has to work on
-     the phone somebody opened the link on. #}
-  <link rel="stylesheet" href="/static/system.css">
-  <link rel="stylesheet" href="/static/demo.css">
-</head>
-<body>
-  <a class="skip-link" href="#inhalt">Direkt zum Inhalt</a>
-  {% include "_demo_banner.html" %}
-  <header>
-    <h1>EingangsLotse</h1>
-    <p class="lead">
-      Ein Eingangs-Assistent fuer Massenverfahren der oeffentlichen Verwaltung:
-      Er liest einen Eingang, belegt jede Aussage, ordnet ihn einer Einheit zu
-      und entscheidet nach einer versionierten Entscheidungstabelle, ob ein
-      Mensch ihn sehen muss. Er entscheidet nichts ueber Menschen - er sortiert
-      Arbeit und legt offen, warum.
-    </p>
-    <p class="aside" lang="en">
-      <span class="aside-label">In English</span>
-      An intake assistant for German public administration that prepares
-      decisions and never takes one. It seals identity data before anything
-      else reads the case, proves every extracted value against the document it
-      came from, and lets a deterministic decision table decide whether a human
-      has to look. Uncertainty can only ever add human review.
-    </p>
-    <nav aria-label="Bereiche">
-      <ul class="navbar">
-        <li><a href="/demo/rundgang">Rundgang</a></li>
-        <li><a href="/demo/antrag">Phase 1: Antrag stellen</a></li>
-        <li><a href="/review">Bearbeitung</a></li>
-        <li><a href="/metrics">Eval-Metriken</a></li>
-        <li><a href="/inbox">Postfach</a></li>
-      </ul>
-    </nav>
-  </header>
-  <main id="inhalt">
-    {# The tour comes FIRST on this page. A visitor who has ninety seconds
-       should spend them walking the system, not reading about it; the three
-       promises below are what the tour then demonstrates. #}
-    <section aria-labelledby="rundgang-heading">
-      <h2 id="rundgang-heading">Fangen Sie hier an</h2>
-      <p class="lead">
-        Der <strong>Rundgang</strong> erzaehlt das ganze System von der ersten
-        Einreichung bis zum geschlossenen Kreis - in sechs Schritten, jeder mit
-        einem Link auf die Stelle, an der er tatsaechlich passiert. Er ist fuer
-        Besucherinnen und Besucher gedacht, die dieses Projekt noch nie gesehen
-        haben.
-      </p>
-      <p class="aside" lang="en">
-        <span class="aside-label">In English</span>
-        The guided tour walks the whole system end to end in six steps, each one
-        linking to the page where that step really happens. Every step carries a
-        short English note like this one.
-      </p>
-      <p>
-        <a class="cta" href="/demo/rundgang">Zum Rundgang</a>
-      </p>
-      <p>Oder direkt an eine Stelle springen:</p>
-      <ul>
-        <li>
-          <a href="/demo/antrag">Phase 1: Antrag stellen</a> - Sie stellen als
-          erfundene Person einen Antrag und sehen danach Schritt fuer Schritt,
-          was die Anlage damit macht. Es ist derselbe Weg, den jeder andere
-          Eingang nimmt.
-        </li>
-        <li>
-          <a href="/review">Bearbeitung</a> - Warteschlangen je Einheit, die
-          Vorgangsansicht mit allen Belegen und die drei Aktionen
-          (bestaetigen, umsteuern, eskalieren). Jede Aktion schreibt ein
-          Ereignis ins Journal; nichts wird ueberschrieben.
-        </li>
-        <li>
-          <a href="/metrics">Eval-Metriken</a> - die Zahlen des letzten
-          Eval-Laufs ueber dem eingefrorenen Goldsatz, inklusive der vier
-          Gates. Die Seite rechnet nichts selbst.
-        </li>
-        <li>
-          <a href="/inbox">Postfach</a> - was eine antragstellende Person
-          erhalten haette. Nur Ansicht, ohne jede Bedienung.
-        </li>
-        <li>
-          <a href="/health">/health</a> und <a href="/healthz">/healthz</a> -
-          Versionsstempel und Betriebspruefung.
-        </li>
-      </ul>
-    </section>
+{# The landing page. What this is, what it guarantees, what this instance is
+   not - opening with the pipeline told as a picture (part 16).
 
-    <section aria-labelledby="garantien-heading">
-      <h2 id="garantien-heading">Die drei Zusagen</h2>
-      <dl>
-        <dt>Zwei Ebenen, eine Richtung</dt>
-        <dd>
-          Die Evidenzebene ist probabilistisch und darf irren: sie extrahiert,
-          ordnet zu, findet Luecken. Die Entscheidungsebene ist deterministisch
-          und liest nur, was belegt ist. Unsicherheit kann einen Vorgang nur zu
-          einem Menschen schieben, nie von ihm weg - das ist das
-          Einwegventil (ADR-004), und es wird bei jedem Commit gegen die echte
-          Entscheidungstabelle geprueft.
-        </dd>
-        <dt>Kein Modelltext an Buergerinnen und Buerger</dt>
-        <dd>
-          Kein Satz, den ein Sprachmodell erzeugt hat, erreicht eine
-          antragstellende Person. Benachrichtigungen entstehen aus Vorlagen
-          einer versionierten Konfiguration; Entwuerfe warten auf die
-          Bestaetigung eines Menschen. Ein Modell darf lesen, nie schreiben.
-        </dd>
-        <dt>Identitaet wird am Eingang versiegelt</dt>
-        <dd>
-          Identitaetsbezogene Felder werden versiegelt, bevor die Arbeitskopie
-          entsteht; alles danach sieht Platzhalter. Erst beim Rendern eines
-          Briefes wird zurueckbefuellt. Der Redaktions-Recall wird gemessen und
-          ist ein Gate.
-        </dd>
-      </dl>
-    </section>
+   THE HERO IS ONE INLINE SVG AND ZERO JAVASCRIPT. Five stages on a line, a
+   sealed envelope travelling between them, a highlight ring that walks along
+   with it, and five captions in the document that fade with the same keyframes
+   at the same offsets. Every animated property is `opacity` or `transform`, so
+   the browser can composite the whole loop without a layout pass.
 
-    <section aria-labelledby="demo-heading">
-      <h2 id="demo-heading">Was diese Instanz ist und was nicht</h2>
-      <p class="notice">
-        {{ view.picker_note }}
+   THE CAPTIONS ARE REAL TEXT IN THE DOCUMENT, not glyphs in the drawing.
+   Selectable, searchable, translated by the same table as everything else, and
+   present in the markup whether or not they are the one currently faded in -
+   which is what makes the reduced-motion fallback a matter of one media query
+   rather than a second copy of the content: `prefers-reduced-motion: reduce`
+   stops the loop, shows all five captions stacked under their stage names and
+   lights every stage at once.
+
+   The SVG carries `role="img"` with a title and a description, so assistive
+   technology reads one sentence about the picture instead of walking a
+   drawing. The stage names are drawn in it for a sighted reader AND repeated
+   as the bold prefix of each caption, so nothing is available only inside the
+   image. #}
+{% extends "demo_base.html" %}
+{% block title %}{{ t("landing.title") }}{% endblock %}
+{% block heading %}{{ t("landing.headline") }}{% endblock %}
+
+{% block hero %}
+<div class="hero">
+  <p class="hero-lead">{{ t("landing.lead") }}</p>
+  <p class="hero-actions">
+    <a class="cta" href="/demo/rundgang">{{ t("landing.cta.tour") }}</a>
+    <a class="cta cta-secondary" href="/demo/antrag">{{ t("landing.cta.intake") }}</a>
+  </p>
+  <figure class="hero-figure">
+    <svg class="hero-svg" viewBox="0 0 960 160" role="img"
+         aria-labelledby="hero-titel hero-beschreibung">
+      <title id="hero-titel">{{ t("landing.hero.label") }}</title>
+      <desc id="hero-beschreibung">{{ t("landing.hero.desc") }}</desc>
+
+      {# The rail the case travels along, behind everything else. #}
+      <line class="hero-rail" x1="96" y1="62" x2="864" y2="62"/>
+
+      {# The five stages. Always drawn, always labelled: the ring is what
+         moves, not the diagram. #}
+      <g class="hero-stage hero-stage-1">
+        <circle class="hero-ring" cx="96" cy="62" r="41"/>
+        <circle class="hero-disc" cx="96" cy="62" r="32"/>
+        <g class="hero-glyph">
+          <rect x="82" y="53" width="28" height="19" rx="3"/>
+          <path d="M83 55l13 10 13-10"/>
+        </g>
+        <text class="hero-name" x="96" y="128">{{ t("landing.hero.s1") }}</text>
+      </g>
+      <g class="hero-stage hero-stage-2">
+        <circle class="hero-ring" cx="288" cy="62" r="41"/>
+        <circle class="hero-disc" cx="288" cy="62" r="32"/>
+        <g class="hero-glyph">
+          <rect x="275" y="58" width="26" height="17" rx="3"/>
+          <path class="hero-shackle" d="M281 58v-5a7 7 0 0 1 14 0v5"/>
+        </g>
+        <text class="hero-name" x="288" y="128">{{ t("landing.hero.s2") }}</text>
+      </g>
+      <g class="hero-stage hero-stage-3">
+        <circle class="hero-ring" cx="480" cy="62" r="41"/>
+        <circle class="hero-disc" cx="480" cy="62" r="32"/>
+        <g class="hero-glyph">
+          <g class="hero-gear">
+            <circle cx="480" cy="62" r="6"/>
+            <path d="M480 48v-5M480 81v5M466 62h-5M494 62h5M470 52l-4-4M490 72l4 4M490 52l4-4M470 72l-4 4"/>
+          </g>
+        </g>
+        <text class="hero-name" x="480" y="128">{{ t("landing.hero.s3") }}</text>
+      </g>
+      <g class="hero-stage hero-stage-4">
+        <circle class="hero-ring" cx="672" cy="62" r="41"/>
+        <circle class="hero-disc" cx="672" cy="62" r="32"/>
+        <g class="hero-glyph">
+          <rect x="658" y="48" width="28" height="7" rx="2"/>
+          <rect x="658" y="59" width="28" height="7" rx="2"/>
+          <rect x="658" y="70" width="28" height="7" rx="2"/>
+        </g>
+        <text class="hero-name" x="672" y="128">{{ t("landing.hero.s4") }}</text>
+      </g>
+      <g class="hero-stage hero-stage-5">
+        <circle class="hero-ring" cx="864" cy="62" r="41"/>
+        <circle class="hero-disc" cx="864" cy="62" r="32"/>
+        <g class="hero-glyph">
+          <circle cx="864" cy="55" r="7"/>
+          <path d="M850 76a14 14 0 0 1 28 0"/>
+        </g>
+        <text class="hero-name" x="864" y="128">{{ t("landing.hero.s5") }}</text>
+      </g>
+
+      {# The case itself: an envelope that acquires a seal after stage 2 and
+         travels the rail with the ring. #}
+      <g class="hero-token">
+        <rect class="hero-token-body" x="82" y="20" width="28" height="19" rx="3"/>
+        <path class="hero-token-flap" d="M83 22l13 10 13-10"/>
+        <g class="hero-token-seal">
+          <circle cx="110" cy="22" r="7"/>
+          <path d="M107 22v-3a3 3 0 0 1 6 0v3"/>
+        </g>
+      </g>
+    </svg>
+    <figcaption class="hero-captions">
+      <span class="sr-only">{{ t("landing.hero.caption.label") }}</span>
+      {% for step in (1, 2, 3, 4, 5) %}
+      <p class="hero-caption hero-caption-{{ step }}">
+        <b class="hero-caption-stage">{{ step }}. {{ t("landing.hero.s" ~ step) }}</b>
+        <span>{{ t("landing.hero.c" ~ step) }}</span>
       </p>
-      <ul>
-        <li>
-          Alle Daten sind synthetisch und stammen aus dem eingefrorenen
-          Goldsatz <code>{{ view.gold_dir }}</code>. Es gibt hier keine echte
-          Person und keinen echten Vorgang.
-        </li>
-        <li>
-          {{ view.ingest_note }}
-        </li>
-        <li>
-          Der Datenbestand wird bei jedem Neustart geloescht und aus dem
-          Goldsatz neu aufgebaut. Was Sie hier bestaetigen oder umsteuern,
-          verschwindet damit wieder - deshalb sind die Aktionen offen.
-        </li>
-        <li>
-          Der Ablagespeicher dieser Demo ist unverschluesseltes JSONL. Das ist
-          genau deshalb vertretbar, weil er nur synthetische Daten enthaelt und
-          der Eingang gesperrt ist; ein Produktivbetrieb ersetzt ihn durch den
-          verschluesselten Speicher aus <code>docs/vault-dpia-input.md</code>.
-        </li>
-      </ul>
-    </section>
-  </main>
-  <footer>
-    <p>
-      Quellcode und die vollstaendige technische Spezifikation:
-      <a href="{{ view.repo_url }}">{{ view.repo_url }}</a>. Lizenz: EUPL-1.2.
-    </p>
-  </footer>
-</body>
-</html>
+      {% endfor %}
+    </figcaption>
+  </figure>
+</div>
+{% endblock %}
+
+{% block content %}
+<section aria-labelledby="rundgang-heading">
+  <h2 id="rundgang-heading">{{ t("landing.start.heading") }}</h2>
+  <p class="lead">{{ m("landing.start.lead") }}</p>
+  <p>
+    <a class="cta" href="/demo/rundgang">{{ t("landing.cta.tour") }}</a>
+  </p>
+  <h3>{{ t("landing.start.jump") }}</h3>
+  <ul class="card-grid">
+    <li class="card">
+      <h4><a href="/demo/antrag">{{ t("landing.card.intake.title") }}</a></h4>
+      <p>{{ t("landing.card.intake.body") }}</p>
+    </li>
+    <li class="card">
+      <h4><a href="/review">{{ t("landing.card.review.title") }}</a></h4>
+      <p>{{ t("landing.card.review.body") }}</p>
+    </li>
+    <li class="card">
+      <h4><a href="/metrics">{{ t("landing.card.metrics.title") }}</a></h4>
+      <p>{{ t("landing.card.metrics.body") }}</p>
+    </li>
+    <li class="card">
+      <h4><a href="/inbox">{{ t("landing.card.inbox.title") }}</a></h4>
+      <p>{{ t("landing.card.inbox.body") }}</p>
+    </li>
+    <li class="card">
+      <h4>{{ t("landing.card.health.title") }}</h4>
+      <p>{{ m("landing.card.health.body") }}</p>
+      <p><a href="/health">/health</a> &middot; <a href="/healthz">/healthz</a></p>
+    </li>
+  </ul>
+</section>
+
+<section aria-labelledby="garantien-heading">
+  <h2 id="garantien-heading">{{ t("landing.promises.heading") }}</h2>
+  <ul class="card-grid card-grid-3">
+    <li class="card">
+      <h3>{{ t("landing.promise.valve.title") }}</h3>
+      <p>{{ t("landing.promise.valve.body") }}</p>
+    </li>
+    <li class="card">
+      <h3>{{ t("landing.promise.model.title") }}</h3>
+      <p>{{ t("landing.promise.model.body") }}</p>
+    </li>
+    <li class="card">
+      <h3>{{ t("landing.promise.seal.title") }}</h3>
+      <p>{{ t("landing.promise.seal.body") }}</p>
+    </li>
+  </ul>
+</section>
+
+<section aria-labelledby="demo-heading">
+  <h2 id="demo-heading">{{ t("landing.instance.heading") }}</h2>
+  <p class="notice">{{ t("picker.note") }}</p>
+  <ul>
+    <li>{{ m("landing.instance.synthetic", gold_dir=view.gold_dir) }}</li>
+    <li>{{ t(view.ingest_note_key) }}</li>
+    <li>{{ t("landing.instance.reset") }}</li>
+    <li>{{ m("landing.instance.storage") }}</li>
+  </ul>
+  <p>
+    {{ t("landing.instance.more") }}
+    <a href="/hinweise">{{ t("chrome.nav.hinweise") }}</a>
+  </p>
+</section>
+{% endblock %}
+
+{% block footer %}
+{% if repo_url %}
+<p>
+  {{ t("footer.source") }} <a href="{{ repo_url }}">{{ repo_url }}</a>.
+  {{ t("footer.license") }}
+</p>
+{% else %}
+<p>{{ t("footer.license") }}</p>
+{% endif %}
+<p>{{ m("footer.a11y") }}</p>
+{% endblock %}

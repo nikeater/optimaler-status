@@ -1,0 +1,23 @@
+{# The demo ribbon (part 16), which replaces part 11's banner block.
+
+   Same mechanism, same gate, one line instead of six. The banner said
+   everything a visitor needed to know about a synthetic-data instance on every
+   single page - which is how a paragraph of small print ends up being read
+   once and then scrolled past forever, on the pages where it matters most. The
+   ribbon says the one thing that must never be missed ("this is a demo, the
+   data is synthetic") and links `/hinweise`, which carries the whole text, the
+   reset model, the ingest posture, the licence and the accessibility summary.
+
+   Demo-gated exactly as the banner was (ADR-027): with the flag off this
+   include renders zero bytes, which `tests/test_demo_mode.py` measures against
+   the same templates rendered with the include neutralised away. #}
+{% import "_icons.html" as icons %}
+{% if demo.enabled %}
+<div class="demo-ribbon" id="demo-ribbon" role="note" aria-label="{{ t('ribbon.label') }}">
+  <p>
+    {{ icons.icon("info") }}
+    <strong>{{ t("ribbon.text") }}</strong>
+    <a href="/hinweise">{{ t("ribbon.more") }}</a>
+  </p>
+</div>
+{% endif %}

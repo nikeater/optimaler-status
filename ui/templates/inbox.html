@@ -1,84 +1,72 @@
+{# The simulated applicant inbox.
+
+   The one page in this project that is BOTH visitor-facing and present on
+   every instance, demo or not. Its chrome is translated like the other
+   citizen pages; the message bodies below it are not, and the note at the
+   bottom of the page says why: they come from
+   `config/notifications/notifications_v1.yaml`, they are legal-text artifacts,
+   and a translated Realakt would be a different document.
+
+   It also stays the page with NO CONTROLS (ADR-005, the part-07 line). The
+   site header's menu is a `<details>` and two links, so there is still no
+   `<form>` and no `<button>` anywhere in this document, which a test asserts
+   rather than trusts. #}
 <!DOCTYPE html>
-<html lang="de">
+<html lang="{{ lang }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>EingangsLotse - Postfach</title>
+  <title>{{ t("inbox.title") }}</title>
   <link rel="stylesheet" href="/static/system.css">
 </head>
 <body>
-  <a class="skip-link" href="#inhalt">Direkt zum Inhalt</a>
-  {% include "_demo_banner.html" %}
-  <header>
-    <h1>EingangsLotse - simuliertes Postfach</h1>
-    <p>
-      Was eine antragstellende Person erhalten haette. Diese Seite zeigt nur an,
-      was tatsaechlich zugestellt wurde; sie erzeugt nichts und aendert nichts.
-    </p>
-    <p>
-      Beide Nachrichtenarten sind <strong>rein informatorisch</strong> (ADR-005):
-      Eingangsbestaetigung und Zwischenstand sind Realakte, keine
-      Verwaltungsakte. Sie entstehen automatisch aus dem Vorgangsjournal, sie
-      durchlaufen keine Pruefung durch einen Menschen, und sie enthalten weder
-      eine Rechtsfolge noch eine Aufforderung. Alles mit Verfahrensfolge geht
-      den schriftformgebundenen Weg (par. 36a SGB I) und nicht ueber diese
-      Seite.
-    </p>
-    {# Deliberately only the two routes that exist on EVERY instance: `/` is a
-       demo-only landing page (part 11) and a nav item that 404s outside demo
-       mode would be a broken link on the page a developer sees first. #}
-    <nav aria-label="Bereiche">
-      <ul class="navbar">
-        <li><a href="/review">Bearbeitung</a></li>
-        <li><a href="/metrics">Eval-Metriken</a></li>
-      </ul>
-    </nav>
-  </header>
+  <a class="skip-link" href="#inhalt">{{ t("chrome.skip") }}</a>
+  {% include "_site_header.html" %}
+  {% include "_demo_ribbon.html" %}
   <main id="inhalt">
+    <div class="page-head">
+      <h1>{{ t("inbox.headline") }}</h1>
+      <p class="lead">{{ t("inbox.lead") }}</p>
+    </div>
     <section id="inbox-panel" aria-labelledby="inbox-heading">
-      <h2 id="inbox-heading">Nachrichten</h2>
+      <h2 id="inbox-heading">{{ t("inbox.messages") }}</h2>
+      <p class="notice">{{ m("inbox.realakt") }}</p>
       {% if not view.cases %}
-      <p class="notice">
-        Noch keine Nachricht zugestellt. Sobald ein Vorgang eingeht, entstehen
-        Eingangsbestaetigung und - nach der Zuordnung - der Zwischenstand.
-      </p>
+      <p class="notice">{{ t("inbox.empty") }}</p>
       {% else %}
       <p>
-        {{ view.message_count }} Nachricht(en) in
-        {{ view.cases|length }} Vorgang/Vorgaengen. Speicher:
+        {{ t("inbox.count", count=view.message_count, cases=view.cases|length) }}
         <code>{{ view.outbox_kind }}</code>.
       </p>
+      {% if page.is_english %}
+      <p class="muted" lang="en">{{ t("inbox.german_note") }}</p>
+      {% endif %}
       {% for case in view.cases %}
-      <h3>Vorgang {{ case.case_id }}</h3>
+      <h3>{{ t("inbox.case", case_id=case.case_id) }}</h3>
       {% for entry in case.entries %}
       <article>
         <dl>
-          <dt>Betreff</dt><dd>{{ entry.subject }}</dd>
-          <dt>Vorlage</dt><dd><code>{{ entry.template_id }}</code></dd>
-          <dt>Anlass</dt>
+          <dt>{{ t("inbox.subject") }}</dt><dd>{{ entry.subject }}</dd>
+          <dt>{{ t("inbox.template") }}</dt><dd><code>{{ entry.template_id }}</code></dd>
+          <dt>{{ t("inbox.cause") }}</dt>
           <dd>
-            Journalereignis <code>{{ entry.source_event_type }}</code>
+            {{ t("inbox.cause.event") }} <code>{{ entry.source_event_type }}</code>
             ({{ entry.source_event_id }})
           </dd>
-          <dt>Weg</dt><dd>{{ entry.channel }} / {{ entry.delivery }}</dd>
-          <dt>Zugestellt</dt><dd>{{ entry.created_at }}</dd>
+          <dt>{{ t("inbox.channel") }}</dt><dd>{{ entry.channel }} / {{ entry.delivery }}</dd>
+          <dt>{{ t("inbox.delivered") }}</dt><dd>{{ entry.created_at }}</dd>
         </dl>
-        <pre>{{ entry.body }}</pre>
+        <pre lang="de">{{ entry.body }}</pre>
       </article>
       {% else %}
-      <p class="notice">Keine Nachricht zu diesem Vorgang.</p>
+      <p class="notice">{{ t("inbox.nothing") }}</p>
       {% endfor %}
       {% endfor %}
       {% endif %}
     </section>
   </main>
   <footer>
-    <p>
-      Der Nachrichtentext stammt vollstaendig aus
-      <code>config/notifications/notifications_v1.yaml</code>. Es wird kein
-      Sprachmodell verwendet (Art. 50 KI-VO, C-13), und es wird nichts aus dem
-      Identitaets-Tresor nachgeladen.
-    </p>
+    <p>{{ m("inbox.footer") }}</p>
   </footer>
 </body>
 </html>
