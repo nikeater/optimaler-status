@@ -24,7 +24,10 @@
       TEXT: it is a fill, a rule and a decorative surface, and everything
       textual in the blue family uses `--brand-ink` (6.51:1 on white) or
       `--brand-ink-strong` (8.92:1). The same split exists in the red family
-      for the same arithmetic reason - see `--alarm` and `--alarm-text`.
+      for the same arithmetic reason - see `--alarm` and `--alarm-text` - and
+      in the caution orange part 17 added for the demo ribbon, `--caution` and
+      `--caution-text`. All three element colours are held to it by one regex
+      over every stylesheet rather than by anybody remembering.
 
    3. FOCUS IS RESTYLED, NEVER REMOVED. No stylesheet in this project contains
       the rule that switches a focus outline off, and a test asserts that over
@@ -67,6 +70,14 @@
   --alarm: #dc0000; /* 5.19:1 on white, 4.32:1 on the darkest surface */
   --alarm-text: #8f1010; /* 9.34:1 */
   --warn: #7a4a06; /* 7.47:1 */
+  /* CAUTION, WHICH IS NOT ALARM. A standing notice that this instance is a
+     demonstration is a thing to be aware of, not a thing that went wrong, and
+     the red family said "error" to every reader who met it. Same two-member
+     split as the red for the same arithmetic reason: `--caution` measures
+     4.36:1 on its own tint and 4.24:1 on the canvas, so it draws the ribbon's
+     edge and `--caution-text` (7.70:1 on the tint) carries the words. */
+  --caution: #b45a00; /* 4.77:1 on white, 4.36:1 on --tint-caution */
+  --caution-text: #7a3d00; /* 8.42:1 on white, 7.70:1 on --tint-caution */
 
   --surface: #ffffff;
   --surface-alt: #f5f7f9;
@@ -76,6 +87,7 @@
   --tint-brand: #e4f2fb;
   --tint-ok: #e8f3ec;
   --tint-alarm: #fbeaea;
+  --tint-caution: #fff3e6; /* --ink measures 14.56:1 on it */
   --tint-sample: #eef2f8;
 
   /* Two border weights on purpose. `--line` separates things inside a card and
@@ -460,11 +472,19 @@ a.wordmark:hover .wordmark-name {
 /* ------------------------------------------------------- the demo ribbon */
 
 /* One line, on every page of a demo instance, linking the page that carries
-   the whole notice. The red family is not decoration here: it is the same
-   warning meaning it has everywhere else in this project. */
+   the whole notice.
+
+   CAUTION ORANGE, NOT ALARM RED, since part 17. The red family means warning,
+   refusal and alarm everywhere else in this project, and readers correctly
+   applied that meaning here too: a red bar across the top of every page reads
+   as "something has gone wrong", when what it says is "this is a demonstration
+   and the data is synthetic". That is a thing to be aware of, permanently and
+   calmly. The red stays exactly where it is on every other surface - the
+   refusal block, the anomaly flag, the failed gate; the ribbon was its one
+   wrong use. Nothing about what the ribbon SAYS or where it renders changed. */
 .demo-ribbon {
-  background: var(--tint-alarm);
-  border-bottom: 2px solid var(--alarm);
+  background: var(--tint-caution);
+  border-bottom: 2px solid var(--caution);
   color: var(--ink);
   font-size: var(--text-sm);
 }
@@ -480,11 +500,11 @@ a.wordmark:hover .wordmark-name {
 }
 
 .demo-ribbon .icon {
-  color: var(--alarm-text);
+  color: var(--caution-text);
 }
 
 .demo-ribbon a {
-  color: var(--alarm-text);
+  color: var(--caution-text);
   font-weight: 600;
 }
 

@@ -327,26 +327,43 @@ def test_the_design_system_carries_the_reflow_rules() -> None:
         assert not re.search(r"font-size:\s*\d+px", css), f"{sheet.name}: px font size"
 
 
-def test_the_two_colours_that_may_not_carry_text_never_do() -> None:
+#: The element colours: too weak for text against at least one surface this
+#: project ships, and each with a text-weight sibling in the same family.
+#: Part 17 added the third when the demo ribbon left the red family.
+ELEMENT_ONLY = {
+    "brand": "brand-ink",  # 2.36:1 on white
+    "alarm": "alarm-text",  # 4.32:1 on the darkest surface
+    "caution": "caution-text",  # 4.36:1 on its own tint, 4.24:1 on the canvas
+}
+
+
+def test_the_element_colours_that_may_not_carry_text_never_do() -> None:
     """1.4.3, made structural instead of remembered (part 16).
 
-    The brand sky blue measures 2.36:1 on white and the reserved red 4.32:1 on
-    the darkest surface this project ships. Both are therefore ELEMENT colours -
-    a fill, a rule, an edge - and both have a text-weight sibling in the same
-    family (`--brand-ink`, `--alarm-text`) for anything a reader has to read.
+    Every member of :data:`ELEMENT_ONLY` is a fill, a rule or an edge, and
+    every one has a text-weight sibling for anything a reader has to read.
     That is a rule somebody would eventually forget, so it is checked over
-    every stylesheet rather than written in a comment.
+    every stylesheet rather than written in a comment - and the check is over
+    a NAMED SET, so a fourth element colour joins it by being added here rather
+    than by being silently exempt.
 
     The regex is anchored so that `border-left-color: var(--brand)` does not
     read as a text colour, which is the one false positive worth avoiding: it
-    is exactly the way these two tokens are SUPPOSED to be used.
+    is exactly the way these tokens are SUPPOSED to be used. It ends at the
+    closing paren, so `color: var(--caution-text)` is the sibling and not a
+    violation.
     """
-    text_colour = re.compile(r"(?<![-\w])color:\s*var\(--(brand|alarm)\)")
+    family = "|".join(sorted(ELEMENT_ONLY))
+    text_colour = re.compile(rf"(?<![-\w])color:\s*var\(--({family})\)")
     for sheet in sorted(Path("ui/static").glob("*.css")):
         css = sheet.read_text(encoding="utf-8")
         found = text_colour.search(css)
         assert found is None, f"{sheet.name}: {found.group(0) if found else ''}"
-    # And the two siblings that carry the text exist and are used.
+    # And every sibling that carries the text exists, next to its element
+    # colour, in the one place the palette is declared.
     system = Path("ui/static/system.css").read_text(encoding="utf-8")
-    assert "--brand-ink:" in system and "--alarm-text:" in system
+    for element, text in ELEMENT_ONLY.items():
+        assert f"--{element}:" in system, element
+        assert f"--{text}:" in system, text
     assert "color: var(--brand-ink)" in system
+    assert "color: var(--caution-text)" in system

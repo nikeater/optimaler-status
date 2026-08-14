@@ -1,7 +1,7 @@
 # Accessibility Self-Check: EN 301 549 V3.2.1 / WCAG 2.1 AA (P-15)
 
 **Status:** SELF-ASSESSMENT by the implementing engineer, 2026-08-12, last
-revised 2026-08-14. Not an audit. No person with a disability has used these
+revised 2026-08-15. Not an audit. No person with a disability has used these
 pages, no assistive technology has been run against them, and no BITV-Test has
 been performed. An accessibility statement under par. 12b BGG and BITV 2.0
 par. 7 may NOT be derived from this document; it needs the external test that is
@@ -21,6 +21,33 @@ they have. The tests behind their `automated` verdicts live in
 `tests/test_demo_journey.py`; where a criterion is answered differently for the
 two page sets, the row says so and names both.
 
+**Revised 2026-08-15 (part 17, the browser pass).** Three things changed, and
+the reason for all three is that this document described a page nobody had
+opened.
+
+1. **2.2.2 was answered on paper only and is now answered in fact.** The pause
+   control shipped inside a wrapper `<div>`, which made it a cousin rather than
+   a sibling of the drawing it was meant to stop; every `:checked ~` rule
+   matched nothing and the checkbox did nothing in any browser. The test
+   asserted that the stylesheet CONTAINED those rules, which was true
+   throughout. The checkbox is now a direct sibling of what it pauses, the
+   test parses the rendered page and asserts that relationship, and the control
+   was operated by mouse and by keyboard in a real browser. The hero's stage
+   order was wrong in the same release and for a related reason - see the
+   engineering log; 1.4.1 is unaffected, because the captions were always real
+   text and always said which stage they belonged to.
+2. **The demo ribbon left the red family for a caution orange.** Red means
+   warning, refusal and alarm everywhere else here, and readers applied that
+   meaning to a bar that says "this is a demonstration". Three new tokens,
+   measured like every other pair and added to the table below. The red is
+   unchanged everywhere it still means alarm.
+3. **1.4.10 and 2.2.2 gained real browser evidence.** Every page in the suite
+   was rendered at 1920 and at 390 CSS px in both languages and looked at, and
+   the three-phase step indicator's geometry was measured at 320, 768, 1024,
+   1440 and 1920 px. This does not close the rows that need an external audit
+   and assistive technology; it does mean the static checks are no longer the
+   only thing behind them.
+
 **Revised 2026-08-14 (part 16, the bilingual overhaul).** Four things changed
 and one of them is a new criterion this project had never engaged before.
 
@@ -28,9 +55,10 @@ and one of them is a new criterion this project had never engaged before.
    and REPLACES the part-15 one. The brand colour is now a sky blue that
    measures 2.36:1 on white, so the token names carry the arithmetic: `--brand`
    is an element colour and never carries text, `--brand-ink` is the text
-   sibling. The reserved red splits the same way. A test greps every stylesheet
-   for `color: var(--brand)` and `color: var(--alarm)` so the rule is
-   structural rather than remembered.
+   sibling. The reserved red splits the same way, and so does the caution
+   orange part 17 added. A test greps every stylesheet for `color:
+   var(--brand)`, `color: var(--alarm)` and `color: var(--caution)` so the rule
+   is structural rather than remembered.
 2. **Two pages joined the suite**: the landing page `/` and the new disclaimer
    page `/hinweise`. Eleven pages are now checked in total.
 3. **2.2.2 Pause, stop, hide is ENGAGED for the first time** and answered with
@@ -93,7 +121,7 @@ Running axe (or a BITV-Test) against a deployed instance is the right thing to
 do and belongs in the pilot, together with a test by users of assistive
 technology, which is the only thing that actually answers the question.
 
-## Measured contrast ratios (part 16)
+## Measured contrast ratios (part 16, extended in part 17)
 
 Every pair below was computed with the WCAG 2.1 relative-luminance formula from
 the hex values in `ui/static/system.css`. These are the pairs the stylesheets
@@ -105,10 +133,14 @@ Requirements: **4.5:1** for body text, **3:1** for large text and for anything
 that identifies a user-interface component or a state.
 
 Surfaces: `--surface` `#ffffff`, `--surface-alt` `#f5f7f9`, `--surface-sunken`
-`#eaeaea`, `--canvas` `#eef2f5`, the four note tints `--tint-brand` `#e4f2fb`,
-`--tint-ok` `#e8f3ec`, `--tint-alarm` `#fbeaea`, `--tint-sample` `#eef2f8`, and
-one fill that carries text: `--brand` `#4db2ec`, used for the current step's
-circle and for nothing else that a word sits on.
+`#eaeaea`, `--canvas` `#eef2f5`, the five note tints `--tint-brand` `#e4f2fb`,
+`--tint-ok` `#e8f3ec`, `--tint-alarm` `#fbeaea`, `--tint-caution` `#fff3e6`
+(part 17), `--tint-sample` `#eef2f8`, and one fill that carries text:
+`--brand` `#4db2ec`, used for the current step's circle and for nothing else
+that a word sits on.
+
+The "worst tint" column is still `--tint-alarm` in every row: `--tint-caution`
+is the lightest of the five, so adding it moved no existing number.
 
 | Foreground | Where it is used | vs `--surface` | vs `--surface-alt` | vs `--surface-sunken` | vs `--canvas` | worst tint | vs `--brand` fill | Requirement | Verdict |
 |---|---|---|---|---|---|---|---|---|---|
@@ -118,11 +150,13 @@ circle and for nothing else that a word sits on.
 | `--brand-ink` `#106393` | links, the nav pills, the menu button, buttons, the caption's stage prefix | 6.51 | 6.06 | 5.41 | 5.78 | 5.59 | (never on brand) | 4.5 | pass |
 | `--brand-ink-strong` `#0c4e73` | hovered links and buttons, the skip link's background | 8.92 | 8.31 | 7.42 | 7.93 | 7.68 | 3.78 | 4.5 | pass |
 | `--ok` `#10683c` | the gate-passed verdict | 6.85 | 6.37 | 5.69 | 6.08 | 5.89 | - | 4.5 | pass |
-| `--alarm-text` `#8f1010` | the gate-failed verdict, the ribbon's link and icon | 9.34 | 8.69 | 7.76 | 8.29 | 8.03 | - | 4.5 | pass |
+| `--alarm-text` `#8f1010` | the gate-failed verdict, the refusal block's prose | 9.34 | 8.69 | 7.76 | 8.29 | 8.03 | - | 4.5 | pass |
+| `--caution-text` `#7a3d00` (part 17) | the demo ribbon's link and icon; **7.70 on `--tint-caution`, which is the only surface it appears on** | 8.42 | 7.84 | 7.00 | 7.48 | 7.24 | 3.57 | 4.5 | pass |
 | `--warn` `#7a4a06` | reserved for an advisory state | 7.47 | 6.96 | 6.21 | 6.64 | 6.43 | - | 4.5 | pass |
 | `#ffffff` on `--brand-ink` | button and menu labels, the call-to-action link, the completed step's checkmark | 6.51 (8.92 on `--brand-ink-strong`) | - | - | - | - | - | 4.5 | pass |
 | **`--brand` `#4db2ec`** | **element colour ONLY**: the header rule, card and stage edges, the hero ring, the current step's fill | 2.36 | 2.20 | 1.96 | 2.10 | 2.03 | - | 3.0 | pass as an element, **FAILS as text and is never used as text** |
-| **`--alarm` `#dc0000`** | **element colour ONLY**: the ribbon's rule, the refusal block's edge, the gate-failed frame | 5.19 | 4.84 | 4.32 | 4.61 | 4.47 | - | 3.0 | pass as an element; **below 4.5 on two surfaces, so text uses `--alarm-text`** |
+| **`--alarm` `#dc0000`** | **element colour ONLY**: the refusal block's edge, the anomaly flag's edge, the gate-failed frame. No longer the demo ribbon (part 17) | 5.19 | 4.84 | 4.32 | 4.61 | 4.47 | - | 3.0 | pass as an element; **below 4.5 on two surfaces, so text uses `--alarm-text`** |
+| **`--caution` `#b45a00`** (part 17) | **element colour ONLY**: the demo ribbon's bottom rule, and nothing else. **4.36 against `--tint-caution`, the surface it is actually drawn beside** | 4.77 | 4.44 | 3.96 | 4.24 | 4.10 | 2.02 | 3.0 | pass as an element; **below 4.5 on three surfaces, so text uses `--caution-text`** |
 | `--line-strong` `#6f7c85` | input, select and textarea borders; the button, table and menu frame; the tag border | 4.29 | 3.99 | 3.56 | 3.81 | 3.69 | 1.82 | 3.0 | pass |
 | `--focus` `#0c4e73` | the 3px focus ring, offset 2px | 8.92 | 8.31 | 7.42 | 7.93 | 7.68 | 3.78 | 3.0 | pass |
 | `--line` `#d8dee3` | row separators and card edges, DECORATIVE only | 1.36 | - | - | - | - | - | none | not a component boundary; see 1.4.11 |
@@ -132,13 +166,22 @@ sunken surface, which is where a `.muted` paragraph wraps a `<code>` element),
 against a 4.5:1 requirement. The lowest ELEMENT ratio is **3.56:1**
 (`--line-strong` on the sunken surface), against 3:1.
 
-Two colours in this palette cannot carry text and the table says so twice:
+Three colours in this palette cannot carry text and the table says so twice:
 once in their row and once in their name. `--brand` is the reference sky blue
 and it is the identity of the site - which is exactly why the temptation to put
 a link in it had to be closed structurally rather than by discipline.
-`tests/test_review_accessibility.py::test_the_two_colours_that_may_not_carry_text_never_do`
+`tests/test_review_accessibility.py::test_the_element_colours_that_may_not_carry_text_never_do`
 greps every stylesheet, with the regex anchored so that `border-left-color:
-var(--brand)` - the correct use - does not read as a false positive.
+var(--brand)` - the correct use - does not read as a false positive, and it
+ends at the closing paren so that `color: var(--caution-text)` is read as the
+text sibling it is. The test checks a NAMED SET rather than two hard-coded
+tokens, so a fourth element colour joins the rule by being added to the set.
+
+The relevant number for the caution family is the one against its own tint,
+because that is the only place either token appears: the ribbon's rule
+measures **4.36:1** against the `#fff3e6` band it sits under (requirement 3.0)
+and its link and icon measure **7.70:1** on that band (requirement 4.5). The
+ribbon's bold sentence stays `--ink`, at **14.56:1** on the same band.
 
 Two caveats that belong next to the numbers rather than under them. This is
 arithmetic on hex values, not a measurement of a rendered display: subpixel
@@ -157,8 +200,8 @@ by requiring words next to every tone.
 | 1.3.3 Sensory characteristics | reviewed | No instruction refers to shape, size or position. |
 | 1.3.4 Orientation | reviewed | No orientation lock; the layout is a single column with `max-width`. |
 | 1.3.5 Identify input purpose | open | The inputs collect no personal data about the USER (unit, reason, note), so the WCAG input-purpose list has nothing to map to. Stated rather than claimed as passed. |
-| 1.4.1 Use of colour | automated | Every queue flag carries its meaning in a `<strong>` label plus a sentence; the tone class only changes a border and a tint. The test asserts each flag block has a label and more than 30 characters of prose. Part 16 added two more places a colour could have been the only carrier and neither is: the step indicator marks the current circle with `aria-current="step"` plus an offscreen "Phase 2 - aktuelle Phase", and a completed circle carries a checkmark GLYPH plus an offscreen "abgeschlossen", so a reader who gets neither the fill nor the icon still gets the state in words. The ribbon says "Demo - synthetische Daten" in text; the red repeats it. |
-| 1.4.3 Contrast (minimum) | reviewed, with measured ratios | The palette is in `ui/static/system.css` as custom properties, and every pair that actually ships was computed before it was used. The full matrix is the section "Measured contrast ratios" below. The lowest text ratio anywhere on any surface is **6.19:1** (`--muted` on the accent tint), against a 4.5:1 requirement. **Measured by calculation against the WCAG 2.1 relative-luminance formula, not with a tool, and not verified on a real display.** |
+| 1.4.1 Use of colour | automated | Every queue flag carries its meaning in a `<strong>` label plus a sentence; the tone class only changes a border and a tint. The test asserts each flag block has a label and more than 30 characters of prose. Part 16 added two more places a colour could have been the only carrier and neither is: the step indicator marks the current circle with `aria-current="step"` plus an offscreen "Phase 2 - aktuelle Phase", and a completed circle carries a checkmark GLYPH plus an offscreen "abgeschlossen", so a reader who gets neither the fill nor the icon still gets the state in words. The ribbon says "Demo - synthetische Daten" in text; the tone repeats it and carries nothing on its own - which is why part 17 could change that tone from red to a caution orange without touching a word of it. |
+| 1.4.3 Contrast (minimum) | reviewed, with measured ratios | The palette is in `ui/static/system.css` as custom properties, and every pair that actually ships was computed before it was used. The full matrix is the section "Measured contrast ratios" below. The lowest text ratio anywhere on any surface is **5.06:1** (`--muted` on the sunken surface), against a 4.5:1 requirement. (This row said 6.19:1 until part 17: a part-15 number that the part-16 re-measurement replaced in the table below without updating the sentence up here. Corrected against the table, which is the computed one.) **Measured by calculation against the WCAG 2.1 relative-luminance formula, not with a tool, and not verified on a real display.** |
 | 1.4.4 Resize text | automated (partly) | All sizes are `rem`, `em`, `ch` or unitless; the type scale is seven `rem` tokens. A test asserts that no stylesheet in `ui/static` contains a `px` font size or a fixed pixel length of three digits or more - the pill radius is `62em` rather than the conventional `999px` for exactly that reason. Whether the pages are USABLE at 200 percent is a browser measurement nobody has made. |
 | 1.4.5 Images of text | automated | There are no images. |
 | 1.4.10 Reflow | automated (static), every page | **Closed for the caseworker pages in part 15, and closed by fixing the cause rather than the symptom.** The rules that make reflow possible used to live in `demo.css`, which only the three citizen-facing pages loaded - which is precisely why this row was open on the others. They are in the design system now, so every page gets them: every wide table sits in its own `overflow-x: auto` container so the container scrolls and the document body never does, `dl` drops from two columns to one below 40rem (the two-column definition list is what actually overflows at 320 px), `overflow-wrap: break-word` on `body` keeps a case id or a placeholder token from pushing the page wider, and no stylesheet carries a fixed pixel length. Asserted per page in `tests/test_review_accessibility.py` (`/review`, both queue variants, the case view, `/metrics`, `/inbox`) and in `tests/test_demo_journey.py` (`/demo/rundgang`, `/demo/antrag`, the pipeline view). **This is a static check of the markup and the CSS and NOT a measurement in a browser at 320 CSS px.** Nobody has read these pages on a real phone; that stays in the open list. |
@@ -174,7 +217,7 @@ by requiring words next to every tone.
 | 2.1.2 No keyboard trap | reviewed | No modal, no focus management script, no `tabindex` above 0 anywhere. |
 | 2.1.4 Character key shortcuts | automated | There are none. |
 | 2.2.1 Timing adjustable | reviewed | No timeout, no auto-refresh, no polling. The queue clocks are display-only and never expire a page. |
-| 2.2.2 Pause, stop, hide | automated (static) | **Engaged for the first time in part 16.** The landing hero animates on a 16-second loop that starts on its own and sits beside other content, which is exactly the three conditions of this criterion. The answer is a control ON THE PAGE - a labelled checkbox above the figure - rather than an operating-system preference, because `prefers-reduced-motion` is a setting a reader made somewhere else and this criterion asks for a mechanism here. It is CSS alone: the checkbox precedes everything it pauses and `:checked ~` reaches them, so it works with scripting off like everything else. It STOPS rather than freezes, and that is the decision worth stating: `animation-play-state: paused` would hold whatever frame was showing, which for four of the five captions is `opacity: 0` - a pause button that hides the text is not a pause button. The paused state is therefore the same still frame the reduced-motion answer produces, with every stage lit and all five captions stacked and readable. The test asserts the control, the absence of `animation-play-state`, and that the paused block says `animation: none` and `opacity: 1`. Every other page in the project still has nothing that moves, blinks or auto-updates. |
+| 2.2.2 Pause, stop, hide | automated (structural) plus a browser check | **Engaged for the first time in part 16, and ANSWERED for the first time in part 17.** The part-16 control did not work: it sat inside a wrapper `<div>`, and since every pause rule is written with the general sibling combinator `~`, the checkbox reached nothing at all. The only assertion about it was that the stylesheet contained those rules, and it stayed green for the whole life of the defect - which is the lesson this row now carries: a rule that exists is not a rule that applies. The checkbox is a direct sibling of the drawing and the captions, a test parses the rendered document and asserts exactly that relationship in both languages, and the control was operated in a real browser with a mouse and with the keyboard. The landing hero animates on a 16-second loop that starts on its own and sits beside other content, which is exactly the three conditions of this criterion. The answer is a control ON THE PAGE - a labelled checkbox above the figure - rather than an operating-system preference, because `prefers-reduced-motion` is a setting a reader made somewhere else and this criterion asks for a mechanism here. It is CSS alone: the checkbox precedes everything it pauses and `:checked ~` reaches them, so it works with scripting off like everything else. It STOPS rather than freezes, and that is the decision worth stating: `animation-play-state: paused` would hold whatever frame was showing, which for four of the five captions is `opacity: 0` - a pause button that hides the text is not a pause button. The paused state is therefore the same still frame the reduced-motion answer produces, with every stage lit and all five captions stacked and readable. The test asserts the control, the absence of `animation-play-state`, and that the paused block says `animation: none` and `opacity: 1`. Every other page in the project still has nothing that moves, blinks or auto-updates. |
 | 2.4.1 Bypass blocks | automated | A real skip link is the first focusable element on every page and targets `<main id="inhalt">`; the test asserts both. |
 | 2.4.2 Page titled | automated | Every page sets a distinct `<title>` naming the queue or the case. |
 | 2.4.3 Focus order | automated (partly) | DOM order is: skip link, nav, unit picker, main content, actions. The test pins the skip link's position; the rest is DOM order with no `tabindex` overrides, which is the only way to get it right. |
