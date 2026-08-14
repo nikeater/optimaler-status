@@ -139,10 +139,17 @@ jobs:
             sleep 2
           done
           curl -sf http://127.0.0.1:8000/healthz
+          # /healthz is a constant and answers before the seed finishes, so the
+          # seeded queue census is the readiness signal - poll for it instead of
+          # racing the entrypoint.
+          for _ in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8000/review | grep -q '101 offene(r) Vorgang' && break
+            sleep 2
+          done
+          docker logs eingangslotse-ci
           curl -sf http://127.0.0.1:8000/review | grep -q '101 offene(r) Vorgang'
-          curl -sf http://127.0.0.1:8000/review | grep -q 'id="demo-banner"'
+          curl -sf http://127.0.0.1:8000/review | grep -q 'id="demo-ribbon"'
           test "$(curl -s -o /dev/null -w '%{http_code}' -X POST \
             -H 'Content-Type: application/json' -d '{}' \
             http://127.0.0.1:8000/ingest)" = "403"
-          docker logs eingangslotse-ci
           docker rm -f eingangslotse-ci
