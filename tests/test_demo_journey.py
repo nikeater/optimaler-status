@@ -41,6 +41,7 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Iterator, Mapping
+from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 from itertools import pairwise
 from pathlib import Path
@@ -48,6 +49,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 from jinja2 import Environment
+from markupsafe import escape
 
 from api import demo as demo_view
 from api import review as review_view
@@ -90,17 +92,21 @@ ARCS = {
 }
 
 #: Every citizen-facing page behind the demo flag. The tour joined in part 15
-#: and is held to the same mechanical bar as the two part-13 pages.
-CITIZEN_PAGES = ("rundgang", "antrag", "pipeline")
+#: and the landing page and the disclaimer page in part 16; all five are held
+#: to the same mechanical bar as the two part-13 pages.
+CITIZEN_PAGES = ("start", "hinweise", "rundgang", "antrag", "pipeline")
+
+PATHS = {
+    "start": "/",
+    "hinweise": "/hinweise",
+    "rundgang": "/demo/rundgang",
+    "antrag": "/demo/antrag",
+}
 
 
 def citizen_path(page: str, case_id: str) -> str:
     """The URL for one of :data:`CITIZEN_PAGES`."""
-    if page == "rundgang":
-        return "/demo/rundgang"
-    if page == "antrag":
-        return "/demo/antrag"
-    return f"/demo/case/{case_id}/pipeline"
+    return PATHS.get(page) or f"/demo/case/{case_id}/pipeline"
 
 
 @pytest.fixture(autouse=True)
@@ -206,6 +212,12 @@ def test_with_the_flag_off_there_is_no_demo_route_anywhere(
     assert client.get("/demo/case/anything/pipeline").status_code == 404
     # Part 15's tour is demo surface like everything else under /demo.
     assert client.get("/demo/rundgang").status_code == 404
+    # And part 16's disclaimer page, which lives outside /demo but is gated by
+    # the same flag for the same reason: a notice about a demonstration
+    # instance is meaningless on an instance that is not one.
+    assert client.get("/hinweise").status_code == 404
+    assert "/hinweise" not in paths
+    assert "/hinweise" not in app.openapi()["paths"]
 
 
 def test_with_the_flag_off_no_demo_store_exists(
@@ -1105,3 +1117,183 @@ def test_the_new_pages_are_built_to_reflow_at_320_css_pixels(
 def _rows(page: str) -> list[str]:
     """The case ids in a queue table, in the order they are rendered."""
     return re.findall(r'href="/review/case/([^"?]+)', page)
+
+
+# ------------------------------------------------- 8. the form controls (P-16) ---
+
+
+def intake(client: TestClient, persona_id: str) -> str:
+    return client.get(f"/demo/antrag?persona={persona_id}").text
+
+
+def test_the_name_is_two_boxes_that_submit_one_string(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Asked surname-first, submitted given-name-first, unchanged downstream.
+
+    Two properties in one test because they are one decision. The FORM has two
+    labelled inputs in the order a German administrative form asks; the
+    SUBMISSION carries the single "Vorname Nachname" string the envelope has
+    always carried, so nothing after the boundary can tell that the page
+    changed. The arcs are the proof that nothing did (test_demo_personas).
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    body = intake(client, "mustermann_regelaltersrente")
+    for field_id in ("nachname", "vorname"):
+        assert f'id="feld-{field_id}"' in body, field_id
+        assert f'for="feld-{field_id}"' in body, field_id
+    assert body.index('id="feld-nachname"') < body.index('id="feld-vorname"')
+    # They sit in one row, which is what "visually one group" means here.
+    assert '<div class="field-row field-row-2">' in body
+    # And the single field the form used to have is gone from the page.
+    assert 'id="feld-name"' not in body
+
+    case_id = submit(client, form_data("mustermann_regelaltersrente"))
+    page = client.get(f"/demo/case/{case_id}/pipeline").text
+    # The echo shows the visitor the string the machine received, not the
+    # order the boxes were in.
+    assert "Renate Mustermann" in page
+    assert "Mustermann Renate" not in page
+
+
+def test_emptying_one_half_of_the_name_submits_the_other(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A blank half is dropped, not joined into a string with a stray space."""
+    client = build_client(config, monkeypatch=monkeypatch)
+    case_id = submit(client, form_data("mustermann_regelaltersrente", vorname=""))
+    page = client.get(f"/demo/case/{case_id}/pipeline").text
+    assert "Mustermann" in page
+    assert " Mustermann" not in page.split("Von Ihnen eingegeben")[1][:400]
+
+
+def test_the_two_dates_are_native_pickers_with_a_text_fallback_hint(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """`type="date"` submits the ISO value the pipeline already expected.
+
+    The hint is not decoration: a browser without a date picker renders the
+    control as a text box, and a visitor then has to be told which of the three
+    plausible orderings this field wants.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    body = intake(client, "mustermann_regelaltersrente")
+    for field_id in ("geburtsdatum", "rentenbeginn"):
+        assert f'<input type="date" id="feld-{field_id}"' in body, field_id
+        assert f'aria-describedby="hilfe-{field_id}"' in body, field_id
+    assert phrase("intake.date.hint") in body
+    # A date the calendar allows is a date the pipeline still judges: the
+    # tampering the hints panel promises keeps working through the new control.
+    case_id = submit(
+        client, form_data("mustermann_regelaltersrente", geburtsdatum="1902-01-01")
+    )
+    assert "geburtsdatum" in client.get(f"/demo/case/{case_id}/pipeline").text
+
+
+def test_the_selects_offer_the_configuration_s_own_vocabulary(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Read from `one_of`, never written here.
+
+    An option this page offers is by construction an option the completeness
+    checker accepts, because both read the same requirement. A hand-written
+    list would be a second vocabulary, and the first thing a second vocabulary
+    does is drift.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    body = intake(client, "musterfrau_statusfeststellung")
+    for field_id in ("antragsart", "antragsteller_rolle", "taetigkeit_bezeichnung"):
+        assert f'<select id="feld-{field_id}"' in body, field_id
+    for option in demo_view.vocabulary(config, "antrag.antragsart"):
+        assert f'<option value="{option}"' in body, option
+    assert demo_view.vocabulary(config, "antrag.antragsteller_rolle") == (
+        "auftragnehmer",
+        "auftraggeber",
+        "gemeinsam",
+    )
+    # A requirement with no `one_of` has no vocabulary to read, which is why
+    # the activity description carries its options in the persona file.
+    assert demo_view.vocabulary(config, "antrag.taetigkeit_bezeichnung") == ()
+    assert '<option value="IT-Beratung und Datenmigration" selected>' in body
+    # Selecting fills the field exactly as typing did.
+    case_id = submit(
+        client,
+        form_data("musterfrau_statusfeststellung", antragsart="prognose_vor_aufnahme"),
+    )
+    assert (
+        "Referat_340_Clearingstelle"
+        in client.get(f"/demo/case/{case_id}/pipeline").text
+    )
+
+
+def test_a_value_outside_the_vocabulary_is_kept_rather_than_silently_changed(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A select must never quietly submit something else than it was given.
+
+    A superseded configuration or a bookmarked URL can hand this page a value
+    the current vocabulary does not have. Dropping it would make the form
+    submit a DIFFERENT application than the one on the screen, so the value is
+    offered as the selected option instead.
+    """
+    from api.i18n import GERMAN
+
+    persona = demo_personas().get("musterfrau_statusfeststellung")
+    assert persona is not None
+    rows = demo_view.field_rows(
+        persona,
+        {"antragsart": "eine_abgeschaffte_antragsart"},
+        config=config,
+        page=GERMAN,
+    )
+    field = next(
+        entry for row in rows for entry in row if entry.field_id == "antragsart"
+    )
+    assert field.control == "select"
+    assert field.value == "eine_abgeschaffte_antragsart"
+    assert field.choices[0] == "eine_abgeschaffte_antragsart"
+    assert "feststellung_nach_aufnahme" in field.choices
+
+
+def test_a_select_with_no_vocabulary_degrades_to_a_text_box(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A dropdown with nothing in it is a control a visitor cannot use."""
+    from api.i18n import GERMAN
+    from engine.demo.personas import PersonaField
+
+    persona = demo_personas().first
+    orphan = PersonaField(
+        field_id="lieblingsfarbe",
+        label="Lieblingsfarbe",
+        path="antrag.lieblingsfarbe",
+        value="blau",
+        control="select",
+    )
+    rows = demo_view.field_rows(
+        replace(persona, fields=(orphan,)), {}, config=config, page=GERMAN
+    )
+    assert rows[0][0].control == "text"
+    assert rows[0][0].choices == ()
+
+
+def test_the_hints_panel_describes_the_controls_the_form_renders(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The panel promises real behaviour; part 16 changed how it is reached.
+
+    Two of the five suggestions are now made in a calendar rather than typed,
+    one is made in a text box that deliberately stayed a text box, and one is
+    new: the split name is a thing a visitor can break too.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    body = intake(client, "mustermann_regelaltersrente")
+    for label, detail in demo_personas().hints:
+        # Escaped, because a hint that quotes a value (``"ja"``) is not in the
+        # HTML verbatim - Jinja escapes everything it renders.
+        assert str(escape(label)) in body, label
+        assert str(escape(detail[:40])) in body, label
+    assert "Kalender" in body, "the date suggestions name the control"
+    assert "Textfeld" in body, "the VSNR and the Rentenart stay text boxes"
+    assert '<input type="text" id="feld-versicherungsnummer"' in body
+    assert '<input type="text" id="feld-rentenart"' in body

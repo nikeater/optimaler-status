@@ -21,6 +21,7 @@ comment in a worse repository.
 from __future__ import annotations
 
 import json
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -458,6 +459,130 @@ def test_a_value_for_an_unknown_field_id_is_ignored() -> None:
         submitted_at=NOW.isoformat(),
     )
     assert "smuggled" not in json.dumps(payload)
+
+
+def test_the_split_name_produces_the_envelope_the_single_field_produced() -> None:
+    """The part-16 identity claim, written out rather than argued.
+
+    The form asks for the surname and the given name in two boxes, in that
+    order, because that is how a German administrative form asks. What reaches
+    the submission is the one string ``antragsteller.name`` has always carried,
+    at the same path, with the same neighbours in the same order - which is
+    what makes every downstream arc unchanged rather than merely equivalent.
+    The dictionary below is the v1 payload, typed out here so that a future
+    edit to the persona file has to disagree with a literal instead of with
+    another derivation of itself.
+    """
+    persona = _persona("mustermann_regelaltersrente")
+    payload = build_form_submission(
+        persona,
+        persona.form_values(),
+        submission_id="demo-split",
+        submitted_at=NOW.isoformat(),
+    )
+    assert payload["data"] == {
+        "antragsteller": {
+            "name": "Renate Mustermann",
+            "geburtsdatum": "1960-06-26",
+            "versicherungsnummer": "65260660M123",
+            "anschrift": {
+                "strasse": "Lotsenweg",
+                "hausnummer": "7",
+                "plz": "21029",
+                "ort": "Musterhafen",
+            },
+        },
+        "antrag": {
+            "rentenart": "regelaltersrente",
+            "rentenbeginn": "2026-12-01",
+            "auslandsbezug": "nein",
+        },
+    }
+    # The key ORDER too, because a byte-identical envelope is the claim.
+    assert list(payload["data"]["antragsteller"]) == [
+        "name",
+        "geburtsdatum",
+        "versicherungsnummer",
+        "anschrift",
+    ]
+
+
+def test_a_half_of_the_name_left_blank_is_dropped_rather_than_joined() -> None:
+    """Emptying one box submits the other alone, with no stray space."""
+    persona = _persona("beispielmann_ohne_rentenbeginn")
+    values = {**persona.form_values(), "vorname": "  "}
+    data = build_form_submission(
+        persona, values, submission_id="demo-half", submitted_at=NOW.isoformat()
+    )["data"]
+    assert isinstance(data, dict)
+    assert data["antragsteller"]["name"] == "Beispielmann"
+    # And emptying both drops the field, exactly as a blank single box did.
+    both = build_form_submission(
+        persona,
+        {**values, "nachname": ""},
+        submission_id="demo-none",
+        submitted_at=NOW.isoformat(),
+    )["data"]
+    assert isinstance(both, dict)
+    assert "name" not in both["antragsteller"]
+
+
+def test_the_form_order_and_the_value_order_are_different_on_purpose() -> None:
+    """Nachname first on the screen, Vorname first in the value."""
+    for persona in demo_personas().personas:
+        fields = [entry.field_id for entry in persona.fields]
+        assert fields[0] == "nachname"
+        assert fields[1] == "vorname"
+        surname = persona.field("nachname")
+        given = persona.field("vorname")
+        assert surname is not None and given is not None
+        assert surname.path == given.path == "antragsteller.name"
+        assert given.join_order < surname.join_order
+        assert f"{given.value} {surname.value}" == persona.display_name
+
+
+def test_every_control_a_persona_declares_is_one_the_form_can_render() -> None:
+    """A typo in `control` would render a text box where a date was meant."""
+    for persona in demo_personas().personas:
+        for entry in persona.fields:
+            assert entry.control in ("text", "date", "select"), entry.field_id
+            if entry.control == "select":
+                # Either the persona file carries the vocabulary or a procedure
+                # requirement does; a select with neither is a dead control.
+                assert entry.options or entry.path in (
+                    "antrag.antragsart",
+                    "antrag.antragsteller_rolle",
+                ), entry.field_id
+            if entry.control == "date":
+                assert (
+                    re.fullmatch(r"\d{4}-\d{2}-\d{2}", entry.value) or not entry.value
+                )
+
+
+def test_every_visitor_facing_persona_string_has_an_english_sibling() -> None:
+    """Part 16: the intake page is translated, personas included.
+
+    Values, paths and letters have no English: they are data, not interface
+    text. Everything a visitor READS does, and this is where a persona added
+    later fails rather than shipping half-translated.
+    """
+    personas = demo_personas()
+    assert personas.note_en and personas.note_en != personas.note
+    assert len(personas.hints_en) == len(personas.hints)
+    assert personas.hints_for("en") == personas.hints_en
+    assert personas.hints_for("de") == personas.hints
+    for persona in personas.personas:
+        for attribute in ("headline", "story", "expectation"):
+            german = getattr(persona, attribute)
+            english = getattr(persona, f"{attribute}_en")
+            assert english, f"{persona.persona_id}.{attribute}"
+            assert english != german, f"{persona.persona_id}.{attribute}"
+        for entry in persona.fields:
+            assert entry.label_en, f"{persona.persona_id}.{entry.field_id}"
+            assert entry.label_for("en") == entry.label_en
+            assert entry.label_for("de") == entry.label
+            if entry.help:
+                assert entry.help_en, f"{persona.persona_id}.{entry.field_id}"
 
 
 def _persona(persona_id: str) -> Persona:

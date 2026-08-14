@@ -35,9 +35,10 @@ versions this process is running.
 
 **Demo mode (part 11) is OFF unless ``EINGANGSLOTSE_DEMO_MODE=1``.** When it is
 on, ``POST /ingest`` closes behind a token (or entirely, when no token is set),
-every rendered page gains a synthetic-data ribbon (part 16; part 11's banner
-block, slimmed to one line and linking ``GET /hinweise``, which carries the
-whole notice) and ``GET /`` becomes a landing page. The posture is read here, once, at app construction; see
+every rendered page gains a synthetic-data ribbon (part 16; part 11's
+banner block, slimmed to one line and linking ``GET /hinweise``, which
+carries the whole notice) and ``GET /`` becomes a landing page. The posture
+is read here, once, at app construction; see
 ``engine/demo/mode.py`` for why each of the three exists and why the review
 actions deliberately stay open. With the flag off, none of it is observable -
 not in a response body, not in the route table and not in the middleware

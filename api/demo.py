@@ -5,9 +5,10 @@ Three pages, all demo-mode-only, all server-rendered like everything else here.
 ``/demo/rundgang``
     The tour. The whole system told from beginning to end in six steps for a
     visitor who has never seen it, each step linking to the page where that
-    step actually happens. Since part 16 the page is written in ONE language at
-    a time - the header's toggle switches it - rather than carrying an English
-    aside under every German paragraph. **It derives nothing.** Every sentence is either static prose or a
+    step actually happens. Since part 16 the page is written in ONE language
+    at a time - the header's toggle switches it - rather than carrying an
+    English aside under every German paragraph. **It derives nothing.** Every
+    sentence is either static prose or a
     fact read off the same projections the other pages read: whether this
     deployment accepts submissions at all, and - for the seeded case the tour
     points at - the unit and tier the journal already recorded. When the state
@@ -25,8 +26,9 @@ Three pages, all demo-mode-only, all server-rendered like everything else here.
     gate does.
 
 ``/demo/case/{case_id}/pipeline``
-    The glass pipeline. Seven stages, one plain sentence each in the reader's
-    language, and the REAL data underneath. **It re-derives nothing.** The routing answer is the
+    The glass pipeline. Seven stages, one plain sentence each in the
+    reader's language, and the REAL data underneath. **It re-derives
+    nothing.** The routing answer is the
     ROUTED event through ``review_state``; anomaly reasons come from
     ``api.review.anomaly_reason_lines``, which calls ``engine.score
     .render_reason`` and no other wording; a sampled case renders as
