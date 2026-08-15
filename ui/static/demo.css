@@ -14,7 +14,19 @@
    `animation-delay` values, which is why the timing of the picture and the
    timing of the text cannot drift apart. Every animated property is `opacity`
    or `transform`. There is no JavaScript on this page and no request to
-   anywhere. */
+   anywhere.
+
+   WHAT PART 18 CHANGED ABOUT THE HERO, AND WHAT IT DID NOT TOUCH. It is the
+   flagship of the site and it looked like a diagram in a white box: same
+   elevation as every card under it, 0.95rem stage names, a grey caption strip
+   with a coloured edge. It is now a panel of its own - a tinted gradient
+   surface, its own elevation, larger discs, heavier stage names, and a caption
+   block that reads as a caption rather than as a note. NONE of the mechanics
+   moved. The 16 second period, the five negative delays, the `hero-travel`
+   geometry in 192 user-unit steps, the sibling-combinator pause control and
+   the reduced-motion still frame are the part-17 versions character for
+   character, because they were only just corrected and every one of them is
+   pinned by a test that reads this file. */
 
 /* ----------------------------------------------------------------- shared */
 
@@ -35,18 +47,40 @@
 /* ------------------------------------------------------------- the hero */
 
 .hero {
-  margin-top: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+/* THE ONE PIECE OF DISPLAY TYPE IN THE PROJECT. The landing headline is the
+   page's voice; everywhere else the type ramp is a reading ramp. Fluid between
+   2.125rem and 3.75rem, tracked in as it grows, and `text-wrap: balance` so a
+   three-word last line never happens. Its `rem` term is what keeps a reader's
+   own font size in the expression (1.4.4).
+
+   SCOPED BY A CLASS, ON PURPOSE. `demo.css` is loaded by five pages and a rule
+   on `.page-head > h1` would have given the tour, the intake form, the
+   pipeline and the disclaimer page a 3.75rem headline too - four pages whose
+   title is a label rather than a statement. `demo_base.html` exposes
+   `page_head_class` and only `landing.html` fills it. */
+.page-head-hero > h1 {
+  font-size: var(--text-hero);
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  max-width: 22ch;
 }
 
 .hero-lead {
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
+  line-height: 1.55;
   color: var(--ink-soft);
+  max-width: 62ch;
 }
 
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-3);
+  margin-bottom: var(--space-5);
   max-width: none;
 }
 
@@ -54,21 +88,35 @@
   margin: 0;
 }
 
+/* The panel. Its own surface, its own elevation and a hairline of brand along
+   the top - the same accent the header and the closing band carry, so the
+   three pieces of furniture on the page are visibly one family. */
 .hero-figure {
-  margin: var(--space-5) 0 0;
-  padding: var(--space-5) var(--space-4) var(--space-4);
-  background: var(--surface);
+  position: relative;
+  margin: var(--space-6) 0 0;
+  padding: var(--space-6) var(--space-5) var(--space-5);
+  background-color: var(--surface);
+  background-image: var(--grad-panel);
   border: 1px solid var(--line);
-  border-top: 4px solid var(--brand);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  text-align: right;
+}
+
+.hero-figure::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  background: var(--grad-rule);
 }
 
 .hero-svg {
   display: block;
   width: 100%;
   height: auto;
-  max-width: 62rem;
+  max-width: 66rem;
   margin: 0 auto;
 }
 
@@ -78,7 +126,8 @@
   fill: none;
   stroke: var(--line-strong);
   stroke-width: 2;
-  stroke-dasharray: 7 7;
+  stroke-linecap: round;
+  stroke-dasharray: 2 10;
 }
 
 .hero-disc {
@@ -98,8 +147,9 @@
 .hero-name {
   fill: var(--ink);
   font-family: var(--font-sans);
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
   text-anchor: middle;
 }
 
@@ -179,24 +229,38 @@
    tall as the tallest of them and nothing jumps when they swap. */
 .hero-captions {
   display: grid;
-  margin: var(--space-4) 0 0;
-  padding: var(--space-3) var(--space-4);
-  border-left: 4px solid var(--brand);
-  background: var(--surface-alt);
-  border-radius: 0 var(--radius) var(--radius) 0;
+  margin: var(--space-5) 0 0;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
 }
 
 .hero-caption {
   grid-area: 1 / 1;
   margin: 0;
   color: var(--ink);
+  font-size: var(--text-md);
   opacity: 0;
   animation: hero-beat 16s linear infinite;
 }
 
+/* The stage prefix as a chip rather than as bold text: it is a label on the
+   sentence, and it is the one place a reader checks which stage they are
+   looking at. */
 .hero-caption-stage {
-  color: var(--brand-ink);
+  display: inline-block;
+  margin-right: var(--space-2);
+  padding: 0.05em 0.6em;
+  border: 1px solid var(--brand-ink);
+  border-radius: var(--radius-pill);
+  background: var(--tint-brand);
+  color: var(--brand-ink-strong);
+  font-size: var(--text-sm);
   font-weight: 700;
+  white-space: nowrap;
 }
 
 /* The same four values as the rings above, for the same reason. */
@@ -365,34 +429,55 @@
    line rather than wrapped in a box, so nothing can come between the checkbox
    and the things it pauses again.
 
+   PART 18 MADE IT LOOK LIKE A CONTROL AND CHANGED NO PART OF THE STRUCTURE.
+   The figure is `text-align: right`, which puts the pair in the panel's top
+   corner where a media control belongs, and the label carries the chip while a
+   negative left margin pulls it back over the checkbox so the two read as one
+   object. The checkbox stays a real checkbox, stays the FIRST child, stays
+   before both of the things it pauses, and stays operable and labelled.
+
    It STOPS rather than freezing. `animation-play-state: paused` would hold
    whatever frame happened to be showing, which for four of the five captions
    is `opacity: 0` - a pause button that hides the text is not a pause button.
    So the paused state is the same still frame the reduced-motion answer
    produces: every stage lit, all five captions stacked and readable. */
 .hero-pause {
+  position: relative;
+  z-index: 1;
   width: 1rem;
   height: 1rem;
   margin: 0;
   accent-color: var(--brand-ink);
-  vertical-align: -0.12em;
+  vertical-align: -0.16em;
 }
 
 /* Inline-block so its bottom margin counts towards the line box, which is what
    separates the control from the drawing without a wrapper. */
 .hero-pause-label {
   display: inline-block;
-  margin: 0 0 var(--space-3) var(--space-2);
+  margin: 0 0 var(--space-4) calc(-1 * var(--space-5));
+  padding: var(--space-1) var(--space-4) var(--space-1) var(--space-6);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
   color: var(--ink-soft);
   font-size: var(--text-sm);
-  font-weight: 600;
+  font-weight: 650;
   cursor: pointer;
+  transition: border-color var(--tempo) var(--ease),
+    background-color var(--tempo) var(--ease);
+}
+
+.hero-pause-label:hover {
+  border-color: var(--brand-ink);
+  background: var(--tint-brand);
 }
 
 /* The input keeps the design system's focus ring; the label repeats the state
    in the one place a reader is already looking. */
 .hero-pause:focus-visible + .hero-pause-label {
   color: var(--brand-ink-strong);
+  border-color: var(--brand-ink);
   text-decoration: underline;
 }
 
@@ -416,7 +501,7 @@
 }
 
 .hero-pause:checked ~ .hero-captions .hero-caption {
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
 }
 
 .hero-pause:checked ~ .hero-captions .hero-caption:last-child {
@@ -448,7 +533,7 @@
   }
 
   .hero-caption {
-    margin-bottom: var(--space-2);
+    margin-bottom: var(--space-3);
   }
 
   .hero-caption:last-child {
@@ -469,7 +554,7 @@
 /* ---------------------------------------------------------- the tour page */
 
 .tour-toc {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 
 /* The step marker: a numbered chip in front of the heading. The number is
@@ -479,34 +564,35 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 2rem;
-  height: 2rem;
+  min-width: 2.4rem;
+  height: 2.4rem;
   margin-right: var(--space-3);
-  border: 2px solid var(--brand-ink);
+  border: 0;
   border-radius: var(--radius-pill);
-  background: var(--tint-brand);
-  color: var(--brand-ink-strong);
-  font-size: var(--text-sm);
+  background: var(--grad-cta);
+  color: #ffffff;
+  font-size: var(--text-md);
   font-weight: 700;
+  box-shadow: var(--shadow-sm);
 }
 
 /* The list of what to look at inside a step. */
 .watch-for {
   list-style: none;
-  margin: 0 0 var(--space-3);
+  margin: 0 0 var(--space-4);
   padding: 0;
 }
 
 .watch-for > li {
   margin-bottom: var(--space-3);
-  padding-left: var(--space-4);
+  padding: var(--space-1) 0 var(--space-1) var(--space-4);
   border-left: 3px solid var(--brand);
 }
 
 /* ------------------------------------------------------------ intake page */
 
 .tabs {
-  margin: var(--space-3) 0;
+  margin: var(--space-4) 0;
 }
 
 .tab-current {
@@ -524,26 +610,59 @@
   padding: 0;
 }
 
+/* A PERSONA IS A CARD, AND THE FOUR OF THEM ARE ONE ROW. They hold text of
+   wildly different lengths - one is three sentences, one is twelve - so the
+   heading is pinned to the top and the body is allowed to be as long as it is,
+   with every card ending on the same line. */
 .persona {
+  display: flex;
+  flex-direction: column;
   margin: 0;
   max-width: none;
-  padding: var(--space-4);
-  border: 1px solid var(--line-strong);
+  padding: var(--space-5);
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
+  box-shadow: var(--shadow-sm);
   font-size: var(--text-sm);
+  transition: border-color var(--tempo) var(--ease),
+    box-shadow var(--tempo) var(--ease), transform var(--tempo) var(--ease);
+}
+
+.persona:hover {
+  border-color: var(--brand);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.persona:focus-within {
+  border-color: var(--brand);
+  box-shadow: var(--shadow-md);
 }
 
 .persona h3 {
   margin-top: 0;
+  font-size: var(--text-md);
+}
+
+.persona h3 a {
+  text-decoration: none;
+}
+
+.persona h3 a:hover {
+  text-decoration: underline;
+}
+
+.persona > *:last-child {
+  margin-bottom: 0;
 }
 
 /* The chosen persona is named "gewaehlt" in a tag inside its own heading; the
    brand edge repeats that and carries nothing on its own. */
 .persona-current {
   border-color: var(--brand-ink);
-  border-left: 4px solid var(--brand);
-  background: var(--tint-brand);
+  background-color: var(--tint-brand-soft);
+  box-shadow: var(--shadow-md);
 }
 
 .hints dt {
@@ -556,8 +675,7 @@
    read as a sequence rather than as a wall. */
 .stage > h2 {
   padding-top: var(--space-1);
-  border-top: 3px solid var(--brand);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 
 /* A placeholder token is monospaced and boxed so it reads as a MACHINE token
@@ -589,11 +707,13 @@
 /* The hand-off between two phases. Deliberately the loudest thing on its
    page: a visitor who loses the thread here loses the tour. */
 .handover {
-  margin: var(--space-4) 0;
-  padding: var(--space-4);
-  border: 2px solid var(--brand-ink);
+  margin: var(--space-5) 0;
+  padding: var(--space-5);
+  border: 1px solid var(--brand-ink);
+  border-left: 5px solid var(--brand-ink);
   border-radius: var(--radius);
   background: var(--tint-brand);
+  box-shadow: var(--shadow-sm);
   font-size: var(--text-md);
   font-weight: 600;
 }
@@ -629,14 +749,14 @@ tbody .tour-row > td {
      reader on the left, the prose runs on the right. */
   .step {
     display: grid;
-    grid-template-columns: minmax(0, 17rem) minmax(0, 1fr);
-    gap: var(--space-6);
+    grid-template-columns: minmax(0, 18rem) minmax(0, 1fr);
+    gap: var(--space-7);
     align-items: start;
   }
 
   .step > h2 {
     position: sticky;
-    top: 6rem;
+    top: 7rem;
     margin: 0;
   }
 
@@ -645,9 +765,47 @@ tbody .tour-row > td {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-4);
   }
+
+  .hero-figure {
+    padding: var(--space-7) var(--space-7) var(--space-6);
+  }
 }
 
 /* ------------------------------------------------------------- the reflow */
+
+/* THE STAGE NAMES COME OUT OF THE DRAWING ON A PHONE, AND THAT IS THE FIX
+   RATHER THAN THE DAMAGE.
+
+   The picture is one `viewBox` of 960 by 160 user units, and its geometry is
+   load-bearing: `hero-travel` walks the envelope in steps of 192 user units,
+   which is a fifth of that width, and a test reads those five numbers out of
+   this file. So the drawing cannot be re-laid-out for a narrow screen without
+   rebuilding the mechanics part 17 had just finished correcting.
+
+   What that costs on a 390 px phone is the labels. The SVG renders about 350
+   px wide, so a 1.05rem label inside the viewBox comes out at roughly 6 CSS
+   px - text that is present, is counted by every checker as present, and can
+   be read by nobody. Illegible text is worse than no text: it is noise that
+   claims to be information.
+
+   Below 48rem the names are therefore hidden and the label band is cropped off
+   the bottom with a negative margin (52 of 160 user units, which is 5.4 % of
+   the picture's width, which is what a percentage margin resolves against).
+   The drawing becomes what it can be at that size - a rail of five stages with
+   one of them ringed - and the stage's NAME is read where it is legible: the
+   caption directly beneath, whose chip carries "1. Eingang" and whose sentence
+   is the one belonging to the lit stage. Nothing is lost from the document,
+   from the accessible name or from the translation table; the `<title>` and
+   `<desc>` that name the picture for assistive technology are untouched. */
+@media (max-width: 48rem) {
+  .hero-name {
+    display: none;
+  }
+
+  .hero-svg {
+    margin-bottom: -5.4%;
+  }
+}
 
 @media (max-width: 40rem) {
   .hero-actions {
@@ -655,7 +813,15 @@ tbody .tour-row > td {
   }
 
   .hero-figure {
-    padding: var(--space-4) var(--space-3) var(--space-3);
+    padding: var(--space-5) var(--space-3) var(--space-4);
+  }
+
+  .hero-captions {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .hero-caption {
+    font-size: var(--text-base);
   }
 
   .step-mark {

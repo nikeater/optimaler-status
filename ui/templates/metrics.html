@@ -1,5 +1,9 @@
 {# The metrics panel. A caseworker/operator screen, so German in both language
-   settings for the reason `_german_note.html` states. #}
+   settings for the reason `_german_note.html` states.
+
+   No demo ribbon since part 18: the synthetic-data notice renders on `/` and
+   `/hinweise` and is one menu item away from here. #}
+{% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -13,7 +17,6 @@
 <body>
   <a class="skip-link" href="#inhalt">Direkt zum Inhalt</a>
   {% include "_site_header.html" %}
-  {% include "_demo_ribbon.html" %}
   <main id="inhalt">
     <div class="page-head">
       <h1>EingangsLotse - Eval-Metriken</h1>
@@ -32,12 +35,23 @@
     </div>
     {% include "_metrics_panel.html" %}
   </main>
-  <footer>
-    <p>
-      Report: <code>{{ view.report_path }}</code>. Das Verzeichnis
-      <code>eval/reports/</code> ist ein Build-Artefakt und liegt nicht im
-      Repository.
-    </p>
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div class="footer-brand">
+        <span class="wordmark-mark">{{ icons.icon("funnel") }}</span>
+        <span class="wordmark-text">
+          <span class="wordmark-name">EingangsLotse</span>
+          <span class="wordmark-sub">Triage-Assistent für Verwaltungsverfahren</span>
+        </span>
+      </div>
+      <div class="footer-notes">
+        <p>
+          Report: <code>{{ view.report_path }}</code>. Das Verzeichnis
+          <code>eval/reports/</code> ist ein Build-Artefakt und liegt nicht im
+          Repository.
+        </p>
+      </div>
+    </div>
   </footer>
 </body>
 </html>

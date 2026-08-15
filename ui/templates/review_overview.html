@@ -1,10 +1,39 @@
 {% extends "review_base.html" %}
+{% import "_icons.html" as icons %}
 {% block title %}EingangsLotse - Warteschlangen{% endblock %}
 {% block heading %}Warteschlangen{% endblock %}
 {% block content %}
 <section aria-labelledby="queues-heading">
   <h2 id="queues-heading">Offene Vorgänge je Einheit</h2>
-  <p>
+  {# THE THREE NUMBERS THIS PAGE IS ABOUT, RENDERED AS NUMBERS (part 18).
+
+     They were a clause in a sentence next to a machine timestamp, which is
+     where a reader scanning a screen finds nothing to scan. Every value here
+     is read off the table below it - the census, the number of queues, and the
+     sum of the "Ueber Latenzbudget" column - so nothing new is claimed and no
+     number can disagree with the table it summarises. The ASCII spelling of
+     the third label is the one the column header carries
+     (`engine/review/queues.py`); a tile that summarises a column and spells it
+     differently would read as a different measurement.
+
+     The sentence underneath is unchanged and stays the statement of record: it
+     is the one that carries the clock, and it is what the deployment smoke
+     test greps for. #}
+  <ul class="stat-grid">
+    <li class="stat">
+      <span class="stat-label">Offene Vorgänge</span>
+      <span class="stat-value">{{ view.open_items }}</span>
+    </li>
+    <li class="stat">
+      <span class="stat-label">Warteschlangen</span>
+      <span class="stat-value">{{ view.queues|length }}</span>
+    </li>
+    <li class="stat">
+      <span class="stat-label">Ueber Latenzbudget</span>
+      <span class="stat-value">{{ view.queues|sum(attribute="over_budget") }}</span>
+    </li>
+  </ul>
+  <p class="stat-source">
     {{ view.open_items }} offene(r) Vorgang/Vorgänge, Stand
     {{ view.now.isoformat() }}. Ein Vorgang ist offen, solange ihn kein Mensch
     bestätigt hat; eine Korrektur schließt ihn nicht, sie verschiebt ihn.
@@ -15,9 +44,9 @@
       <thead>
         <tr>
           <th scope="col">Einheit</th>
-          <th scope="col">Offen</th>
-          <th scope="col">Ältester Vorgang</th>
-          <th scope="col">Ueber Latenzbudget</th>
+          <th scope="col" class="num">Offen</th>
+          <th scope="col" class="num">Ältester Vorgang</th>
+          <th scope="col" class="num">Ueber Latenzbudget</th>
         </tr>
       </thead>
       <tbody>
@@ -29,9 +58,9 @@
             <span class="tag">par. 16 Abs. 2 SGB I</span>
             {% endif %}
           </th>
-          <td>{{ queue.count }}</td>
-          <td>{{ queue.oldest_label }}</td>
-          <td>
+          <td class="num">{{ queue.count }}</td>
+          <td class="num">{{ queue.oldest_label }}</td>
+          <td class="num">
             {{ queue.over_budget }}
             {% if queue.over_budget %}
             <span class="sr-only">Vorgänge über dem betrieblichen Zielwert</span>
@@ -39,7 +68,17 @@
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="4">Keine offenen Vorgänge.</td></tr>
+        {# A DESIGNED NOTHING (part 18). An empty queue is a normal and in fact
+           good state; rendered as a bare sentence in a table cell it read as a
+           page that had failed to load. Same words, given a shape. #}
+        <tr>
+          <td colspan="4">
+            <div class="empty">
+              <span class="empty-mark">{{ icons.icon("check") }}</span>
+              <p class="empty-title">Keine offenen Vorgänge.</p>
+            </div>
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
@@ -59,23 +98,38 @@
       <thead>
         <tr>
           <th scope="col">Tier</th>
-          <th scope="col">Offen</th>
-          <th scope="col">Ältester (Std.)</th>
-          <th scope="col">Zielwert (Std.)</th>
+          <th scope="col" class="num">Offen</th>
+          <th scope="col" class="num">Ältester (Std.)</th>
+          <th scope="col" class="num">Zielwert (Std.)</th>
           <th scope="col">Status</th>
         </tr>
       </thead>
       <tbody>
         {% for row in view.metrics.backlog %}
         <tr>
-          <th scope="row">{{ row.tier }}</th>
-          <td>{{ row.open_items }}</td>
-          <td>{{ "%.1f"|format(row.oldest_hours) if row.oldest_hours is not none else "-" }}</td>
-          <td>{{ row.budget_hours if row.budget_hours is not none else "-" }}</td>
-          <td>{% if row.over_budget %}über Zielwert{% else %}im Zielwert{% endif %}</td>
+          <th scope="row"><span class="badge badge-tier">{{ row.tier }}</span></th>
+          <td class="num">{{ row.open_items }}</td>
+          <td class="num">{{ "%.1f"|format(row.oldest_hours) if row.oldest_hours is not none else "-" }}</td>
+          <td class="num">{{ row.budget_hours if row.budget_hours is not none else "-" }}</td>
+          {# The badge is drawn AROUND the sentence, never instead of it: remove
+             the words and the tone has nothing left to render (WCAG 1.4.1). #}
+          <td>
+            {% if row.over_budget %}
+            <span class="badge badge-warn">über Zielwert</span>
+            {% else %}
+            <span class="badge badge-ok">im Zielwert</span>
+            {% endif %}
+          </td>
         </tr>
         {% else %}
-        <tr><td colspan="5">Kein offener Vorgang.</td></tr>
+        <tr>
+          <td colspan="5">
+            <div class="empty">
+              <span class="empty-mark">{{ icons.icon("check") }}</span>
+              <p class="empty-title">Kein offener Vorgang.</p>
+            </div>
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
@@ -99,18 +153,18 @@
       <thead>
         <tr>
           <th scope="col">Einheit</th>
-          <th scope="col">Bestätigt</th>
+          <th scope="col" class="num">Bestätigt</th>
           <th scope="col">Ohne Änderung</th>
-          <th scope="col">Korrekturen</th>
-          <th scope="col">Korrekturquote</th>
-          <th scope="col">Liegezeit Median</th>
+          <th scope="col" class="num">Korrekturen</th>
+          <th scope="col" class="num">Korrekturquote</th>
+          <th scope="col" class="num">Liegezeit Median</th>
         </tr>
       </thead>
       <tbody>
         {% for unit in view.metrics.units %}
         <tr>
           <th scope="row">{{ unit.unit_id }}</th>
-          <td>{{ unit.confirmed }}</td>
+          <td class="num">{{ unit.confirmed }}</td>
           <td>
             {% if unit.confirm_without_edit_rate is none %}
             {{ unit.confirmed_without_edit }} <span class="muted">(Quote: zu wenige Vorgänge)</span>
@@ -118,12 +172,19 @@
             {{ "%.3f"|format(unit.confirm_without_edit_rate) }}
             {% endif %}
           </td>
-          <td>{{ unit.overridden }}</td>
-          <td>{{ "%.3f"|format(unit.override_rate) if unit.override_rate is not none else "-" }}</td>
-          <td>{{ "%.0f s"|format(unit.median_seconds_to_confirm) if unit.median_seconds_to_confirm is not none else "-" }}</td>
+          <td class="num">{{ unit.overridden }}</td>
+          <td class="num">{{ "%.3f"|format(unit.override_rate) if unit.override_rate is not none else "-" }}</td>
+          <td class="num">{{ "%.0f s"|format(unit.median_seconds_to_confirm) if unit.median_seconds_to_confirm is not none else "-" }}</td>
         </tr>
         {% else %}
-        <tr><td colspan="6">Noch keine Bestätigung und keine Korrektur.</td></tr>
+        <tr>
+          <td colspan="6">
+            <div class="empty">
+              <span class="empty-mark">{{ icons.icon("chart") }}</span>
+              <p class="empty-title">Noch keine Bestätigung und keine Korrektur.</p>
+            </div>
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>

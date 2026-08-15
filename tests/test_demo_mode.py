@@ -155,13 +155,29 @@ def stripped_environment() -> Environment:
 
 @pytest.mark.parametrize(
     "template",
-    ["metrics.html", "inbox.html", "review_overview.html"],
+    [
+        "metrics.html",
+        "inbox.html",
+        "review_overview.html",
+        # PART 18 ADDED THE TWO THAT ACTUALLY CARRY THE RIBBON, and it had to.
+        # The ribbon renders on `/` and `/hinweise` now and nowhere else, so
+        # the three templates above no longer include it at all - and a
+        # byte-identity check over three templates that cannot differ measures
+        # nothing. These two are the ones where the include is present and the
+        # `demo.enabled` gate is the only thing keeping it silent, which is
+        # exactly the property this test exists to measure. They render with
+        # the posture off here, which is what a non-demo deployment would do
+        # with them if it served them at all.
+        "landing.html",
+        "hinweise.html",
+    ],
 )
 def test_with_the_flag_off_every_page_renders_byte_identically(
     config: ConfigBundle, tmp_path: Path, template: str
 ) -> None:
     """The demo include adds exactly zero bytes when the posture is off."""
     set_demo_posture(DemoPosture())
+    off = DemoPosture()
     views: dict[str, object] = {
         "metrics.html": MetricsView(available=False, report_path="/nowhere"),
         "inbox.html": build_inbox_view(JsonlOutbox(tmp_path / "outbox")),
@@ -170,6 +186,10 @@ def test_with_the_flag_off_every_page_renders_byte_identically(
             config=config,
             unit_id=REVIEW_UNIT,
             now=BASE_TIME,
+        ),
+        "landing.html": landing_view.build_view(off, gold_dir="corpus/gold/v4"),
+        "hinweise.html": landing_view.build_hinweise_view(
+            off, gold_dir="corpus/gold/v4"
         ),
     }
     view = views[template]
@@ -338,36 +358,95 @@ def test_the_posture_object_answers_the_same_question_as_the_route() -> None:
 # ------------------------------------------------------------ the banner ---
 
 
-def test_the_banner_is_on_every_rendered_page(
+#: Where the synthetic-data ribbon renders, and where it deliberately does not
+#: (part 18, on the user's direction). Written as a table of both answers
+#: rather than as a list of pages to check, because the interesting half of
+#: this ruling is the ABSENCE: a scope that is only asserted where it is
+#: present drifts back to "on everything" the first time somebody adds an
+#: include, and nothing fails.
+RIBBON_ON = ("/", "/hinweise")
+RIBBON_OFF = (
+    "/review",
+    f"/review/queue/{REVIEW_UNIT}",
+    "/review/queue/__clearing__",
+    "/metrics",
+    "/inbox",
+    "/demo/rundgang",
+    "/demo/antrag",
+)
+
+
+def test_the_ribbon_renders_on_the_two_pages_that_are_about_the_demo(
     config: ConfigBundle, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Every page. The one that is missed is the one somebody screenshots."""
+    """The scope, both halves of it, and the way to the notice from everywhere.
+
+    From part 11 to part 17 the notice sat on top of every page of a demo
+    instance. The user's direction in part 18 is that it belongs on the landing
+    page and on the page it links, so this asserts exactly that: present on
+    those two, absent on every other page the instance serves.
+
+    WHAT MUST NOT REGRESS WITH IT is the reachability of the full notice. A
+    page that no longer carries the ribbon still has to put the disclaimer one
+    click away, or narrowing the scope would have removed the route to the
+    honesty text rather than the repetition of it. That is the third assertion
+    below, and it is made on the pages that LOST the ribbon.
+    """
     monkeypatch.setenv(DEMO_MODE_ENV, "1")
     monkeypatch.setenv(INGEST_TOKEN_ENV, TOKEN)
     client = build_client(config, tmp_path)
     case_id = client.post(
         "/ingest", json=submission(), headers={INGEST_HEADER: TOKEN}
     ).json()["case_id"]
-    for path in (
-        "/",
-        "/review",
-        f"/review/queue/{REVIEW_UNIT}",
-        "/review/queue/__clearing__",
-        f"/review/case/{case_id}",
-        f"/review/case/{case_id}?unit={REVIEW_UNIT}",
-        "/metrics",
-        "/inbox",
-    ):
+
+    for path in RIBBON_ON:
         response = client.get(path)
         assert response.status_code == 200, path
         assert 'id="demo-ribbon"' in response.text, path
         assert "Demo - synthetische Daten." in response.text, path
         assert 'href="/hinweise"' in response.text, path
+
+    for path in (*RIBBON_OFF, f"/review/case/{case_id}?unit={REVIEW_UNIT}"):
+        response = client.get(path)
+        assert response.status_code == 200, path
+        assert 'id="demo-ribbon"' not in response.text, path
+        # ... and the notice is still one menu item away from every one of them.
+        assert 'href="/hinweise"' in response.text, path
+
     # And the full notice lives on exactly one page, which the ribbon links.
     notice = client.get("/hinweise")
     assert notice.status_code == 200
     assert "SYNTHETISCHEN Daten" in notice.text
     assert "all data is synthetic" in notice.text
+
+
+def test_exactly_two_templates_include_the_ribbon_partial() -> None:
+    """The scope, pinned at the source rather than only at the response.
+
+    The HTTP test above proves what a visitor sees today. This one proves the
+    MECHANISM is still one include line per page, so that restoring the old
+    always-on behaviour - or losing the ribbon altogether - is a visible edit
+    to a named file and not an accident inside a base template. The partial
+    itself is untouched by part 18 and this asserts that too: it still carries
+    the id the deployment smoke test greps and the keys the table translates.
+    """
+    templates = sorted(TEMPLATE_DIR.glob("*.html"))
+    including = {
+        path.name
+        for path in templates
+        if '{% include "_demo_ribbon.html" %}' in path.read_text(encoding="utf-8")
+    }
+    assert including == {"landing.html", "hinweise.html"}, sorted(including)
+    # The two bases expose the slot and fill nothing into it themselves.
+    demo_base = (TEMPLATE_DIR / "demo_base.html").read_text(encoding="utf-8")
+    assert "{% block ribbon %}{% endblock %}" in demo_base
+    review_base = (TEMPLATE_DIR / "review_base.html").read_text(encoding="utf-8")
+    assert "_demo_ribbon" not in review_base
+    ribbon = (TEMPLATE_DIR / "_demo_ribbon.html").read_text(encoding="utf-8")
+    assert 'id="demo-ribbon"' in ribbon
+    assert "{% if demo.enabled %}" in ribbon
+    for key in ("ribbon.label", "ribbon.text", "ribbon.more"):
+        assert key in ribbon, key
 
 
 def test_the_banner_states_the_ingest_posture_it_actually_has(
@@ -635,8 +714,15 @@ def test_the_seeded_state_serves_the_review_ui(
     )
     overview = client.get("/review")
     assert overview.status_code == 200
+    # The census sentence, verbatim: the deployment smoke test in CI greps this
+    # exact prefix off the live `/review`, so its shape is a contract and not a
+    # detail of this page's copy. Part 18 put the same number in a statistic
+    # tile above it and left the sentence where it was.
     assert "101 offene(r) Vorgang" in overview.text
-    assert 'id="demo-ribbon"' in overview.text
+    # The ribbon is NOT here since part 18 - see the scope test above - and the
+    # landing page is where it is asserted instead.
+    assert 'id="demo-ribbon"' not in overview.text
+    assert 'id="demo-ribbon"' in client.get("/").text
     assert client.get("/inbox").status_code == 200
 
 

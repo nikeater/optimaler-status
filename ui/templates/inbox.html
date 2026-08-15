@@ -12,7 +12,12 @@
    affordance part 17 added is an anchor to this same URL, so there is still no
    `<form>` and no `<button>` anywhere in this document, which a test asserts
    rather than trusts. Nothing on this page sends, edits or approves anything;
-   a reload asks the server to say again what it already said. #}
+   a reload asks the server to say again what it already said.
+
+   No demo ribbon since part 18: the synthetic-data notice renders on `/` and
+   `/hinweise`. This page exists on every instance, demo or not, and its own
+   footer already says where its messages come from. #}
+{% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="{{ lang }}">
 <head>
@@ -24,7 +29,6 @@
 <body>
   <a class="skip-link" href="#inhalt">{{ t("chrome.skip") }}</a>
   {% include "_site_header.html" %}
-  {% include "_demo_ribbon.html" %}
   <main id="inhalt">
     <div class="page-head">
       <h1>{{ t("inbox.headline") }}</h1>
@@ -88,8 +92,19 @@
       {% endif %}
     </section>
   </main>
-  <footer>
-    <p>{{ m("inbox.footer") }}</p>
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div class="footer-brand">
+        <span class="wordmark-mark">{{ icons.icon("funnel") }}</span>
+        <span class="wordmark-text">
+          <span class="wordmark-name">EingangsLotse</span>
+          <span class="wordmark-sub">{{ t("chrome.subtitle") }}</span>
+        </span>
+      </div>
+      <div class="footer-notes">
+        <p>{{ m("inbox.footer") }}</p>
+      </div>
+    </div>
   </footer>
 </body>
 </html>

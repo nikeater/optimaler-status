@@ -3,37 +3,73 @@
    comes from the design system and is not repeated here.
 
    No state on this page is carried by colour alone. A gate says "bestanden" or
-   "gerissen" in words; the weight and the hue only repeat it. */
+   "gerissen" in words; the weight, the hue and the glyph only repeat it. */
 
-/* The gate verdict, at the top of the panel. A sentence first, styled as a
-   banner second. */
-.gate-passed,
-.gate-failed {
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius);
+/* THE VERDICT IS THE PAGE (part 18). Eleven tables of eval numbers open with
+   one sentence that decides whether the build was allowed to ship, and that
+   sentence was a thin tinted strip indistinguishable from a notice. It is a
+   panel now: a glyph, a verdict line and the sentence, at the top of the
+   section, sized so a judge reading the page from three metres away gets the
+   answer before the numbers. */
+.gate {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-5);
+  padding: var(--space-5);
+  border: 1px solid;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  font-size: var(--text-md);
   font-weight: 650;
 }
 
+.gate-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: none;
+  border: 2px solid;
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+}
+
+.gate-mark .icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  vertical-align: 0;
+}
+
 .gate-passed {
-  border: 1px solid var(--ok);
-  border-left: 4px solid var(--ok);
+  border-color: var(--ok);
   background: var(--tint-ok);
   color: var(--ok);
 }
 
+.gate-passed .gate-mark {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
 .gate-failed {
-  border: 1px solid var(--alarm);
-  border-left: 4px solid var(--alarm);
+  border-color: var(--alarm);
   background: var(--tint-alarm);
   color: var(--alarm-text);
   font-weight: 700;
+}
+
+.gate-failed .gate-mark {
+  border-color: var(--alarm);
+  color: var(--alarm-text);
 }
 
 /* A metric that IS a gate is marked in the table by weight and by a rule on
    its left edge; its "Bedeutung" column says "Gate" in words. */
 .gate-row > th,
 .gate-row > td {
-  background: var(--surface-alt);
+  background: var(--tint-brand-soft);
   font-weight: 650;
 }
 
@@ -46,20 +82,34 @@
    Scoped to `main` since part 16: the site header uses the same element for
    its menu, and a panel styled like a metrics disclosure would be wrong. */
 main details {
-  margin: var(--space-4) 0 0;
-  border: 1px solid var(--line-strong);
+  margin: var(--space-5) 0 0;
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--surface-alt);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
 }
 
 main summary {
-  padding: var(--space-3) var(--space-4);
-  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius);
+  font-weight: 650;
   cursor: pointer;
+  transition: background-color var(--tempo) var(--ease);
 }
 
+main summary:hover {
+  background: var(--tint-brand-soft);
+}
+
+/* The disclosure's own marker turns when it opens. `list-style` on a summary
+   is the marker; rotating it is done on a pseudo-element instead, so the
+   native triangle keeps working for engines that draw their own. */
 main details[open] > summary {
-  border-bottom: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line);
+  border-radius: var(--radius) var(--radius) 0 0;
 }
 
 main details > .scroll-x {

@@ -9,6 +9,7 @@
    line is the proof of life. It is deliberately NOT the same fact as
    "Gemessen am": that is when the numbers were computed, this is when the page
    was drawn, and the two are labelled so they cannot be read as one. #}
+{% import "_icons.html" as icons %}
 <section id="metrics-panel" aria-labelledby="metrics-heading">
   <h2 id="metrics-heading">Messwerte</h2>
   {% if view.rendered_at %}
@@ -18,18 +19,32 @@
   </p>
   {% endif %}
   {% if not view.available %}
-  <p class="notice">
-    {{ view.problem }} Report erzeugen mit:
-    <code>{{ view.refresh_hint }}</code>
-  </p>
+  {# The no-report state, designed rather than announced (part 18). It is the
+     state a fresh checkout is in and the first thing a reviewer sees if they
+     open the page before running the eval, so it says what to do and how. #}
+  <div class="empty">
+    <span class="empty-mark">{{ icons.icon("chart") }}</span>
+    <p class="empty-title">{{ view.problem }}</p>
+    <p>Report erzeugen mit: <code>{{ view.refresh_hint }}</code></p>
+  </div>
   {% else %}
-  <p class="{{ 'gate-passed' if view.gate_passed else 'gate-failed' }}">
-    {% if view.gate_passed %}
-    Gate bestanden: keine False Clears.
-    {% else %}
-    Gate gerissen: mindestens ein Vorgang wurde fälschlich nach Tier 1
-    freigegeben.
-    {% endif %}
+  {# THE VERDICT, AT THE TOP, AS A PANEL (part 18). This one sentence decides
+     whether the build was allowed to ship and it was a thin tinted strip
+     indistinguishable from a notice. The glyph repeats what the words say and
+     carries nothing on its own - it is `aria-hidden` and the sentence beside
+     it is the whole message (WCAG 1.4.1). #}
+  <p class="gate {{ 'gate-passed' if view.gate_passed else 'gate-failed' }}">
+    <span class="gate-mark">
+      {% if view.gate_passed %}{{ icons.icon("check") }}{% else %}{{ icons.icon("alert") }}{% endif %}
+    </span>
+    <span>
+      {% if view.gate_passed %}
+      Gate bestanden: keine False Clears.
+      {% else %}
+      Gate gerissen: mindestens ein Vorgang wurde fälschlich nach Tier 1
+      freigegeben.
+      {% endif %}
+    </span>
   </p>
   <dl>
     <dt>Goldset</dt><dd>{{ view.gold_dir }} ({{ view.item_count }} Vorgänge)</dd>
@@ -50,13 +65,13 @@
     <table>
       <caption>Gesamtmetriken</caption>
       <thead>
-        <tr><th scope="col">Metrik</th><th scope="col">Wert</th><th scope="col">Bedeutung</th></tr>
+        <tr><th scope="col">Metrik</th><th scope="col" class="num">Wert</th><th scope="col">Bedeutung</th></tr>
       </thead>
       <tbody>
         {% for metric in view.headline %}
         <tr{% if metric.is_gate %} class="gate-row"{% endif %}>
           <th scope="row">{{ metric.label }}</th>
-          <td>{{ metric.value }}</td>
+          <td class="num">{{ metric.value }}</td>
           <td>{{ metric.note }}</td>
         </tr>
         {% endfor %}

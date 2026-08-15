@@ -1,18 +1,66 @@
-/* The caseworker surface, on top of system.css. One page-specific leftover.
+/* The caseworker surface, on top of system.css. Page-specific leftovers only.
 
    What used to live here - the skip link, the focus ring, the offscreen
    helper, the picker, the flags, the tags, the notices, the sampled row - is
    in the design system now, because the citizen pages need exactly the same
    things and two definitions of a focus ring is one too many. */
 
-/* The way back, carrying the adopted unit (part 17). A plain row of links
-   above the first card. The site header's menu is site chrome and holds no
-   page state by design, so a "back to the queues" that keeps the picker's
-   choice has to be an in-page link rather than a nav item. */
+/* The way back, carrying the adopted unit (part 17). The site header's menu is
+   site chrome and holds no page state by design, so a "back to the queues"
+   that keeps the picker's choice has to be an in-page link rather than a nav
+   item.
+
+   PART 18 MADE IT LOOK LIKE A WAY BACK. It was a row of grey inline links
+   above the first card and read as body text somebody had forgotten to format;
+   it is a row of chips now, which is what a reader already recognises as
+   navigation. */
 .backlink {
-  margin: 0 0 var(--space-4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-5);
   color: var(--muted);
   font-size: var(--text-sm);
+}
+
+.backlink a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--surface);
+  color: var(--brand-ink);
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--tempo) var(--ease),
+    background-color var(--tempo) var(--ease), color var(--tempo) var(--ease);
+}
+
+.backlink a:hover {
+  border-color: var(--brand-ink);
+  background: var(--tint-brand);
+  color: var(--brand-ink-strong);
+}
+
+/* The case identifier under the page title. A case id is a machine token and
+   was set as a 2.75rem headline, which made the loudest thing on the screen a
+   string nobody reads as language. The heading now names the THING and the
+   token sits beneath it in the face it belongs to. */
+.case-id {
+  display: inline-block;
+  margin: 0 0 var(--space-4);
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  word-break: break-all;
 }
 
 /* The classifier's ranking: present, clearly fenced, and labelled as having
@@ -20,8 +68,8 @@
    not look like the tables that DID decide something, and a reader who sees a
    suggestion styled like an answer starts weighing it. */
 .log-only {
-  margin: var(--space-4) 0;
-  padding: var(--space-4);
+  margin: var(--space-5) 0;
+  padding: var(--space-5);
   border: 2px dashed var(--line-strong);
   border-radius: var(--radius);
   background: var(--surface-alt);

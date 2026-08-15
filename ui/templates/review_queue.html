@@ -1,4 +1,5 @@
 {% extends "review_base.html" %}
+{% import "_icons.html" as icons %}
 {% block title %}EingangsLotse - {{ view.queue.label }}{% endblock %}
 {% block heading %}{{ view.queue.label }}{% endblock %}
 {% block picker_action %}/review/queue/{{ view.queue.queue_id }}{% endblock %}
@@ -46,14 +47,21 @@
     sie erhalten hat.
   </p>
   {% endif %}
-  <div class="scroll-x">
+  {# THE LONGEST TABLE IN THE PROJECT KEEPS ITS HEAD (part 18). This queue is
+     41 rows on the seeded demo; by row twelve the column names are off screen
+     and "Tier" is a bare number in a column of bare numbers. `.is-tall` gives
+     the scroll box a maximum height so its own sticky head has something to
+     stick to - and it applies only from 64rem up, because on a phone taking
+     the reader's page scroll away and replacing it with an inner one would be
+     worse than the problem. #}
+  <div class="scroll-x is-tall">
     <table>
       <caption>Warteschlange {{ view.queue.label }}</caption>
       <thead>
         <tr>
           <th scope="col">Vorgang</th>
-          <th scope="col">Tier</th>
-          <th scope="col">Wartet seit</th>
+          <th scope="col" class="num">Tier</th>
+          <th scope="col" class="num">Wartet seit</th>
           <th scope="col">Hinweise</th>
         </tr>
       </thead>
@@ -67,11 +75,11 @@
             <span class="sr-only">Dieser Vorgang stammt aus Ihrem Rundgang. Die Kennzeichnung ist reine Anzeige und verändert die Reihenfolge nicht.</span>
             {% endif %}
           </th>
-          <td>
-            {{ row.tier if row.tier is not none else "-" }}
+          <td class="num">
+            <span class="badge badge-tier">{{ row.tier if row.tier is not none else "-" }}</span>
             <span class="sr-only">{{ view.tier_labels.get(row.tier, "") }}</span>
           </td>
-          <td>{{ row.age_label }}</td>
+          <td class="num">{{ row.age_label }}</td>
           <td>
             {% if row.flags %}
             <ul class="flags">
@@ -87,7 +95,14 @@
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="4">Kein offener Vorgang in dieser Warteschlange.</td></tr>
+        <tr>
+          <td colspan="4">
+            <div class="empty">
+              <span class="empty-mark">{{ icons.icon("check") }}</span>
+              <p class="empty-title">Kein offener Vorgang in dieser Warteschlange.</p>
+            </div>
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>

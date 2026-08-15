@@ -24,6 +24,17 @@
 {% block title %}{{ t("landing.title") }}{% endblock %}
 {% block heading %}{{ t("landing.headline") }}{% endblock %}
 
+{# ONE OF THE TWO PAGES THAT CARRY THE RIBBON (part 18). The synthetic-data
+   notice used to render on every page of a demo instance; by the user's
+   direction it renders here and on the page it links, and nowhere else. The
+   partial, its `id`, its keys and its `demo.enabled` gate are unchanged. #}
+{% block ribbon %}{% include "_demo_ribbon.html" %}{% endblock %}
+
+{# The landing page is the only one whose title is display type rather than a
+   page heading: this class is what switches the ramp, so no other page grows
+   a 3.75rem headline by inheriting one. #}
+{% block page_head_class %} page-head-hero{% endblock %}
+
 {% block hero %}
 <div class="hero">
   <p class="hero-lead">{{ t("landing.lead") }}</p>
@@ -166,7 +177,11 @@
   </ul>
 </section>
 
-<section aria-labelledby="garantien-heading">
+{# The three promises are the product's claim about itself rather than a place
+   to go, so they sit in a tinted zone instead of on a fourth identical white
+   card. Presentation only: the same heading, the same three cards, the same
+   words (part 18). #}
+<section class="section-tinted" aria-labelledby="garantien-heading">
   <h2 id="garantien-heading">{{ t("landing.promises.heading") }}</h2>
   <ul class="card-grid card-grid-3">
     <li class="card">

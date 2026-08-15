@@ -6,7 +6,22 @@
    language machinery, and differ only in what sits under `<main>`. The page
    title lives in `.page-head` rather than in the header element, because the
    header is a property of the SITE and the `h1` is a property of the page -
-   which is also what keeps the `h1` the first heading in the document. #}
+   which is also what keeps the `h1` the first heading in the document.
+
+   THE RIBBON IS A BLOCK RATHER THAN AN INCLUDE (part 18). It used to be
+   included here, which put it on every page this base renders. The user's
+   direction is that the synthetic-data notice belongs on the landing page and
+   on the page it links, so this template exposes the slot and exactly two
+   templates - `landing.html` and `hinweise.html` - fill it. Nothing about the
+   partial changed: same `id="demo-ribbon"`, same translation keys, same
+   `demo.enabled` gate, so a deployment with the flag off still renders zero
+   bytes of it. Reverting the scope is putting the include back on this line.
+
+   THE FOOTER IS THE CLOSING BAND (part 18). Full width like the header, with
+   the wordmark on one side and the page's own sentences on the other. The
+   sentences are unchanged - they are the honesty text, and part 18 restyled
+   their container rather than their words. #}
+{% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="{{ lang }}">
 <head>
@@ -19,9 +34,9 @@
 <body>
   <a class="skip-link" href="#inhalt">{{ t("chrome.skip") }}</a>
   {% include "_site_header.html" %}
-  {% include "_demo_ribbon.html" %}
+  {% block ribbon %}{% endblock %}
   <main id="inhalt">
-    <div class="page-head">
+    <div class="page-head{% block page_head_class %}{% endblock %}">
       <h1>{% block heading %}{{ t("tour.headline") }}{% endblock %}</h1>
       {# The three-phase indicator marks WHERE a visitor is. The tour page is
          the map rather than a position on it and passes no phase, so the
@@ -33,20 +48,31 @@
     </div>
     {% block content %}{% endblock %}
   </main>
-  <footer>
-    {% block footer %}
-    <p>{{ t("footer.real") }}</p>
-    <p>{{ m("footer.no_message") }}</p>
-    <p>{{ m("footer.a11y") }}</p>
-    {% if repo_url %}
-    <p>
-      {{ t("footer.source") }} <a href="{{ repo_url }}">{{ repo_url }}</a>.
-      {{ t("footer.license") }}
-    </p>
-    {% else %}
-    <p>{{ t("footer.license") }}</p>
-    {% endif %}
-    {% endblock %}
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div class="footer-brand">
+        <span class="wordmark-mark">{{ icons.icon("funnel") }}</span>
+        <span class="wordmark-text">
+          <span class="wordmark-name">EingangsLotse</span>
+          <span class="wordmark-sub">{{ t("chrome.subtitle") }}</span>
+        </span>
+      </div>
+      <div class="footer-notes">
+        {% block footer %}
+        <p>{{ t("footer.real") }}</p>
+        <p>{{ m("footer.no_message") }}</p>
+        <p>{{ m("footer.a11y") }}</p>
+        {% if repo_url %}
+        <p>
+          {{ t("footer.source") }} <a href="{{ repo_url }}">{{ repo_url }}</a>.
+          {{ t("footer.license") }}
+        </p>
+        {% else %}
+        <p>{{ t("footer.license") }}</p>
+        {% endif %}
+        {% endblock %}
+      </div>
+    </div>
   </footer>
 </body>
 </html>

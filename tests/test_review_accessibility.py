@@ -300,7 +300,14 @@ def test_every_page_is_built_to_reflow_at_320_css_pixels(
     """
     html = pages[name]
     assert 'name="viewport" content="width=device-width, initial-scale=1"' in html
-    assert html.count("<table") == html.count('<div class="scroll-x">'), (
+    # Counted with a pattern rather than with a literal since part 18: the
+    # queue's container carries `class="scroll-x is-tall"`, which gives its own
+    # sticky table head something to stick to. The assertion is the same one -
+    # one scroll container per table, no table outside one - and it now also
+    # holds for a container that has been modified rather than only for the
+    # bare class attribute somebody happened to write first.
+    containers = re.findall(r'<div class="scroll-x[^"]*">', html)
+    assert html.count("<table") == len(containers), (
         f"{name}: a table outside a scroll container"
     )
     assert "style=" not in html, f"{name}: an inline style"

@@ -9,7 +9,15 @@
    The unit picker moved out of the header and into `.page-head` in part 16: it
    is a property of THIS page, not of the site, and the site header now carries
    the wordmark, the language toggle and the menu for every page in the
-   project. #}
+   project.
+
+   NO DEMO RIBBON SINCE PART 18. The synthetic-data notice renders on `/` and
+   on `/hinweise` and nowhere else, by the user's direction. What these screens
+   say about being a demonstration is unchanged and is said by the page itself:
+   the picker note below states that the role choice is a demo function with no
+   sign-in and no authorisation model, the footer states what this surface does
+   not do, and the site header's menu links the full notice. #}
+{% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -23,7 +31,6 @@
 <body>
   <a class="skip-link" href="#inhalt">Direkt zum Inhalt</a>
   {% include "_site_header.html" %}
-  {% include "_demo_ribbon.html" %}
   <main id="inhalt">
     <div class="page-head">
       <h1>{% block heading %}EingangsLotse - Sachbearbeitung{% endblock %}</h1>
@@ -73,23 +80,34 @@
     </div>
     {% block content %}{% endblock %}
   </main>
-  <footer>
-    <p>
-      Jede Aktion auf diesen Seiten schreibt ein neues Journalereignis. Es wird
-      kein vergangenes Ereignis geändert und keines gelöscht: eine Korrektur
-      ist ein Eintrag neben dem alten, nicht an seiner Stelle (ADR-008).
-    </p>
-    <p>
-      Diese Oberfläche erzeugt keine Nachricht an antragstellende Personen.
-      Eingangsbestätigung und Zwischenstand entstehen automatisch aus dem
-      Journal und durchlaufen keine Prüfung (ADR-005); <code>/inbox</code> ist
-      und bleibt reine Ansicht.
-    </p>
-    <p>
-      Barrierefreiheit: Selbsteinschätzung nach EN 301 549 / WCAG 2.1 AA in
-      <code>docs/accessibility-selfcheck.md</code>. Eine externe Prüfung nach
-      BITV 2.0 hat nicht stattgefunden und ist Pilotvoraussetzung (P-15).
-    </p>
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <div class="footer-brand">
+        <span class="wordmark-mark">{{ icons.icon("funnel") }}</span>
+        <span class="wordmark-text">
+          <span class="wordmark-name">EingangsLotse</span>
+          <span class="wordmark-sub">Triage-Assistent für Verwaltungsverfahren</span>
+        </span>
+      </div>
+      <div class="footer-notes">
+        <p>
+          Jede Aktion auf diesen Seiten schreibt ein neues Journalereignis. Es wird
+          kein vergangenes Ereignis geändert und keines gelöscht: eine Korrektur
+          ist ein Eintrag neben dem alten, nicht an seiner Stelle (ADR-008).
+        </p>
+        <p>
+          Diese Oberfläche erzeugt keine Nachricht an antragstellende Personen.
+          Eingangsbestätigung und Zwischenstand entstehen automatisch aus dem
+          Journal und durchlaufen keine Prüfung (ADR-005); <code>/inbox</code> ist
+          und bleibt reine Ansicht.
+        </p>
+        <p>
+          Barrierefreiheit: Selbsteinschätzung nach EN 301 549 / WCAG 2.1 AA in
+          <code>docs/accessibility-selfcheck.md</code>. Eine externe Prüfung nach
+          BITV 2.0 hat nicht stattgefunden und ist Pilotvoraussetzung (P-15).
+        </p>
+      </div>
+    </div>
   </footer>
 </body>
 </html>

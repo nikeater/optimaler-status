@@ -14,6 +14,12 @@
 {% extends "demo_base.html" %}
 {% block title %}{{ t("hinweise.title") }}{% endblock %}
 {% block heading %}{{ t("hinweise.headline") }}{% endblock %}
+
+{# The second of the two pages that carry the ribbon (part 18). This is the
+   page the ribbon links, so it is also the page a reader arrives at from it -
+   and a notice that vanishes at the moment you follow it would read as having
+   been dismissed rather than expanded. #}
+{% block ribbon %}{% include "_demo_ribbon.html" %}{% endblock %}
 {% block content %}
 
 <section aria-labelledby="einleitung-heading">
