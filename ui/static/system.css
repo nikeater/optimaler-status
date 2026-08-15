@@ -984,6 +984,16 @@ article > pre {
   color: #ffffff;
 }
 
+/* THE RING HAS TO BE VISIBLE ON THE SURFACE IT IS DRAWN ON, and this is the
+   one surface in the project where the design system's ring is not. `--focus`
+   is #0c4e73 and measures 1.34:1 against the band - a focus indicator nobody
+   can see, on the one band that carries links. White measures 11.96:1 there.
+   Found by measuring the pair rather than by looking at it, which is the whole
+   argument for computing every pair a new surface creates. */
+.site-footer :focus-visible {
+  outline-color: #ffffff;
+}
+
 .site-footer code {
   background: var(--band-fill);
   color: inherit;
@@ -1334,7 +1344,7 @@ thead th.num {
    top of the box it is inside. */
 @media (min-width: 64rem) {
   .scroll-x.is-tall {
-    max-height: 70vh;
+    max-height: 78vh;
   }
 
   .scroll-x.is-tall thead th {
@@ -1471,13 +1481,16 @@ select {
   padding-right: var(--space-6);
 }
 
+/* THE CALENDAR BUTTON IS LEFT ALONE APART FROM ITS CURSOR, and that is a
+   finding rather than a preference. It is a control inside the engine's own
+   shadow tree with its own tab stop and its own focus ring, which this project
+   cannot restyle and must not damage. A first pass dimmed it to `opacity:
+   0.65` to sit more quietly in the field; a keyboard walk of the form then
+   showed the stop with no visible ring, because an opacity on the host part
+   dims whatever the engine paints on it - the focus indicator included. The
+   cursor is the whole of what is safe to change here. */
 input[type="date"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
-  opacity: 0.65;
-}
-
-input[type="date"]:hover::-webkit-calendar-picker-indicator {
-  opacity: 1;
 }
 
 textarea {
@@ -2065,6 +2078,17 @@ th > .empty {
 
   .site-footer-inner {
     padding: var(--space-6) var(--space-3);
+  }
+}
+
+/* A SCROLL BOX IS A SCREEN AFFORDANCE AND PAPER HAS NO SCROLLBAR. A caseworker
+   who prints a queue for a file must get all 41 rows, not the 78vh of them
+   that happened to be in view - so the one rule that clips a table is undone
+   for print. Everything else on the page prints as it renders. */
+@media print {
+  .scroll-x.is-tall {
+    max-height: none;
+    overflow: visible;
   }
 }
 

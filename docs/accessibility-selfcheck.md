@@ -21,6 +21,42 @@ they have. The tests behind their `automated` verdicts live in
 `tests/test_demo_journey.py`; where a criterion is answered differently for the
 two page sets, the row says so and names both.
 
+**Revised 2026-08-15 (part 18, the visual overhaul).** The redesign changed how
+every page looks and was held to the rule that it may change nothing about what
+any page guarantees. Five things are worth a reader's attention here, and two
+of them are defects the redesign created and then found.
+
+1. **The focus ring failed on the one surface that did not exist before.** Part
+   18 added a dark closing band, and `--focus` measures 1.34:1 against it. The
+   ring is white inside the band (11.96:1). This came out of computing the pair
+   before shipping it, and was then confirmed by a new measurement: every tab
+   stop on all nine pages was focused in a browser and its computed outline
+   colour compared with the computed background behind it. See 1.4.11 and
+   2.4.7.
+2. **A styling of the date field dimmed a focus ring this project does not
+   own.** `input[type="date"]` carries a calendar button in the engine's shadow
+   tree with its own tab stop; `opacity: 0.65` on it dimmed the ring the engine
+   paints there. The rule sets nothing but `cursor` now. The tab walk found it.
+3. **The fluid type is `clamp()` with a `rem` term, never bare `vw`.** Three
+   sizes became fluid and a `vw`-only font size would have failed 1.4.4
+   outright. See that row.
+4. **1.4.10 was re-measured after the redesign** at 320 and 390 CSS px on all
+   ten pages: every one of them still measures exactly the viewport. The one
+   new thing that can clip content - a maximum height on the 41-row queue table
+   so its sticky header has a box to stick to - engages only from 64rem up and
+   is removed for print.
+5. **The demo ribbon renders on `/` and `/hinweise` only.** This is a product
+   decision by the user, not an accessibility one, and it is recorded here
+   because this document is where the honesty properties of these pages are
+   written down. Nothing the ribbon SAYS changed and nothing else about the
+   notice moved: the full disclaimer is still one page, the ribbon still links
+   it, the site menu still links it from every page, and the pages that no
+   longer carry the ribbon still carry their own statements about what this
+   instance is - the picker note about the role model on the caseworker
+   screens, the footer on all of them. The tests assert both halves: that the
+   notice renders on those two pages, and that it is REACHABLE from every page
+   that lost it.
+
 **Revised 2026-08-15 (part 17, the browser pass).** Four things changed, and
 the reason for all four is the same: this document described pages that had
 been asserted about but never opened. Everything below was found by rendering
@@ -149,7 +185,7 @@ Running axe (or a BITV-Test) against a deployed instance is the right thing to
 do and belongs in the pilot, together with a test by users of assistive
 technology, which is the only thing that actually answers the question.
 
-## Measured contrast ratios (part 16, extended in part 17)
+## Measured contrast ratios (part 16, extended in parts 17 and 18)
 
 Every pair below was computed with the WCAG 2.1 relative-luminance formula from
 the hex values in `ui/static/system.css`. These are the pairs the stylesheets
@@ -192,7 +228,94 @@ is the lightest of the five, so adding it moved no existing number.
 The lowest TEXT ratio anywhere on any surface is **5.06:1** (`--muted` on the
 sunken surface, which is where a `.muted` paragraph wraps a `<code>` element),
 against a 4.5:1 requirement. The lowest ELEMENT ratio is **3.56:1**
-(`--line-strong` on the sunken surface), against 3:1.
+(`--line-strong` on the sunken surface), against 3:1. Part 18 added five
+surfaces and neither floor moved; the table below shows why.
+
+### The part-18 surfaces
+
+Part 18 changed no hue in the palette and added five surfaces: a wash at the
+top of the page, a pale member of the blue family for large zones, and the one
+dark band in the project with its own ink and link colour. They are listed
+separately rather than as five more columns on the matrix above, for the reason
+that matrix already gives: a pair that does not occur on a rendered page is not
+listed, and most of these tokens meet most of these surfaces nowhere.
+
+Surfaces: `--canvas-top` `#e2eef8` (the top of the page wash, which is what the
+page head, the hero lead, the back-links and the call-to-action row sit on),
+`--tint-brand-soft` `#f2f8fd` (a tinted section, a statistic tile's gradient
+start, a gate row, a hovered table row, a `legend`, the empty-state disc), and
+`--band` `#0c3a56` (the closing footer).
+
+| Foreground | Where it is used on the new surface | vs `--canvas-top` | vs `--tint-brand-soft` | vs `--band` | Requirement | Verdict |
+|---|---|---|---|---|---|---|
+| `--ink` `#222222` | page and card text, table cells, a statistic's value | 13.50 | 14.87 | - | 4.5 | pass |
+| `--ink-soft` `#3f4a52` | the hero lead, a definition value, the default badge | 7.70 | 8.48 | - | 4.5 | pass |
+| `--muted` `#57646d` | the back-link row, a tile's label, `.stat-source` | 5.17 | 5.69 | - | 4.5 | pass |
+| `--brand-ink` `#106393` | links, the empty-state glyph | 5.52 | 6.08 | - | 4.5 | pass |
+| `--brand-ink-strong` `#0c4e73` | a `legend`, the brand badge, the hero caption chip | 7.57 | 8.34 | - | 4.5 | pass |
+| `--ok` `#10683c` | the gate-passed verdict on a tinted row | 5.81 | 6.40 | - | 4.5 | pass |
+| `--caution-text` `#7a3d00` | a caution badge that lands on a tinted row | 7.14 | 7.86 | - | 4.5 | pass |
+| `--alarm-text` `#8f1010` | the gate-failed verdict on a tinted row | 7.92 | 8.72 | - | 4.5 | pass |
+| `--band-ink` `#e8f1f7` | every sentence in the closing band | - | - | 10.46 | 4.5 | pass |
+| `--band-link` `#a9d8f2` | every link in the closing band | - | - | 7.86 | 4.5 | pass |
+| `#ffffff` | the band's wordmark, and its focus ring | - | - | 11.96 | 4.5 | pass |
+| `--focus` `#0c4e73` | the 3px ring, offset 2px | 7.57 | 8.34 | **1.34 - NOT USED THERE** | 3.0 | pass; see 1.4.11 |
+| `--line-strong` `#6f7c85` | a control boundary on a tinted zone | 3.64 | 4.01 | - | 3.0 | pass |
+| `--brand` `#4db2ec` | the 3px accent rule at the top of the band and the header | 2.00 | 2.21 | 5.07 | 3.0 | element only; see below |
+
+Two of these rows are the reason the arithmetic is done rather than eyeballed.
+
+**The focus ring is white inside the closing band.** `--focus` is `#0c4e73` and
+measures **1.34:1** against `--band` - a focus indicator on the one dark
+surface in the project that nobody could see, on a band that carries links.
+`.site-footer :focus-visible` overrides the ring to `#ffffff`, which measures
+**11.96:1** there. This was found by computing the pair, not by looking at the
+page, and then confirmed by walking the tab order of all nine pages in a
+browser and reading the computed outline colour against the computed background
+at every stop.
+
+**The sky blue finally has a surface it could carry text on, and still does
+not.** `--brand` measures 5.07:1 against the band, which is above the 4.5
+requirement - the first surface in this project where the brand colour would
+pass as text. It remains an element colour: it draws the 3px accent rule at the
+top of the header and of the band and nothing else. The rule that `--brand`
+never carries text is structural (a regex over every stylesheet, in
+`tests/test_review_accessibility.py`), and an exception that held on exactly
+one surface would be a rule nobody could apply from the token's name.
+
+### The badges (part 18)
+
+A badge is a bordered pill drawn around a sentence. Its text is measured
+against its own fill, and its border against the same fill, because that is
+where both are actually drawn.
+
+| Badge | Text on its fill | Border on its fill | Verdict |
+|---|---|---|---|
+| default (`--ink-soft` on `--surface-alt`) | 8.46 | 3.99 (`--line-strong`) | pass |
+| `.badge-ok` (`--ok` on `--tint-ok`) | 6.02 | 6.02 (`--ok`) | pass |
+| `.badge-warn` (`--caution-text` on `--tint-caution`) | 7.70 | 4.36 (`--caution`) | pass |
+| `.badge-alarm` (`--alarm-text` on `--tint-alarm`) | 8.03 | 4.47 (`--alarm`) | pass |
+| `.badge-brand` (`--brand-ink-strong` on `--tint-brand`) | 7.82 | 5.70 (`--brand-ink`) | pass |
+
+A badge is not an interactive component, so 1.4.11's 3:1 is not strictly
+engaged by its border; every one of them clears it anyway, and the text
+requirement of 4.5 is what actually governs and is met with margin. What the
+badges do NOT do is carry meaning: each one is drawn around the sentence that
+was already there - "über Zielwert", "Tier 1 - klar und vollständig", "offen,
+wartet auf menschliche Bestätigung" - so removing the tone removes a box and
+no information (1.4.1).
+
+### The gradients (part 18)
+
+Three gradients ship. Two of them have text on top and are therefore only as
+good as their lightest stop, which is why neither of them touches `--brand`.
+
+| Gradient | Stops | Text on it | Worst stop | Verdict |
+|---|---|---|---|---|
+| `--grad-cta` | `#106393` to `#0c4e73` | `#ffffff` on the primary button, the call to action, the menu control, a completed step | 6.51 | pass |
+| `--grad-mark` | `#106393` to `#0c4e73` | the wordmark's white glyph (decorative, `aria-hidden`) | 6.51 | pass |
+| `--grad-panel` | `#f2f8fd` to `#ffffff` | card and tile text in `--ink`, `--ink-soft`, `--muted` | 14.87 / 8.48 / 5.69 | pass |
+| `--grad-rule` | `#0c4e73` to `#4db2ec` to `#0c4e73` | none - a 3px hairline, decorative | - | carries no text |
 
 Three colours in this palette cannot carry text and the table says so twice:
 once in their row and once in their name. `--brand` is the reference sky blue
@@ -228,12 +351,12 @@ by requiring words next to every tone.
 | 1.3.3 Sensory characteristics | reviewed | No instruction refers to shape, size or position. |
 | 1.3.4 Orientation | reviewed | No orientation lock; the layout is a single column with `max-width`. |
 | 1.3.5 Identify input purpose | open | The inputs collect no personal data about the USER (unit, reason, note), so the WCAG input-purpose list has nothing to map to. Stated rather than claimed as passed. |
-| 1.4.1 Use of colour | automated | Every queue flag carries its meaning in a `<strong>` label plus a sentence; the tone class only changes a border and a tint. The test asserts each flag block has a label and more than 30 characters of prose. Part 16 added two more places a colour could have been the only carrier and neither is: the step indicator marks the current circle with `aria-current="step"` plus an offscreen "Phase 2 - aktuelle Phase", and a completed circle carries a checkmark GLYPH plus an offscreen "abgeschlossen", so a reader who gets neither the fill nor the icon still gets the state in words. The ribbon says "Demo - synthetische Daten" in text; the tone repeats it and carries nothing on its own - which is why part 17 could change that tone from red to a caution orange without touching a word of it. |
+| 1.4.1 Use of colour | automated | Every queue flag carries its meaning in a `<strong>` label plus a sentence; the tone class only changes a border and a tint. The test asserts each flag block has a label and more than 30 characters of prose. Part 16 added two more places a colour could have been the only carrier and neither is: the step indicator marks the current circle with `aria-current="step"` plus an offscreen "Phase 2 - aktuelle Phase", and a completed circle carries a checkmark GLYPH plus an offscreen "abgeschlossen", so a reader who gets neither the fill nor the icon still gets the state in words. The ribbon says "Demo - synthetische Daten" in text; the tone repeats it and carries nothing on its own - which is why part 17 could change that tone from red to a caution orange without touching a word of it. Part 18 added the badge, which is the same rule made into a component: a badge is a bordered pill drawn AROUND the sentence that was already in the cell - "über Zielwert", "im Zielwert", "Tier 1 - klar und vollstaendig", "offen, wartet auf menschliche Bestaetigung" - so a reader who gets no colour at all loses a box and no information. The gate verdict on `/metrics` gained a glyph for the same reason and under the same rule: it is `aria-hidden`, it repeats the verdict the sentence beside it states in words, and it is a second carrier rather than the only one. |
 | 1.4.3 Contrast (minimum) | reviewed, with measured ratios | The palette is in `ui/static/system.css` as custom properties, and every pair that actually ships was computed before it was used. The full matrix is the section "Measured contrast ratios" below. The lowest text ratio anywhere on any surface is **5.06:1** (`--muted` on the sunken surface), against a 4.5:1 requirement. (This row said 6.19:1 until part 17: a part-15 number that the part-16 re-measurement replaced in the table below without updating the sentence up here. Corrected against the table, which is the computed one.) **Measured by calculation against the WCAG 2.1 relative-luminance formula, not with a tool, and not verified on a real display.** |
-| 1.4.4 Resize text | automated (partly) | All sizes are `rem`, `em`, `ch` or unitless; the type scale is seven `rem` tokens. A test asserts that no stylesheet in `ui/static` contains a `px` font size or a fixed pixel length of three digits or more - the pill radius is `62em` rather than the conventional `999px` for exactly that reason. Whether the pages are USABLE at 200 percent is a browser measurement nobody has made. |
+| 1.4.4 Resize text | automated (partly) | All sizes are `rem`, `em`, `ch` or unitless; the type scale is eight `rem` tokens. A test asserts that no stylesheet in `ui/static` contains a `px` font size or a fixed pixel length of three digits or more - the pill radius is `62em` rather than the conventional `999px` for exactly that reason. **Part 18 added three fluid sizes and they are the one place this criterion could have been lost.** A font size given in `vw` alone ignores the reader's font setting entirely and fails outright. Each of `--text-title`, `--text-hero` and `--text-stat` is a `clamp()` whose preferred value carries a `rem` term as well as a `vw` term - `clamp(1.875rem, 1.55rem + 1.05vw, 2.75rem)` - so the whole expression moves when a reader enlarges text, and the `vw` term only decides how much of the range a given viewport takes. The floor of every ramp is a size this project already shipped. Whether the pages are USABLE at 200 percent is still a browser measurement nobody has made. |
 | 1.4.5 Images of text | automated | There are no images. |
-| 1.4.10 Reflow | automated (static) plus a measured browser pass, every page | **Closed for the caseworker pages in part 15, and closed by fixing the cause rather than the symptom.** The rules that make reflow possible used to live in `demo.css`, which only the three citizen-facing pages loaded - which is precisely why this row was open on the others. They are in the design system now, so every page gets them: every wide table sits in its own `overflow-x: auto` container so the container scrolls and the document body never does, `dl` drops from two columns to one below 40rem (the two-column definition list is what actually overflows at 320 px), `overflow-wrap: break-word` on `body` keeps a case id or a placeholder token from pushing the page wider, and no stylesheet carries a fixed pixel length. Asserted per page in `tests/test_review_accessibility.py` (`/review`, both queue variants, the case view, `/metrics`, `/inbox`) and in `tests/test_demo_journey.py` (`/demo/rundgang`, `/demo/antrag`, the pipeline view). **Part 17 added the measurement the previous sentence used to say did not exist**: every page was rendered at 320 and 390 CSS px and `scrollWidth` compared against the viewport. Three pages failed and were fixed - see the part-17 note at the top for the three causes, none of which a markup check could have seen. All ten now measure exactly the viewport width at both sizes. What is still open is a real phone in a real hand: this is a headless engine at a set viewport, not a device test, and no person has read these pages on one. |
-| 1.4.11 Non-text contrast | reviewed, with measured ratios | Two border weights exist so the floor cannot be missed by accident. `--line-strong` (`#6f7c85`) draws every control boundary - inputs, selects, the button and menu outline, the table frame - and is at or above **3.56:1** against every surface it is used on, white included (4.29:1). `--line` (`#d8dee3`, 1.36:1 on white) is decorative only: it separates rows inside a card and identifies no component. The focus ring is `--focus` (`#0c4e73`) at 3px with a 2px offset, at or above **7.42:1** on every surface. Two honest notes rather than one. The `.tag` badge's border sits below 3:1 against the brand tint when a tag is inside a selected persona card - a badge is not an interactive component and its text carries 13:1 or better, so 1.4.11 is not engaged, but it is stated rather than left to be found. And the current step's circle is a `--brand` fill inside a `--brand-ink` border: the border measures 6.51:1 against the card BEHIND it, which is the comparison this criterion asks for (is the component distinguishable from its surroundings), and only 2.76:1 against the fill it encloses, which is not - stated here because the second number is the one a reader computing from the table would find first. |
+| 1.4.10 Reflow | automated (static) plus a measured browser pass, every page | **Closed for the caseworker pages in part 15, and closed by fixing the cause rather than the symptom.** The rules that make reflow possible used to live in `demo.css`, which only the three citizen-facing pages loaded - which is precisely why this row was open on the others. They are in the design system now, so every page gets them: every wide table sits in its own `overflow-x: auto` container so the container scrolls and the document body never does, `dl` drops from two columns to one below 40rem (the two-column definition list is what actually overflows at 320 px), `overflow-wrap: break-word` on `body` keeps a case id or a placeholder token from pushing the page wider, and no stylesheet carries a fixed pixel length. Asserted per page in `tests/test_review_accessibility.py` (`/review`, both queue variants, the case view, `/metrics`, `/inbox`) and in `tests/test_demo_journey.py` (`/demo/rundgang`, `/demo/antrag`, the pipeline view). **Part 17 added the measurement the previous sentence used to say did not exist**: every page was rendered at 320 and 390 CSS px and `scrollWidth` compared against the viewport. Three pages failed and were fixed - see the part-17 note at the top for the three causes, none of which a markup check could have seen. All ten now measure exactly the viewport width at both sizes. **Re-measured after the part-18 redesign: all ten pages still measure exactly 320 at 320 and exactly 390 at 390.** Part 18 added one thing that can clip content and it is bounded on purpose. `.scroll-x.is-tall` gives the 41-row queue table a maximum height so its own sticky header has a box to stick to; it applies only from 64rem up, so the single-column phone layout never gets an inner scroller competing with the reader's own scroll, and a `@media print` rule removes the cap so a printed queue carries all its rows rather than the 78vh of them that were in view. Every row in that box contains a link, so a keyboard reader reaches all of them by tabbing, and the box scrolls to follow the focus. What is still open is a real phone in a real hand: this is a headless engine at a set viewport, not a device test, and no person has read these pages on one. |
+| 1.4.11 Non-text contrast | reviewed, with measured ratios | Two border weights exist so the floor cannot be missed by accident. `--line-strong` (`#6f7c85`) draws every control boundary - inputs, selects, the button and menu outline, the table frame - and is at or above **3.56:1** against every surface it is used on, white included (4.29:1). `--line` (`#d8dee3`, 1.36:1 on white) is decorative only: it separates rows inside a card and identifies no component. The focus ring is `--focus` (`#0c4e73`) at 3px with a 2px offset, at or above **7.42:1** on every surface. Two honest notes rather than one. The `.tag` badge's border sits below 3:1 against the brand tint when a tag is inside a selected persona card - a badge is not an interactive component and its text carries 13:1 or better, so 1.4.11 is not engaged, but it is stated rather than left to be found. And the current step's circle is a `--brand` fill inside a `--brand-ink` border: the border measures 6.51:1 against the card BEHIND it, which is the comparison this criterion asks for (is the component distinguishable from its surroundings), and only 2.76:1 against the fill it encloses, which is not - stated here because the second number is the one a reader computing from the table would find first. **Part 18 added a dark band and with it the one place the ring failed.** `--focus` measures 1.34:1 against `--band`, so `.site-footer :focus-visible` sets the ring to white, which measures 11.96:1 there; the finding came out of computing the pair, and the fix was then verified by walking the tab order of all nine pages in a browser and reading the computed outline colour against the computed background at every stop - 159 stops, all at or above 3:1. One further note that belongs next to that walk. `input[type="date"]` has a calendar button inside the engine's own shadow tree with its own tab stop and its own focus ring, which this project can neither restyle nor read; a first pass dimmed it with `opacity: 0.65` and thereby dimmed the ring the engine paints on it, which the walk caught. The rule now sets nothing but `cursor`. |
 | 1.4.12 Text spacing | reviewed | No fixed heights, no `!important` on line-height. `body` carries `line-height: 1.65`, raised from 1.55 in part 17 to carry the wider measure; every heading keeps 1.2. |
 | 1.4.13 Content on hover or focus | automated | Nothing appears on hover or focus; the test asserts no `onmouseover` anywhere. |
 
@@ -252,7 +375,7 @@ by requiring words next to every tone.
 | 2.4.4 Link purpose (in context) | reviewed | Link text is the queue name or the case id; there is no "here" or "more". |
 | 2.4.5 Multiple ways | reviewed | A case is reachable from its queue and from a direct URL; the nav is on every page. There is no search, which for a demo with one journal is defensible and for a pilot is not. |
 | 2.4.6 Headings and labels | reviewed | Section headings name their content in German administrative vocabulary; labels name what is entered. Whether they are USEFUL to a caseworker is exactly what the pilot has to tell us. |
-| 2.4.7 Focus visible | automated | `:focus-visible` in the design system sets a 3px outline in `--focus` with a 2px offset, which survives on top of every tinted surface (9.47:1 or better). The test sweeps EVERY stylesheet in `ui/static` for the two rules that switch an outline off, rather than checking two files named by hand, and additionally asserts the ring is restyled rather than merely present. |
+| 2.4.7 Focus visible | automated, plus a measured browser walk | `:focus-visible` in the design system sets a 3px outline in `--focus` with a 2px offset, which survives on top of every tinted surface (7.57:1 or better) and is overridden to white inside the closing band, where `--focus` would measure 1.34:1 - see 1.4.11. The test sweeps EVERY stylesheet in `ui/static` for the two rules that switch an outline off, rather than checking two files named by hand, and additionally asserts the ring is restyled rather than merely present. **Part 18 added the measurement**: every tab stop on all nine pages was focused in a browser and its computed outline colour compared against the computed background behind it. |
 | 2.5.1 Pointer gestures | automated | No gesture; every action is a click or a keypress on a native control. |
 | 2.5.2 Pointer cancellation | reviewed | Native buttons only; the browser's own down-then-up semantics apply. |
 | 2.5.3 Label in name | reviewed | The visible label text IS the accessible name: no `aria-label` overrides a visible string anywhere. |
@@ -329,7 +452,7 @@ does that nothing else in the project does.
 
 | Criterion | Verdict | Note |
 |---|---|---|
-| 1.1.1 Non-text content | automated | The hero is the project's only image, and it is an inline SVG with `role="img"`, a `<title>` and a `<desc>`. Its five stage names are ALSO the bold prefix of five real text captions below it, so nothing in the picture is available only in the picture. See the criterion row above for the icon set. |
+| 1.1.1 Non-text content | automated | The hero is the project's only image, and it is an inline SVG with `role="img"`, a `<title>` and a `<desc>`. Its five stage names are ALSO the prefix of five real text captions below it, so nothing in the picture is available only in the picture. **Part 18 relied on that property rather than adding to it.** The drawing is one `viewBox` of 960 by 160 user units whose geometry is load-bearing - the envelope travels in steps of 192 units, a fifth of the width - so it cannot be re-laid-out for a narrow screen without rebuilding mechanics that had just been corrected. On a 390 px phone the SVG renders about 350 px wide and a stage name inside it comes out at roughly six CSS px: text that every checker counts as present and no person can read. Below 48rem the in-picture names are therefore hidden and the label band is cropped off with a negative margin; the stage's name is read from the caption directly beneath, whose chip carries "1. Eingang" and whose sentence belongs to the lit stage. Nothing left the document, the accessible name or the translation table - only the illegible copy of it left the picture. See the criterion row above for the icon set. |
 | 2.2.2 Pause, stop, hide | automated (static) | The one page in the project where this criterion is engaged at all. A labelled checkbox above the figure stops the loop, in CSS alone; the paused state shows every stage lit and all five captions at once, which is also what `prefers-reduced-motion: reduce` produces without being asked. See the criterion row above for why it stops rather than freezes. |
 | 1.4.10 Reflow | automated (static) | Same three checks as the other citizen pages - viewport meta, every table in its own scroll container, no inline width - plus the hero, which is a `viewBox` SVG at `width: 100%` and therefore scales rather than overflowing. The menu panel stops floating below 40rem for the same reason. Not a browser measurement. |
 | 2.4.2 Page titled | automated | Distinct titles, translated with the rest of the page. |
