@@ -1,10 +1,6 @@
 # ADR-032: A Visual System With Elevation, Zones and Measured Surfaces, and a Demo Notice That Renders Where It Is About
 
-**Status:** Proposed, 2026-08-15 (part 18, the visual overhaul)
-
-> Numbering note: this file is written as ADR-032 because that is the number the
-> work item names as the candidate. If the sequence has moved, the number is the
-> only thing in it that changes.
+**Status:** Accepted, 2026-08-15 (part 18, the visual overhaul)
 
 ## Context
 
