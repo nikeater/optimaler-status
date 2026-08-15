@@ -576,6 +576,20 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* A tour step already carries a numbered chip in front of its heading, so it
+   does not ALSO take the design system's accent tick and heading rule. Two
+   markers on one heading is one too many - and in the two-column layout above
+   64rem the rule would underline the left column rather than the section, so
+   it would be drawing the wrong thing as well as a second one. */
+.step > h2 {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.step > h2::before {
+  content: none;
+}
+
 /* The list of what to look at inside a step. */
 .watch-for {
   list-style: none;

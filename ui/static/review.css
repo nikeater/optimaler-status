@@ -46,20 +46,27 @@
   color: var(--brand-ink-strong);
 }
 
-/* The case identifier under the page title. A case id is a machine token and
-   was set as a 2.75rem headline, which made the loudest thing on the screen a
-   string nobody reads as language. The heading now names the THING and the
-   token sits beneath it in the face it belongs to. */
+/* The case identifier inside the page title. A case id is a machine token and
+   it was set as display type: `Vorgang case-ar-0001-regelaltersrente-
+   vollstaendig` at 2.75rem was the loudest thing on the screen and the part of
+   it a reader cannot read as language.
+
+   The heading still says exactly what it said - the rendered sentence is
+   unchanged - but the token wears the face it belongs to, at half the
+   heading's size. `em` rather than `rem`, so it stays half of whatever the
+   fluid heading resolves to at this viewport and at this reader's font size. */
 .case-id {
   display: inline-block;
-  margin: 0 0 var(--space-4);
-  padding: var(--space-1) var(--space-3);
+  padding: 0.1em 0.4em;
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
-  background: var(--surface-alt);
+  background: var(--surface);
   color: var(--ink-soft);
   font-family: var(--font-mono);
-  font-size: var(--text-sm);
+  font-size: 0.5em;
+  font-weight: 600;
+  letter-spacing: 0;
+  vertical-align: middle;
   word-break: break-all;
 }
 

@@ -1191,6 +1191,19 @@ dl {
   border-bottom: 1px solid var(--line);
 }
 
+/* A definition list draws its own top and bottom rule, which doubles up with
+   the rule under a section heading and with the card's own edge. Whichever one
+   is redundant is the one that goes. */
+main > section > h2 + dl {
+  border-top: 0;
+  padding-top: 0;
+}
+
+main > section > dl:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
 dt {
   font-weight: 650;
   color: var(--muted);
@@ -1586,17 +1599,40 @@ button:active {
 
 /* ------------------------------------------------------ notes and notices */
 
+/* A NOTE READS AS AN ANNOTATION, NOT AS THE PAGE (part 18). Two of these stack
+   at the top of every caseworker screen - the acting unit and the C-5 note
+   about the role picker - and at body size on a grey fill they were the first
+   and heaviest thing under the heading, which is the opposite of what a note
+   is for. Same words, same tones, one size down and a lighter fill. */
 .notice {
-  margin: 0 0 var(--space-4);
-  padding: var(--space-4) var(--space-5);
+  margin: 0 0 var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--line);
   border-left: 4px solid var(--line-strong);
   border-radius: var(--radius);
   background: var(--surface-alt);
+  font-size: var(--text-sm);
+  line-height: 1.6;
 }
 
 .notice > *:last-child {
   margin-bottom: 0;
+}
+
+/* A note in the page head belongs to the page rather than to a card, so it
+   sits ON the canvas with its own hairline elevation instead of looking like
+   a recessed panel that lost its card. */
+.page-head .notice {
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.page-head .ok-note {
+  background: var(--tint-ok);
+}
+
+.page-head .language-note {
+  background: var(--tint-brand);
 }
 
 .ok-note {

@@ -358,7 +358,9 @@ def test_the_whole_three_phase_journey_for_each_persona(
     assert intake.status_code == 200
     assert persona(persona_id).display_name in intake.text
     assert phrase("intake.hints.heading") in intake.text
-    assert 'id="demo-ribbon"' in intake.text
+    # The ribbon is not on this page since part 18; the route to the notice is,
+    # and that is what the journey has to keep - see the scope test below.
+    assert 'href="/hinweise"' in intake.text
     assert 'aria-current="step"' in intake.text
     assert phrase("phase.antrag") in intake.text
 
@@ -909,17 +911,32 @@ def test_the_caseworker_pages_never_show_the_working_copy_text(
         assert sentence in client.get(f"/demo/case/{case_id}/pipeline").text
 
 
-def test_the_demo_pages_carry_the_synthetic_data_banner(
+#: The two citizen pages that carry the ribbon itself since part 18. The other
+#: three carry the ROUTE to it, which is the property that must not regress
+#: when the notice stops being repeated on every screen.
+RIBBON_PAGES = ("start", "hinweise")
+
+
+def test_every_demo_page_reaches_the_synthetic_data_notice(
     config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Every page. The one that is missed is the one somebody screenshots."""
+    """The ribbon on two pages, and the way to the notice from all five.
+
+    Until part 17 the ribbon sat on every page and this test said so. The
+    user's part-18 direction narrowed it to the landing page and the page it
+    links, so the assertion splits in two: the notice RENDERS on those two, and
+    it is REACHABLE from every one of them - because a scope change that
+    quietly removed the route to the honesty text would be a different change
+    from the one that was asked for.
+    """
     client = build_client(config, monkeypatch=monkeypatch)
     case_id = submit(client, form_data("mustermann_regelaltersrente"))
     for page in CITIZEN_PAGES:
         path = citizen_path(page, case_id)
         body = client.get(path).text
-        assert 'id="demo-ribbon"' in body, path
-        assert phrase("ribbon.text") in body, path
+        carries = page in RIBBON_PAGES
+        assert ('id="demo-ribbon"' in body) is carries, path
+        assert (phrase("ribbon.text") in body) is carries, path
         assert 'href="/hinweise"' in body, path
     assert demo_personas().note in client.get("/demo/antrag").text
 
@@ -1254,19 +1271,34 @@ def test_the_phase_connector_stops_at_the_edge_of_the_circles() -> None:
     paints on TOP of the previous circle, because the pseudo-element belongs to
     a later sibling than the circle it overlaps.
 
-    This is a literal pin and it is honest about being one: it cannot measure a
-    box. Whether the gap is really there is a browser question and was answered
-    in a browser at 320, 768, 1024, 1440 and 1920 px.
+    This cannot measure a box, and it no longer pins the two literals that made
+    it look as though it could. Whether the gap is really there is a browser
+    question and was answered in a browser at 320, 768, 1024, 1440 and 1920 px.
+
+    WHAT IT PINS INSTEAD IS THE ARITHMETIC (part 18, when the mark grew from
+    2.2rem to 2.6rem). The old version wrote the radius into the assertion by
+    hand in two places and then checked separately that the mark was still the
+    size those numbers assumed - three literals that have to be kept in step by
+    somebody remembering. The radius is now READ OUT of the `.phase-mark` rule
+    and the connector is required to pull back by exactly that much plus one
+    step of the spacing ladder. Resizing the mark and forgetting the connector
+    is a failure; resizing both together is not an edit to this test.
     """
     system = Path("ui/static/system.css").read_text(encoding="utf-8")
+    mark = re.search(r"\.phase-mark\s*\{([^}]*)\}", system)
+    assert mark, "no mark rule"
+    size = re.search(r"width:\s*([\d.]+)rem", mark.group(1))
+    assert size, "the mark has no width in rem"
+    radius = float(size.group(1)) / 2
+    # `2.6 / 2` is `1.3`, and CSS is written without a trailing zero.
+    written = f"{radius:g}rem"
     connector = re.search(r"\.phase::before\s*\{([^}]*)\}", system)
     assert connector, "no connector rule"
     body = connector.group(1)
-    # The mark is 2.2rem across, so each end pulls back by its 1.1rem radius
-    # plus one step of breathing room.
-    assert "left: calc(-50% + 1.1rem + var(--space-2))" in body, body
-    assert "right: calc(50% + 1.1rem + var(--space-2))" in body, body
-    assert re.search(r"width:\s*2\.2rem", system), "the mark's size moved"
+    gap = re.search(r"left: calc\(-50% \+ [\d.]+rem \+ (var\(--space-\d\))\)", body)
+    assert gap, body
+    assert f"left: calc(-50% + {written} + {gap.group(1)})" in body, body
+    assert f"right: calc(50% + {written} + {gap.group(1)})" in body, body
     # The stacked variant below 40rem has no connectors and keeps none.
     narrow = system.split("@media (max-width: 40rem)")[1]
     assert re.search(r"\.phase::before\s*\{\s*content: none;", narrow)

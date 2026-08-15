@@ -2,7 +2,10 @@
 {% set state = view.state %}
 {% set case = state.case %}
 {% block title %}EingangsLotse - Vorgang {{ state.case_id }}{% endblock %}
-{% block heading %}Vorgang {{ state.case_id }}{% endblock %}
+{# The heading says what it always said; the token inside it is marked up so it
+   can be set in the monospaced face at half the heading's size instead of as
+   display type (part 18). The rendered sentence is unchanged. #}
+{% block heading %}Vorgang <span class="case-id">{{ state.case_id }}</span>{% endblock %}
 {% block picker_action %}/review/case/{{ state.case_id }}{% endblock %}
 {% block content %}
 
@@ -36,7 +39,9 @@
     </dd>
     <dt>Tier</dt>
     <dd>
-      {{ view.tier_label }}
+      {# The badge is drawn around the whole label, so the tone has nothing to
+         render if the words are taken away (WCAG 1.4.1). #}
+      <span class="badge badge-brand">{{ view.tier_label }}</span>
       {% if state.tier_changed %}
       <span class="tag">manuell geändert, maschinell: {{ view.machine_tier_label }}</span>
       {% endif %}
@@ -48,10 +53,14 @@
     <dt>Status</dt>
     <dd>
       {% if state.confirmed %}
-      bestätigt am {{ state.confirmed_at.isoformat() }} durch Einheit
+      <span class="badge badge-ok">bestätigt</span>
+      am {{ state.confirmed_at.isoformat() }} durch Einheit
       {{ case.confirmed_unit_id or "unbekannt" }}
       {% else %}
-      offen, wartet auf menschliche Bestätigung
+      {# Neutral rather than caution: a case waiting for a human IS the
+         product, not an exception. The exception tones are kept for the
+         states that are ones - over the latency target, a failed gate. #}
+      <span class="badge">offen, wartet auf menschliche Bestätigung</span>
       {% endif %}
     </dd>
   </dl>

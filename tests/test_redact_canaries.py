@@ -936,6 +936,10 @@ def test_no_canary_reaches_the_demo_landing_page_or_the_banner(
             )
             assert created.status_code == 201
             case_id = created.json()["case_id"]
+            # The ribbon renders on the two pages that are about the demo since
+            # part 18; here it is only evidence that the posture really is on
+            # for this client, which is what makes the sweep below a sweep of
+            # the DEMO surface. The sweep itself is over every page either way.
             for path in (
                 "/",
                 "/hinweise",
@@ -947,7 +951,9 @@ def test_no_canary_reaches_the_demo_landing_page_or_the_banner(
             ):
                 page = demo_client.get(path)
                 assert page.status_code == 200, path
-                assert 'id="demo-ribbon"' in page.text, path
+                assert ('id="demo-ribbon"' in page.text) is (
+                    path in ("/", "/hinweise")
+                ), path
                 assert_no_canary(page.text, f"the demo page {path}")
             # And the refusal body, which is the one response a stranger who
             # POSTed real data would read back.

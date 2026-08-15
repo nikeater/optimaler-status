@@ -59,7 +59,13 @@
       <h2 id="inbox-heading">{{ t("inbox.messages") }}</h2>
       <p class="notice">{{ m("inbox.realakt") }}</p>
       {% if not view.cases %}
-      <p class="notice">{{ t("inbox.empty") }}</p>
+      {# An empty inbox on a fresh instance is a normal state and the page said
+         so in a grey notice that read like a failure (part 18). Same sentence,
+         given a shape. Still no control of any kind on this page. #}
+      <div class="empty">
+        <span class="empty-mark">{{ icons.icon("inbox") }}</span>
+        <p class="empty-title">{{ t("inbox.empty") }}</p>
+      </div>
       {% else %}
       <p>
         {{ t("inbox.count", count=view.message_count, cases=view.cases|length) }}
