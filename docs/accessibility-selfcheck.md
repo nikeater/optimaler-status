@@ -294,8 +294,13 @@ where both are actually drawn.
 | default (`--ink-soft` on `--surface-alt`) | 8.46 | 3.99 (`--line-strong`) | pass |
 | `.badge-ok` (`--ok` on `--tint-ok`) | 6.02 | 6.02 (`--ok`) | pass |
 | `.badge-warn` (`--caution-text` on `--tint-caution`) | 7.70 | 4.36 (`--caution`) | pass |
-| `.badge-alarm` (`--alarm-text` on `--tint-alarm`) | 8.03 | 4.47 (`--alarm`) | pass |
 | `.badge-brand` (`--brand-ink-strong` on `--tint-brand`) | 7.82 | 5.70 (`--brand-ink`) | pass |
+
+There is no alarm badge and the omission is deliberate rather than pending.
+Nothing in this UI is a small inline state meaning "something went wrong"; the
+red family's three places - the refusal notice, the anomaly flag and the failed
+gate - are all blocks. A fourth tone would be a rule with no user and a row of
+measurements here for a pair that never renders.
 
 A badge is not an interactive component, so 1.4.11's 3:1 is not strictly
 engaged by its border; every one of them clears it anyway, and the text
