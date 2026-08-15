@@ -50,6 +50,14 @@ works on any page and preserves every other query parameter, and it is
 registered UNCONDITIONALLY - the language machinery is not demo surface. What
 it does not do outside demo mode is link anything demo. See ``api/i18n.py``.
 
+**Every response carries ``Cache-Control: no-cache`` (part 17b).** Without that
+header a browser invents its own freshness window and keeps a stylesheet it was
+never told it could keep, which is how a deploy of new markup came to be
+rendered with the previous deploy's CSS. ``no-cache`` means "store it, but
+revalidate before every use", so the static mount's ETags turn a repeat visit
+into a 304 and a redeploy is visible on the next request. The middleware is
+registered unconditionally and outermost; see ``_mount_cache_control``.
+
 **The guided showcase (part 13) rides on the same flag and adds two pages.**
 ``GET /demo/antrag`` is a citizen intake surface over fictional personas;
 ``GET /demo/case/{id}/pipeline`` narrates what the pipeline did to the
@@ -163,6 +171,12 @@ VAULT_DIR_ENV = "EINGANGSLOTSE_VAULT_DIR"
 #: Set to "0" to seal free text with the deterministic union alone. Default on:
 #: prose is where bare person names live, and no regular expression finds them.
 TEXT_NER_ENV = "EINGANGSLOTSE_TEXT_NER"
+
+#: The caching policy every response carries (part 17b). Deliberately NOT
+#: ``no-store``: what this closes is the heuristic freshness window, not the
+#: browser's disk. See :func:`_mount_cache_control`.
+CACHE_CONTROL_HEADER = "cache-control"
+NO_CACHE = "no-cache"
 
 INVALID_SUBMISSION = "invalid submission"
 
@@ -559,6 +573,11 @@ def create_app(
         demo_store=demo_store,
         run_ingest=run_ingest,
     )
+    # LAST, and the position is the design: Starlette builds the stack so that
+    # the middleware registered last is the outermost one, which is the only
+    # place from which a header reaches the responses the middleware above
+    # return WITHOUT calling a route - the language 303 and the ingest 403.
+    _mount_cache_control(app)
 
     if STATIC_DIR.is_dir():
         app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
@@ -603,6 +622,51 @@ def _mount_language(app: FastAPI) -> None:
             httponly=True,
             samesite="lax",
         )
+        return response
+
+
+def _mount_cache_control(app: FastAPI) -> None:
+    """``Cache-Control: no-cache`` on every response (part 17b).
+
+    The app sent no caching header at all until this existed, and "no header"
+    does not mean "do not cache". The static mount sends ``ETag`` and
+    ``Last-Modified``, so a browser is entitled to HEURISTIC caching: it
+    invents a freshness window from the file's age and reuses
+    ``/static/system.css`` without asking anyone. Observed in production on the
+    day part 17 shipped - a visitor's browser rendered the NEW markup with the
+    PREVIOUS deploy's stylesheet, which is a page nobody wrote, nobody can
+    reproduce from the repository and nobody can debug from the server logs.
+    For a demonstration that redeploys up to the day it is judged, that is a
+    defect class rather than a nuisance.
+
+    ``no-cache`` and NOT ``no-store``. The two are easy to confuse and only one
+    of them is right here: ``no-cache`` lets the browser keep the bytes and
+    obliges it to REVALIDATE before every use, while ``no-store`` forbids
+    keeping them at all. Since the static mount already answers a conditional
+    request with a 304 and no body, revalidation costs one small round trip and
+    a redeploy is picked up on the very next request; ``no-store`` would throw
+    that economy away and buy nothing back. ``max-age`` is not added either -
+    any value above zero is the window this exists to close - and no static URL
+    is versioned, because a content-hashed asset pipeline is a build-step design
+    decision and this defect does not require one.
+
+    Registered UNCONDITIONALLY, like the language switch and unlike the ingest
+    gate: how long a browser may keep a response is not demo surface. And
+    registered LAST, which under Starlette's stack order makes it the OUTERMOST
+    middleware, so it sees every response the app produces on the way out -
+    rendered pages, the static mount, ``/healthz``, a 404, and the two
+    short-circuits that never reach a route at all: the ``?lang=`` 303 and the
+    demo instance's ingest 403.
+
+    ``setdefault`` rather than an assignment: no response sets the header today,
+    but the one that some day needs its own policy should be able to state it
+    and keep it.
+    """
+
+    @app.middleware("http")
+    async def cache_control(request: Request, call_next: Any) -> Any:
+        response = await call_next(request)
+        response.headers.setdefault(CACHE_CONTROL_HEADER, NO_CACHE)
         return response
 
 
