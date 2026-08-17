@@ -153,6 +153,33 @@
       </div>
       {% endfor %}
     </fieldset>
+
+    {# PART 20: THE PREPARED DOCUMENTS. Presented like an upload area and
+       labelled as what it is. A ticked box becomes a REAL attachment on the
+       submission - text plus a source type, which is how a PDF travels through
+       this system once its text layer has been read - so the boundary seals it
+       span by span and the pipeline view shows its working copy. There is no
+       file input here and the fieldset says so in words rather than leaving it
+       to be noticed: an upload control on a public page is an ingest path
+       around the redaction boundary (the part-10 refusal). #}
+    {% if view.attachments %}
+    <fieldset>
+      <legend>{{ t("intake.attachments.legend") }}</legend>
+      <p class="help">{{ t("intake.attachments.note") }}</p>
+      {% for anlage in view.attachments %}
+      <div class="field">
+        <input type="checkbox" id="anlage-{{ anlage.attachment_id }}"
+               name="{{ anlage.field_name }}" value="1"{% if anlage.checked %} checked{% endif %}
+               aria-describedby="hilfe-anlage-{{ anlage.attachment_id }}">
+        <label for="anlage-{{ anlage.attachment_id }}">{{ anlage.label }}</label>
+        <span class="help" id="hilfe-anlage-{{ anlage.attachment_id }}">
+          <code>{{ anlage.filename }}</code> {{ anlage.note }}
+        </span>
+      </div>
+      {% endfor %}
+      <p class="notice">{{ t("intake.attachments.no_upload") }}</p>
+    </fieldset>
+    {% endif %}
     {% endif %}
 
     {% if view.ingest_open %}

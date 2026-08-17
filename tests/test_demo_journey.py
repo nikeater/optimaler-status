@@ -812,6 +812,109 @@ def test_what_the_persona_arrived_with_is_a_required_field(
     assert optional == [("beispielmann_ohne_rentenbeginn", "rentenbeginn")]
 
 
+def test_the_prepared_documents_are_offered_and_say_what_they_are(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Part 20: an upload area that is honest about not being one.
+
+    Three things have to be on the page together, because any two of them
+    without the third would be misleading: the documents with the names an
+    agency really uses, the sentence saying they are prepared and synthetic,
+    and the sentence saying that uploading a file of your own is deliberately
+    absent here. The last one is the part-10 refusal stated in words rather
+    than left to be inferred from the absence of a control - and the absence
+    of the control is asserted too, on both halves of what would make one.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    for chosen in demo_personas().personas:
+        body = client.get(f"/demo/antrag?persona={chosen.persona_id}").text
+        assert phrase("intake.attachments.legend") in body, chosen.persona_id
+        assert phrase("intake.attachments.note") in body, chosen.persona_id
+        assert phrase("intake.attachments.no_upload") in body, chosen.persona_id
+        for entry in chosen.attachments:
+            assert f'name="{entry.field_name}"' in body, entry.attachment_id
+            assert f'for="anlage-{entry.attachment_id}"' in body, entry.attachment_id
+            assert escape(entry.label) in body, entry.attachment_id
+            assert entry.filename in body, entry.attachment_id
+        # No upload path, and no dependency that would make one possible.
+        assert 'type="file"' not in body
+        assert "multipart/form-data" not in body
+        # Nothing is ticked until a visitor ticks it.
+        assert " checked" not in body
+
+
+def test_a_ticked_document_follows_the_case_into_the_pipeline_view(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The whole point of the shape: it is a real part, so it appears as one.
+
+    The pipeline view renders whatever parts the working copy has, so the
+    documents arrive there through the same projection the structured payload
+    does - no attachment branch was added to that page. What a visitor sees is
+    the sealed document beside the sealed form, its own part id, its own
+    placeholders, and the sealed-span count risen to match.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    chosen = persona("musterfrau_statusfeststellung")
+    ticked = chosen.attachments[0]
+
+    plain = client.get(
+        f"/demo/case/{submit(client, form_data(chosen.persona_id))}/pipeline"
+    )
+    assert "part-text-0" not in plain.text
+
+    case_id = submit(client, {**form_data(chosen.persona_id), ticked.field_name: "1"})
+    page = client.get(f"/demo/case/{case_id}/pipeline")
+    assert page.status_code == 200
+    assert "part-text-0" in page.text
+    # A sentence that exists ONLY in the document, next to the placeholders the
+    # boundary put in it.
+    assert "Beschreibung des Auftragsverhaeltnisses" in page.text
+    assert '<mark class="placeholder">' in page.text
+    # And the identity in the document is gone from what the page shows.
+    for value in identity_strings(chosen.persona_id):
+        assert page.text.count(value) <= 2, value  # the echo only, never the copy
+
+    # The caseworker surface still shows no document content: part 20 adds a
+    # part, not a window (ADR-026).
+    case_page = client.get(f"/review/case/{case_id}?unit=Referat_340_Clearingstelle")
+    assert case_page.status_code == 200
+    assert "Beschreibung des Auftragsverhaeltnisses" not in case_page.text
+    # It does show that a part arrived, which is metadata and always did.
+    assert "part-text-0" in case_page.text
+
+
+def test_the_selection_survives_a_refusal_like_every_other_answer(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A re-render must not silently untick what somebody chose.
+
+    The refusal path re-renders the page with the visitor's own values; the
+    documents are part of those values, so they come back ticked. Without this
+    a visitor correcting one field would also, invisibly, drop their
+    enclosures.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    chosen = persona("mustermann_regelaltersrente")
+    ticked = chosen.attachments[0]
+    with patch.object(
+        app_module, "run_pipeline", side_effect=redaction_refusal("egal")
+    ):
+        refused = client.post(
+            "/demo/antrag",
+            data={**form_data(chosen.persona_id), ticked.field_name: "1"},
+            follow_redirects=False,
+        )
+    assert refused.status_code == 200
+    marked = re.search(
+        rf'<input type="checkbox" id="anlage-{ticked.attachment_id}"[^>]*>',
+        refused.text,
+    )
+    assert marked and " checked" in marked.group(0)
+    # And the ones that were not ticked did not become ticked.
+    assert refused.text.count(" checked") == 1
+
+
 def test_the_red_state_is_css_over_a_state_the_browser_maintains() -> None:
     """No script, no `:invalid`, and colour is not the only carrier.
 

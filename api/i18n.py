@@ -1211,6 +1211,37 @@ TABLE: dict[str, tuple[str, str]] = {
         "Diese Angabe fehlt. Ohne sie wird der Antrag nicht abgeschickt.",
         "This answer is missing. The application will not be sent without it.",
     ),
+    "intake.attachments.legend": (
+        "Anlagen (PDF, simuliert)",
+        "Enclosures (PDF, simulated)",
+    ),
+    "intake.attachments.note": (
+        "Wählen Sie aus, was die antragstellende Person beilegt. Die Dokumente "
+        "sind vorbereitet und synthetisch; ihre Namen sind die, unter denen die "
+        "Rentenversicherung diese Unterlagen tatsächlich anfordert. Ein "
+        "angehaktes Dokument wird zu einer echten Anlage der Einreichung: es "
+        "wird versiegelt, bekommt eine Textebene und läuft durch dieselbe "
+        "Verarbeitung wie das Formular. Im nächsten Schritt sehen Sie die "
+        "Arbeitskopie jedes Dokuments.",
+        "Choose what the applicant encloses. The documents are prepared and "
+        "synthetic; their names are the ones the German pension insurance "
+        "really asks for these papers under. A ticked document becomes a real "
+        "attachment on the submission: it is sealed, gets a text layer and goes "
+        "through the same processing as the form. The next step shows you the "
+        "working copy of each document.",
+    ),
+    "intake.attachments.no_upload": (
+        "Eigene Dateien lassen sich hier bewusst nicht hochladen. Ein "
+        "Upload-Feld auf einer öffentlichen Demo wäre ein Eingangsweg an der "
+        "Schwärzungsgrenze vorbei, und die Grenze ist der ganze Gegenstand "
+        "dieser Anlage. Die Dokumente oben gehören zu der erfundenen Person, "
+        "die Sie gewählt haben, und zu keinem Menschen.",
+        "There is deliberately no way to upload a file of your own here. An "
+        "upload control on a public demo would be an ingest path around the "
+        "redaction boundary, and that boundary is what this whole system is "
+        "about. The documents above belong to the fictional applicant you "
+        "picked and to nobody.",
+    ),
     "intake.hints.heading": (
         "Was Sie ausprobieren können",
         "What you can try",

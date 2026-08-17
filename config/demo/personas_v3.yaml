@@ -1,4 +1,4 @@
-# Demo personas v2 (config/demo/) - part 16, the bilingual UI overhaul.
+# Demo personas v3 (config/demo/) - part 20, the simulated attachments.
 #
 # ITS OWN VERSIONED FILE, and the reason is the standing lesson of parts 06 to
 # 12: `config/thresholds.yaml`, `config/rules/`, `config/decision/` and
@@ -12,14 +12,91 @@
 # imported only by the demo routes, which exist only when
 # EINGANGSLOTSE_DEMO_MODE=1.
 #
-# WHY v2 SUPERSEDES v1 RATHER THAN EDITING IT. The shape of a persona changed:
-# `name` became `nachname` + `vorname`, fields grew a `control`, and every
-# visitor-facing string grew an English sibling. A v1 reader handed this file
-# would render an empty name box. The house rule for a versioned file whose
-# SHAPE changes is to supersede it - the same rule that produced routing_v3 and
-# taxonomy_drv_bund_v2 - and, like those, only the current version stays on
-# disk. Nothing in this file's DATA changed: every value, every letter and
-# every persona id is the v1 value, byte for byte.
+# WHY v3 SUPERSEDES v2 RATHER THAN EDITING IT. A persona grew a new part:
+# `attachments`, the prepared documents a visitor may tick on the intake form.
+# That is a SHAPE change, and the house rule for a versioned file whose shape
+# changes is to supersede it - the same rule that produced routing_v3,
+# taxonomy_drv_bund_v2 and v2 of this file - with only the current version left
+# on disk. Nothing that existed in v2 moved: every persona id, every field,
+# every value and every letter is the v2 text, byte for byte, apart from the
+# two hints part 20 rewrote (see the panel below) and the one sentence Bernd
+# Beispielmann's card gained.
+#
+# (v2 superseded v1 for the same reason one part earlier: `name` became
+# `nachname` + `vorname`, fields grew a `control`, and every visitor-facing
+# string grew an English sibling.)
+#
+# WHAT AN ATTACHMENT IS HERE, AND WHAT IT IS NOT. It is a PREPARED, SYNTHETIC
+# document that the demo offers as a checkbox; ticking it puts a real
+# attachment on the submission - `text` plus a `sourceType`, the same shape the
+# corpus's e-mail and scan items ride on - so the boundary seals it span by
+# span, the text layer normalizes it, derivation reads it and the pipeline view
+# shows its working copy. There is NO file upload here and there will not be
+# one: an upload control on a public page is an ingest path around the
+# redaction boundary, which is the part-10 refusal, and the fieldset says so in
+# words rather than leaving it to be noticed.
+#
+# THE DOCUMENT NAMES ARE REAL. They were researched against the Deutsche
+# Rentenversicherung's own forms rather than invented, so a German caseworker
+# reading a screenshot recognises them:
+#   * Statusfeststellung par. 7a SGB IV - `V0027` Ziffer 16 lists what an
+#     applicant encloses. `C0031` (Beschreibung des Auftragsverhaeltnisses) is
+#     the narrative annex without which, in V0027's own words, no determination
+#     can be made; "Saemtliche Einzelvertraege, Projektbeschreibungen und
+#     Aufgabenbeschreibungen" and "Rechnungen in Kopie" are the other two, and
+#     the second is required twice over (V0027 Ziffer 3.2 and C0031 Ziffer 3.1).
+#   * Regelaltersrente - the application is `R0100`, and Ziffer 15 says
+#     enclosures travel with `R0990` (Aufstellung ueber eingereichte bzw.
+#     nachzureichende Unterlagen). Ziffer 16 names the Geburtsurkunde; `R0810`
+#     is the Meldung zur Krankenversicherung der Rentner; "Nachweise ueber
+#     Ausbildungszeiten" is the DRV's own wording for closing a gap in the
+#     Versicherungsverlauf.
+#   Two candidates were checked and REJECTED rather than used: `V0028` is the
+#   guidance leaflet the DRV supplies and never something an applicant
+#   encloses, and the Versicherungsverlauf is an OUTBOUND document the DRV
+#   sends to the insured. Both would have read as wrong to a caseworker.
+#
+# THE TEXT IS BUILT FROM THE PERSONA'S OWN VALUES. Every `text` below is a
+# template over this persona's field ids (`{versicherungsnummer}`, `{plz}`,
+# ...), rendered once at LOAD time; an unknown key is a load error rather than
+# a half-rendered document in front of a visitor. That is the gold-corpus
+# method and it is what makes the documents deterministic: the same persona
+# always produces the same bytes.
+#
+# WHAT THE TEXT MAY NOT SAY, and it is a rule rather than a style note.
+#   1. DERIVATION. A document is text, and `text.normalized` is where the
+#      content signals of `config/procedures/*.yaml` are read (ADR-020). Two
+#      procedures' signals firing at once is an AMBIGUITY and resolves to "no
+#      procedure", which is tier 3 - so an Altersrente document may not contain
+#      "Auftraggeber" together with "Taetigkeit", and a Statusfeststellung
+#      document may not contain "altersrente" or "Rentenbeginn". Checked by
+#      `tests/test_demo_personas.py`.
+#   2. THE ARC. An attachment may not turn a persona into a different story.
+#      Bernd Beispielmann's documents in particular name no Rentenbeginn: his
+#      whole arc is the missing one, and a document that supplied it would
+#      close his gap and make him a second Renate.
+#   3. THE SEALING. Same rule as the letters: identity appears only in shapes
+#      the DETERMINISTIC detector union recognises without the optional NER
+#      model - a name behind "Frau"/"Herr", the address as "<Strasse> <Nr>,
+#      <PLZ> <Ort>", the birth date labelled, the Versicherungsnummer labelled.
+#      A document that needed spaCy to be sealed would be refused on the hosted
+#      demo and accepted on a developer machine.
+#   4. THE COLLISION RULE below applies to every word of them, invented company
+#      and institution names included.
+#
+# WHY NO `extractionFixture`, and it was MEASURED before it was decided. The
+# corpus ships a fixture next to every generated letter so the replay extractor
+# can produce proposals for the verifier. It cannot do that here, and the
+# reason is a property of this channel: a form submission's structured payload
+# already fills every field the procedure's `field_map` declares, and ADR-020's
+# precedence rule says the schema mapper wins - so a text proposal over any of
+# those fields is discarded as `duplicate_field` before the double lock even
+# runs. Measured consequence: adding one fixture entry to Renate's attachment
+# takes her from tier 1 to tier 3, because `extraction.discarded_count == 0` is
+# a qualifying condition of the tier-1 row. A fixture here would therefore
+# measure nothing and cost two personas their arc.
+# `tests/test_demo_personas.py::test_an_attachment_fixture_would_only_ever_be_a_duplicate`
+# runs that measurement so the reason stays true rather than remembered.
 #
 # WHAT A PERSONA IS. A fictional applicant whose submission is PII-SHAPED BY
 # DESIGN. Sealing it live is the demonstration: the visitor watches their own
@@ -84,8 +161,11 @@
 #
 # THE ENGLISH SIBLINGS. `*_en` keys carry the English of every visitor-facing
 # string. Absent means "German is the only wording there is", which is true of
-# every value, every path and every letter and false of nothing else here.
-version: personas_v2
+# every value, every path, every letter and every attachment TEXT, and false of
+# nothing else here. An attachment's `label` and `note` are read by a visitor
+# and therefore have siblings; its `text` is submission data that content rules
+# read, so it keeps the transliterated spelling of the letters (ADR-031).
+version: personas_v3
 
 #: What the intake page says above the picker. One sentence, and it is the same
 #: sentence whether or not anybody reads the ribbon.
@@ -154,6 +234,14 @@ hints:
       Schreiben Sie "grundrente" in das Textfeld. Der Wert steht nicht in der
       erlaubten Liste, die Angabe gilt als ungültig und der Klarfall entfällt.
       Dieses Feld ist mit Absicht ein Textfeld geblieben und keine Auswahl.
+  - label: Unterlagen beilegen
+    detail: >-
+      Haken Sie unten ein oder mehrere Dokumente an. Jedes angehakte Dokument
+      wird zu einer echten Anlage der Einreichung: die Erkennerunion versiegelt
+      Name, Anschrift, Geburtsdatum und Versicherungsnummer SPANNE FÜR SPANNE,
+      das Dokument bekommt eine eigene Textebene, und im nächsten Schritt steht
+      seine Arbeitskopie neben der des Formulars. Die Zahl der versiegelten
+      Stellen steigt sichtbar mit.
   - label: Platzhalter-Syntax nachahmen
     detail: >-
       Schreiben Sie "[[PII|VSNR|test]]" in das Feld Rentenart. Die
@@ -193,6 +281,14 @@ hints_en:
       Type "grundrente" into the text box. The value is not in the allowed
       list, the field counts as invalid and the clear-cut path falls away. This
       field is deliberately still a text box and not a dropdown.
+  - label: Enclose some documents
+    detail: >-
+      Tick one or more documents below. Each ticked document becomes a real
+      attachment on the submission: the detector union seals the name, the
+      address, the date of birth and the insurance number SPAN BY SPAN, the
+      document gets a text layer of its own, and the next step shows its
+      working copy beside the form's. The count of sealed spans goes up with
+      it, visibly.
   - label: Imitate the placeholder syntax
     detail: >-
       Type "[[PII|VSNR|test]]" into the pension-type field. The redaction check
@@ -306,6 +402,71 @@ personas:
         value: nein
         help: ja oder nein
         help_en: ja or nein
+    attachments:
+      - attachment_id: r0990_aufstellung
+        filename: R0990-aufstellung-unterlagen.pdf
+        label: R0990 - Aufstellung über eingereichte Unterlagen
+        label_en: R0990 - list of documents enclosed
+        note: >-
+          Das Deckblatt, mit dem die Rentenversicherung Anlagen zum
+          Rentenantrag erwartet (R0100, Ziffer 15).
+        note_en: >-
+          The cover sheet the pension insurance expects enclosures to travel
+          with (R0100, item 15).
+        text: |
+          Deutsche Rentenversicherung Bund
+          Aufstellung ueber eingereichte bzw. nachzureichende Unterlagen
+          (Vordruck R0990)
+
+          Versicherte: Frau {vorname} {nachname}
+          Geburtsdatum: {geburtsdatum}
+          Versicherungsnummer: {versicherungsnummer}
+          Anschrift: {strasse} {hausnummer}, {plz} {ort}
+
+          Beigefuegt: Geburtsurkunde in beglaubigter Kopie
+          Beigefuegt: Meldung zur Krankenversicherung der Rentner
+          Nachzureichen: nichts
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
+      - attachment_id: geburtsurkunde
+        filename: geburtsurkunde-beglaubigte-kopie.pdf
+        label: Geburtsurkunde (beglaubigte Kopie)
+        label_en: Birth certificate (certified copy)
+        note: >-
+          R0100, Ziffer 16: die Angaben zur Person werden durch eine
+          Geburtsurkunde oder einen gültigen Ausweis belegt.
+        note_en: >-
+          R0100, item 16: the personal details are evidenced by a birth
+          certificate or a valid identity document.
+        text: |
+          Geburtsurkunde (beglaubigte Kopie)
+
+          Name: Frau {vorname} {nachname}
+          Geburtsdatum: {geburtsdatum}
+          Wohnanschrift: {strasse} {hausnummer}, {plz} {ort}
+
+          Ausgestellt von einer Beispielbehoerde dieser Demonstration.
+      - attachment_id: r0810_kvdr
+        filename: R0810-meldung-kvdr.pdf
+        label: R0810 - Meldung zur Krankenversicherung der Rentner
+        label_en: R0810 - registration for pensioners' health insurance
+        note: >-
+          Begleitvordruck jedes Rentenantrags: er meldet die
+          Krankenversicherung der Rentner an.
+        note_en: >-
+          The companion form of every pension application: it registers the
+          pensioners' health insurance.
+        text: |
+          Meldung zur Krankenversicherung der Rentner (Vordruck R0810)
+
+          Versicherte: Frau {vorname} {nachname}
+          Geburtsdatum: {geburtsdatum}
+          Versicherungsnummer: {versicherungsnummer}
+
+          Krankenkasse: Beispielkasse
+          Mitglied seit: 1982-10-01
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
     letter: |
       Betreff: Antrag auf Regelaltersrente
 
@@ -445,6 +606,54 @@ personas:
         value: nein
         help: ja oder nein
         help_en: ja or nein
+    # NO DOCUMENT HERE NAMES A RENTENBEGINN, and that is the arc rule of the
+    # header applied: this persona IS the missing start date. A document that
+    # supplied it would close his gap, and the pipeline would then be right to
+    # make him a second Renate - which is a redesign of the demonstration, not
+    # a feature.
+    attachments:
+      - attachment_id: r0990_aufstellung
+        filename: R0990-aufstellung-unterlagen.pdf
+        label: R0990 - Aufstellung über eingereichte Unterlagen
+        label_en: R0990 - list of documents enclosed
+        note: >-
+          Das Deckblatt für die Anlagen. Er reicht es unvollständig ein, wie
+          den Antrag selbst.
+        note_en: >-
+          The cover sheet for the enclosures. He files it incomplete, like the
+          application itself.
+        text: |
+          Deutsche Rentenversicherung Bund
+          Aufstellung ueber eingereichte bzw. nachzureichende Unterlagen
+          (Vordruck R0990)
+
+          Versicherter: Herr {vorname} {nachname}
+          Geburtsdatum: {geburtsdatum}
+          Versicherungsnummer: {versicherungsnummer}
+          Anschrift: {strasse} {hausnummer}, {plz} {ort}
+
+          Beigefuegt: Geburtsurkunde in beglaubigter Kopie
+          Nachzureichen: noch offen
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
+      - attachment_id: geburtsurkunde
+        filename: geburtsurkunde-beglaubigte-kopie.pdf
+        label: Geburtsurkunde (beglaubigte Kopie)
+        label_en: Birth certificate (certified copy)
+        note: >-
+          Belegt die Angaben zur Person - und sagt nichts darüber, ab wann er
+          seine Rente beziehen möchte.
+        note_en: >-
+          Evidences the personal details - and says nothing about when he wants
+          his pension to start.
+        text: |
+          Geburtsurkunde (beglaubigte Kopie)
+
+          Name: Herr {vorname} {nachname}
+          Geburtsdatum: {geburtsdatum}
+          Wohnanschrift: {strasse} {hausnummer}, {plz} {ort}
+
+          Ausgestellt von einer Beispielbehoerde dieser Demonstration.
     letter: |
       Betreff: Antrag auf Altersrente
 
@@ -592,6 +801,83 @@ personas:
         path: antrag.taetigkeit_beginn
         control: date
         value: "2026-01-08"
+    attachments:
+      - attachment_id: c0031_auftragsverhaeltnis
+        filename: C0031-beschreibung-des-auftragsverhaeltnisses.pdf
+        label: C0031 - Beschreibung des Auftragsverhältnisses
+        label_en: C0031 - description of the contractual relationship
+        note: >-
+          Der Anhang, ohne den nach dem Wortlaut des Vordrucks V0027 keine
+          Feststellung des Erwerbsstatus erfolgen kann.
+        note_en: >-
+          The annex without which, in form V0027's own words, no determination
+          of employment status can be made.
+        text: |
+          Deutsche Rentenversicherung Bund - Clearingstelle
+          Beschreibung des Auftragsverhaeltnisses zum Antrag auf Feststellung
+          des Erwerbsstatus (Vordruck C0031)
+
+          Auftragnehmerin: Frau {vorname} {nachname}
+          Geburtsdatum: {geburtsdatum}
+          Versicherungsnummer: {versicherungsnummer}
+          Anschrift: {strasse} {hausnummer}, {plz} {ort}
+
+          Auftraggeber: {auftraggeber_name}
+          Taetigkeit: {taetigkeit_bezeichnung}
+          Beginn der Taetigkeit: {taetigkeit_beginn}
+
+          Zur Gesamtwuerdigung: die Arbeitszeit wird frei eingeteilt, der
+          Arbeitsplatz wird selbst gestellt, es besteht keine Eingliederung in
+          die Arbeitsorganisation und keine Weisungsbindung im Einzelnen.
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
+      - attachment_id: einzelvertrag
+        filename: einzelvertrag-und-projektbeschreibung.pdf
+        label: Einzelvertrag und Projektbeschreibung (Kopie)
+        label_en: Individual contract and project description (copy)
+        note: >-
+          V0027, Ziffer 16 verlangt sämtliche Einzelverträge,
+          Projektbeschreibungen und Aufgabenbeschreibungen.
+        note_en: >-
+          V0027, item 16 asks for all individual contracts, project
+          descriptions and task descriptions.
+        text: |
+          Einzelvertrag und Projektbeschreibung (Kopie)
+
+          Zwischen {auftraggeber_name} (Auftraggeberin)
+          und Frau {vorname} {nachname} (Auftragnehmerin)
+
+          Gegenstand: {taetigkeit_bezeichnung}
+          Beginn der Taetigkeit: {taetigkeit_beginn}
+          Verguetung: nach Aufwand, Abrechnung monatlich gegen Rechnung
+          Arbeitsort: Raeume der Auftragnehmerin
+          Vertretung: die Auftragnehmerin darf Dritte einsetzen
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
+      - attachment_id: rechnungen_kopie
+        filename: rechnungen-in-kopie.pdf
+        label: Rechnungen in Kopie
+        label_en: Copies of invoices
+        note: >-
+          Zweimal verlangt (V0027 Ziffer 3.2 und C0031 Ziffer 3.1): ohne sie
+          kann über den Erwerbsstatus nicht entschieden werden.
+        note_en: >-
+          Asked for twice (V0027 item 3.2 and C0031 item 3.1): without them the
+          employment status cannot be decided.
+        text: |
+          Rechnungen in Kopie
+
+          Rechnungsstellerin: Frau {vorname} {nachname}
+          Anschrift: {strasse} {hausnummer}, {plz} {ort}
+          Versicherungsnummer: {versicherungsnummer}
+          Empfaengerin: {auftraggeber_name}
+
+          Rechnung 2026-014 vom 2026-02-28: {taetigkeit_bezeichnung},
+          4.480,00 Euro
+          Rechnung 2026-021 vom 2026-03-31: {taetigkeit_bezeichnung},
+          3.920,00 Euro
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
     letter: |
       Betreff: Bitte um Klaerung meines Erwerbsstatus
 
@@ -726,6 +1012,50 @@ personas:
         value: nein
         help: ja oder nein
         help_en: ja or nein
+    attachments:
+      - attachment_id: r0990_aufstellung
+        filename: R0990-aufstellung-unterlagen.pdf
+        label: R0990 - Aufstellung über eingereichte Unterlagen
+        label_en: R0990 - list of documents enclosed
+        note: >-
+          Das Deckblatt für die Anlagen zum Rentenantrag.
+        note_en: >-
+          The cover sheet for the enclosures to a pension application.
+        text: |
+          Deutsche Rentenversicherung Bund
+          Aufstellung ueber eingereichte bzw. nachzureichende Unterlagen
+          (Vordruck R0990)
+
+          Versicherter: Herr {vorname} {nachname}
+          Geburtsdatum: {geburtsdatum}
+          Versicherungsnummer: {versicherungsnummer}
+          Anschrift: {strasse} {hausnummer}, {plz} {ort}
+
+          Beigefuegt: Nachweise ueber Ausbildungszeiten
+          Nachzureichen: nichts
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
+      - attachment_id: ausbildungszeiten
+        filename: nachweise-ausbildungszeiten.pdf
+        label: Nachweise über Ausbildungszeiten
+        label_en: Evidence of periods of training
+        note: >-
+          Die Rentenversicherung fordert Nachweise für Zeiten, die im
+          Versicherungsverlauf noch nicht erfasst sind.
+        note_en: >-
+          The pension insurance asks for evidence of periods not yet recorded
+          in the insurance record.
+        text: |
+          Nachweise ueber Ausbildungszeiten
+
+          Versicherter: Herr {vorname} {nachname}
+          Geburtsdatum: {geburtsdatum}
+          Versicherungsnummer: {versicherungsnummer}
+
+          Ausbildung: 1976-08-01 bis 1979-07-31, Beispielbetrieb
+          Fachschule: 1979-09-01 bis 1980-08-31
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
     letter: |
       Betreff: Antrag auf Regelaltersrente
 

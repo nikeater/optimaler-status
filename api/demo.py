@@ -74,6 +74,7 @@ from engine.demo.personas import (
     Persona,
     PersonaField,
     PersonaSet,
+    selected_attachments,
 )
 from engine.demo.store import DemoStore, DemoSubmission, TypedValue
 from engine.ingest.envelope import case_id_for
@@ -268,6 +269,23 @@ class FieldView:
 
 
 @dataclass(frozen=True)
+class AttachmentView:
+    """One prepared document, as the checkbox list renders it (part 20).
+
+    A view over :class:`~engine.demo.personas.PersonaAttachment` and nothing
+    more: the ticked state comes off the submitted form so a re-render after a
+    refusal keeps the visitor's own selection, exactly as the field values do.
+    """
+
+    attachment_id: str
+    field_name: str
+    label: str
+    filename: str
+    note: str
+    checked: bool
+
+
+@dataclass(frozen=True)
 class IntakeView:
     """Everything the intake template renders."""
 
@@ -276,6 +294,7 @@ class IntakeView:
     persona: Persona
     channel: str
     rows: tuple[tuple[FieldView, ...], ...]
+    attachments: tuple[AttachmentView, ...]
     body: str
     note: str
     hints: tuple[tuple[str, str], ...]
@@ -504,6 +523,29 @@ def field_rows(
     return tuple(tuple(row) for row in rows)
 
 
+def attachment_views(
+    persona: Persona, values: Mapping[str, str], *, page: PageContext
+) -> tuple[AttachmentView, ...]:
+    """This persona's prepared documents, in one language, with their state.
+
+    Every document the persona has, always - the list is what the visitor
+    CHOOSES from, so hiding an unticked one would leave a page that could not
+    offer what it just took away on a re-render.
+    """
+    ticked = {entry.attachment_id for entry in selected_attachments(persona, values)}
+    return tuple(
+        AttachmentView(
+            attachment_id=entry.attachment_id,
+            field_name=entry.field_name,
+            label=entry.label_for(page.lang),
+            filename=entry.filename,
+            note=entry.note_for(page.lang),
+            checked=entry.attachment_id in ticked,
+        )
+        for entry in persona.attachments
+    )
+
+
 def build_intake_view(
     posture: DemoPosture,
     personas: PersonaSet,
@@ -520,12 +562,14 @@ def build_intake_view(
     """The intake page for one persona, one channel and whatever was typed."""
     context = page or GERMAN
     persona = personas.get(persona_id) or default_persona(personas)
+    submitted = dict(values or {})
     return IntakeView(
         posture=posture,
         personas=ordered_personas(personas),
         persona=persona,
         channel=resolve_channel(channel),
-        rows=field_rows(persona, dict(values or {}), config=config, page=context),
+        rows=field_rows(persona, submitted, config=config, page=context),
+        attachments=attachment_views(persona, submitted, page=context),
         body=persona.letter if body is None else body,
         note=personas.note_for(context.lang),
         hints=personas.hints_for(context.lang),

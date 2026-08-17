@@ -38,6 +38,7 @@ from engine.demo.personas import (
     build_letter_submission,
     demo_personas,
     load_personas,
+    selected_attachments,
 )
 from engine.journal import InMemoryJournalStore
 from engine.pipeline import PipelineResult, run_pipeline
@@ -80,7 +81,7 @@ def run(
 
 def test_the_shipped_persona_file_loads_and_covers_the_four_arcs() -> None:
     personas = demo_personas()
-    assert personas.version == "personas_v2"
+    assert personas.version == "personas_v3"
     assert {persona.persona_id for persona in personas.personas} == set(FORM_ARCS)
     assert personas.note
     assert len(personas.hints) >= 3
@@ -124,6 +125,39 @@ def test_an_unknown_persona_id_is_none_and_never_an_error() -> None:
             "a field is not a mapping",
         ),
         ("version: x\npersonas: [nope]\n", "a persona is not a mapping"),
+        # Part 20: an attachment that could not be rendered, in every way it
+        # could fail. All of them are LOAD errors rather than render-time ones,
+        # because the alternative is a visitor being shown a document with
+        # `{versicherungsnummer}` printed in it.
+        (
+            "version: x\npersonas: [{persona_id: p, letter: hi, "
+            "fields: [{field_id: a, path: b.c}], attachments: nope}]\n",
+            "attachments is not a list",
+        ),
+        (
+            "version: x\npersonas: [{persona_id: p, letter: hi, "
+            "fields: [{field_id: a, path: b.c}], attachments: [nope]}]\n",
+            "an attachment is not a mapping",
+        ),
+        (
+            "version: x\npersonas: [{persona_id: p, letter: hi, "
+            "fields: [{field_id: a, path: b.c}], "
+            "attachments: [{attachment_id: d, text: x}]}]\n",
+            "needs an attachment_id, a filename and a label",
+        ),
+        (
+            "version: x\npersonas: [{persona_id: p, letter: hi, "
+            "fields: [{field_id: a, path: b.c}], "
+            "attachments: [{attachment_id: d, filename: d.pdf, label: D}]}]\n",
+            "has no text",
+        ),
+        (
+            "version: x\npersonas: [{persona_id: p, letter: hi, "
+            "fields: [{field_id: a, path: b.c, value: v}], "
+            "attachments: [{attachment_id: d, filename: d.pdf, label: D, "
+            "text: 'Nummer: {gibtesnicht}'}]}]\n",
+            "which is not one of this persona's fields",
+        ),
     ],
 )
 def test_a_persona_file_that_would_render_wrong_is_refused(
@@ -284,9 +318,314 @@ def test_the_persona_file_is_not_read_by_the_config_loader(
     stamp = config.version_stamp().model_dump(mode="json")
     assert "personas" not in json.dumps(stamp)
     document = yaml.safe_load(
-        Path("config/demo/personas_v2.yaml").read_text(encoding="utf-8")
+        Path("config/demo/personas_v3.yaml").read_text(encoding="utf-8")
     )
-    assert document["version"] == "personas_v2"
+    assert document["version"] == "personas_v3"
+    # Only the current version stays on disk - the house rule for a superseded
+    # versioned file, and the reason a reader never has to ask which one is live.
+    assert sorted(p.name for p in Path("config/demo").glob("personas_*.yaml")) == [
+        "personas_v3.yaml"
+    ]
+
+
+# --------------------------------------------------- the prepared documents ---
+
+
+def attachment_texts() -> list[tuple[str, str]]:
+    """Every rendered document text, with the persona it belongs to."""
+    return [
+        (f"{persona.persona_id}.{entry.attachment_id}", entry.text)
+        for persona in demo_personas().personas
+        for entry in persona.attachments
+    ]
+
+
+def frozen_identity_values() -> set[str]:
+    """Every identity string the two frozen sets hold, long enough to search.
+
+    The mirror image of :func:`frozen_text`. That function asks "does a persona
+    value occur in a frozen set"; this one is for the new direction part 20
+    opens: an attachment text is PROSE somebody wrote, and prose is where a
+    canary string could be copied in by accident.
+    """
+    values: set[str] = set()
+    document = yaml.safe_load(
+        Path("corpus/pii_golden/items.yaml").read_text(encoding="utf-8")
+    )
+    for item in document.get("items") or []:
+        text = str(item.get("text", ""))
+        for label in item.get("labels") or []:
+            piece = text[int(label["start"]) : int(label["end"])].strip()
+            if len(piece) >= 4:
+                values.add(piece)
+    for directory in sorted(Path("corpus/gold").iterdir()):
+        if not directory.is_dir():
+            continue
+        for path in sorted(directory.glob("*.json")):
+            payload = json.loads(path.read_text(encoding="utf-8"))
+            applicant = (payload.get("data") or {}).get("antragsteller") or {}
+            address = applicant.get("anschrift") or {}
+            for value in (
+                applicant.get("name"),
+                applicant.get("versicherungsnummer"),
+                address.get("strasse"),
+                address.get("ort"),
+            ):
+                piece = str(value or "").strip()
+                if len(piece) >= 4:
+                    values.add(piece)
+    return values
+
+
+def test_every_persona_brings_two_to_four_recognisable_documents() -> None:
+    """The shape of the offer, and the two halves of "honestly labelled".
+
+    A document has a NAME a German caseworker recognises and a FILE NAME that
+    says PDF, because the fieldset presents them as the enclosures they stand
+    for. Both are asserted here rather than eyeballed, along with the English
+    siblings every visitor-facing string in this file has to have.
+    """
+    for persona in demo_personas().personas:
+        assert 2 <= len(persona.attachments) <= 4, persona.persona_id
+        ids = [entry.attachment_id for entry in persona.attachments]
+        assert len(set(ids)) == len(ids), persona.persona_id
+        for entry in persona.attachments:
+            where = f"{persona.persona_id}.{entry.attachment_id}"
+            assert entry.filename.endswith(".pdf"), where
+            assert entry.label and entry.label_en, where
+            assert entry.label_en != entry.label, where
+            assert entry.note and entry.note_en, where
+            assert entry.note_en != entry.note, where
+            assert entry.label_for("en") == entry.label_en
+            assert entry.label_for("de") == entry.label
+            assert entry.note_for("en") == entry.note_en
+            assert entry.note_for("de") == entry.note
+            assert entry.field_name == f"anlage-{entry.attachment_id}"
+            assert persona.attachment(entry.attachment_id) is entry
+        assert persona.attachment("keine-solche-anlage") is None
+
+
+def test_a_document_is_rendered_from_its_own_personas_values() -> None:
+    """Deterministic by construction, which is what makes it recordable.
+
+    The text is a template over the persona's own field ids, substituted once
+    at load time. Two things follow and both are checked: nothing unresolved
+    survives into a document a visitor is shown, and the values in it are that
+    persona's own rather than a copy that could drift from the form beside it.
+    """
+    for persona in demo_personas().personas:
+        for entry in persona.attachments:
+            where = f"{persona.persona_id}.{entry.attachment_id}"
+            assert "{" not in entry.text and "}" not in entry.text, where
+            for field_id in ("nachname", "vorname"):
+                field = persona.field(field_id)
+                assert field is not None
+                assert field.value in entry.text, f"{where}: {field_id}"
+
+
+def test_no_document_makes_a_second_procedure_fire() -> None:
+    """The derivation rule of the config header, asserted over the text.
+
+    ``text.normalized`` is where the content signals of the procedure configs
+    are read, and two procedures matching at once is an AMBIGUITY that resolves
+    to "no procedure" and therefore to tier 3 (ADR-013). A document that named
+    a Rentenbeginn on a Statusfeststellung, or an Auftraggeber and a Taetigkeit
+    on an Altersrente, would take its persona's arc away - so the words that
+    would do it are listed here rather than left to a reviewer's memory.
+
+    ``contains`` and ``matches`` are case-insensitive, so the check is too.
+    """
+    forbidden = {
+        "altersrente": ("statusfeststellung", "erwerbsstatus", "par. 7a"),
+        "statusfeststellung": ("altersrente", "rentenbeginn"),
+    }
+    everywhere = ("erwerbsminderungsrente", "eintritt der erwerbsminderung")
+    for persona in demo_personas().personas:
+        # Which procedure this persona IS, by the same two facts the pipeline
+        # uses: the channel hint, or the payload signals of the form.
+        procedure = persona.procedure_hint or "statusfeststellung"
+        for entry in persona.attachments:
+            lowered = entry.text.lower()
+            where = f"{persona.persona_id}.{entry.attachment_id}"
+            for word in (*forbidden.get(procedure, ()), *everywhere):
+                assert word not in lowered, f"{where} says {word!r}"
+            if procedure != "statusfeststellung":
+                assert not ("auftraggeber" in lowered and "taetigkeit" in lowered), (
+                    f"{where} names an Auftraggeber and a Taetigkeit together, "
+                    "which is the statusfeststellung content signal"
+                )
+
+
+def test_no_document_text_collides_with_a_frozen_set() -> None:
+    """The collision rule, in the direction an attachment opens.
+
+    A document is prose, and prose is where a canary string gets copied in by
+    accident. The invented institutions in these texts (a Beispielkasse, a
+    Beispielbetrieb) are Mustermann-class for the same reason the people are.
+    """
+    frozen = frozen_identity_values()
+    assert "11040650L949" in frozen, "the pii_golden canaries must be in scope"
+    assert "17170459B012" in frozen, "the gold corpus must be in scope"
+    for where, text in attachment_texts():
+        for value in frozen:
+            assert value not in text, f"{where} carries the frozen value {value!r}"
+
+
+def test_every_document_seals_clean_without_the_optional_model(
+    config: ConfigBundle,
+) -> None:
+    """The letter rule of the config header, extended to the documents.
+
+    Same reason, one step sharper: the hosted image ships without the
+    ``[redact]`` extra, so a document whose sealing needed spaCy would be
+    refused by the boundary there and accepted here. Every persona's whole set
+    is ticked at once, which is also the worst case for the sweep.
+    """
+    for persona in demo_personas().personas:
+        result, _ = run(config, _form(persona.persona_id, attachments=True))
+        assert result.envelope.redaction_verified is True, persona.persona_id
+        text = "".join(part.redacted_text or "" for part in result.envelope.parts)
+        assert text, f"{persona.persona_id}: no free-text part was produced"
+        for field in persona.fields:
+            if field.identity and len(field.value) >= 4:
+                assert field.value not in text, (
+                    f"{persona.persona_id}: {field.field_id} survived into a "
+                    "document's working copy"
+                )
+
+
+def test_a_ticked_document_becomes_a_real_part_of_the_envelope(
+    config: ConfigBundle,
+) -> None:
+    """Not a label on a page: a part the whole pipeline runs over.
+
+    The submission carries the attachment in the shape ``engine/ingest`` reads
+    (``text`` plus a ``sourceType``), the envelope grows one free-text
+    ContentPart per document plus one RawRef naming the file, and the sealing
+    counts are reported per part. Born-digital rather than OCR, because that
+    decides whether a span is verified exactly or fuzzily.
+    """
+    persona = _persona("mustermann_regelaltersrente")
+    ticked = persona.attachments[0]
+    payload = build_form_submission(
+        persona,
+        {**persona.form_values(), ticked.field_name: "1"},
+        submission_id="demo-anlage",
+        submitted_at=NOW.isoformat(),
+    )
+    assert payload["attachments"] == [
+        {
+            "id": ticked.attachment_id,
+            "filename": ticked.filename,
+            "mediaType": "application/pdf",
+            "sourceType": "born_digital",
+            "text": ticked.text,
+        }
+    ]
+    # An unticked box posts nothing, and nothing ticked is the pre-part-20
+    # submission byte for byte.
+    assert (
+        build_form_submission(
+            persona,
+            persona.form_values(),
+            submission_id="demo-anlage",
+            submitted_at=NOW.isoformat(),
+        )["attachments"]
+        == []
+    )
+
+    result, _ = run(config, payload)
+    parts = [part for part in result.envelope.parts if part.redacted_text is not None]
+    assert [part.part_id for part in parts] == ["part-text-0"]
+    assert parts[0].source_type.value == "born_digital"
+    assert parts[0].media_type == "text/plain"
+    assert [ref.filename for ref in result.envelope.raw_refs if ref.filename] == [
+        ticked.filename
+    ]
+    assert result.redaction is not None
+    assert result.redaction.text_sealed_counts["part-text-0"] > 0
+    # The text layer really was built over it, which is what makes a span in it
+    # verifiable at all.
+    assert result.text_layer is not None
+    assert [part.part_id for part in result.text_layer.parts] == ["part-text-0"]
+
+
+def test_a_checkbox_for_a_document_a_persona_does_not_have_is_ignored() -> None:
+    """The same "never half-select something" rule the pickers follow."""
+    persona = _persona("mustermann_regelaltersrente")
+    values = {
+        **persona.form_values(),
+        "anlage-gibt-es-nicht": "1",
+        # An unticked box posts nothing; a blank one is not a tick either.
+        persona.attachments[0].field_name: "",
+    }
+    assert selected_attachments(persona, values) == ()
+    payload = build_form_submission(
+        persona, values, submission_id="demo-x", submitted_at=NOW.isoformat()
+    )
+    assert payload["attachments"] == []
+    assert "gibt-es-nicht" not in json.dumps(payload)
+
+
+def test_the_documents_are_offered_in_the_order_the_file_lists_them() -> None:
+    """Ticking a subset keeps that order, because a reader reads a list."""
+    persona = _persona("musterfrau_statusfeststellung")
+    first, _second, third = persona.attachments
+    chosen = selected_attachments(
+        persona,
+        {third.field_name: "1", first.field_name: "1"},
+    )
+    assert [entry.attachment_id for entry in chosen] == [
+        first.attachment_id,
+        third.attachment_id,
+    ]
+
+
+def test_an_attachment_fixture_would_only_ever_be_a_duplicate(
+    config: ConfigBundle,
+) -> None:
+    """WHY THE DOCUMENTS CARRY NO ``extractionFixture``, measured rather than said.
+
+    The corpus ships a fixture next to every generated letter so the replay
+    extractor can hand the verifier proposals. It cannot do that on this
+    channel, and the reason is structural: a form submission's payload already
+    fills every field the procedure's ``field_map`` declares, and ADR-020's
+    precedence rule says the schema mapper wins - so a text proposal over any
+    of them is discarded as ``duplicate_field`` BEFORE the double lock runs.
+
+    The cost is not theoretical either. ``extraction.discarded_count == 0`` is
+    a qualifying condition of the tier-1 row, so one such entry takes a
+    complete persona from tier 1 to the default tier 3. A fixture here would
+    measure nothing and cost two personas their arc, which is why there is
+    none - and this test is the measurement, so the reason stays true.
+    """
+    persona = _persona("mustermann_regelaltersrente")
+    ticked = persona.attachments[0]
+    payload = build_form_submission(
+        persona,
+        {**persona.form_values(), ticked.field_name: "1"},
+        submission_id="demo-fixture-probe",
+        submitted_at=NOW.isoformat(),
+    )
+    payload["extractionFixture"] = [
+        {
+            "field": "versicherungsnummer",
+            "part_id": "part-text-0",
+            "anchor": "Versicherungsnummer:",
+            "mode": "sealed",
+        }
+    ]
+    result, _ = run(config, payload)
+    assert result.extraction is not None
+    assert result.extraction.failure_counts() == {"duplicate_field": 1}
+    assert result.extractions.discarded_count == 1
+    assert int(result.decision.tier) == 3
+    # And without the fixture the same submission is the tier-1 arc it always
+    # was, so the discard is what moved it and nothing else.
+    del payload["extractionFixture"]
+    unfixed, _ = run(config, payload)
+    assert int(unfixed.decision.tier) == 1
+    assert unfixed.extractions.discarded_count == 0
 
 
 # ------------------------------------------------------------- the arcs ---
@@ -314,6 +653,53 @@ def test_each_persona_produces_its_arc_through_the_form(
     assert result.envelope.redaction_verified is True
     assert result.redaction is not None
     assert result.redaction.sealed_count >= 4
+
+
+@pytest.mark.parametrize("persona_id", sorted(FORM_ARCS))
+def test_enclosing_every_document_leaves_the_arc_where_it_was(
+    config: ConfigBundle, persona_id: str
+) -> None:
+    """Part 20's arc decision, and it IS a decision rather than a coincidence.
+
+    Attachments add evidence, and evidence is allowed to move a case. What was
+    decided for these four is that it must not: each persona exists to
+    demonstrate ONE thing, and a demo where enclosing the documents an agency
+    asks for makes the case worse would teach the opposite of what it means.
+    The documents were designed against that - none of them names a field its
+    persona's form does not already carry, and none of them carries a fixture
+    (see the test above for the measurement) - so procedure, tier, unit and
+    flag are the same with every box ticked as with none.
+
+    What DOES move is the part the demonstration is about and it is asserted
+    here in the same breath: more free-text parts, more sealed spans, per-part
+    counts where there were none. The one number that moves without changing an
+    arc is Bernd Beispielmann's anomaly score (0.109 -> 0.505, threshold 0.86):
+    an item with prose in it is a rarer shape than a bare form, the scorer says
+    so, and the flag stays off. That is the scorer being honest, not a defect.
+    """
+    persona = demo_personas().get(persona_id)
+    assert persona is not None
+    bare, _ = run(config, _form(persona_id))
+    laden, _ = run(config, _form(persona_id, attachments=True))
+
+    procedure, tier, unit, flagged = FORM_ARCS[persona_id]
+    assert laden.procedure_id == procedure
+    assert int(laden.decision.tier) == tier
+    assert laden.decision.routed_unit_id == unit
+    assert (laden.anomaly is not None and laden.anomaly.flagged) is flagged
+    assert laden.derivation.source == bare.derivation.source
+    assert laden.clear_cut is bare.clear_cut
+    assert laden.evidence.completeness.verdict == bare.evidence.completeness.verdict
+    assert [gap.requirement_id for gap in laden.evidence.completeness.gaps] == [
+        gap.requirement_id for gap in bare.evidence.completeness.gaps
+    ]
+    assert laden.extractions.discarded_count == bare.extractions.discarded_count
+
+    assert laden.redaction is not None and bare.redaction is not None
+    assert laden.redaction.sealed_count > bare.redaction.sealed_count
+    assert len(laden.redaction.text_sealed_counts) == len(persona.attachments)
+    assert bare.redaction.text_sealed_counts == {}
+    assert all(count > 0 for count in laden.redaction.text_sealed_counts.values())
 
 
 def test_the_tier_one_persona_is_complete_and_clear_cut(config: ConfigBundle) -> None:
@@ -591,11 +977,14 @@ def _persona(persona_id: str) -> Persona:
     return persona
 
 
-def _form(persona_id: str) -> dict[str, object]:
+def _form(persona_id: str, *, attachments: bool = False) -> dict[str, object]:
     persona = _persona(persona_id)
+    values = dict(persona.form_values())
+    if attachments:
+        values.update({entry.field_name: "1" for entry in persona.attachments})
     return build_form_submission(
         persona,
-        persona.form_values(),
+        values,
         submission_id=f"demo-{persona_id}",
         submitted_at=NOW.isoformat(),
     )
