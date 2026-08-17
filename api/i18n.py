@@ -1408,13 +1408,16 @@ TABLE: dict[str, tuple[str, str]] = {
         "before. Everything after that - derivation, extraction, rules, "
         "decision, scorer - read this version and nothing else.",
     ),
-    "pipeline.b.kinds.caption": (
-        "Was im Fließtext versiegelt wurde, nach Art. Werte erscheinen hier nie.",
-        "What was sealed out of the prose, by kind. Values never appear here.",
+    # Part 20 renamed these three from `pipeline.b.kinds.*` and dropped a
+    # fourth. The table counts spans PER TEXT PART and always did; calling its
+    # first column "Art" made the citizen page ask for `kind.part-text-0` and
+    # print the key. See `api/review.py::sealed_text_parts`.
+    "pipeline.b.parts.caption": (
+        "Wie viele Stellen je Textteil versiegelt wurden. Werte erscheinen hier nie.",
+        "How many spans were sealed in each text part. Values never appear here.",
     ),
-    "pipeline.b.kinds.col1": ("Art", "Kind"),
-    "pipeline.b.kinds.col2": ("Bedeutung", "Meaning"),
-    "pipeline.b.kinds.col3": ("Anzahl", "Count"),
+    "pipeline.b.parts.col1": ("Textteil", "Text part"),
+    "pipeline.b.parts.col2": ("Versiegelte Stellen", "Sealed spans"),
     "pipeline.c.heading": ("c) Extraktion", "c) Extraction"),
     "pipeline.c.body": (
         "Jetzt wird gelesen, was in der Arbeitskopie steht - und jede gefundene "

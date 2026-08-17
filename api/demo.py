@@ -16,14 +16,16 @@ Three pages, all demo-mode-only, all server-rendered like everything else here.
     caseworker surface instead of a case that is not there.
 
 ``/demo/antrag``
-    The intake surface. A persona picker over ``config/demo/personas_v2.yaml``,
-    an EDITABLE prefilled form (Formular tab) or an editable prose letter
-    (E-Mail tab), and a panel that suggests what to break. The submission goes
+    The intake surface. A persona picker over ``config/demo/personas_v3.yaml``,
+    an EDITABLE prefilled form, the prepared documents that persona may enclose,
+    and a panel that suggests what to break. The submission goes
     through the app's own ``run_ingest`` - the same sealing, the same
     validation, the same journal as ``POST /ingest`` - with the deployment's
     ingest token presented server-side. The raw endpoint keeps its 403 posture
     for direct callers; what changes is who is holding the token, not what the
-    gate does.
+    gate does. Since part 20 there is one channel and no chooser
+    (:data:`OFFERED_CHANNELS`), every prefilled field is a required field
+    (:func:`required_for`), and a ticked document becomes a real attachment.
 
 ``/demo/case/{case_id}/pipeline``
     The glass pipeline. Seven stages, one plain sentence each in the
@@ -61,7 +63,7 @@ from api.review import (
     anomaly_reason_lines,
     channel_label,
     clearing_label,
-    sealed_kinds,
+    sealed_text_parts,
     tier_label,
     unit_name,
 )
@@ -672,7 +674,7 @@ class PipelineView:
     parts: tuple[PartView, ...]
     pairings: tuple[Pairing, ...]
     echo_body: str
-    sealed_kinds: tuple[tuple[str, str, int], ...]
+    sealed_text_parts: tuple[tuple[str, int], ...]
     anomaly_reasons: tuple[ReasonLine, ...]
     notifications: tuple[OutboxEntry, ...]
     queue_id: str
@@ -747,7 +749,7 @@ def build_pipeline_view(
         parts=tuple(_part_views(held)),
         pairings=_pairings(held),
         echo_body=held.echo_body if held else "",
-        sealed_kinds=sealed_kinds(state),
+        sealed_text_parts=sealed_text_parts(state),
         anomaly_reasons=anomaly_reason_lines(state),
         notifications=tuple(outbox.entries(case_id)),
         queue_id=unit_id or CLEARING_QUEUE,

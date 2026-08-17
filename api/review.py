@@ -78,26 +78,6 @@ SAMPLED_NOTE = (
 #: pages ask :func:`tier_label` for the reader's language.
 TIER_LABELS = {tier: phrase(f"tier.{tier}") for tier in (1, 2, 3)}
 
-#: What a sealed kind stood for, in words. The working copy shows placeholders
-#: and this is how a caseworker knows what one replaced.
-KIND_LABELS = {
-    kind: phrase(f"kind.{kind}")
-    for kind in (
-        "VSNR",
-        "GEBDAT",
-        "ADDR",
-        "NAME",
-        "ORG",
-        "BNR",
-        "IBAN",
-        "STID",
-        "AKTZ",
-        "EMAIL",
-        "TEL",
-        "TEXT",
-    )
-}
-
 #: The clearing queue's label. Passed EXPLICITLY wherever a queue is built, so
 #: the overview and the queue page cannot show two spellings of one queue.
 CLEARING_LABEL_KEY = "queue.clearing"
@@ -232,7 +212,7 @@ class CaseView:
     unit_id: str | None
     unit_name: str
     now: datetime
-    sealed_kinds: tuple[tuple[str, str, int], ...] = ()
+    sealed_text_parts: tuple[tuple[str, int], ...] = ()
     anomaly_reasons: tuple[ReasonLine, ...] = ()
     classifier_ranking: tuple[dict[str, Any], ...] = ()
     drafts: tuple[DraftRecord, ...] = ()
@@ -391,7 +371,7 @@ def build_case_view(
         unit_id=unit_id,
         unit_name=unit_name(config, unit_id),
         now=moment,
-        sealed_kinds=sealed_kinds(state),
+        sealed_text_parts=sealed_text_parts(state),
         anomaly_reasons=anomaly_reason_lines(state),
         classifier_ranking=_ranking(state),
         drafts=() if drafts is None or gated else tuple(drafts.records(case_id)),
@@ -433,16 +413,31 @@ def _summary(queue: Queue) -> QueueSummary:
     )
 
 
-def sealed_kinds(state: ReviewState) -> tuple[tuple[str, str, int], ...]:
-    """What the boundary sealed out of this case's prose, by kind and count.
+def sealed_text_parts(state: ReviewState) -> tuple[tuple[str, int], ...]:
+    """How many spans the boundary sealed out of each free-text PART.
 
-    Public because part 13's citizen-facing pipeline view shows the same three
-    columns to the applicant, and two functions producing "an Aktenzeichen
-    stood here" would be two vocabularies for one fact.
+    Public because part 13's citizen-facing pipeline view shows the same table
+    to the applicant, and two functions counting one fact would be two
+    vocabularies for it.
+
+    **Renamed and re-shaped in part 20, and the reason is a defect a browser
+    walk found.** It used to be called ``sealed_kinds`` and to look every key
+    up in a table of kind labels, but ``text_sealed_counts`` has never been keyed
+    by kind: ``engine/redact/boundary.py`` counts spans PER PART and journals
+    it that way. On the caseworker page the lookup fell through to its own
+    fallback and printed the part id twice under a heading that said "Art";
+    on the citizen page, which translates that column, it printed the raw key
+    ``kind.part-text-0``. The counts were right the whole time - only what they
+    were called was wrong, and the honest table has two columns rather than a
+    third that restates the first.
+
+    Until part 20 this could only be seen on the e-mail tab, because a form
+    submission had no free-text part at all. Attachments give every submission
+    one, which is what put the table in front of a reader.
     """
     return tuple(
-        (kind, KIND_LABELS.get(kind, kind), count)
-        for kind, count in sorted(state.case.text_sealed_counts.items())
+        (part_id, count)
+        for part_id, count in sorted(state.case.text_sealed_counts.items())
         if count
     )
 

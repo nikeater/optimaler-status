@@ -103,20 +103,19 @@
   {% endfor %}
   {% endif %}
 
-  {% if view.sealed_kinds %}
+  {% if view.sealed_text_parts %}
   <div class="scroll-x">
     <table>
-      <caption>{{ t("pipeline.b.kinds.caption") }}</caption>
+      <caption>{{ t("pipeline.b.parts.caption") }}</caption>
       <thead>
         <tr>
-          <th scope="col">{{ t("pipeline.b.kinds.col1") }}</th>
-          <th scope="col">{{ t("pipeline.b.kinds.col2") }}</th>
-          <th scope="col">{{ t("pipeline.b.kinds.col3") }}</th>
+          <th scope="col">{{ t("pipeline.b.parts.col1") }}</th>
+          <th scope="col">{{ t("pipeline.b.parts.col2") }}</th>
         </tr>
       </thead>
       <tbody>
-        {% for kind, label, count in view.sealed_kinds %}
-        <tr><th scope="row"><code>{{ kind }}</code></th><td>{{ t("kind." ~ kind) }}</td><td>{{ count }}</td></tr>
+        {% for part_id, count in view.sealed_text_parts %}
+        <tr><th scope="row"><code>{{ part_id }}</code></th><td>{{ count }}</td></tr>
         {% endfor %}
       </tbody>
     </table>

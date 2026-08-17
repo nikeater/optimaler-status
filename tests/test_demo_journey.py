@@ -884,6 +884,57 @@ def test_a_ticked_document_follows_the_case_into_the_pipeline_view(
     assert "part-text-0" in case_page.text
 
 
+def test_the_sealed_span_table_counts_parts_and_says_so(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A defect part 20's browser walk found, pinned so it cannot come back.
+
+    ``text_sealed_counts`` is keyed by PART - the boundary counts spans per
+    part and journals it that way - and the projection that renders it used to
+    be called ``sealed_kinds`` and to look every key up in a table of kind
+    labels. On the caseworker page that fell through to its own fallback and
+    printed the part id twice; on the citizen page, which translates that
+    column, it printed the raw key ``kind.part-text-0`` at a reader.
+
+    Until this part it could only be seen on the e-mail tab. Attachments give
+    every submission a free-text part, so the table is now on the page a
+    visitor lands on - which is how looking at it found this.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    chosen = persona("musterfrau_statusfeststellung")
+    case_id = submit(
+        client,
+        {
+            **form_data(chosen.persona_id),
+            **{entry.field_name: "1" for entry in chosen.attachments},
+        },
+    )
+    page = client.get(f"/demo/case/{case_id}/pipeline").text
+    assert "kind.part-text" not in page, "a raw translation key reached a reader"
+    assert phrase("pipeline.b.parts.caption") in page
+    assert phrase("pipeline.b.parts.col1") in page
+    assert phrase("pipeline.b.parts.col2") in page
+
+    view = demo_view.build_pipeline_view(
+        client.app.state.journal,  # type: ignore[attr-defined]
+        config=config,
+        case_id=case_id,
+        outbox=client.app.state.outbox,  # type: ignore[attr-defined]
+        store=client.app.state.demo_store,  # type: ignore[attr-defined]
+    )
+    assert view is not None
+    assert [part_id for part_id, _count in view.sealed_text_parts] == [
+        f"part-text-{index}" for index in range(len(chosen.attachments))
+    ]
+    assert all(count > 0 for _part_id, count in view.sealed_text_parts)
+
+    # The caseworker page reads the SAME projection, which is why it was worth
+    # fixing once rather than twice.
+    case_page = client.get(f"/review/case/{case_id}?unit=Referat_340_Clearingstelle")
+    assert "Versiegelte Stellen" in case_page.text
+    assert "part-text-0" in case_page.text
+
+
 def test_the_selection_survives_a_refusal_like_every_other_answer(
     config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -930,8 +981,18 @@ def test_the_red_state_is_css_over_a_state_the_browser_maintains() -> None:
     # The edge is the element colour, the words are the text colour - the
     # split the palette reserves, and `tests/test_review_accessibility.py`
     # enforces the second half over every stylesheet.
-    edge = re.search(r"input:user-invalid[^{]*\{([^}]*)\}", rules)
+    edge = re.search(r'input\[type="text"\]:user-invalid[^{]*\{([^}]*)\}', rules)
     assert edge and "border-color: var(--alarm)" in edge.group(1)
+    # SPECIFICITY AND ORDER, pinned because a browser walk found them wrong.
+    # A bare `input:user-invalid` loses to `input[type="text"]:focus`, and the
+    # browser focuses the field it stopped at - so the one field the visitor is
+    # looking at was the one that stayed blue. The invalid rules match the
+    # focus rules' shape and come after them.
+    assert rules.index('input[type="text"]:focus') < rules.index(
+        'input[type="text"]:user-invalid'
+    ), "the focus rule must not out-order the invalid rule"
+    for control in ('input[type="date"]', "select", "textarea"):
+        assert f"{control}:user-invalid" in rules, control
     sentence = re.search(r"\.field-error\s*\{([^}]*)\}", rules)
     assert sentence and "color: var(--alarm-text)" in sentence.group(1)
     assert "display: none" in sentence.group(1), "the sentence must be pre-rendered"

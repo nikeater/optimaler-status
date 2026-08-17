@@ -1480,8 +1480,20 @@ textarea:focus {
    white) draws the EDGE, `--alarm-text` (9.34:1) carries the WORDS. No new
    pair enters the project here. And colour is never the only carrier: every
    required field has a pre-rendered sentence underneath it that the rule at
-   the bottom reveals, so the state has words as well as a tone. */
-input:user-invalid,
+   the bottom reveals, so the state has words as well as a tone.
+
+   THE SELECTOR LIST IS SPELLED OUT PER CONTROL and this block sits AFTER the
+   focus rules, which is a finding from the browser walk rather than a style.
+   A bare `input:user-invalid` is specificity 0-1-1 and the control's own focus
+   rule is `input[type="text"]:focus` at 0-2-1, so the blue focus edge won -
+   and the browser moves focus TO the field it stopped at, which means the one
+   field a visitor is looking at was the one field that was not red. Matching
+   the focus rules' shape and coming after them makes an invalid field red
+   whether it is focused or not. The focus INDICATOR is untouched: it is an
+   `outline` on `:focus-visible` and measures 7.62:1 against this tint. */
+input[type="text"]:user-invalid,
+input[type="number"]:user-invalid,
+input[type="date"]:user-invalid,
 select:user-invalid,
 textarea:user-invalid {
   border-color: var(--alarm);

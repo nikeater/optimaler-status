@@ -87,14 +87,14 @@
       {% else %}nicht bestanden oder nicht protokolliert{% endif %}
     </dd>
   </dl>
-  {% if view.sealed_kinds %}
+  {% if view.sealed_text_parts %}
   <div class="scroll-x">
     <table>
-      <caption>Was im Fließtext versiegelt wurde, nach Art. Werte erscheinen hier nie.</caption>
-      <thead><tr><th scope="col">Art</th><th scope="col">Bedeutung</th><th scope="col">Anzahl</th></tr></thead>
+      <caption>Wie viele Stellen je Textteil versiegelt wurden. Werte erscheinen hier nie.</caption>
+      <thead><tr><th scope="col">Textteil</th><th scope="col">Versiegelte Stellen</th></tr></thead>
       <tbody>
-        {% for kind, label, count in view.sealed_kinds %}
-        <tr><th scope="row"><code>{{ kind }}</code></th><td>{{ label }}</td><td>{{ count }}</td></tr>
+        {% for part_id, count in view.sealed_text_parts %}
+        <tr><th scope="row"><code>{{ part_id }}</code></th><td>{{ count }}</td></tr>
         {% endfor %}
       </tbody>
     </table>
