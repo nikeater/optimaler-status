@@ -52,6 +52,7 @@ from fastapi.testclient import TestClient
 from jinja2 import Environment
 from markupsafe import escape
 
+from api import app as app_module
 from api import demo as demo_view
 from api import inbox as inbox_view
 from api import review as review_view
@@ -78,7 +79,13 @@ from engine.demo.store import (
 from engine.draft import InMemoryDraftStore
 from engine.journal import InMemoryJournalStore
 from engine.notify import InMemoryOutbox
-from engine.redact import InMemoryVaultStore, text_seal_detector
+from engine.redact import (
+    InMemoryVaultStore,
+    RedactionRefusedError,
+    default_policy,
+    redact_payload,
+    text_seal_detector,
+)
 from engine.redact.placeholders import PLACEHOLDER_RE
 
 TOKEN = "demo-journey-token"
@@ -400,27 +407,80 @@ def test_the_whole_three_phase_journey_for_each_persona(
     assert client.get("/inbox").status_code == 200
 
 
-def test_the_letter_tab_goes_through_the_same_pipeline(
+def test_the_channel_chooser_is_gone_and_an_old_link_lands_on_the_form(
     config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """One pipeline, two tabs. The e-mail adapter is simulated and says so."""
-    client = build_client(config, monkeypatch=monkeypatch)
-    page = client.get("/demo/antrag?persona=musterfrau_statusfeststellung&kanal=email")
-    assert phrase("channel.email") in page.text
-    assert "SIMULIERTER Adapter" in page.text
-    assert "P-14" in page.text
-    assert "<textarea" in page.text
+    """Part 20, and the part-13 test it deliberately replaces.
 
+    The user's decision of 2026-08-18 reverses the part-13 fork: the intake
+    page is the form, full stop. What used to be asserted here - that the
+    e-mail tab renders, says SIMULIERTER Adapter, offers a textarea and posts a
+    letter - is asserted in its NEGATIVE now, on all four of the surfaces that
+    used to carry it, because "the tab is gone" is only worth testing if
+    nothing renders any half of it:
+
+    * neither tab label and neither channel note is in the document,
+    * the section heading the chooser sat under is gone with it,
+    * no link on the page carries a ``kanal`` parameter,
+    * and the letter's own control, the textarea, is not rendered either.
+
+    The FALLBACK is the other half. A judge with a bookmarked
+    ``?kanal=email`` gets the form rather than a 404 or an unlinked page, and
+    a POST that carries the old parameter submits the form too - so there is no
+    way in from the outside either. The envelope builder underneath is not
+    deleted and keeps its unit coverage in ``tests/test_demo_personas.py``.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    for path in (
+        "/demo/antrag",
+        "/demo/antrag?persona=musterfrau_statusfeststellung&kanal=email",
+    ):
+        body = client.get(path).text
+        for gone in (
+            phrase("channel.email"),
+            phrase("channel.fit_connect"),
+            phrase("intake.channel.heading"),
+            phrase("channel.note.email"),
+            'id="kanal-heading"',
+            '<ul class="navbar tabs">',
+            "<textarea",
+        ):
+            assert gone not in body, f"{gone!r} still renders on {path}"
+        # No LINK offers the parameter any more either. The language toggle is
+        # excluded and only it: it echoes the URL the visitor asked for, which
+        # is the part-16 rule that a toggle must not throw a parameter away.
+        for href in re.findall(r'href="(/demo/antrag[^"]*)"', body):
+            assert "kanal=" not in href or "lang=" in href, href
+        # It IS the form: the persona's own fields are the controls.
+        assert '<input type="text" id="feld-versicherungsnummer"' in body, path
+        assert phrase("intake.form.heading") in body, path
+
+    # The view layer says the same thing, so a caller that never renders the
+    # template cannot reach the letter variant either.
+    assert demo_view.resolve_channel("email") == CHANNEL_FORM
+    assert demo_view.resolve_channel(CHANNEL_EMAIL) == CHANNEL_FORM
+    assert demo_view.resolve_channel(None) == CHANNEL_FORM
+    assert demo_view.resolve_channel(CHANNEL_FORM) == CHANNEL_FORM
+    assert demo_view.OFFERED_CHANNELS == (CHANNEL_FORM,)
+
+    # And a POST carrying the old parameter is a FORM submission: the persona's
+    # structured payload arrives, the letter's `body` is ignored.
     case_id = submit(
-        client, form_data("musterfrau_statusfeststellung", channel=CHANNEL_EMAIL)
+        client,
+        {
+            **form_data("musterfrau_statusfeststellung"),
+            "kanal": CHANNEL_EMAIL,
+            "body": "dies waere frueher als Anschreiben durchgegangen",
+        },
     )
     pipeline = client.get(f"/demo/case/{case_id}/pipeline")
     assert pipeline.status_code == 200
-    # The prose letter routes to the Clearingstelle, derived from CONTENT.
     assert "Referat_340_Clearingstelle" in pipeline.text
-    assert "Ihr Anschreiben, vorher und nachher" in pipeline.text
-    # And the honest sentence about why nothing was extracted (ADR-028).
-    assert phrase(demo_view.NO_EXTRACTION_NOTE) in pipeline.text
+    assert "dies waere frueher" not in pipeline.text
+    assert "Ihr Anschreiben, vorher und nachher" not in pipeline.text
+    # The form fills the payload, so the fields ARE extracted - which is the
+    # sentence about an unextractable letter no longer applying.
+    assert phrase(demo_view.NO_EXTRACTION_NOTE) not in pipeline.text
 
 
 def test_a_tampered_submission_fires_the_gap_and_the_flag(
@@ -455,26 +515,89 @@ def test_a_tampered_submission_fires_the_gap_and_the_flag(
     assert "rule_auslandsbezug" in abroad_page
 
 
+def redaction_refusal(canary: str) -> RedactionRefusedError:
+    """A REAL refusal, produced by the boundary rather than constructed here.
+
+    Built by handing the boundary prose that imitates the reserved placeholder
+    syntax, which is the one way to produce a refusal without the optional
+    model (ADR-019, ruling 4). The object - findings, kinds, paths, lengths -
+    is the boundary's own, so a test that renders it is rendering the thing the
+    page would actually be handed.
+    """
+    with pytest.raises(RedactionRefusedError) as raised:
+        redact_payload(
+            {},
+            policy=default_policy(),
+            case_id="case-refusal-probe",
+            created_at=BASE_TIME,
+            texts={"part-text-0": f"[[PII|VSNR|nope]] {canary}"},
+            text_detector=text_seal_detector(with_ner=False),
+        )
+    return raised.value
+
+
+def test_a_forged_placeholder_in_a_form_field_is_sealed_rather_than_refused(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Part 20's finding: the form cannot reach the refusal, and that is right.
+
+    With the letter tab gone (work item 1) the only text a visitor controls is
+    a structured leaf, and ADR-017's boundary auto-seals a leaf the sweep
+    complained about before it refuses anything - "auto-seal once, then
+    refuse". So placeholder-shaped input in a form field is sealed as a whole
+    leaf and the submission goes through, with the auto-seal recorded.
+
+    That is the behaviour, so that is what is pinned. The refusal RENDERING is
+    pinned separately, over the boundary's own refusal object, because a page
+    that could not render a refusal it may still be handed would be a 500
+    waiting for the first submission the sweep cannot rescue.
+
+    The field is the Rentenart on purpose: it is NOT identity-classed, so the
+    forgery survives the policy's own sealing and reaches the sweep, which is
+    what makes this the auto-seal path rather than the ordinary one. What the
+    visitor then sees is the whole chain being honest with them - the leaf is a
+    placeholder, the witness still holds the forged string, it is not in the
+    procedure's allowed list, and the case is incomplete and goes to a human.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    case_id = submit(
+        client, form_data("mustermann_regelaltersrente", rentenart="[[PII|VSNR|nope]]")
+    )
+    page = client.get(f"/demo/case/{case_id}/pipeline")
+    assert page.status_code == 200
+    store = client.app.state.demo_store  # type: ignore[attr-defined]
+    held = store.get(case_id)
+    assert held is not None
+    working = "\n".join(part.text for part in held.working_copy)
+    assert "[[PII|VSNR|nope]]" not in working, "the forgery reached the working copy"
+    assert "antrag.rentenart = [[PII|TEXT|" in working
+    # And the evidence plane read the REAL value through the witness: it is not
+    # one the procedure allows, so the field is invalid and a human gets it.
+    assert "invalid" in page.text
+    assert "Tier 2" in page.text
+
+
 def test_a_refused_submission_renders_the_refusal_on_the_page(
     config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The boundary refusing its own output is a real behaviour worth showing.
 
-    Forged placeholder syntax is the reliable way to produce one without an
-    optional model: the sweep treats placeholder-SHAPED text that is not a
-    valid placeholder as residue, because something is imitating the reserved
-    syntax (ADR-019, ruling 4).
+    Driven by making the pipeline raise the boundary's OWN refusal object (see
+    :func:`redaction_refusal`) rather than by a submission, because part 20
+    removed the one surface a visitor could forge prose on - see the test above
+    for what a form field does instead. What is asserted is unchanged and is
+    the page's half of the contract: 200 rather than 500, the refusal wording,
+    the alert block, and nothing in the journal.
     """
     client = build_client(config, monkeypatch=monkeypatch)
-    refused = client.post(
-        "/demo/antrag",
-        data=form_data(
-            "mustermann_regelaltersrente",
-            channel=CHANNEL_EMAIL,
-            body="[[PII|VSNR|nope]]",
-        ),
-        follow_redirects=False,
-    )
+    with patch.object(
+        app_module, "run_pipeline", side_effect=redaction_refusal("egal")
+    ):
+        refused = client.post(
+            "/demo/antrag",
+            data=form_data("mustermann_regelaltersrente"),
+            follow_redirects=False,
+        )
     assert refused.status_code == 200
     assert phrase(REFUSED_REDACTION) in refused.text
     assert 'id="refusal"' in refused.text
@@ -490,18 +613,22 @@ def test_no_refusal_ever_echoes_what_the_visitor_typed(
     A refusal names kinds, paths, lengths and recognizer ids. It never names
     the residue - which on this page would be the visitor's own data, printed
     back at them by the component whose whole job is to keep it out.
+
+    Through the boundary's own refusal object since part 20, for the reason
+    given on the test above: the canary rides INSIDE the text the boundary
+    refused, so what is checked is still that the page does not print back
+    what it was handed.
     """
     client = build_client(config, monkeypatch=monkeypatch)
     canary = "KANARIENVOGEL-4711"
-    refused = client.post(
-        "/demo/antrag",
-        data=form_data(
-            "mustermann_regelaltersrente",
-            channel=CHANNEL_EMAIL,
-            body=f"[[PII|VSNR|nope]] {canary}",
-        ),
-        follow_redirects=False,
-    )
+    with patch.object(
+        app_module, "run_pipeline", side_effect=redaction_refusal(canary)
+    ):
+        refused = client.post(
+            "/demo/antrag",
+            data=form_data("mustermann_regelaltersrente"),
+            follow_redirects=False,
+        )
     assert refused.status_code == 200
     assert phrase(REFUSED_REDACTION) in refused.text
     block = refused.text.split('id="refusal"')[1].split("</div>")[0]
@@ -569,10 +696,15 @@ def test_an_unknown_persona_or_channel_falls_back_instead_of_failing(
     # The FALLBACK is the one the page defaults to, not merely a name that
     # appears somewhere in a picker that lists every persona.
     assert persona_cards(page.text)[0] == (demo_view.LEAD_PERSONA, True)
-    assert phrase("channel.fit_connect") in page.text
+    # The channel is no longer a choice (part 20), so the fallback is checked
+    # on the view rather than on a tab label that no longer renders.
+    view = demo_view.build_intake_view(
+        DemoPosture(), demo_personas(), persona_id="ghost", channel="telepathie"
+    )
+    assert view.channel == CHANNEL_FORM
+    assert view.is_email is False
     assert demo_view.resolve_channel("telepathie") == CHANNEL_FORM
     assert demo_view.resolve_channel(None) == CHANNEL_FORM
-    assert demo_view.resolve_channel(CHANNEL_EMAIL) == CHANNEL_EMAIL
 
 
 def test_the_lead_persona_opens_the_picker_and_the_others_stay_reachable(
@@ -687,6 +819,48 @@ def test_the_working_copy_holds_placeholders_and_never_a_sealed_value(
     address = [value for value in entry.echo if value.kind == "ADDR"]
     assert len(address) == 1
     assert address[0].value == "Lotsenweg 7 21029 Musterhafen"
+
+
+def test_the_working_copy_carries_a_text_part_as_text(config: ConfigBundle) -> None:
+    """A free-text part becomes a `text`-shaped entry, not a rendered payload.
+
+    Pinned on its own since part 20. Until this part the branch was reached
+    only through the e-mail tab, which no longer renders (work item 1) - and
+    the store still has to handle a text part, because a seeded corpus letter
+    is one and because a ticked attachment is one (work item 3). A store that
+    quietly dropped them would show a visitor an empty stage (b).
+    """
+    from engine.demo.personas import build_letter_submission
+    from engine.pipeline import run_pipeline
+
+    chosen = persona("musterfrau_statusfeststellung")
+    envelope = run_pipeline(
+        build_letter_submission(
+            chosen,
+            chosen.letter,
+            submission_id="demo-text-part",
+            submitted_at=BASE_TIME.isoformat(),
+        ),
+        config=config,
+        journal=InMemoryJournalStore(),
+        vault=InMemoryVaultStore(),
+        now=BASE_TIME,
+        text_detector=text_seal_detector(with_ner=False),
+    ).envelope
+    entry = DemoSubmission.from_envelope(
+        envelope,
+        persona_id=chosen.persona_id,
+        persona_label=chosen.display_name,
+        channel=CHANNEL_EMAIL,
+        created_at=BASE_TIME,
+    )
+    shapes = [part.shape for part in entry.working_copy]
+    assert shapes.count("text") == 1
+    text = next(part.text for part in entry.working_copy if part.shape == "text")
+    assert "Sehr geehrte Damen und Herren" in text
+    assert PLACEHOLDER_RE.search(text) is not None
+    for value in identity_strings(chosen.persona_id):
+        assert value not in text, value
 
 
 def test_the_store_expires_by_ttl_and_forgets_completely(
@@ -891,20 +1065,20 @@ def test_the_caseworker_pages_never_show_the_working_copy_text(
     The case view still shows sealed KINDS and span COORDINATES and no content,
     exactly as part 10 shipped it. What part 13 added is visible on the demo
     pages and nowhere else.
+
+    Part 20 swapped the probe from the letter tab's prose to the form's own
+    working copy, because the letter tab is gone. The strings below are the
+    demo store's dotted-path rendering of the REDACTED structured payload -
+    content the caseworker UI has never had a window onto, and the exact thing
+    ADR-026 left open.
     """
     client = build_client(config, monkeypatch=monkeypatch)
-    case_id = submit(
-        client, form_data("musterfrau_statusfeststellung", channel=CHANNEL_EMAIL)
-    )
+    case_id = submit(client, form_data("musterfrau_statusfeststellung"))
     case_page = client.get(f"/review/case/{case_id}?unit=Referat_340_Clearingstelle")
     assert case_page.status_code == 200
-    # Sentences that exist ONLY in the letter this visitor wrote. The prepared
-    # Nachforderung on the same page has its own greeting from config, which is
-    # why the assertion is over the submission's wording and not over a
-    # salutation any German letter carries.
     for sentence in (
-        "Bitte um Klaerung meines Erwerbsstatus",
-        "seit Anfang des Jahres arbeite ich als freie Beraterin",
+        "antrag.taetigkeit_bezeichnung = IT-Beratung und Datenmigration",
+        "antrag.antragsart = feststellung_nach_aufnahme",
     ):
         assert sentence not in case_page.text, sentence
         # And the demo page does show it, which is the difference part 13 makes.

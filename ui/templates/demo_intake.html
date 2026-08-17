@@ -12,7 +12,18 @@
    file (the name, the address) sit side by side on a wide screen and stack
    below 40rem like everything else. The "will be sealed" tag is shown once per
    row rather than once per input, because four identical tags next to four
-   address inputs teach nothing and crowd the label they belong to. #}
+   address inputs teach nothing and crowd the label they belong to.
+
+   PART 20: THIS PAGE IS THE FORM. The "Weg waehlen" chooser below is COMMENTED
+   OUT rather than deleted (a Jinja comment renders zero bytes), on the user's
+   decision of 2026-08-18 reversing the part-13 "simulated and labelled" fork.
+   `api/demo.py::resolve_channel` offers exactly one channel from now on, so
+   `?kanal=email` lands on the form and a judge with an old link sees a page
+   rather than a 404. Everything the e-mail variant needed is still here and
+   still tested - the `view.is_email` branches below, `IntakeView.body`,
+   `engine/demo/personas.py::build_letter_submission` - and uncommenting the
+   block plus restoring `OFFERED_CHANNELS` brings the tab back exactly as it
+   was. #}
 {% extends "demo_base.html" %}
 {% block title %}{{ t("intake.title") }}{% endblock %}
 {% block heading %}{{ t("intake.headline") }}{% endblock %}
@@ -49,7 +60,7 @@
         {% if persona.persona_id == view.persona.persona_id %}
         {{ persona.display_name }} <span class="tag">{{ t("intake.persona.chosen") }}</span>
         {% else %}
-        <a href="/demo/antrag?persona={{ persona.persona_id }}&amp;kanal={{ view.channel }}">{{ persona.display_name }}</a>
+        <a href="/demo/antrag?persona={{ persona.persona_id }}">{{ persona.display_name }}</a>
         {% endif %}
       </h3>
       <p class="muted">{{ persona.headline_for(lang) }}</p>
@@ -59,6 +70,9 @@
     {% endfor %}
   </ul>
 </section>
+
+{# THE CHOOSER, COMMENTED OUT (part 20). Kept verbatim so that restoring it is
+   an uncomment rather than a rewrite; see the header of this file.
 
 <section aria-labelledby="kanal-heading">
   <h2 id="kanal-heading">{{ t("intake.channel.heading") }}</h2>
@@ -75,6 +89,8 @@
   </ul>
   <p class="notice">{{ t("channel.note." ~ view.channel) }}</p>
 </section>
+
+#}
 
 <section aria-labelledby="formular-heading">
   <h2 id="formular-heading">

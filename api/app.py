@@ -853,6 +853,13 @@ def _mount_demo_journey(
             return refused(verdict.detail)
         now = datetime.now(UTC)
         submission_id = f"{DEMO_SUBMISSION_PREFIX}-{uuid4().hex[:12]}"
+        # PART 20: the e-mail branch below is unreachable and deliberately
+        # UNCHANGED. `demo_view.resolve_channel` offers one channel since the
+        # user's decision of 2026-08-18, so `channel` is always the form here -
+        # including for a POST that carries the old `kanal=email`, which is the
+        # point. Nothing is deleted: uncommenting the chooser in
+        # `ui/templates/demo_intake.html` and putting `CHANNEL_EMAIL` back into
+        # `demo_view.OFFERED_CHANNELS` makes this glue live again as it stands.
         payload = (
             build_letter_submission(
                 chosen, body, submission_id=submission_id, submitted_at=now.isoformat()

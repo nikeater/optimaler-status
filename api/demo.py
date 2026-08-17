@@ -296,15 +296,37 @@ class IntakeView:
         return tuple(field for row in self.rows for field in row)
 
 
+#: Which of the two channel ids this page still OFFERS. One, since part 20.
+#:
+#: The user's decision of 2026-08-18 reverses the part-13 fork: the "Weg
+#: waehlen" chooser is commented out of ``ui/templates/demo_intake.html`` and
+#: the intake page is the form, full stop. Two things follow, and they are the
+#: whole of the change:
+#:
+#: * ``?kanal=email`` and a POST carrying ``kanal=email`` both resolve to the
+#:   form. A bookmarked link from before this part therefore shows a page
+#:   rather than a 404 or an unlinked one, which is the same "never
+#:   half-select something" rule the unit picker and the language switch follow.
+#: * Nothing underneath is deleted. ``CHANNELS`` still names both ids because
+#:   both are still legal values of a submission; ``build_letter_submission``
+#:   still builds an e-mail envelope and still has its unit coverage in
+#:   ``tests/test_demo_personas.py``; and ``IntakeView.channels`` still returns
+#:   both, so uncommenting the template block restores the tab exactly.
+#:
+#: Restoring the choice is this tuple plus that comment block, and nothing else.
+OFFERED_CHANNELS: tuple[str, ...] = (CHANNEL_FORM,)
+
+
 def resolve_channel(raw: str | None) -> str:
-    """The chosen channel; anything unknown is the form.
+    """The channel this page submits on; anything else is the form.
 
     Same discipline as the unit picker: an unknown value in a bookmarked URL is
-    not an error and must never half-select something. There are exactly two
-    channels here and no scan, because a file upload on a public page would be
-    an ingest path around the redaction boundary.
+    not an error and must never half-select something. There is no scan channel
+    and, since part 20, no e-mail one either - a file upload on a public page
+    would be an ingest path around the redaction boundary, and the e-mail tab
+    is the user's own removal (see :data:`OFFERED_CHANNELS`).
     """
-    return raw if raw in CHANNELS else CHANNEL_FORM
+    return raw if raw in OFFERED_CHANNELS else CHANNEL_FORM
 
 
 #: Which persona a visitor lands on with no ``?persona=`` in the URL, and which
