@@ -109,6 +109,13 @@
     {% else %}
     <fieldset>
       <legend>{{ t("intake.form.legend", name=view.persona.display_name) }}</legend>
+      {# PART 20: what the persona arrived with has to be sent. The `required`
+         attribute below is the browser's own validation and there is no script
+         anywhere on this page; the red treatment is CSS over `:user-invalid`,
+         which fires only after somebody has actually tried. The sentence per
+         field is PRE-RENDERED and shown by CSS, so nothing has to be inserted
+         at the moment it is needed. #}
+      <p class="help">{{ t("intake.required.note") }}</p>
       {% for row in view.rows %}
       <div class="field-row field-row-{{ row|length }}">
         {% for field in row %}
@@ -124,10 +131,10 @@
           {% endif %}
           {% if field.control == "date" %}
           <input type="date" id="feld-{{ field.field_id }}" name="{{ field.field_id }}"
-                 value="{{ field.value }}"
+                 value="{{ field.value }}"{% if field.required %} required{% endif %}
                  {% if field.help %}aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
           {% elif field.control == "select" %}
-          <select id="feld-{{ field.field_id }}" name="{{ field.field_id }}"
+          <select id="feld-{{ field.field_id }}" name="{{ field.field_id }}"{% if field.required %} required{% endif %}
                   {% if field.help %}aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
             {% for option in field.choices %}
             <option value="{{ option }}"{% if option == field.value %} selected{% endif %}>{{ option }}</option>
@@ -135,8 +142,11 @@
           </select>
           {% else %}
           <input type="text" id="feld-{{ field.field_id }}" name="{{ field.field_id }}"
-                 value="{{ field.value }}" maxlength="200"
+                 value="{{ field.value }}" maxlength="200"{% if field.required %} required{% endif %}
                  {% if field.help %}aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
+          {% endif %}
+          {% if field.required %}
+          <span class="field-error">{{ t("intake.required.error") }}</span>
           {% endif %}
         </div>
         {% endfor %}

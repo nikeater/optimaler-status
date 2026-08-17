@@ -486,7 +486,17 @@ def test_the_channel_chooser_is_gone_and_an_old_link_lands_on_the_form(
 def test_a_tampered_submission_fires_the_gap_and_the_flag(
     config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The hints panel promises real behaviour; this is the behaviour."""
+    """The hints panel promises real behaviour; this is the behaviour.
+
+    Two of the three probes below are what a visitor can now do in a browser
+    (the panel names both). The first is not: since part 20 every prefilled
+    field is required, so nobody can empty the Versicherungsnummer from the
+    form - the missing-field path moved to Bernd Beispielmann's own arc, which
+    ``tests/test_demo_personas.py`` pins. It stays HERE as a server-side probe
+    because the pipeline behaviour it exercises is unchanged and worth keeping
+    under test: a field that arrives absent is MISSING, not invalid, and it
+    carries the procedure's own Nachforderung wording.
+    """
     client = build_client(config, monkeypatch=monkeypatch)
 
     # Delete the Versicherungsnummer: a gap, a Nachforderung sentence, tier 2.
@@ -750,6 +760,79 @@ def test_the_lead_persona_opens_the_picker_and_the_others_stay_reachable(
         assert [c for c, current in chosen if current] == [persona_id], persona_id
         # ... and it is still the leftmost card, so the row never reshuffles.
         assert chosen[0][0] == demo_view.LEAD_PERSONA, persona_id
+
+
+def test_what_the_persona_arrived_with_is_a_required_field(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Part 20's rule, pinned as a RULE and not as a list of field names.
+
+    Prefilled implies required; empty by design implies not. Asserted over
+    every persona and every field of every persona, in both directions, so a
+    renamed field, a new persona or a reordered config file cannot quietly
+    exempt anything - and so the ONE exception the shipped demo has is a
+    consequence of the rule rather than a special case in the template.
+
+    The blocking itself is the browser's. What is checkable from here is that
+    the attribute is on the control the visitor uses, that the sentence the
+    CSS reveals is PRE-RENDERED next to it (nothing is inserted at the moment
+    it is needed, because nothing here runs), and that no script arrived with
+    any of it.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    for chosen in demo_personas().personas:
+        body = client.get(f"/demo/antrag?persona={chosen.persona_id}").text
+        assert "<script" not in body, chosen.persona_id
+        for entry in chosen.fields:
+            control = re.search(
+                rf'<(input|select)[^>]*id="feld-{entry.field_id}"[^>]*>', body
+            )
+            assert control, f"{chosen.persona_id}.{entry.field_id} is not rendered"
+            expected = bool(entry.value.strip())
+            assert demo_view.required_for(entry) is expected
+            assert (" required" in control.group(0)) is expected, (
+                f"{chosen.persona_id}.{entry.field_id}: required attribute "
+                f"{'missing' if expected else 'present'} - the rule is that a "
+                "field the persona arrived with a value for must be sent with one"
+            )
+        # The sentence exists once per required field, before anybody submits.
+        required = sum(1 for entry in chosen.fields if entry.value.strip())
+        assert body.count('<span class="field-error">') == required
+        assert phrase("intake.required.error") in body
+        assert phrase("intake.required.note") in body
+
+    # And the exception the rule produces is exactly one control in the whole
+    # demonstration, which is what makes Bernd's card able to name it.
+    optional = [
+        (chosen.persona_id, entry.field_id)
+        for chosen in demo_personas().personas
+        for entry in chosen.fields
+        if not demo_view.required_for(entry)
+    ]
+    assert optional == [("beispielmann_ohne_rentenbeginn", "rentenbeginn")]
+
+
+def test_the_red_state_is_css_over_a_state_the_browser_maintains() -> None:
+    """No script, no `:invalid`, and colour is not the only carrier.
+
+    `:invalid` would paint a form red before anybody had touched it, which is
+    the opposite of the user's sentence ("after pressing Antrag absenden");
+    `:user-invalid` waits for the interaction. The sentence under the field is
+    what keeps 1.4.1: take the colour away and the state still has words.
+    """
+    css = Path("ui/static/system.css").read_text(encoding="utf-8")
+    rules = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
+    assert ":user-invalid" in rules
+    assert not re.search(r"(?<![-\w]):invalid", rules), "a form red before it was used"
+    # The edge is the element colour, the words are the text colour - the
+    # split the palette reserves, and `tests/test_review_accessibility.py`
+    # enforces the second half over every stylesheet.
+    edge = re.search(r"input:user-invalid[^{]*\{([^}]*)\}", rules)
+    assert edge and "border-color: var(--alarm)" in edge.group(1)
+    sentence = re.search(r"\.field-error\s*\{([^}]*)\}", rules)
+    assert sentence and "color: var(--alarm-text)" in sentence.group(1)
+    assert "display: none" in sentence.group(1), "the sentence must be pre-rendered"
+    assert re.search(r":user-invalid ~ \.field-error\s*\{\s*display: block;", rules)
 
 
 def test_the_lead_persona_brings_its_own_controls_to_the_first_screen(

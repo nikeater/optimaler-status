@@ -251,6 +251,10 @@ class FieldView:
     value typing produced. ``choices`` is the vocabulary the select offers, read
     from the procedure configuration or from the persona file and never
     invented here.
+
+    ``required`` is part 20 and is a RULE rather than a list of field names:
+    a field the persona arrived with a value for must still carry one when it
+    is sent. See :func:`required_for`.
     """
 
     field_id: str
@@ -260,6 +264,7 @@ class FieldView:
     kind: str
     control: str = "text"
     choices: tuple[str, ...] = ()
+    required: bool = False
 
 
 @dataclass(frozen=True)
@@ -398,6 +403,37 @@ def vocabulary(config: ConfigBundle, path: str) -> tuple[str, ...]:
     return ()
 
 
+def required_for(entry: PersonaField) -> bool:
+    """Whether this field renders with the HTML ``required`` attribute.
+
+    **The rule: what the persona ARRIVED with has to be sent.** A field the
+    persona file gives a value for is required; a field it deliberately leaves
+    empty is not. That is one expression over the persona's own declaration,
+    not a list of field names and not per-persona machinery - rename a field,
+    add a persona, reorder the file, and the rule still says the same thing.
+
+    Read off ``entry.value`` - the DECLARED value - and never off what is
+    currently in the box. The difference shows on a re-render: a page that
+    recomputed this from the submitted values would drop the attribute from
+    exactly the field somebody had just emptied, which is the one moment it
+    exists for.
+
+    What the rule buys is the user's own sentence for part 20: press "Antrag
+    absenden" with an empty field and the browser marks it and refuses to send.
+    The blocking is the browser's - no JavaScript is added anywhere here - and
+    what this function does is decide which fields get to ask for it.
+
+    The one field in the shipped demo that this leaves optional is Bernd
+    Beispielmann's Rentenbeginn, which is empty BY DESIGN because his whole
+    arc is the incomplete submission: tier 2, and a Nachforderung in the
+    procedure's own words. His card says so, because a form that behaves
+    differently on one screen has to explain itself on that screen. He is
+    deprecation-pending (see ``config/demo/``), and when he goes the rule does
+    not change - it simply has nothing left to except.
+    """
+    return bool(entry.value.strip())
+
+
 def _field_view(
     entry: PersonaField,
     *,
@@ -433,6 +469,7 @@ def _field_view(
         kind=entry.kind,
         control=control,
         choices=choices,
+        required=required_for(entry),
     )
 
 

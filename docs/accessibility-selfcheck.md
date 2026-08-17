@@ -57,6 +57,25 @@ of them are defects the redesign created and then found.
    notice renders on those two pages, and that it is REACHABLE from every page
    that lost it.
 
+**Revised 2026-08-18 (part 20, the intake detour).** The intake page changed in
+three ways and one of them is an accessibility change rather than a product
+one, so it is written down here.
+
+1. **The form validates in the browser now.** Every field a persona arrived
+   with a value for carries the HTML `required` attribute, so the browser
+   blocks the submission, moves focus to the field it stopped at and speaks its
+   own message. The page adds a pre-rendered sentence per field, revealed by
+   CSS on `:user-invalid`, plus a red edge (`--alarm`, an element colour) and a
+   red label (`--alarm-text`, the text colour of the same family). No new
+   colour pair enters the project and no JavaScript enters it either; the
+   native message is not suppressed. See 3.3.1 and 3.3.3, both rewritten.
+2. **`:user-invalid`, never `:invalid`.** The second would paint a form red
+   before anybody had touched it, which is an error message about nothing.
+3. **The e-mail tab stopped rendering** (a product decision by the user). The
+   textarea it carried is gone with it, so the rows that named it name the
+   inputs and selects that remain. Nothing else about the page's structure
+   moved: same landmarks, same heading levels, same labels, same reflow rules.
+
 **Revised 2026-08-15 (part 17, the browser pass).** Four things changed, and
 the reason for all four is the same: this document described pages that had
 been asserted about but never opened. Everything below was found by rendering
@@ -425,8 +444,9 @@ was not trained on anything. The mechanical bar is asserted for all five in
 | 1.4.1 Use of colour | automated | The highlighted queue row says "Ihr Vorgang" in words plus an offscreen sentence; the tint repeats it. The current step in the indicator is `aria-current` plus a border plus offscreen text. A placeholder token is bordered and monospaced, not coloured. |
 | 1.4.10 Reflow | automated (static) | See the row above: scroll containers, a one-column `dl` below 40rem, no fixed pixel width, and the viewport meta. Not a browser measurement. |
 | 2.4.2 Page titled | automated | Distinct titles naming the phase. |
-| 3.3.2 Labels or instructions | automated | Every input, select and the letter textarea has a `<label for>`; fields with a help sentence carry `aria-describedby`. A field that will be sealed says which KIND it becomes, next to its label, before it is submitted - once per row rather than once per input, because four identical tags beside four address boxes crowd the label they belong to. **Part 16 gave each new control its own instruction**: a `type="date"` field carries a format hint for browsers that render it as a text box, and a `<select>` says that its options come from the procedure configuration and fill the field exactly as typing would. |
-| 3.3.1 Error identification | reviewed | A refused submission re-renders the page with the refusal in a `role="alert"` block at the top, the visitor's edits preserved, and the findings as a list of kinds and places. It never echoes the value that caused the refusal. |
+| 3.3.2 Labels or instructions | automated | Every input and select has a `<label for>`; fields with a help sentence carry `aria-describedby`. A field that will be sealed says which KIND it becomes, next to its label, before it is submitted - once per row rather than once per input, because four identical tags beside four address boxes crowd the label they belong to. **Part 16 gave each new control its own instruction**: a `type="date"` field carries a format hint for browsers that render it as a text box, and a `<select>` says that its options come from the procedure configuration and fill the field exactly as typing would. **Part 20 states the required rule in words** above the fields ("everything already filled in here is a required field"), because the rule is uniform and an asterisk repeated on eleven controls says less than one sentence does. |
+| 3.3.1 Error identification | reviewed | Two error paths now, and neither carries its meaning in colour alone. **Client-side (part 20):** every prefilled field carries the HTML `required` attribute, so the browser blocks the submission and announces its own message on the field it stopped at. The page adds a pre-rendered sentence per field ("Diese Angabe fehlt...") that CSS reveals on `:user-invalid`, plus a red edge and a red label. `:user-invalid` rather than `:invalid` is deliberate: the second would mark a form nobody had touched yet. No JavaScript is involved and the native message is not suppressed. **Server-side (part 13):** a refused submission re-renders the page with the refusal in a `role="alert"` block at the top, the visitor's edits preserved, and the findings as a list of kinds and places. It never echoes the value that caused the refusal. |
+| 3.3.3 Error suggestion | reviewed | The client-side sentence says what is wrong AND what follows from it ("this answer is missing; the application will not be sent without it"), next to the field it is about. The server-side refusal names the kind of content and where it was found. Neither suggests a value, which on this surface would mean a page guessing at a person's data. |
 | 3.1.5 Reading level | open | Both pages are written in plain German and avoid jargon where the domain allows it, but no Leichte-Sprache or Einfache-Sprache version exists and no readability measurement has been made. For a citizen-facing public-administration surface this is a real gap, not a nice-to-have; it belongs with the external audit. |
 | 2.2.1 Timing adjustable | reviewed, with one honest caveat | Nothing on either page times out, auto-refreshes or polls. The demo store behind the pipeline view DOES expire after 30 minutes, and the page then renders a sentence saying the working copy is no longer held while everything from the journal stays readable. No interaction is lost and no input has to be re-entered, so this is not a 2.2.1 time limit; it is stated here because a reader deserves to know a timer exists. |
 

@@ -767,17 +767,17 @@ TABLE: dict[str, tuple[str, str]] = {
         "Auf der Antragsseite wählen Sie eine von vier <em>erfundenen</em> "
         "Personen - offenkundig erfundene Namen, damit ein Bildschirmfoto "
         "dieser Demo niemals wie ein echter Vorgang aussieht - und bearbeiten deren "
-        "vorausgefüllten Antrag. Sie dürfen ihn kaputt machen: die "
-        "Versicherungsnummer löschen, den Rentenbeginn zwanzig Jahre in die "
+        "vorausgefüllten Antrag. Sie dürfen ihn kaputt machen: eine Rentenart "
+        "eintragen, die es nicht gibt, den Rentenbeginn zwanzig Jahre in die "
         "Zukunft schieben, den Auslandsbezug einschalten. Jede dieser "
         "Änderungen löst ein anderes, echtes Verhalten der Anlage aus.",
         "On the intake page you pick one of four openly <em>fictional</em> "
         "applicants - Mustermann-class names, so that a screenshot of this "
         "demo can never look like a real case - and edit their prefilled "
-        "application. You are meant to break it: delete the insurance number, "
-        "push the pension start date twenty years into the future, switch on "
-        "the cross-border flag. Each of those changes triggers a different, "
-        "real behaviour of the system.",
+        "application. You are meant to break it: enter a pension type that "
+        "does not exist, push the pension start date twenty years into the "
+        "future, switch on the cross-border flag. Each of those changes "
+        "triggers a different, real behaviour of the system.",
     ),
     "tour.s2.p2": (
         "Das Formular geht durch <strong>dieselbe</strong> Verarbeitung wie "
@@ -1195,6 +1195,21 @@ TABLE: dict[str, tuple[str, str]] = {
         "genau so, wie Tippen es füllen würde.",
         "The options come from the procedure configuration; picking one fills "
         "the field exactly as typing would.",
+    ),
+    "intake.required.note": (
+        "Alles, was hier schon ausgefüllt ist, ist ein Pflichtfeld. Leeren Sie "
+        "eines und versuchen Sie abzuschicken: Ihr Browser markiert das Feld "
+        "rot und sendet nichts. Diese Prüfung findet im Browser statt, ohne "
+        "JavaScript; die Vollständigkeitsprüfung der Anlage läuft danach und "
+        "noch einmal getrennt davon.",
+        "Everything already filled in here is a required field. Empty one and "
+        "try to submit: your browser marks the field red and sends nothing. "
+        "That check happens in the browser, without JavaScript; the system's "
+        "own completeness check runs afterwards and separately from it.",
+    ),
+    "intake.required.error": (
+        "Diese Angabe fehlt. Ohne sie wird der Antrag nicht abgeschickt.",
+        "This answer is missing. The application will not be sent without it.",
     ),
     "intake.hints.heading": (
         "Was Sie ausprobieren können",

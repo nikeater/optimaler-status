@@ -1462,6 +1462,56 @@ textarea:focus {
   box-shadow: 0 0 0 3px var(--tint-brand);
 }
 
+/* A MISSING ANSWER IS RED, AND NOTHING HERE DOES THE BLOCKING (part 20).
+
+   The intake form's fields carry the HTML `required` attribute, so the BROWSER
+   refuses the submission and shows its own message. This block is the visual
+   half and nothing else: no script runs, no state is tracked, and every rule
+   below is a selector over a state the engine already maintains.
+
+   `:user-invalid` rather than `:invalid`, and the difference is the whole
+   point: `:invalid` matches from the first paint, so a form that was merely
+   OPENED would be red before anybody typed anything. `:user-invalid` waits
+   until the field has been interacted with or the form submitted, which is
+   exactly the moment the user's own sentence describes - "after pressing
+   Antrag absenden with empty fields".
+
+   The red family is used as the palette reserves it: `--alarm` (5.19:1 on
+   white) draws the EDGE, `--alarm-text` (9.34:1) carries the WORDS. No new
+   pair enters the project here. And colour is never the only carrier: every
+   required field has a pre-rendered sentence underneath it that the rule at
+   the bottom reveals, so the state has words as well as a tone. */
+input:user-invalid,
+select:user-invalid,
+textarea:user-invalid {
+  border-color: var(--alarm);
+  box-shadow: 0 0 0 3px var(--tint-alarm);
+}
+
+/* The label repeats the state, because a reader whose eye is on the label
+   should not have to look at the box to know which one it is about. `:has()`
+   is the only way from a control back to the label that precedes it, and it is
+   deliberately the ONLY thing that depends on it: the border and the sentence
+   below carry the meaning on their own. */
+.field:has(:user-invalid) label {
+  color: var(--alarm-text);
+}
+
+/* PRE-RENDERED, revealed by CSS. The sibling combinator reaches it because the
+   sentence is written after its control, which is also where a reader expects
+   to find it. */
+.field-error {
+  display: none;
+  margin-top: var(--space-2);
+  color: var(--alarm-text);
+  font-size: var(--text-sm);
+  font-weight: 650;
+}
+
+:user-invalid ~ .field-error {
+  display: block;
+}
+
 select {
   /* The native arrow is drawn by the engine at the end of the control, so the
      text needs room not to run into it. */

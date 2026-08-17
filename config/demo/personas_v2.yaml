@@ -103,12 +103,36 @@ note_en: >-
 #: panel. Each one produces a DIFFERENT, real behaviour of the pipeline, which
 #: is the point: a demo you cannot break teaches nothing. Updated in part 16 to
 #: match the controls the form actually renders.
+#:
+#: PART 20 REWROTE THE TWO THAT INSTRUCTED A DELETION, because every prefilled
+#: field is a required field now and a visitor cannot empty one. They were
+#: replaced rather than dropped, and both replacements were MEASURED against
+#: the pipeline before they were written:
+#:
+#:   * the missing-field path moved to where it still exists, Bernd
+#:     Beispielmann's own form (his Rentenbeginn is empty by design and is the
+#:     one control here that is not required);
+#:   * "Vornamen leeren" became the auto-seal path of ADR-017, which nothing
+#:     else on this page shows: placeholder-shaped input in a non-identity
+#:     field is sealed by the boundary itself on a second pass, the witness
+#:     still carries the typed string, and the procedure's allowed list rejects
+#:     it. Verified: tier 2, `antrag.rentenart` reported invalid,
+#:     `auto_sealed_paths` naming the field.
+#:
+#: One candidate was measured and DROPPED: breaking the check digit of a
+#: Versicherungsnummer changes nothing a visitor can see (tier 1, complete).
+#: The requirement validates a PATTERN and the birth date it encodes, not the
+#: Pruefziffer, and the REDACT profile seals on format alone - so the hint
+#: would have promised a behaviour that does not happen.
 hints:
-  - label: Versicherungsnummer löschen
+  - label: Eine fehlende Angabe absenden
     detail: >-
-      Leeren Sie das Textfeld. Die Vollständigkeitsprüfung meldet eine Lücke,
-      der Vorgang fällt auf Tier 2 und es entsteht eine Nachforderung mit
-      genau dem Satz, den die Verfahrenskonfiguration dafür vorsieht.
+      Wechseln Sie oben zu Bernd Beispielmann. Sein Rentenbeginn ist bewusst
+      leer und ist das einzige Feld dieser Demonstration, das kein Pflichtfeld
+      ist - Sie können seinen Antrag also unverändert abschicken. Die
+      Vollständigkeitsprüfung meldet eine Lücke, der Vorgang fällt auf Tier 2
+      und es entsteht eine Nachforderung mit genau dem Satz, den die
+      Verfahrenskonfiguration dafür vorsieht.
   - label: Geburtsdatum unplausibel setzen
     detail: >-
       Wählen Sie im Kalender den 1. Januar 1902. Die Versicherungsnummer trägt
@@ -130,18 +154,25 @@ hints:
       Schreiben Sie "grundrente" in das Textfeld. Der Wert steht nicht in der
       erlaubten Liste, die Angabe gilt als ungültig und der Klarfall entfällt.
       Dieses Feld ist mit Absicht ein Textfeld geblieben und keine Auswahl.
-  - label: Vornamen leeren
+  - label: Platzhalter-Syntax nachahmen
     detail: >-
-      Der Nachname geht allein durch. Beide Felder schreiben in dieselbe Stelle
-      der Einreichung; die Seite fügt sie zusammen, bevor irgendetwas versiegelt
-      wird, und ein leeres Feld wird weggelassen statt als Leerzeichen gesendet.
+      Schreiben Sie "[[PII|VSNR|test]]" in das Feld Rentenart. Die
+      Schwärzungsprüfung erkennt Text, der die reservierte Syntax nur nachahmt,
+      versiegelt das Feld daraufhin selbst und prüft erneut - in der
+      Arbeitskopie steht danach ein echter Platzhalter. Die
+      Vollständigkeitsprüfung liest Ihren Wert weiterhin über den flüchtigen
+      Zeugen, findet ihn nicht in der erlaubten Liste und meldet die Angabe als
+      ungültig.
 
 hints_en:
-  - label: Delete the insurance number
+  - label: Submit an application with something missing
     detail: >-
-      Empty the text box. The completeness check reports a gap, the case drops
-      to tier 2, and a request for information is prepared using exactly the
-      sentence the procedure configuration provides for it.
+      Switch to Bernd Beispielmann above. His pension start date is empty by
+      design and is the one control in this demonstration that is not a
+      required field, so you can submit his application unchanged. The
+      completeness check reports a gap, the case drops to tier 2, and a request
+      for information is prepared using exactly the sentence the procedure
+      configuration provides for it.
   - label: Make the date of birth implausible
     detail: >-
       Pick 1 January 1902 in the calendar. The insurance number carries the
@@ -162,11 +193,14 @@ hints_en:
       Type "grundrente" into the text box. The value is not in the allowed
       list, the field counts as invalid and the clear-cut path falls away. This
       field is deliberately still a text box and not a dropdown.
-  - label: Empty the given name
+  - label: Imitate the placeholder syntax
     detail: >-
-      The surname travels on alone. Both boxes write to the same place in the
-      submission; the page joins them before anything is sealed, and an empty
-      box is omitted rather than sent as a space.
+      Type "[[PII|VSNR|test]]" into the pension-type field. The redaction check
+      recognises text that merely imitates the reserved syntax, seals the field
+      itself and sweeps again - the working copy then holds a real placeholder.
+      The completeness check still reads your value through the transient
+      witness, does not find it in the allowed list, and reports the field as
+      invalid.
 
 personas:
   # ------------------------------------------------------------ arc 1: tier 1 --
@@ -292,6 +326,16 @@ personas:
       Frau Renate Mustermann
 
   # ------------------------------------------- arc 2: tier 2, Nachforderung --
+  #
+  # DEPRECATION-PENDING (user ruling 2026-08-18, part 20). This persona is
+  # marked for removal in a later part and must not constrain a design decision
+  # again: the required-fields rule was settled WITHOUT regard to his arc, and
+  # the only accommodation he gets is the honest one below - his empty
+  # Rentenbeginn is the single control in this demo that is not a required
+  # field, and his card says so, because a form that behaves differently on one
+  # screen has to explain itself on that screen. When he is removed, the rule
+  # in `api/demo.py::required_for` does not change; it simply has nothing left
+  # to except, and the first hint in the panel above has to move with him.
   - persona_id: beispielmann_ohne_rentenbeginn
     display_name: Bernd Beispielmann
     headline: Altersrente ohne Rentenbeginn
@@ -306,11 +350,17 @@ personas:
     expectation: >-
       Zuordenbar, aber unvollständig: Tier 2 beim Referat 312. Es entsteht
       eine Nachforderung, die genau die fehlende Angabe abfragt - im Wortlaut
-      der Verfahrenskonfiguration, nicht in einem erzeugten Satz.
+      der Verfahrenskonfiguration, nicht in einem erzeugten Satz. Sein leerer
+      Rentenbeginn ist das einzige Feld dieser Demonstration, das kein
+      Pflichtfeld ist: nur dieser Antrag lässt sich unverändert mit einer
+      fehlenden Angabe abschicken.
     expectation_en: >-
       Routable but incomplete: tier 2 at unit 312. A request for information is
       prepared that asks for exactly the missing field - in the procedure
-      configuration's own wording, not in a generated sentence.
+      configuration's own wording, not in a generated sentence. His empty
+      pension start date is the one field in this demonstration that is not a
+      required field: his is the only application that can be submitted
+      unchanged with something missing.
     fields:
       - field_id: nachname
         label: Nachname
