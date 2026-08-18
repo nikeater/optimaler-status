@@ -10,7 +10,7 @@ holds, for the handful of submissions a VISITOR made in the last half hour, the
 two strings the guided tour needs to put side by side. A production deployment
 gets no store from this file; the open item stays open.
 
-## The two compartments, and where each one may come from
+## The three compartments, and where each one may come from
 
 ``working_copy``
     What the pipeline saw. Built by :meth:`DemoSubmission.from_envelope` from
@@ -29,6 +29,24 @@ gets no store from this file; the open item stays open.
     (ADR-002 keeps that shut until outbound rendering), not from the transient
     witness (ADR-017 keeps that inside one pipeline call), and not from a
     journal payload (which never carries content).
+
+``links`` (part 19, the two-party loop)
+    Which case asked WHICH counterparty for a statement, and which case the
+    answer became. :class:`StatementLink` is keyed by an opaque token this
+    module mints - :func:`new_token`, 96 bits out of :mod:`secrets` - and the
+    token is the whole of the correlation: it is not derived from a case id, it
+    is not derived from a submission id, and it is never a sealed value or a
+    function of one. The few strings a link carries so the request letter can
+    be written come from the SAME place ``echo`` comes from, the visitor's own
+    HTTP request, and they are shown back to the visitor who typed them.
+
+    Two things this compartment deliberately is not. It is not a journal:
+    "a statement was requested" is a demo-layer fact, no event type exists for
+    it, and inventing one would be a contract change (see ADR-036). And it is
+    not a channel into the next submission: the counterparty page RENDERS these
+    values into form controls and the visitor's own browser posts them back, so
+    what reaches ingest is a posted form exactly like the intake's, never a
+    value the server injected out of a store.
 
 ## What bounds it
 
@@ -56,9 +74,10 @@ is the one thing ADR-008 and ADR-026 both refuse.
 
 from __future__ import annotations
 
+import secrets
 from collections import OrderedDict
 from collections.abc import Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime, timedelta
 
 from schemas.envelope import Envelope
@@ -75,6 +94,27 @@ DEFAULT_CAPACITY = 64
 #: Per-string cap. The intake form enforces the same bound before submitting,
 #: so this is the second of two locks rather than the only one.
 MAX_CHARS = 8000
+
+#: How many bytes of randomness a correlation token carries (part 19).
+#:
+#: Twelve, so the token is 96 bits and 24 hexadecimal characters. The number is
+#: chosen against what the token has to survive, which is a stranger GUESSING a
+#: link to somebody else's request within the store's own lifetime: a
+#: :data:`DEFAULT_CAPACITY`-entry map that empties itself after
+#: :data:`DEFAULT_TTL`. Ninety-six bits is far past that and still short enough
+#: to print on the simulated letter as a Zeichen a reader can compare by eye.
+#:
+#: :mod:`secrets` rather than :mod:`uuid` or :mod:`random`, and rather than a
+#: hash of anything the case already has. A token derived from a case id, a
+#: submission id or a sealed value would be a second name for a thing that has
+#: one, and the first thing a derived token does is leak what it was derived
+#: from. This one is drawn, not computed.
+TOKEN_BYTES = 12
+
+
+def new_token() -> str:
+    """A fresh correlation token: drawn from :mod:`secrets`, derived from nothing."""
+    return secrets.token_hex(TOKEN_BYTES)
 
 
 @dataclass(frozen=True)
@@ -155,6 +195,58 @@ class DemoSubmission:
         return now - self.created_at >= ttl
 
 
+@dataclass(frozen=True)
+class StatementAnswer:
+    """One answer the counterparty gave, as the summary table shows it.
+
+    ``value`` is the SUBMITTED string - ``ja``, ``beim_auftraggeber`` - and not
+    a rendering of it. The page prints it in a monospaced box next to a
+    translated label for the same reason the working copy is printed verbatim:
+    a second vocabulary for the values a caseworker will read out of the
+    evidence would be a second answer to "what did the Auftraggeber say".
+    """
+
+    field_id: str
+    value: str
+
+
+@dataclass(frozen=True)
+class StatementLink:
+    """One two-party correlation: one request, at most one answer (part 19).
+
+    Everything here except ``token``, ``statement_case_id`` and the two clocks
+    is a string the VISITOR typed on the intake form, held under the ``echo``
+    rule of this module's header: off their own HTTP request, in RAM, for half
+    an hour, shown back to the visitor who typed it. The Versicherungsnummer
+    and the Geburtsdatum of the applicant are deliberately NOT among them - a
+    Stellungnahme does not need them, so the counterparty surface never sees
+    them and the statement submission never carries them (ADR-036).
+    """
+
+    token: str
+    case_id: str
+    created_at: datetime
+    #: What the request letter has to be able to say.
+    auftraggeber: str = ""
+    applicant: str = ""
+    taetigkeit: str = ""
+    beginn: str = ""
+    antragsart: str = ""
+    #: Filled in when the answer arrives, and empty until then. "May or may not
+    #: come" is a state this object can be in, which is the point of it.
+    statement_case_id: str = ""
+    answered_at: datetime | None = None
+    answers: tuple[StatementAnswer, ...] = ()
+
+    @property
+    def answered(self) -> bool:
+        """Whether a statement arrived. Nothing anywhere gates on this."""
+        return bool(self.statement_case_id)
+
+    def expired(self, now: datetime, ttl: timedelta) -> bool:
+        return now - self.created_at >= ttl
+
+
 class DemoStore:
     """A tiny in-memory map of case id to :class:`DemoSubmission`.
 
@@ -174,6 +266,11 @@ class DemoStore:
         self._ttl = ttl
         self._capacity = max(1, capacity)
         self._entries: OrderedDict[str, DemoSubmission] = OrderedDict()
+        # The two-party links (part 19), keyed by the token rather than by a
+        # case id: the token is what a counterparty presents, and a map keyed
+        # by case id would have to be searched by the one thing this compartment
+        # exists to keep unguessable.
+        self._links: OrderedDict[str, StatementLink] = OrderedDict()
 
     @property
     def ttl(self) -> timedelta:
@@ -204,9 +301,89 @@ class DemoStore:
         self._sweep(now or datetime.now(UTC))
         return self._entries.get(case_id)
 
+    # ------------------------------------------- the two-party loop (part 19) ---
+
+    def request_statement(
+        self, link: StatementLink, *, now: datetime | None = None
+    ) -> StatementLink:
+        """Record that a statement was asked of one case's counterparty.
+
+        Same bounds as :meth:`put` and for the same reasons - swept, capped,
+        RAM only - and deliberately the same TTL: a request whose case's working
+        copy has already been dropped would be a letter about a case this
+        process can no longer show.
+        """
+        self._sweep(now or datetime.now(UTC))
+        self._links[link.token] = link
+        self._links.move_to_end(link.token)
+        while len(self._links) > self._capacity:
+            self._links.popitem(last=False)
+        return link
+
+    def link_by_token(
+        self, token: str, *, now: datetime | None = None
+    ) -> StatementLink | None:
+        """The request that token names, or None. Absence and expiry are one.
+
+        An unknown token is None rather than an error, which is the discipline
+        every other lookup here follows (``PersonaSet.get``, ``resolve_unit``,
+        ``resolve_language``): a stale link in somebody's browser history shows
+        a page that explains itself, never a stack trace and never somebody
+        else's request.
+        """
+        self._sweep(now or datetime.now(UTC))
+        return self._links.get(token) if token else None
+
+    def link_for_case(
+        self, case_id: str, *, now: datetime | None = None
+    ) -> StatementLink | None:
+        """The link this case is on EITHER side of, or None.
+
+        One lookup for both directions, because there is one relation: the case
+        that asked and the case that answered are two ends of the same
+        :class:`StatementLink`, and two finders would be two chances to disagree
+        about which cases are related. The caller decides which end it is
+        looking at by comparing ``case_id``.
+        """
+        self._sweep(now or datetime.now(UTC))
+        if not case_id:
+            return None
+        for link in reversed(self._links.values()):
+            if case_id in (link.case_id, link.statement_case_id):
+                return link
+        return None
+
+    def record_statement(
+        self,
+        token: str,
+        *,
+        statement_case_id: str,
+        answers: Iterable[StatementAnswer] = (),
+        now: datetime | None = None,
+    ) -> StatementLink | None:
+        """Attach the arrived statement to its request, or None if it is gone.
+
+        The link keeps its ``created_at``, so answering does not extend the
+        lifetime of anything: the whole correlation still expires when the
+        request it belongs to would have.
+        """
+        moment = now or datetime.now(UTC)
+        link = self.link_by_token(token, now=moment)
+        if link is None:
+            return None
+        answered = replace(
+            link,
+            statement_case_id=statement_case_id,
+            answered_at=moment,
+            answers=tuple(answers),
+        )
+        self._links[token] = answered
+        return answered
+
     def reset(self) -> None:
         """Drop everything. A restart does the same thing by construction."""
         self._entries.clear()
+        self._links.clear()
 
     def __len__(self) -> int:
         return len(self._entries)
@@ -215,6 +392,10 @@ class DemoStore:
         """Oldest first, which is the order the capacity evicts in."""
         return tuple(self._entries)
 
+    def tokens(self) -> tuple[str, ...]:
+        """Every live correlation token, oldest first. For tests."""
+        return tuple(self._links)
+
     def _sweep(self, now: datetime) -> None:
         for case_id in [
             case_id
@@ -222,6 +403,10 @@ class DemoStore:
             if entry.expired(now, self._ttl)
         ]:
             del self._entries[case_id]
+        for token in [
+            token for token, link in self._links.items() if link.expired(now, self._ttl)
+        ]:
+            del self._links[token]
 
 
 def _parts(envelope: Envelope) -> Iterable[WorkingCopyPart]:
