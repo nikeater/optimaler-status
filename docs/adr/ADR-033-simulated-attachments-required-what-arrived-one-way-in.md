@@ -1,6 +1,6 @@
 # ADR-033: Simulated Attachments That Really Travel, Required-What-The-Persona-Arrived-With, and One Way In
 
-**Status:** Proposed, 2026-08-18 (part 20, the intake detour)
+**Status:** Accepted, 2026-08-18 (part 20, the intake detour)
 
 ## Context
 
