@@ -1407,6 +1407,30 @@ legend {
   accent-color: var(--brand-ink);
 }
 
+/* A CHECKBOX AND ITS LABEL ARE ONE ROW (part 20), and this is a browser-walk
+   finding rather than a preference. A label is `inline-block`, so one longer
+   than the line wraps BELOW the box while a short one stays beside it - on the
+   intake page's document list at 390px that put two of three boxes on their
+   own line and the third inline, which reads as three different controls. The
+   grid gives the box its own column and lets the label and its help sentence
+   wrap in the second one, at any width. */
+.field-check {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: var(--space-2);
+  align-items: start;
+}
+
+.field-check > label,
+.field-check > .help {
+  grid-column: 2;
+}
+
+.field-check > input[type="checkbox"] {
+  /* Optically on the first line of the label rather than at its top edge. */
+  margin: 0.3rem 0 0;
+}
+
 /* Fields that belong together in the persona file sit together on the page:
    the two halves of a name, the four parts of an address. One column below
    48rem, like everything else. */

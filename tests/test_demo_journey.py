@@ -762,6 +762,25 @@ def test_the_lead_persona_opens_the_picker_and_the_others_stay_reachable(
         assert chosen[0][0] == demo_view.LEAD_PERSONA, persona_id
 
 
+def attributes(tag: str) -> set[str]:
+    """The attribute NAMES of one start tag, as a browser would parse them.
+
+    Written because a substring check is not one. The environment runs with
+    `trim_blocks` and `lstrip_blocks`, so two conditional attributes on
+    consecutive template lines render glued together - and
+    ``" required" in tag`` is perfectly happy with
+    ``requiredaria-describedby="..."``, which is a single attribute nobody has
+    ever heard of and means the control has neither. That shipped once; the
+    browser walk found it because an empty required date field submitted.
+    """
+    return {
+        name.lower()
+        for name in re.findall(
+            r"(?:^|\s)([A-Za-z-]+)(?==|[\s>])", tag[tag.index(" ") :]
+        )
+    }
+
+
 def test_what_the_persona_arrived_with_is_a_required_field(
     config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -788,12 +807,22 @@ def test_what_the_persona_arrived_with_is_a_required_field(
                 rf'<(input|select)[^>]*id="feld-{entry.field_id}"[^>]*>', body
             )
             assert control, f"{chosen.persona_id}.{entry.field_id} is not rendered"
+            names = attributes(control.group(0))
             expected = bool(entry.value.strip())
             assert demo_view.required_for(entry) is expected
-            assert (" required" in control.group(0)) is expected, (
+            assert ("required" in names) is expected, (
                 f"{chosen.persona_id}.{entry.field_id}: required attribute "
-                f"{'missing' if expected else 'present'} - the rule is that a "
-                "field the persona arrived with a value for must be sent with one"
+                f"{'missing' if expected else 'present'} ({sorted(names)}) - the "
+                "rule is that a field the persona arrived with a value for must "
+                "be sent with one"
+            )
+            # And the help sentence is still ADDRESSED, which is the attribute
+            # `required` was glued to the first time this shipped. Checked
+            # against the sentence the page actually rendered, because the view
+            # adds one to every date and every select.
+            described = f'id="hilfe-{entry.field_id}"' in body
+            assert ("aria-describedby" in names) is described, (
+                f"{chosen.persona_id}.{entry.field_id}: {sorted(names)}"
             )
         # The sentence exists once per required field, before anybody submits.
         required = sum(1 for entry in chosen.fields if entry.value.strip())
@@ -961,9 +990,14 @@ def test_the_selection_survives_a_refusal_like_every_other_answer(
         rf'<input type="checkbox" id="anlage-{ticked.attachment_id}"[^>]*>',
         refused.text,
     )
-    assert marked and " checked" in marked.group(0)
+    assert marked and "checked" in attributes(marked.group(0))
     # And the ones that were not ticked did not become ticked.
-    assert refused.text.count(" checked") == 1
+    for entry in chosen.attachments[1:]:
+        other = re.search(
+            rf'<input type="checkbox" id="anlage-{entry.attachment_id}"[^>]*>',
+            refused.text,
+        )
+        assert other and "checked" not in attributes(other.group(0))
 
 
 def test_the_red_state_is_css_over_a_state_the_browser_maintains() -> None:

@@ -129,13 +129,22 @@
           {% if field.help %}
           <span class="help" id="hilfe-{{ field.field_id }}">{{ field.help }}</span>
           {% endif %}
+          {# EVERY CONDITIONAL ATTRIBUTE CARRIES ITS OWN LEADING SPACE, and that
+             is a bug this template already shipped once. The environment runs
+             with `trim_blocks` and `lstrip_blocks` (api/metrics.py), so the
+             newline after an `{% endif %}` and the indent before the next
+             `{% if %}` are both removed - two conditional attributes on
+             consecutive lines therefore render as one attribute with both
+             names glued together (`requiredaria-describedby`), and the browser
+             quietly has neither. A leading space inside each condition is the
+             only form that cannot be undone by whitespace control. #}
           {% if field.control == "date" %}
           <input type="date" id="feld-{{ field.field_id }}" name="{{ field.field_id }}"
                  value="{{ field.value }}"{% if field.required %} required{% endif %}
-                 {% if field.help %}aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
+                 {% if field.help %} aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
           {% elif field.control == "select" %}
           <select id="feld-{{ field.field_id }}" name="{{ field.field_id }}"{% if field.required %} required{% endif %}
-                  {% if field.help %}aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
+                  {% if field.help %} aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
             {% for option in field.choices %}
             <option value="{{ option }}"{% if option == field.value %} selected{% endif %}>{{ option }}</option>
             {% endfor %}
@@ -143,7 +152,7 @@
           {% else %}
           <input type="text" id="feld-{{ field.field_id }}" name="{{ field.field_id }}"
                  value="{{ field.value }}" maxlength="200"{% if field.required %} required{% endif %}
-                 {% if field.help %}aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
+                 {% if field.help %} aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
           {% endif %}
           {% if field.required %}
           <span class="field-error">{{ t("intake.required.error") }}</span>
@@ -167,7 +176,7 @@
       <legend>{{ t("intake.attachments.legend") }}</legend>
       <p class="help">{{ t("intake.attachments.note") }}</p>
       {% for anlage in view.attachments %}
-      <div class="field">
+      <div class="field field-check">
         <input type="checkbox" id="anlage-{{ anlage.attachment_id }}"
                name="{{ anlage.field_name }}" value="1"{% if anlage.checked %} checked{% endif %}
                aria-describedby="hilfe-anlage-{{ anlage.attachment_id }}">
