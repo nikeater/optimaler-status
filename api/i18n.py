@@ -223,6 +223,15 @@ TABLE: dict[str, tuple[str, str]] = {
         "Quellcode und vollständige technische Spezifikation:",
         "Source code and the full technical specification:",
     ),
+    # THE VISIBLE TEXT OF THE SOURCE LINK, AND THE REASON IT IS NOT THE URL.
+    # `EINGANGSLOTSE_REPO_URL` points at a hosting account, and an account
+    # namespace is somebody's name: printing the address as the link's text
+    # published the maintainer's personal name in the footer of every page. The
+    # href is unchanged and still carries the configured address in full - a
+    # reader who wants it reads the status bar, copies the link or follows it.
+    # Deliberately platform-agnostic: the variable can point at any host, so a
+    # label naming one would be a label the configuration can contradict.
+    "footer.source.link": ("Zum Repository", "To the repository"),
     "footer.license": ("Lizenz: EUPL-1.2.", "Licence: EUPL-1.2."),
     # The one English line the caseworker screens carry, and only in English
     # mode. It is a `lang="en"` element inside a German document on purpose.
@@ -1099,13 +1108,16 @@ TABLE: dict[str, tuple[str, str]] = {
         "Der Quellcode ist offen und vollständig dokumentiert",
         "The source is open and fully documented",
     ),
+    # The tail moved off "im Repository" when the link below it became a label
+    # reading "Zum Repository": the sentence and the anchor sat next to each
+    # other and stuttered. Same facts, one noun said once.
     "tour.s6.d5.body": (
         "Lizenz EUPL-1.2. Architekturentscheidungen, die Spezifikation, die "
-        "bekannten Fehler und die Barrierefreiheits-Selbsteinschätzung liegen "
-        "im Repository.",
+        "bekannten Fehler und die Barrierefreiheits-Selbsteinschätzung sind "
+        "mit dem Quellcode veröffentlicht.",
         "Licence EUPL-1.2. The architecture decision records, the "
         "specification, the known errors and the accessibility self-assessment "
-        "are in the repository.",
+        "are published with the source.",
     ),
     "tour.s6.cta": ("Zu den Eval-Metriken", "To the evaluation metrics"),
     "tour.s6.a11y": (

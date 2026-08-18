@@ -583,6 +583,55 @@ def test_the_source_link_appears_only_when_it_is_configured(
     assert item in configured
 
 
+#: A configured source address, shaped like the real ones. The path segment is
+#: the point: `EINGANGSLOTSE_REPO_URL` names a hosting ACCOUNT, and an account
+#: namespace is a person's name - on GitHub and on openCode alike.
+NAMED_REPO_URL = "https://example.invalid/Some-Person-Name/eingangslotse"
+
+
+def test_the_source_address_is_a_destination_and_never_a_visible_string(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The maintainer's name is not part of this product's copy (part 24).
+
+    Four templates used to render `{{ repo_url }}` as the anchor's TEXT as well
+    as its `href`, which put the account namespace of whoever deployed the
+    instance into the footer of every page. It is a label now, and this is the
+    guard that keeps it one - written as two halves because either alone can be
+    satisfied by a page that fails the other.
+
+    The SOURCE half is the one that catches a new template: every occurrence of
+    the variable in every template has to be the value of an `href`, so a fifth
+    page cannot reintroduce the pattern by copying the fourth. The RENDERED half
+    is the one that catches everything else - a title attribute, an aria-label,
+    a `<code>` block - by configuring an address with a person-shaped path,
+    walking every page in both languages, deleting the `href="..."` occurrences
+    and asserting nothing is left.
+    """
+    for name, source in templates().items():
+        for match in re.finditer(r"\{\{\s*repo_url\s*\}\}", source):
+            before = source[: match.start()]
+            assert before.endswith('href="'), (
+                f"{name}: repo_url rendered outside an href at {match.start()}"
+            )
+
+    monkeypatch.setenv("EINGANGSLOTSE_REPO_URL", NAMED_REPO_URL)
+    client = build_client(config, monkeypatch)
+    paths = (*VISITOR_PAGES, "/demo/rundgang", *GERMAN_PAGES)
+    for path in paths:
+        for body in (client.get(path).text, in_english(client, path)):
+            assert NAMED_REPO_URL in body or "/demo/gegenpartei" in path, path
+            outside = body.replace(f'href="{NAMED_REPO_URL}"', "")
+            assert NAMED_REPO_URL not in outside, (
+                f"{path}: the source address is rendered as visible text"
+            )
+    # And the label that replaced it is on the page, in both languages. A fresh
+    # client, because `in_english` sets the cookie and leaves it set.
+    german = build_client(config, monkeypatch)
+    assert shown("footer.source.link") in german.get("/").text
+    assert shown("footer.source.link", "en") in in_english(german, "/")
+
+
 # ----------------------------------------------------------------- 5. hero ---
 
 

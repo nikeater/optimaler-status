@@ -174,8 +174,10 @@
       <dt>{{ t("tour.s6.d5.title") }}</dt>
       <dd>
         {{ t("tour.s6.d5.body") }}
+        {# The address is the destination and never the link text (part 24);
+           the base template's footer block says why. #}
         {% if repo_url %}
-        <a href="{{ repo_url }}">{{ repo_url }}</a>
+        <a href="{{ repo_url }}">{{ t("footer.source.link") }}</a>
         {% endif %}
       </dd>
     </dl>

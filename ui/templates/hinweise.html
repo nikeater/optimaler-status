@@ -59,9 +59,11 @@
 <section aria-labelledby="lizenz-heading">
   <h2 id="lizenz-heading">{{ t("hinweise.licence.heading") }}</h2>
   <p>{{ t("hinweise.licence.body") }}</p>
+  {# The address is the destination and never the link text (part 24); the base
+     template's footer block says why. #}
   {% if repo_url %}
   <p>
-    {{ t("footer.source") }} <a href="{{ repo_url }}">{{ repo_url }}</a>.
+    {{ t("footer.source") }} <a href="{{ repo_url }}">{{ t("footer.source.link") }}</a>.
     {{ t("footer.license") }}
   </p>
   {% else %}
