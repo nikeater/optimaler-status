@@ -1,6 +1,6 @@
 # ADR-034: Three Phases, Three Grounds, One Design System
 
-**Status:** Proposed, 2026-08-18 (part 21, the phase-theming detour)
+**Status:** Accepted, 2026-08-18 (part 21, the phase-theming detour)
 
 ## Context
 
