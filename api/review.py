@@ -203,6 +203,39 @@ class ReasonLine:
 
 
 @dataclass(frozen=True)
+class StatementCrossLink:
+    """The other half of a two-party Statusfeststellung, as a link (part 19).
+
+    **The same class of thing as ``QueueView.highlight``, and held to the same
+    rules.** It re-derives nothing, it changes no queue, it writes no journal
+    event and it gates nothing: what it does is name the case id at the other
+    end of a correlation the demo store already holds, so a caseworker looking
+    at a Statusfeststellung can see that the counterparty's statement arrived as
+    its own case and open it. Both cases are ordinary items in their unit's
+    queue and neither knows about the other in the journal.
+
+    ``None`` outside demo mode, always: the store that holds the correlation is
+    constructed only on a demo instance (``api/app.py``), so there is no field
+    to fill and the section renders zero bytes. That is the part-13 pattern for
+    the highlight, one layer further in.
+    """
+
+    #: The OTHER case - the one this page is not showing.
+    case_id: str
+    #: Whether this page is the case that ASKED (so the other one is the
+    #: statement) or the statement itself (so the other one is the application).
+    asked: bool
+    #: When the request went out, and when the answer arrived. Display only;
+    #: no clock in this project gates anything.
+    requested_at: datetime
+    answered_at: datetime | None = None
+
+    @property
+    def href(self) -> str:
+        return f"/review/case/{self.case_id}"
+
+
+@dataclass(frozen=True)
 class CaseView:
     """Everything the case view shows, already normalized for the template."""
 
@@ -223,6 +256,9 @@ class CaseView:
     #: absolute deadline without seeing which calendar computed it.
     dispatch_land: str = ""
     dispatch_holidays: int = 0
+    #: The two-party cross-link (part 19), on a demo instance and only when
+    #: this case is on one end of one. See :class:`StatementCrossLink`.
+    statement: StatementCrossLink | None = None
     tier_labels: dict[int, str] = field(default_factory=lambda: dict(TIER_LABELS))
     picker_note: str = PICKER_NOTE
     sampled_note: str = SAMPLED_NOTE
@@ -356,8 +392,16 @@ def build_case_view(
     now: datetime | None = None,
     message: str = "",
     error: str = "",
+    statement: StatementCrossLink | None = None,
 ) -> CaseView | None:
-    """The case view, or None when the journal knows no such case."""
+    """The case view, or None when the journal knows no such case.
+
+    ``statement`` arrives already resolved (``api/app.py``) rather than as a
+    store this module would query, and that is deliberate: `api/review` reads
+    the journal and the stores the SYSTEM has, and handing it the demo store
+    would make the caseworker surface a reader of demo state. What it takes is
+    a value that is None everywhere except on a demo instance.
+    """
     events = journal.read(case_id)
     if not events:
         return None
@@ -380,6 +424,7 @@ def build_case_view(
         error=error,
         dispatch_land=config.dispatch.land if config.dispatch else "nicht konfiguriert",
         dispatch_holidays=len(config.dispatch.holidays) if config.dispatch else 0,
+        statement=statement,
     )
 
 

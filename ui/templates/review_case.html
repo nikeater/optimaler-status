@@ -69,6 +69,61 @@
   {% endif %}
 </section>
 
+{# THE SECOND PARTY, AS A LINK AND AS NOTHING ELSE (part 19).
+
+   The same class of thing as the queue page's `highlight`, and held to the same
+   four rules: it re-derives nothing, it changes no queue, it writes no event
+   and it gates no decision. What it adds is the one fact a caseworker cannot
+   get from this screen otherwise - that the counterparty's statement arrived as
+   its own case, and which one.
+
+   Demo-gated twice over, deliberately. `view.statement` is None outside demo
+   mode because the store that holds the correlation is only constructed there
+   (`api/app.py`), and `demo.enabled` says the same thing at the template level;
+   either alone would keep the flag-off page byte-identical, and having both
+   means neither can be removed by accident. #}
+{% if demo.enabled and view.statement %}
+<section aria-labelledby="gegenpartei-heading">
+  <h2 id="gegenpartei-heading">Zweite Partei</h2>
+  {% if view.statement.asked %}
+  <p>
+    Zu diesem Statusfeststellungsantrag ist eine <strong>Stellungnahme des
+    Auftraggebers</strong> eingegangen. Sie ist kein Anhang dieses Vorgangs,
+    sondern selbst ein Eingang - versiegelt, geprüft und zugeordnet wie jeder
+    andere:
+    <a href="{{ view.statement.href }}{% if view.unit_id %}?unit={{ view.unit_id }}{% endif %}">Vorgang {{ view.statement.case_id }}</a>.
+  </p>
+  {% else %}
+  <p>
+    Dieser Vorgang <strong>ist</strong> die Stellungnahme des Auftraggebers. Der
+    Antrag der auftragnehmenden Person, zu dem sie gehört, ist
+    <a href="{{ view.statement.href }}{% if view.unit_id %}?unit={{ view.unit_id }}{% endif %}">Vorgang {{ view.statement.case_id }}</a>.
+  </p>
+  {% endif %}
+  <dl>
+    <dt>Anhörung ausgelöst</dt>
+    <dd>{{ view.statement.requested_at.isoformat() }}</dd>
+    <dt>Stellungnahme eingegangen</dt>
+    <dd>
+      {% if view.statement.answered_at %}
+      {{ view.statement.answered_at.isoformat() }}
+      {% else %}
+      noch nicht
+      {% endif %}
+    </dd>
+  </dl>
+  <p class="notice">
+    Diese Verknüpfung ist <strong>reine Anzeige</strong>: sie leitet nichts ab,
+    ändert keine Warteschlange, schreibt kein Journalereignis und wirkt auf
+    keine Entscheidung. Beide Vorgänge stehen unabhängig voneinander in ihrer
+    Warteschlange, ältester zuerst. Die Verknüpfung stammt aus dem
+    Zwischenspeicher dieser Demonstration und existiert außerhalb des
+    Demo-Betriebs nicht - eine belastbare Verbindung zweier Vorgänge wäre ein
+    eigener Ereignistyp und damit eine Vertragsänderung (ADR-036).
+  </p>
+</section>
+{% endif %}
+
 <section aria-labelledby="copy-heading">
   <h2 id="copy-heading">Arbeitskopie: was die Maschine gesehen hat</h2>
   <p>
