@@ -62,7 +62,14 @@ from engine.redact import InMemoryVaultStore, text_seal_detector
 TOKEN = "i18n-token"
 
 #: The visitor-facing pages, which are translated in full.
-VISITOR_PAGES = ("/", "/hinweise", "/demo/rundgang", "/demo/antrag", "/inbox")
+VISITOR_PAGES = (
+    "/",
+    "/hinweise",
+    "/demo/rundgang",
+    "/demo/antrag",
+    "/demo/gegenpartei",
+    "/inbox",
+)
 
 #: The caseworker pages, which stay German in both settings.
 GERMAN_PAGES = ("/review", "/review/queue/Referat_312_Renten", "/metrics")
@@ -505,6 +512,7 @@ def test_the_menu_is_a_native_disclosure_and_needs_no_script(
         "/",
         "/demo/rundgang",
         "/demo/antrag",
+        "/demo/gegenpartei",
         "/review",
         "/inbox",
         "/metrics",
@@ -527,7 +535,12 @@ def test_the_header_carries_no_demo_route_with_the_flag_off(
     client = build_client(config, monkeypatch, demo=False)
     for path in ("/review", "/inbox", "/metrics"):
         body = client.get(path).text
-        for demo_route in ("/demo/rundgang", "/demo/antrag", "/hinweise"):
+        for demo_route in (
+            "/demo/rundgang",
+            "/demo/antrag",
+            "/demo/gegenpartei",
+            "/hinweise",
+        ):
             assert demo_route not in body, f"{demo_route} on {path}"
         assert 'href="/"' not in body, path
         assert '<span class="wordmark">' in body, path

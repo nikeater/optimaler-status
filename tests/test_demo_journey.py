@@ -104,16 +104,24 @@ ARCS = {
     "musterkind_taetigkeitsbeginn_voraus": ("Referat_340_Clearingstelle", "Tier 3"),
 }
 
-#: Every citizen-facing page behind the demo flag. The tour joined in part 15
-#: and the landing page and the disclaimer page in part 16; all five are held
-#: to the same mechanical bar as the two part-13 pages.
-CITIZEN_PAGES = ("start", "hinweise", "rundgang", "antrag", "pipeline")
+#: Every citizen-facing page behind the demo flag. The tour joined in part 15,
+#: the landing page and the disclaimer page in part 16, and the counterparty
+#: surface in part 19; all six are held to the same mechanical bar as the two
+#: part-13 pages.
+#:
+#: ``gegenpartei`` is swept WITHOUT a reference, which is its own decision: the
+#: page a stranger reaches from the menu is the one that has to explain itself,
+#: and it is also the state that is hardest to notice being broken. The states
+#: with a live and an answered hearing are walked in
+#: ``tests/test_demo_gegenpartei.py``.
+CITIZEN_PAGES = ("start", "hinweise", "rundgang", "antrag", "gegenpartei", "pipeline")
 
 PATHS = {
     "start": "/",
     "hinweise": "/hinweise",
     "rundgang": "/demo/rundgang",
     "antrag": "/demo/antrag",
+    "gegenpartei": "/demo/gegenpartei",
 }
 
 
@@ -959,8 +967,22 @@ def test_a_ticked_document_follows_the_case_into_the_pipeline_view(
     assert "Beschreibung des Auftragsverhaeltnisses" in page.text
     assert '<mark class="placeholder">' in page.text
     # And the identity in the document is gone from what the page shows.
+    #
+    # PART 19 RAISED THE BOUND FROM TWO TO THREE AND ADDED THE ASSERTION THAT
+    # ACTUALLY MEANS WHAT THIS ONE WAS APPROXIMATING. The two occurrences that
+    # were always allowed are the echo pairing ("you typed this") and the
+    # "ausgefuellt als" line of stage (a). The third is the simulated Anhoerung
+    # letter, which quotes the applicant and the Auftraggeber because a hearing
+    # that named neither could not say which relationship it is about. All three
+    # are one compartment - the visitor's own value, on the visitor's own page,
+    # shown back to the visitor who typed it - and a count was only ever a proxy
+    # for the thing this test is about, which is the WORKING COPY. That is now
+    # asserted directly, over every `<pre>` on the page.
     for value in identity_strings(chosen.persona_id):
-        assert page.text.count(value) <= 2, value  # the echo only, never the copy
+        assert page.text.count(value) <= 3, value
+    for block in re.findall(r"<pre[^>]*>(.*?)</pre>", page.text, re.S):
+        for value in identity_strings(chosen.persona_id):
+            assert value not in block, f"{value!r} is in a working-copy block"
 
     # The caseworker surface still shows no document content: part 20 adds a
     # part, not a window (ADR-026).
@@ -1382,6 +1404,11 @@ def test_no_page_shows_another_visitors_identity(
     for path in (
         f"/demo/case/{second}/pipeline",
         "/demo/rundgang",
+        # Part 19's counterparty surface reached with no reference and with one
+        # that names nothing: neither may show a request that belongs to
+        # somebody else's case, which is the whole point of the token.
+        "/demo/gegenpartei",
+        "/demo/gegenpartei?zeichen=guessed",
         "/hinweise",
         "/review",
         "/review/queue/Referat_340_Clearingstelle",

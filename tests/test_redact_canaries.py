@@ -948,6 +948,16 @@ def test_no_canary_reaches_the_demo_landing_page_or_the_banner(
                 f"/review/case/{case_id}",
                 "/metrics",
                 "/inbox",
+                # Part 15's tour and part 19's counterparty surface. Both are
+                # public pages that render from constants and from the demo
+                # store, and the second one renders a LETTER built out of
+                # strings a visitor typed - which is exactly the kind of page
+                # this sweep exists for. Reached here without a reference, so
+                # what is swept is the state a stranger following the menu
+                # lands on.
+                "/demo/rundgang",
+                "/demo/gegenpartei",
+                "/demo/gegenpartei?zeichen=not-a-real-reference",
             ):
                 page = demo_client.get(path)
                 assert page.status_code == 200, path
