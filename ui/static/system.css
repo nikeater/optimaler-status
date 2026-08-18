@@ -97,6 +97,18 @@
      edge and `--caution-text` (7.70:1 on the tint) carries the words. */
   --caution: #b45a00; /* 4.77:1 on white, 4.36:1 on --tint-caution */
   --caution-text: #7a3d00; /* 8.42:1 on white, 7.70:1 on --tint-caution */
+  /* THE THIRD FAMILY (part 21), and the fourth element colour. The caseworker
+     ground below is a warm amber world, and amber has the same arithmetic the
+     sky blue has: `--amber` measures 3.83:1 on white and 3.06:1 on the palest
+     amber surface, so it clears the 3:1 an edge needs and CANNOT reach the
+     4.5:1 a word needs. Yellow therefore carries surfaces and edges and the
+     amber-browns carry every letter - the identical split as `--brand` /
+     `--brand-ink` and `--alarm` / `--alarm-text`, held by the same regex over
+     every stylesheet rather than by anybody remembering. Declared here, where
+     the palette is declared; used by `.ground-casework`. */
+  --amber: #b07700; /* 3.83:1 on white - EDGES AND FILLS ONLY, never text */
+  --amber-ink: #8a4f0a; /* 6.56:1 on white, 5.24:1 on the deepest amber */
+  --amber-ink-strong: #5f3705; /* 10.32:1 on white - hover, buttons, the ring */
 
   --surface: #ffffff;
   --surface-alt: #f5f7f9;
@@ -149,6 +161,24 @@
   /* Decorative only: a hairline accent, never a text bed. */
   --grad-rule: linear-gradient(90deg, #0c4e73, #4db2ec 50%, #0c4e73);
   --grad-panel: linear-gradient(160deg, #f2f8fd, #ffffff 62%);
+
+  /* THE INK ON A FILL, WHICH IS NOT ALWAYS WHITE (part 21). Every component
+     that paints `--grad-cta` or `--brand-ink-strong` under a label - the skip
+     link, the menu control, a button, the call to action, the wordmark's
+     glyph, a completed step - wrote `#ffffff` in place. On the machine ground
+     the same components are a LIGHT blue fill, because a dark button on a dark
+     card measures 2.30:1 against it and stops being visible as a control; the
+     ink on that fill has to be dark. One token, so the inversion is a value
+     rather than six overrides. `#ffffff` on the light gradient's palest stop is
+     the 6.51:1 this palette has always shipped.
+     THE BAND'S OWN WHITE IS NOT THIS TOKEN and stays a literal: the closing
+     band is dark on all three grounds, so its wordmark and its focus ring are
+     white everywhere and must not follow a ground that inverts. */
+  --cta-ink: #ffffff;
+
+  /* The sticky header's translucent fill, so the page visibly passes UNDER it.
+     A token because it is a colour and every ground has its own. */
+  --header-veil: rgba(255, 255, 255, 0.86);
 
   /* THE TYPE SCALE. Two ramps: a fixed one in `rem` for everything that reads
      as text, and a fluid one for the three sizes that are the page speaking
@@ -220,6 +250,234 @@
   /* The desktop container. 80rem is the part-16 width; the pages breathe into
      real columns at 48rem, 64rem and 80rem rather than growing one long line. */
   --measure: 80rem;
+}
+
+/* ------------------------------------------------------ the three grounds */
+
+/* PART 21: THE DEMONSTRATION HAS THREE PHASES AND THEY LOOK LIKE THREE WORLDS.
+   The product already names them - `PHASES = ("antrag", "maschine",
+   "sachbearbeitung")` in `api/demo.py`, and the step indicator counts a visitor
+   through them - and until this part all three rendered on the same sky-blue
+   canvas. What follows gives each phase its own ground.
+
+   ONE DESIGN SYSTEM, NOT THREE STYLESHEETS. Every rule below this section is
+   written once and reads its colours from tokens; a ground is a body class that
+   re-points those tokens and nothing else. No component is duplicated, no page
+   sheet is forked, and a rule added to a card is a rule on all three grounds by
+   construction. The three grounds are:
+
+     (default)          the citizen: `/`, `/demo/antrag`, `/demo/rundgang`,
+                        `/hinweise`, `/inbox`. The part-18 sky-blue canvas,
+                        UNCHANGED - `:root` above is this ground, which is why
+                        a citizen page carries no class at all.
+     .ground-machine    what the machine does inside: `/demo/case/{id}/pipeline`
+                        and `/metrics`. Deep blue-slate in the brand's own hue.
+     .ground-casework   the caseworker: `/review`, `/review/queue/*`,
+                        `/review/case/*`. Warm amber paper.
+
+   THE GROUNDS ARE PRODUCT STYLING, NOT A DEMO FEATURE. `/review*` and
+   `/metrics` exist with the demo posture off, and the class on their `<body>`
+   is unconditional: theming here is CSS plus a static class, never a byte that
+   depends on a flag, so the flag-off byte-identity suite is untouched by it.
+
+   EVERY PAIR ON A NEW GROUND WAS COMPUTED BEFORE IT SHIPPED, and the ratios in
+   the comments below are those computations. Part 18 put a focus ring on the
+   closing band at 1.34:1 - an indicator nobody could see, found by arithmetic
+   and not by looking - and two new grounds are that failure mode multiplied by
+   two. The full matrix is in `docs/accessibility-selfcheck.md`. Two pairs broke
+   in exactly that way here and both are fixed at the bottom of this file, in
+   "the components that a ground breaks": the current step's number, which is
+   `--ink` on the sky-blue disc and inverts to 2.05:1 when `--ink` goes light,
+   and the primary button, which is a dark gradient that measures 2.30:1
+   against a dark card and had to become a light fill with dark ink.
+
+   WHAT A GROUND MAY AND MAY NOT MOVE. A ground re-points the SURFACE ladder,
+   the ink ladder, the phase family and the two gradients that carry them. It
+   does NOT move the meaning of a semantic hue: green is the good state, red is
+   the refusal and orange is the caution on all three grounds, and where those
+   tokens change value it is only so a green stays green on a dark surface. The
+   caution family's ONLY consumer outside the demo ribbon is `.badge-warn`, and
+   the ribbon renders on `/` and `/hinweise`, which are citizen pages. */
+
+/* THE MACHINE GROUND. Not black: a deep blue-slate at the brand's own hue,
+   lifted through five surfaces so a card still sits above a canvas and a
+   `<code>` token still sits inside it. The ladder is the light one inverted -
+   `--canvas` is the darkest, `--surface` is a step up, `--surface-alt` and
+   `--surface-sunken` are two more - which is what keeps every part-18 component
+   rendering correctly without a single component-level override.
+
+   Worst text ratio on this ground: 5.36:1 (`--muted` on `--surface-sunken`),
+   against 4.5. Worst element ratio: 3.75:1 (`--line-strong` on the same),
+   against 3.0. Both are BETTER than the light ground's own worst numbers
+   (5.06 and 3.56). */
+.ground-machine {
+  /* Native controls, the caret and the viewport's scrollbar follow this rather
+     than a stylesheet, and the used value is taken from the ROOT element -
+     which is why the rule under this block reaches for the root instead. */
+  color-scheme: dark;
+
+  --canvas: #101b24; /* --ink 15.16:1 */
+  --canvas-top: #152736; /* the wash, bluer at the top; --ink 13.28:1 */
+  --surface: #1b2836; /* cards and the header; --ink 13.01:1 */
+  --surface-alt: #22303e; /* table heads, articles, notices; --ink 11.70:1 */
+  --surface-sunken: #2a3a4a; /* <code>, the placeholder token; --ink 10.13:1 */
+
+  --tint-brand: #1c3b52; /* --brand-ink-strong 8.73:1 */
+  --tint-brand-soft: #16232f; /* a hovered row, a tinted zone; --ink 13.88:1 */
+  --tint-ok: #14332a; /* --ok 7.33:1 */
+  --tint-alarm: #3a1f22; /* --alarm-text 7.46:1 */
+  --tint-caution: #3a2b14; /* --caution-text 8.08:1 */
+  --tint-sample: #1e2a3c; /* the calmest surface here too (ADR-025) */
+
+  --ink: #e9f0f6; /* 13.01:1 on --surface */
+  --ink-soft: #c3d2de; /* 9.69:1 */
+  --muted: #a2b2c0; /* 6.89:1, and 5.36:1 on the sunken surface */
+
+  /* The sky blue is unchanged and still may not carry text. It finally has a
+     ground it would pass on - 6.34:1 against a card - and the rule that it is
+     a fill, a rule and an edge is structural rather than a matter of where it
+     happens to measure well. What inverts is the family's TEXT weights: on a
+     dark surface the readable member of a blue family is a light blue. */
+  --brand: #4db2ec; /* 6.34:1 on --surface - element only */
+  --brand-ink: #8ecdf2; /* 8.67:1 - links */
+  --brand-ink-strong: #bfe4fa; /* 11.18:1 - hover, buttons, the ring */
+  --focus: #bfe4fa; /* 8.71:1 at its worst, on --surface-sunken */
+
+  /* The semantic families keep their meanings and lose their darkness: a green
+     at #10683c measures 1.4:1 on this canvas and would be a state nobody could
+     read. Same hue, inverted weight. */
+  --ok: #5fd39a; /* 8.03:1 on --surface */
+  --alarm: #ef6b6b; /* 4.98:1 on --surface, 3.88:1 at its worst - edges only */
+  --alarm-text: #ffa9a2; /* 8.16:1 on --surface */
+  --caution: #c98126; /* 4.74:1 on --surface, 3.69:1 at its worst */
+  --caution-text: #f0bf72; /* 8.84:1 on --surface */
+  --warn: #e8bd7a; /* still reserved, still unused; 8.54:1 if it is ever used */
+
+  --line: #33455a; /* 1.52:1 on --surface - decorative, like its light twin */
+  --line-strong: #7f95a6; /* 4.81:1 on --surface, 3.75:1 at its worst */
+
+  /* THE BUTTON HAD TO INVERT. `--grad-cta` runs #106393 to #0c4e73 on the light
+     ground and measures 2.30:1 and 1.68:1 against a dark card - a control that
+     is not distinguishable from its surroundings, which is exactly what 1.4.11
+     forbids. There is no dark blue that fixes it: white text needs the fill
+     dark and the dark card needs the fill light, and the two requirements have
+     no overlap. So the fill goes light and `--cta-ink` goes dark with it. */
+  --cta-ink: #0d1a24; /* 11.59:1 and 10.22:1 on the two stops */
+  --grad-cta: linear-gradient(135deg, #a9d8f2, #8ecdf2);
+  --grad-mark: linear-gradient(135deg, #a9d8f2, #8ecdf2);
+  /* Decorative, and brighter here so the 3px masthead line is a line rather
+     than a smudge: the light ground's #0c4e73 end stops measure 1.68:1 on this
+     surface. */
+  --grad-rule: linear-gradient(90deg, #2f8fc7, #4db2ec 50%, #2f8fc7);
+  --grad-panel: linear-gradient(160deg, #22303e, #1b2836 62%);
+
+  --header-veil: rgba(27, 40, 54, 0.86);
+
+  /* THE CLOSING BAND, INVERTED SO IT STILL READS AS A FOOTER. On a light page
+     the band is the darkest thing on the screen (10.63:1 against the canvas);
+     on this one the same navy measures 1.46:1 against the canvas and stops
+     being a band. It goes one step LIGHTER and bluer than the page instead -
+     the same principle, which is that the closing band is the surface that
+     differs most from the page it ends. Its own ink and link are unchanged and
+     both still clear their floors on the new value. */
+  --band: #0e456a; /* 1.73:1 against --canvas, 1.48:1 against --surface */
+  --band-ink: #e8f1f7; /* 8.83:1 on the band */
+  --band-link: #a9d8f2; /* 6.64:1 on the band */
+
+  /* A blue-tinted shadow is invisible on a blue-slate page. Black, and deeper,
+     because on a dark ground elevation is carried by the shadow and by the
+     surface step rather than by the shadow alone. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.36), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.36), 0 10px 24px -8px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 4px 10px rgba(0, 0, 0, 0.4), 0 22px 44px -14px rgba(0, 0, 0, 0.7);
+}
+
+/* The used `color-scheme` is propagated to the viewport from the ROOT element
+   only, so a class on `<body>` cannot darken the document's scrollbar on its
+   own. This reaches the root from the class that is actually stable in the page
+   shell. An engine without `:has()` renders a light scrollbar beside a dark
+   page and loses nothing else - the same bargain the invalid-field label makes
+   with the same selector further down. */
+html:has(> .ground-machine) {
+  color-scheme: dark;
+}
+
+/* THE CASEWORK GROUND. Warm amber paper: a cream canvas, near-white cards, and
+   a family of amber-browns for everything a caseworker reads. The split the
+   brief demands is arithmetic and not taste - `--amber` cannot reach 4.5:1 on
+   any surface on this ground (3.06:1 at its worst, 3.83:1 on white), so yellow
+   draws the edges and the amber-browns carry every word.
+
+   Worst text ratio on this ground: 4.99:1 (`--muted` on `--surface-sunken`),
+   against 4.5. Worst element ratio: 3.06:1 (`--amber` on the same), against
+   3.0. */
+.ground-casework {
+  --canvas: #f6ebd6; /* --ink 13.99:1 */
+  --canvas-top: #fdf3dc; /* the wash, warmer at the top; --ink 14.97:1 */
+  --surface: #fffdf9; /* cards and the header; --ink 16.27:1 */
+  --surface-alt: #fbf4e5; /* table heads, articles, notices; --ink 15.09:1 */
+  --surface-sunken: #f0e5cd; /* <code>, the language pill; --ink 13.22:1 */
+
+  --tint-brand: #fbe8c1; /* --brand-ink-strong 8.56:1 */
+  --tint-brand-soft: #fdf5e3; /* a hovered row, a tinted zone; --ink 15.22:1 */
+  /* The sampled case keeps the calmest surface on the page (ADR-025). On this
+     ground the calmest thing is a warm grey, not the blue one: a cool patch on
+     warm paper reads as a highlight, which is the one thing a random draw must
+     never look like. */
+  --tint-sample: #f1efe7; /* --ink 14.72:1 */
+
+  /* THE PHASE FAMILY IS THE AMBER FAMILY. Every structural token in the blue
+     family points at its amber sibling, which is what makes a link, a legend,
+     a badge, a button and a hover state change world together without a single
+     component rule being written twice. The element/text split travels with
+     them: `--brand` is the member that may not carry text on either ground. */
+  --brand: var(--amber); /* #b07700 - 3.77:1 on --surface, element only */
+  --brand-ink: var(--amber-ink); /* #8a4f0a - 6.45:1 on --surface */
+  --brand-ink-strong: var(--amber-ink-strong); /* #5f3705 - 10.16:1 */
+  --focus: var(--amber-ink-strong); /* 8.25:1 at its worst, on the sunken */
+
+  /* Warm ink, because a neutral near-black on cream reads as a screenshot of a
+     different site pasted onto this one. */
+  --ink: #241e14; /* 16.27:1 on --surface */
+  --ink-soft: #4a4032; /* 9.98:1 */
+  --muted: #6b5f4c; /* 6.14:1, and 4.99:1 on the sunken surface */
+
+  /* The semantic families are UNCHANGED here, tints included, and that is the
+     point rather than an omission. This ground is light, so the light values
+     still measure what they measured: `--ok` 6.74:1 on a card, `--alarm-text`
+     9.19:1, `--caution-text` 8.28:1. A state that looked one way on the citizen
+     pages looks the same way here, which is what "the semantic red keeps its
+     meaning on all grounds" has to mean if it means anything. */
+
+  --line: #e6d8bc; /* 1.39:1 on --surface - decorative */
+  --line-strong: #7e7053; /* 4.77:1 on --surface, 3.88:1 at its worst */
+
+  --grad-cta: linear-gradient(135deg, #8a4f0a, #5f3705);
+  --grad-mark: linear-gradient(135deg, #8a4f0a, #5f3705);
+  /* Decorative. The gold mid-stop measures 2.49:1 on a card, which is what the
+     sky blue measures on white (2.36:1) in the same role. */
+  --grad-rule: linear-gradient(90deg, #5f3705, #cf9a1f 50%, #5f3705);
+  --grad-panel: linear-gradient(160deg, #fdf5e3, #fffdf9 62%);
+
+  --header-veil: rgba(255, 253, 249, 0.86);
+
+  /* The closing band, in this world's colour. A navy band under amber paper
+     reads as a footer borrowed from another site; this is the same object -
+     the darkest surface on the page, 11.55:1 against the canvas - in warm
+     brown. Its link is an amber that WOULD fail on paper and passes here at
+     9.21:1, which is the same licence `--band-link` has always had: the band
+     is its own surface with its own measured ink, exactly as the light ground's
+     #a9d8f2 is a sky blue that could not carry text on white either. */
+  --band: #3d2a12; /* 11.55:1 against --canvas */
+  --band-ink: #f6ecd8; /* 11.64:1 on the band */
+  --band-link: #f3cf95; /* 9.21:1 on the band */
+
+  /* Warm shadows, so a card's elevation is the same light source as its page. */
+  --shadow-sm: 0 1px 2px rgba(61, 42, 18, 0.07), 0 1px 3px rgba(61, 42, 18, 0.06);
+  --shadow-md: 0 2px 4px rgba(61, 42, 18, 0.08),
+    0 10px 24px -8px rgba(61, 42, 18, 0.2);
+  --shadow-lg: 0 4px 10px rgba(61, 42, 18, 0.1),
+    0 22px 44px -14px rgba(61, 42, 18, 0.3);
 }
 
 /* -------------------------------------------------------------------- base */
@@ -397,7 +655,7 @@ hr {
   z-index: 40;
   padding: var(--space-3) var(--space-5);
   background: var(--brand-ink-strong);
-  color: #ffffff;
+  color: var(--cta-ink);
   font-weight: 650;
   border-radius: 0 0 var(--radius) 0;
   box-shadow: var(--shadow-lg);
@@ -457,7 +715,7 @@ hr {
    white above and lose nothing but the effect. */
 @supports (backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px)) {
   .site-header {
-    background-color: rgba(255, 255, 255, 0.86);
+    background-color: var(--header-veil);
     -webkit-backdrop-filter: saturate(1.7) blur(14px);
     backdrop-filter: saturate(1.7) blur(14px);
   }
@@ -495,7 +753,7 @@ hr {
   flex: none;
   border-radius: var(--radius);
   background: var(--grad-mark);
-  color: #ffffff;
+  color: var(--cta-ink);
   box-shadow: var(--shadow-sm);
 }
 
@@ -597,7 +855,7 @@ a.wordmark:hover .wordmark-name {
   border: 1px solid transparent;
   border-radius: var(--radius);
   background: var(--grad-cta);
-  color: #ffffff;
+  color: var(--cta-ink);
   font-size: var(--text-sm);
   font-weight: 650;
   cursor: pointer;
@@ -747,6 +1005,17 @@ main {
 .page-head > p {
   color: var(--ink-soft);
   font-size: var(--text-md);
+}
+
+/* The lead paragraph: one size up, so the first thing a visitor reads is
+   visibly the first thing. In the design system since part 21 - it was in
+   `demo.css`, and `/metrics` and `/inbox` ask for it without loading that file.
+   Neither page LOOKED wrong, because both put their lead inside `.page-head`
+   and the rule above already gives it this size and this ink; the class they
+   asked for simply did not exist. `demo.css` carries the longer note. */
+.lead {
+  font-size: var(--text-md);
+  color: var(--ink-soft);
 }
 
 .language-note {
@@ -1165,7 +1434,7 @@ article > pre {
 .phase-done .phase-mark {
   background: var(--grad-cta);
   border-color: var(--brand-ink-strong);
-  color: #ffffff;
+  color: var(--cta-ink);
 }
 
 .phase-done::before,
@@ -1587,7 +1856,7 @@ button {
   border: 1px solid transparent;
   border-radius: var(--radius);
   background: var(--grad-cta);
-  color: #ffffff;
+  color: var(--cta-ink);
   cursor: pointer;
   box-shadow: var(--shadow-sm);
   transition: box-shadow var(--tempo) var(--ease),
@@ -1623,7 +1892,7 @@ button:active {
   border: 1px solid transparent;
   border-radius: var(--radius);
   background: var(--grad-cta);
-  color: #ffffff;
+  color: var(--cta-ink);
   font-weight: 650;
   text-decoration: none;
   box-shadow: var(--shadow-sm);
@@ -1632,7 +1901,7 @@ button:active {
 }
 
 .cta:hover {
-  color: #ffffff;
+  color: var(--cta-ink);
   box-shadow: var(--shadow-md);
   transform: translateY(-2px);
 }
@@ -1954,6 +2223,35 @@ tbody .sample-row > td {
 td > .empty,
 th > .empty {
   padding: var(--space-6) var(--space-4);
+}
+
+/* ------------------------------ the components that a ground breaks */
+
+/* PART 21. Every rule above this line reads its colours from tokens, so the
+   three grounds get all of them for free. This section is the exceptions - the
+   places where a component hard-codes a RELATION between two tokens and the
+   relation stops holding when a ground moves one of them. There is exactly one
+   of them, and it was found by computing the pair rather than by looking at the
+   page, which is the whole method.
+
+   THE CURRENT STEP'S NUMBER. `.phase-current .phase-mark` fills the disc with
+   `--brand` and writes the number on it in `--ink`. That is 6.74:1 on the light
+   ground, where `--ink` is nearly black and the sky blue is a light fill - and
+   2.05:1 on the machine ground, where `--brand` is the SAME sky blue and
+   `--ink` has gone light. Two light values on top of each other: the one number
+   on the strip that says which phase a visitor is in, unreadable, on the one
+   page in the project where phase 2 is the current phase. `--cta-ink` is the
+   token for exactly this - the ink that goes on a brand-family fill - and it
+   measures 7.47:1 there.
+
+   The casework ground never renders this component: the step indicator is a
+   demo affordance and the caseworker UI never learns that a tour is running
+   (part 13, ruling 5). For the record, `--ink` on `--amber` would be 4.32:1 on
+   that ground, which is why this note exists rather than a rule with no user:
+   a template that ever puts the strip on a caseworker page has to bring the
+   same override with it. */
+.ground-machine .phase-current .phase-mark {
+  color: var(--cta-ink);
 }
 
 /* ------------------------------------------------ the desktop breakpoints */

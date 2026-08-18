@@ -1,6 +1,12 @@
 {% extends "demo_base.html" %}
 {% set state = view.state %}
 {% set case = state.case %}
+{# THE MACHINE PHASE HAS ITS OWN GROUND (part 21). This is the page that shows
+   what the machine did inside, and it renders on the deep blue-slate family
+   rather than on the citizen canvas - the phase the step indicator above calls
+   "Maschine", made visible. Nothing but the class changes here: every rule the
+   ground re-points lives in `system.css`. #}
+{% block ground %} class="ground-machine"{% endblock %}
 {% block title %}{{ t("pipeline.title") }}{% endblock %}
 {% block heading %}{{ t("pipeline.headline") }}{% endblock %}
 {% block content %}

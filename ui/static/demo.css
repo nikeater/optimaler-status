@@ -30,14 +30,23 @@
 
 /* ----------------------------------------------------------------- shared */
 
-/* The lead paragraph: one size up, so the first thing a visitor reads is
-   visibly the first thing. */
-.lead {
-  font-size: var(--text-md);
-  color: var(--ink-soft);
-}
+/* `.lead` MOVED TO system.css IN PART 21, found the same way the `.cta` move
+   below was found: auditing every component on the two new grounds. `/metrics`
+   and `/inbox` both open with `<p class="lead">` and neither of them loads this
+   file, so on both of those pages the class resolved to nothing at all.
 
-/* `.cta` MOVED TO system.css IN PART 17. It was defined here and used by
+   IT DID NOT LOOK WRONG, AND THAT IS THE WHOLE REASON TO MOVE IT. Both of those
+   paragraphs sit inside `.page-head`, and `.page-head > p` in the design system
+   already sets the same size and the same ink - so those two pages rendered
+   correctly by coincidence of WHERE the paragraph sits rather than because the
+   class they ask for exists. Move that `<p>` out of the page head, or add a
+   second lead further down either page, and the sentence silently becomes body
+   text. `.cta` below was this same omission with a visible consequence, which
+   is why it was found in part 17 by looking; this is the same omission with no
+   visible consequence, which is why it took an audit. A component five
+   templates ask for belongs in the one file every page loads.
+
+   `.cta` MOVED TO system.css IN PART 17. It was defined here and used by
    `metrics.html`, which loads system.css and metrics.css and never loaded this
    file - so the metrics reload control asked for a class that did not exist on
    its page and rendered as a bare inline link with no background, no border
@@ -570,7 +579,7 @@
   border: 0;
   border-radius: var(--radius-pill);
   background: var(--grad-cta);
-  color: #ffffff;
+  color: var(--cta-ink);
   font-size: var(--text-md);
   font-weight: 700;
   box-shadow: var(--shadow-sm);

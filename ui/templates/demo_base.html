@@ -20,7 +20,13 @@
    THE FOOTER IS THE CLOSING BAND (part 18). Full width like the header, with
    the wordmark on one side and the page's own sentences on the other. The
    sentences are unchanged - they are the honesty text, and part 18 restyled
-   their container rather than their words. #}
+   their container rather than their words.
+
+   THE GROUND IS A CLASS ON `<body>` (part 21). Four of the five templates that
+   extend this base are citizen pages and fill the block with nothing, so their
+   `<body>` renders exactly the byte it always did; `demo_pipeline.html` is the
+   machine phase and fills it. The block emits the whole attribute rather than a
+   class name into a fixed `class=""`, for that reason. #}
 {% import "_icons.html" as icons %}
 <!DOCTYPE html>
 <html lang="{{ lang }}">
@@ -31,7 +37,7 @@
   <link rel="stylesheet" href="/static/system.css">
   <link rel="stylesheet" href="/static/demo.css">
 </head>
-<body>
+<body{% block ground %}{% endblock %}>
   <a class="skip-link" href="#inhalt">{{ t("chrome.skip") }}</a>
   {% include "_site_header.html" %}
   {% block ribbon %}{% endblock %}
