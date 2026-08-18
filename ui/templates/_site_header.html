@@ -70,6 +70,12 @@
             <li><a href="/">{{ icons.icon("home") }}<span>{{ t("chrome.nav.home") }}</span></a></li>
             <li><a href="/demo/rundgang">{{ icons.icon("shield") }}<span>{{ t("chrome.nav.tour") }}</span></a></li>
             <li><a href="/demo/antrag">{{ icons.icon("form") }}<span>{{ t("chrome.nav.intake") }}</span></a></li>
+            {# The counterparty surface (part 19). In the menu even though it is
+               only useful with a reference from a letter, because a judge with
+               no presenter has to be able to FIND the second half of the loop -
+               and because the page reached without one is an explanation of
+               what it is plus the way to earn a hearing, not a dead end. #}
+            <li><a href="/demo/gegenpartei">{{ icons.icon("envelope") }}<span>{{ t("chrome.nav.gegenpartei") }}</span></a></li>
             {% endif %}
             <li><a href="/review">{{ icons.icon("queue") }}<span>{{ t("chrome.nav.review") }}</span></a></li>
             <li><a href="/inbox">{{ icons.icon("envelope") }}<span>{{ t("chrome.nav.inbox") }}</span></a></li>

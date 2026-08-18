@@ -727,6 +727,61 @@
   margin-bottom: var(--space-2);
 }
 
+/* --------------------------------------- the simulated letter (part 19) */
+
+/* THE ANHOERUNG, AS THE DOCUMENT IT IS. The flowchart this part implements drew
+   a popup; this is a letter instead, and it has to LOOK like one or the
+   distinction is only in the source. A sheet with generous margins, the body
+   face rather than the monospaced one (`pre` is for machine text - a working
+   copy, a message body - and this is a letter a person would have read), and a
+   left rule that marks it as an enclosure rather than as page prose.
+
+   Every colour is a token, so the sheet follows whichever ground it lands on:
+   the citizen canvas on `/demo/gegenpartei`, the deep blue-slate of the machine
+   phase on `/demo/case/{id}/pipeline`. Nothing here declares a colour of its
+   own, which is what keeps the contrast floors computed from `system.css` true
+   of it (tests/test_review_accessibility.py).
+
+   `pre-line` rather than `<br>`: the letter arrives as paragraphs from
+   `engine/demo/gegenpartei.py` and two of them carry their own line breaks (the
+   reference block, the sign-off). Whitespace is the only thing that has to
+   survive, and a template that injected markup into text a visitor's own
+   company name is interpolated into would be the wrong place to start. */
+.letter {
+  margin: 0 0 var(--space-5);
+  padding: var(--space-6) var(--space-6) var(--space-5);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+  box-shadow: var(--shadow-sm);
+}
+
+.letter > p {
+  margin: 0 0 var(--space-4);
+  white-space: pre-line;
+}
+
+.letter > p:first-child {
+  font-weight: 650;
+  margin-bottom: var(--space-1);
+}
+
+/* The subject line sits directly under the sender and belongs with it. */
+.letter > p:nth-child(2) {
+  font-weight: 600;
+}
+
+.letter > p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 40rem) {
+  .letter {
+    padding: var(--space-4);
+  }
+}
+
 /* The hand-off between two phases. Deliberately the loudest thing on its
    page: a visitor who loses the thread here loses the tour. */
 .handover {

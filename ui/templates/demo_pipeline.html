@@ -20,6 +20,22 @@
   {% if view.sampled %}
   <p class="notice sample-note">{{ t("pipeline.sampled") }}</p>
   {% endif %}
+  {# PART 19, and the position is the whole of the reasoning: the two-party
+     section itself sits where it belongs in the story (between the message and
+     the hand-off), which is a long way down a page with seven stages on it. A
+     visitor who just submitted has to be TOLD there is a second party, at the
+     top, or the loop is discoverable only by scrolling. Two lines and a link,
+     with the letter and the detail left where they belong. #}
+  {% if view.statement and view.statement.asked %}
+  <p class="notice">
+    {% if view.statement.answered %}
+    {{ m("pipeline.statement.notice.arrived") }}
+    {% else %}
+    {{ m("pipeline.statement.notice") }}
+    {% endif %}
+    <a href="#gegenpartei">{{ t("pipeline.statement.heading") }}</a>
+  </p>
+  {% endif %}
 </section>
 
 <section aria-labelledby="a-heading" class="stage">
@@ -365,6 +381,77 @@
   <p class="muted">{{ t("pipeline.f.none") }}</p>
   {% endif %}
 </section>
+
+{# THE SECOND PARTY (part 19). Deliberately NOT lettered, and deliberately not
+   inside the a) to g) run: those seven are what the machine did to this case
+   and every one of them is readable off the journal. This one is the demo layer
+   simulating an Anhoerung, it writes no event, and a heading that said "h)"
+   would claim a pipeline stage that does not exist. It sits between the message
+   and the hand-off because that is where it happens in the procedure: the
+   Clearingstelle hears the other side before a caseworker takes the file. #}
+{% if view.statement %}
+<section aria-labelledby="gegenpartei-heading" id="gegenpartei" class="stage">
+  <h2 id="gegenpartei-heading">
+    {% if view.statement.asked %}
+    {{ t("pipeline.statement.heading") }}
+    {% else %}
+    {{ t("pipeline.statement.origin.heading") }}
+    {% endif %}
+  </h2>
+  {% if view.statement.asked %}
+  <p>{{ t("pipeline.statement.body") }}</p>
+  <p class="notice">{{ t("pipeline.statement.demo_note") }}</p>
+
+  <h3>{{ t("pipeline.statement.letter.heading") }}</h3>
+  <p class="muted" lang="en">{{ t("pipeline.statement.letter.note") }}</p>
+  <div class="letter" lang="de">
+    {% for paragraph in view.statement.letter %}
+    <p>{{ paragraph }}</p>
+    {% endfor %}
+  </div>
+
+  {% if view.statement.answered %}
+  <h3>{{ t("pipeline.statement.arrived.heading") }}</h3>
+  <p>{{ t("pipeline.statement.arrived.body", at=view.statement.answered_label) }}</p>
+  {% if view.statement.answers %}
+  <div class="scroll-x">
+    <table>
+      <caption>{{ t("pipeline.statement.answers.caption") }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{ t("pipeline.statement.answers.col1") }}</th>
+          <th scope="col">{{ t("pipeline.statement.answers.col2") }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for answer in view.statement.answers %}
+        <tr>
+          <th scope="row">{{ answer.label }}</th>
+          <td><code>{{ answer.value }}</code></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+  <p class="handover">
+    <a href="{{ view.statement.statement_href }}">{{ t("pipeline.statement.arrived.link") }}</a>
+  </p>
+  {% else %}
+  <p class="notice">{{ t("pipeline.statement.waiting") }}</p>
+  <p class="handover">
+    <a href="{{ view.statement.answer_href }}">{{ t("pipeline.statement.cta") }}</a>
+  </p>
+  {% endif %}
+  {% else %}
+  <p>{{ t("pipeline.statement.origin.body") }}</p>
+  <p class="notice">{{ t("pipeline.statement.minimal") }}</p>
+  <p class="handover">
+    <a href="{{ view.statement.origin_href }}">{{ t("pipeline.statement.origin.link") }}</a>
+  </p>
+  {% endif %}
+</section>
+{% endif %}
 
 <section aria-labelledby="g-heading" class="stage">
   <h2 id="g-heading">{{ t("pipeline.g.heading") }}</h2>

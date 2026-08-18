@@ -25,6 +25,7 @@
    block plus restoring `OFFERED_CHANNELS` brings the tab back exactly as it
    was. #}
 {% extends "demo_base.html" %}
+{% import "_field.html" as fields with context %}
 {% block title %}{{ t("intake.title") }}{% endblock %}
 {% block heading %}{{ t("intake.headline") }}{% endblock %}
 {% block content %}
@@ -116,51 +117,11 @@
          field is PRE-RENDERED and shown by CSS, so nothing has to be inserted
          at the moment it is needed. #}
       <p class="help">{{ t("intake.required.note") }}</p>
-      {% for row in view.rows %}
-      <div class="field-row field-row-{{ row|length }}">
-        {% for field in row %}
-        <div class="field">
-          <label for="feld-{{ field.field_id }}">
-            {{ field.label }}
-            {% if field.kind and loop.first %}
-            <span class="tag">{{ t("intake.sealed_as", kind=t("kind." ~ field.kind)) }}</span>
-            {% endif %}
-          </label>
-          {% if field.help %}
-          <span class="help" id="hilfe-{{ field.field_id }}">{{ field.help }}</span>
-          {% endif %}
-          {# EVERY CONDITIONAL ATTRIBUTE CARRIES ITS OWN LEADING SPACE, and that
-             is a bug this template already shipped once. The environment runs
-             with `trim_blocks` and `lstrip_blocks` (api/metrics.py), so the
-             newline after an `{% endif %}` and the indent before the next
-             `{% if %}` are both removed - two conditional attributes on
-             consecutive lines therefore render as one attribute with both
-             names glued together (`requiredaria-describedby`), and the browser
-             quietly has neither. A leading space inside each condition is the
-             only form that cannot be undone by whitespace control. #}
-          {% if field.control == "date" %}
-          <input type="date" id="feld-{{ field.field_id }}" name="{{ field.field_id }}"
-                 value="{{ field.value }}"{% if field.required %} required{% endif %}
-                 {% if field.help %} aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
-          {% elif field.control == "select" %}
-          <select id="feld-{{ field.field_id }}" name="{{ field.field_id }}"{% if field.required %} required{% endif %}
-                  {% if field.help %} aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
-            {% for option in field.choices %}
-            <option value="{{ option }}"{% if option == field.value %} selected{% endif %}>{{ option }}</option>
-            {% endfor %}
-          </select>
-          {% else %}
-          <input type="text" id="feld-{{ field.field_id }}" name="{{ field.field_id }}"
-                 value="{{ field.value }}" maxlength="200"{% if field.required %} required{% endif %}
-                 {% if field.help %} aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
-          {% endif %}
-          {% if field.required %}
-          <span class="field-error">{{ t("intake.required.error") }}</span>
-          {% endif %}
-        </div>
-        {% endfor %}
-      </div>
-      {% endfor %}
+      {# PART 19 moved the field markup itself into `_field.html`, where the
+         counterparty form reads it too. Nothing rendered changed: the same
+         controls, the same ids, the same conditional attributes with the same
+         leading spaces (the macro's own header says why that matters). #}
+      {{ fields.rows(view.rows) }}
     </fieldset>
 
     {# PART 20: THE PREPARED DOCUMENTS. Presented like an upload area and

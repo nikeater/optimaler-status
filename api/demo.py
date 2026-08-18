@@ -1,6 +1,7 @@
 """The guided showcase: a citizen submits, watches the machine, becomes the clerk.
 
-Three pages, all demo-mode-only, all server-rendered like everything else here.
+Four pages since part 19, all demo-mode-only, all server-rendered like
+everything else here.
 
 ``/demo/rundgang``
     The tour. The whole system told from beginning to end in six steps for a
@@ -40,6 +41,20 @@ Three pages, all demo-mode-only, all server-rendered like everything else here.
     copy and the visitor's own echo, and both live in the demo-only TTL store
     with the reasoning in ``engine/demo/store.py``.
 
+``/demo/gegenpartei``
+    The counterparty surface (part 19). Par. 7a Abs. 4 SGB IV hears BOTH sides,
+    so a submitted Statusfeststellung produces a simulated Anhoerung letter to
+    the Auftraggeber - rendered as a letter rather than as the flowchart's
+    popup, because nothing on this site needs JavaScript - and this page is
+    where the VISITOR answers as that Auftraggeber. The statement is a REAL
+    submission through the same ``run_ingest``: sealed, redacted, span-verified,
+    routed and journaled as its own case, which is the demonstration that the
+    seal is a property of the system rather than a courtesy to one party. The
+    two cases are correlated by an opaque token the demo store minted
+    (``engine/demo/store.py``), never by a sealed value and never by anything
+    derived from one. **Nothing gates on the answer**: the case proceeds
+    whether it comes or not, and the page says so in those words.
+
 **Nothing here can send anything to an applicant.** ``/inbox`` is linked and
 never touched (ADR-005, the part-07 line): the tour shows the receipt that was
 produced automatically, and there is no control on any of these pages that
@@ -69,6 +84,7 @@ from api.review import (
     unit_name,
 )
 from engine.config_loader import ConfigBundle
+from engine.demo import gegenpartei
 from engine.demo.mode import DemoPosture
 from engine.demo.personas import (
     CHANNEL_EMAIL,
@@ -79,7 +95,7 @@ from engine.demo.personas import (
     PersonaSet,
     selected_attachments,
 )
-from engine.demo.store import DemoStore, DemoSubmission, TypedValue
+from engine.demo.store import DemoStore, DemoSubmission, StatementLink, TypedValue
 from engine.ingest.envelope import case_id_for
 from engine.journal.store import JournalStore
 from engine.notify.outbox import Outbox, OutboxEntry
@@ -489,8 +505,18 @@ def _field_view(
     value: str,
     config: ConfigBundle | None,
     page: PageContext,
+    select_hint: bool = True,
 ) -> FieldView:
-    """One persona field as the form renders it, in one language."""
+    """One persona field as the form renders it, in one language.
+
+    ``select_hint`` is off for exactly one fieldset and the reason is a defect
+    the part-19 browser walk found. "Die Auswahl kommt aus der
+    Verfahrenskonfiguration" is worth saying once; the counterparty form asks
+    six questions in a column and printed it six times, which is not an
+    explanation any more but wallpaper. That fieldset says it once, above the
+    six, so the sentence is where a reader meets it rather than under every
+    control.
+    """
     choices: tuple[str, ...] = ()
     control = entry.control
     if control == "select":
@@ -508,7 +534,7 @@ def _field_view(
     help_text = entry.help_for(page.lang)
     if control == "date":
         help_text = " ".join(filter(None, (help_text, page.t("intake.date.hint"))))
-    elif control == "select":
+    elif control == "select" and select_hint:
         help_text = " ".join(filter(None, (help_text, page.t("intake.select.hint"))))
     return FieldView(
         field_id=entry.field_id,
@@ -529,21 +555,39 @@ def field_rows(
     config: ConfigBundle | None,
     page: PageContext,
 ) -> tuple[tuple[FieldView, ...], ...]:
-    """The persona's fields, grouped the way the persona file groups them.
+    """The persona's fields, grouped the way the persona file groups them."""
+    return grouped_rows(persona.fields, values, config=config, page=page)
+
+
+def grouped_rows(
+    fields: Sequence[PersonaField],
+    values: Mapping[str, str],
+    *,
+    config: ConfigBundle | None,
+    page: PageContext,
+    select_hint: bool = True,
+) -> tuple[tuple[FieldView, ...], ...]:
+    """Any run of fields, grouped the way the file that declares them groups.
 
     Consecutive fields sharing a ``group`` become one row - the two halves of
     the name, the four parts of the address - so the form reads as the handful
     of ANSWERS it is rather than as eleven separate questions. Purely visual:
     the grouping changes no field id, no path and nothing that is submitted.
+
+    Takes a sequence rather than a persona since part 19, because the
+    counterparty form asks its questions in three fieldsets over one field list
+    (``engine/demo/gegenpartei.py``) and a second grouper for the second form
+    would be a second set of row rules.
     """
     rows: list[list[FieldView]] = []
     current = ""
-    for entry in persona.fields:
+    for entry in fields:
         view = _field_view(
             entry,
             value=values.get(entry.field_id, entry.value),
             config=config,
             page=page,
+            select_hint=select_hint,
         )
         if entry.group and entry.group == current and rows:
             rows[-1].append(view)
@@ -690,6 +734,150 @@ class Pairing:
     kind: str
 
 
+# ------------------------------------------ the two-party loop (part 19) ---
+
+#: The two ends of one :class:`~engine.demo.store.StatementLink`, as the page
+#: that is looking at it. A case is on exactly one of them, decided by comparing
+#: case ids and never by a second stored field: one relation, one truth.
+ROLE_ASKED = "asked"
+ROLE_ANSWER = "answer"
+
+#: The route the counterparty surface lives on, and the query parameter the
+#: correlation token travels in. A parameter rather than a path segment, so a
+#: token that expired leaves ``/demo/gegenpartei`` itself a page that explains
+#: what this surface is instead of a 404 nobody can act on.
+GEGENPARTEI_PATH = "/demo/gegenpartei"
+GEGENPARTEI_PARAM = "zeichen"
+
+
+def gegenpartei_href(token: str = "") -> str:
+    """Where the counterparty answers, for one request or in general."""
+    return (
+        f"{GEGENPARTEI_PATH}?{GEGENPARTEI_PARAM}={token}" if token else GEGENPARTEI_PATH
+    )
+
+
+@dataclass(frozen=True)
+class AnswerLine:
+    """One answer the counterparty gave, translated label, verbatim value."""
+
+    label: str
+    value: str
+
+
+@dataclass(frozen=True)
+class StatementSection:
+    """The two-party loop on ONE pipeline page, in whichever state it is in.
+
+    **This is demo-layer state and the section says so on the page.** No journal
+    event records that a statement was requested, because no event type for it
+    exists and inventing one would be a contract change rather than a demo
+    (ADR-036 names it as the pilot-scope shape). What the section renders comes
+    from the RAM store's link compartment and from the journal projection of the
+    other case - never from a second derivation of anything.
+
+    Three states, and the page has a different thing to say in each:
+
+    * asked, unanswered - the letter went out, nothing came back, and nothing
+      anywhere waits for it;
+    * asked, answered - the statement arrived as its own sealed case, linked;
+    * this case IS the answer - it points back at the case it belongs to.
+    """
+
+    role: str
+    token: str
+    origin_case_id: str
+    statement_case_id: str
+    requested_at: datetime
+    answered_at: datetime | None
+    letter: tuple[str, ...]
+    answers: tuple[AnswerLine, ...]
+
+    @property
+    def answered(self) -> bool:
+        return bool(self.statement_case_id)
+
+    @property
+    def asked(self) -> bool:
+        """Whether THIS page is the case that asked."""
+        return self.role == ROLE_ASKED
+
+    @property
+    def answered_label(self) -> str:
+        """When the statement arrived, to the second.
+
+        Trimmed because this one is read inside a SENTENCE ("am ... ist die
+        Stellungnahme eingegangen"), and six digits of microseconds in the
+        middle of a sentence read as machine noise rather than as a time. The
+        caseworker page prints the same instant in a definition list and keeps
+        the full ISO value there, which is where machine precision belongs.
+        """
+        if self.answered_at is None:  # pragma: no cover - guarded by `answered`
+            return ""
+        return self.answered_at.replace(microsecond=0).isoformat()
+
+    @property
+    def answer_href(self) -> str:
+        """Where the visitor goes to play the Auftraggeber."""
+        return gegenpartei_href(self.token)
+
+    @property
+    def statement_href(self) -> str:
+        return f"/demo/case/{self.statement_case_id}/pipeline"
+
+    @property
+    def origin_href(self) -> str:
+        return f"/demo/case/{self.origin_case_id}/pipeline"
+
+
+def answer_lines(
+    link: StatementLink, page: PageContext | None = None
+) -> tuple[AnswerLine, ...]:
+    """The counterparty's answers with their labels in the reader's language.
+
+    The VALUE is never translated and never re-worded: ``ja``,
+    ``beim_auftraggeber`` and the rest are the strings that are in the working
+    copy, that the evidence plane reads and that a caseworker will see. A
+    prettier rendering here would be a second vocabulary for them, and the page
+    exists to show what the machine got rather than a paraphrase of it.
+    """
+    context = page or GERMAN
+    return tuple(
+        AnswerLine(
+            label=context.t(f"gegenpartei.field.{answer.field_id}"),
+            value=answer.value,
+        )
+        for answer in link.answers
+    )
+
+
+def build_statement_section(
+    link: StatementLink | None, *, case_id: str, page: PageContext | None = None
+) -> StatementSection | None:
+    """The two-party section for one case, or None when there is nothing to say.
+
+    None is the normal answer for most cases and is not a failure: a seeded
+    corpus item was never submitted through this demo, an Altersrente has no
+    counterparty at all, and a submission that named no Auftraggeber has nobody
+    to hear. A section that rendered "no statement was requested" on all of
+    those would be a page inventing a two-party procedure for cases that do not
+    have one.
+    """
+    if link is None:
+        return None
+    asked = case_id == link.case_id
+    return StatementSection(
+        role=ROLE_ASKED if asked else ROLE_ANSWER,
+        token=link.token,
+        origin_case_id=link.case_id,
+        statement_case_id=link.statement_case_id,
+        requested_at=link.created_at,
+        answered_at=link.answered_at,
+        letter=gegenpartei.request_letter(link),
+        answers=answer_lines(link, page),
+    )
+
+
 @dataclass(frozen=True)
 class PipelineView:
     """Everything the seven stages need, and not one derived fact of its own."""
@@ -727,6 +915,10 @@ class PipelineView:
     #: recomputed and no second answer to "what tier is this" exists - the
     #: decided tier still comes from the journal through ``review_state``.
     would_be_tier: int | None = None
+    #: The two-party loop, when this case is on either end of one (part 19).
+    #: None on every other case, which is most of them - see
+    #: :func:`build_statement_section`.
+    statement: StatementSection | None = None
     phase: str = "maschine"
     phases: tuple[str, ...] = PHASES
 
@@ -808,6 +1000,11 @@ def build_pipeline_view(
         # styling, and two definitions of "sampled" would be one too many.
         sampled=state.sampled,
         would_be_tier=armed_scorer_tier(config),
+        statement=build_statement_section(
+            store.link_for_case(case_id, now=moment) if store is not None else None,
+            case_id=case_id,
+            page=context,
+        ),
     )
 
 
@@ -823,6 +1020,156 @@ def armed_scorer_tier(config: ConfigBundle) -> int | None:
     """
     targets = [int(row.to_tier) for row in config.decision_table.downgrades]
     return max(targets) if targets else None
+
+
+# ------------------------------------------- the counterparty surface (19) ---
+
+
+@dataclass(frozen=True)
+class GegenparteiView:
+    """The page where the VISITOR plays the Auftraggeber.
+
+    Four states, and every one of them is a page that says what it is rather
+    than a 404 or an empty form:
+
+    * no token at all - somebody followed the menu item. The page explains the
+      two-party loop and offers the intake, because a request is the thing you
+      need before you can answer one.
+    * a token this process no longer holds - expired, or from a restart. Same
+      page, plus the sentence that says which of the two it might be. The store
+      cannot tell those apart and does not pretend to (``DemoStore.get``).
+    * a live request - the letter, and the form.
+    * a request that was already answered - the letter, and the two cases it
+      produced. Answering twice is not offered: the statement is a real
+      submission and a second one would be a second case, not an edit.
+    """
+
+    posture: DemoPosture
+    token: str
+    link: StatementLink | None
+    letter: tuple[str, ...]
+    party_rows: tuple[tuple[FieldView, ...], ...]
+    question_rows: tuple[tuple[FieldView, ...], ...]
+    carried: tuple[FieldView, ...]
+    body: str
+    answers: tuple[AnswerLine, ...]
+    ingest_open: bool
+    ingest_note_key: str
+    error_key: str = ""
+    error_details: tuple[str, ...] = ()
+    #: The counterparty is submitting, so the indicator stands on phase 1. The
+    #: phase is a property of what the visitor is DOING, not of who they are.
+    phase: str = "antrag"
+    phases: tuple[str, ...] = PHASES
+
+    @property
+    def phase_index(self) -> int:
+        return phase_index(self.phase)
+
+    @property
+    def known(self) -> bool:
+        """Whether this page is looking at a request it actually holds."""
+        return self.link is not None
+
+    @property
+    def answered(self) -> bool:
+        return self.link is not None and self.link.answered
+
+    @property
+    def answered_label(self) -> str:
+        """When the statement arrived, to the second - it is read in a sentence."""
+        if self.link is None or self.link.answered_at is None:
+            return ""
+        return self.link.answered_at.replace(microsecond=0).isoformat()
+
+    @property
+    def origin_href(self) -> str:
+        return f"/demo/case/{self.link.case_id}/pipeline" if self.link else ""
+
+    @property
+    def statement_href(self) -> str:
+        if self.link is None or not self.link.statement_case_id:
+            return ""
+        return f"/demo/case/{self.link.statement_case_id}/pipeline"
+
+    @property
+    def fields(self) -> tuple[FieldView, ...]:
+        """Every visible field, flattened out of its row. For tests."""
+        return tuple(
+            field
+            for rows in (self.party_rows, self.question_rows)
+            for row in rows
+            for field in row
+        )
+
+
+def build_gegenpartei_view(
+    posture: DemoPosture,
+    link: StatementLink | None,
+    *,
+    token: str = "",
+    values: Mapping[str, str] | None = None,
+    body: str | None = None,
+    error_key: str = "",
+    error_details: Sequence[str] = (),
+    config: ConfigBundle | None = None,
+    page: PageContext | None = None,
+) -> GegenparteiView:
+    """The counterparty page for one request, and whatever was typed on it."""
+    context = page or GERMAN
+    submitted = dict(values or {})
+    if link is None:
+        return GegenparteiView(
+            posture=posture,
+            token=token,
+            link=None,
+            letter=(),
+            party_rows=(),
+            question_rows=(),
+            carried=(),
+            body="",
+            answers=(),
+            ingest_open=posture.ingest_open,
+            ingest_note_key=OPEN_NOTE if posture.ingest_open else CLOSED_NOTE,
+        )
+    form = gegenpartei.statement_form(link)
+    return GegenparteiView(
+        posture=posture,
+        token=link.token,
+        link=link,
+        letter=gegenpartei.request_letter(link),
+        party_rows=grouped_rows(
+            gegenpartei.party_fields(form), submitted, config=config, page=context
+        ),
+        question_rows=grouped_rows(
+            gegenpartei.question_fields(form),
+            submitted,
+            config=config,
+            page=context,
+            # Said once, above the six questions, rather than under each of
+            # them: see :func:`_field_view`.
+            select_hint=False,
+        ),
+        carried=tuple(
+            _field_view(
+                entry,
+                value=submitted.get(entry.field_id, entry.value),
+                config=config,
+                page=context,
+            )
+            for entry in gegenpartei.carried_fields(form)
+        ),
+        body=gegenpartei.statement_prose(link) if body is None else body,
+        answers=answer_lines(link, context),
+        ingest_open=posture.ingest_open,
+        ingest_note_key=OPEN_NOTE if posture.ingest_open else CLOSED_NOTE,
+        error_key=error_key,
+        error_details=tuple(error_details),
+    )
+
+
+def render_gegenpartei(view: GegenparteiView, page: PageContext | None = None) -> str:
+    return render_template("demo_gegenpartei.html", view, page)
 
 
 def render_intake(view: IntakeView, page: PageContext | None = None) -> str:

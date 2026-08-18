@@ -175,6 +175,10 @@ TABLE: dict[str, tuple[str, str]] = {
     "chrome.nav.home": ("Start", "Start"),
     "chrome.nav.tour": ("Rundgang", "Guided tour"),
     "chrome.nav.intake": ("Antrag stellen", "Submit an application"),
+    "chrome.nav.gegenpartei": (
+        "Als Auftraggeber antworten",
+        "Answer as the client",
+    ),
     "chrome.nav.review": ("Sachbearbeitung", "Caseworker screens"),
     "chrome.nav.inbox": ("Postfach", "Applicant inbox"),
     "chrome.nav.metrics": ("Eval-Metriken", "Evaluation metrics"),
@@ -877,6 +881,30 @@ TABLE: dict[str, tuple[str, str]] = {
         "<strong>Stage e, decision.</strong> The decision table's reasons are "
         "listed in evaluation order, with the id of the row that fired. That "
         'is the point where "explainable" stops being a promise.',
+    ),
+    # The two-party loop, told where it happens (part 19). Inside step 3 rather
+    # than as a seventh step: renumbering four headings to insert one would
+    # have changed every anchor a judge might have bookmarked, and the hearing
+    # of the second party belongs to what happens AROUND the machine's seven
+    # stages rather than beside the caseworker's screens.
+    "tour.s3.gegenpartei": (
+        "Und dann fragt die Clearingstelle die andere Seite. Ein "
+        "Statusfeststellungsantrag hat zwei Parteien - par. 7a Abs. 4 SGB IV "
+        "verlangt, dass der Auftraggeber gehört wird, bevor entschieden wird. "
+        "In dieser Demonstration spielen Sie ihn selbst: Sie sehen das "
+        "Anschreiben, das bei ihm eingegangen ist, und antworten darauf. Ihre "
+        "Antwort läuft durch denselben Eingang und wird ein eigener, "
+        "versiegelter Vorgang - die Versiegelung gilt für beide Seiten.",
+        "And then the clearing unit asks the other side. An employment-status "
+        "application has two parties - par. 7a Abs. 4 SGB IV requires the "
+        "client to be heard before a decision is made. In this demonstration "
+        "you play that client yourself: you see the letter that arrived for "
+        "them and you answer it. Your answer runs through the same intake and "
+        "becomes a sealed case of its own - the seal holds for both sides.",
+    ),
+    "tour.s3.gegenpartei.cta": (
+        "Die Gegenseite spielen",
+        "Play the other party",
     ),
     "tour.s4.p1": (
         "Jetzt wechseln Sie die Rolle. Die Sachbearbeitungsoberfläche zeigt "
@@ -1661,6 +1689,346 @@ TABLE: dict[str, tuple[str, str]] = {
         "Postfach dieses Vorgangs",
         "inbox for this case",
     ),
+    # ------------------------------------------ the second party (part 19) --
+    #
+    # NOT a lettered stage, and the naming is the argument. a) to g) are what
+    # the MACHINE did to this case, each one readable off the journal. Asking
+    # the Auftraggeber for a statement is not one of them: no event type
+    # records it, no engine step performs it, and the demo layer simulates it
+    # in RAM. Calling it "h)" would claim a pipeline stage that does not exist,
+    # so the section carries a name instead of a letter and says in its own
+    # first sentence which of the two it is.
+    "pipeline.statement.heading": (
+        "Die zweite Seite: der Auftraggeber wird gehört",
+        "The second party: the client is heard",
+    ),
+    "pipeline.statement.body": (
+        "Über den Erwerbsstatus entscheidet niemand, ohne beide Seiten gehört "
+        "zu haben: par. 7a Abs. 4 SGB IV verlangt die Anhörung des "
+        "Auftraggebers, bevor über den Antrag entschieden wird. Für diesen "
+        "Vorgang ist die Anhörung ausgelöst worden - und Sie können sie in "
+        "dieser Demonstration selbst beantworten.",
+        "Nobody decides an employment status without hearing both sides: par. "
+        "7a Abs. 4 SGB IV requires the client to be heard before the "
+        "application is decided. For this case that hearing has been "
+        "triggered - and in this demonstration you can answer it yourself.",
+    ),
+    "pipeline.statement.demo_note": (
+        "Dieser Schritt ist der einzige auf dieser Seite, den die Demo-Schicht "
+        'simuliert. Er steht bewusst nicht im Journal: für "Stellungnahme '
+        'angefordert" gibt es keinen Ereignistyp, und einen zu erfinden wäre '
+        "eine Vertragsänderung und keine Vorführung. Was er auslöst, ist "
+        "dagegen echt - die Stellungnahme läuft durch denselben Eingang wie "
+        "jeder andere Vorgang.",
+        "This step is the only one on this page that the demo layer "
+        "simulates. It is deliberately absent from the journal: there is no "
+        'event type for "statement requested", and inventing one would be a '
+        "contract change rather than a demonstration. What it triggers is "
+        "real, though - the statement runs through the same intake as every "
+        "other case.",
+    ),
+    "pipeline.statement.letter.heading": (
+        "Das Anschreiben an den Auftraggeber",
+        "The letter to the client",
+    ),
+    "pipeline.statement.letter.note": (
+        "Das Schreiben bleibt deutsch, wie jedes Behördenschreiben auf diesen "
+        "Seiten: es ist ein Dokument und keine Oberflächenbeschriftung.",
+        "The letter stays German, like every official letter on this site: it "
+        "is a document rather than interface text.",
+    ),
+    "pipeline.statement.waiting": (
+        "Bisher ist keine Stellungnahme eingegangen. Das ist kein Fehler und "
+        "hält nichts auf: eine Antwort ist freiwillig, nichts in der "
+        "Verarbeitung wartet auf sie, und die Warteschlange ordnet deswegen "
+        "keinen Vorgang um. Geht keine ein, wird nach Aktenlage entschieden.",
+        "No statement has arrived yet. That is not an error and it holds "
+        "nothing up: answering is voluntary, nothing in the processing waits "
+        "for it, and no queue is reordered because of it. If none arrives, "
+        "the case is decided on the file as it stands.",
+    ),
+    "pipeline.statement.cta": (
+        "Jetzt als Auftraggeber antworten",
+        "Answer as the client now",
+    ),
+    "pipeline.statement.notice": (
+        "Für diesen Vorgang wurde eine <strong>Stellungnahme des "
+        "Auftraggebers</strong> angefordert. Sie können die Gegenseite in "
+        "dieser Demonstration selbst spielen.",
+        "A <strong>statement from the client</strong> has been requested for "
+        "this case. In this demonstration you can play the other party "
+        "yourself.",
+    ),
+    "pipeline.statement.notice.arrived": (
+        "Die <strong>Stellungnahme des Auftraggebers</strong> ist eingegangen "
+        "und liegt als eigener, versiegelter Vorgang vor.",
+        "The <strong>client's statement</strong> has arrived and exists as its "
+        "own sealed case.",
+    ),
+    "pipeline.statement.arrived.heading": (
+        "Stellungnahme eingegangen",
+        "Statement received",
+    ),
+    "pipeline.statement.arrived.body": (
+        "Am {at} ist die Stellungnahme eingegangen. Sie ist kein Anhang an "
+        "diesem Vorgang, sondern ein eigener Eingang: derselbe Weg, dieselbe "
+        "Versiegelung, dieselbe Vollständigkeitsprüfung, dieselbe "
+        "Warteschlange. Die Clearingstelle hat damit zwei versiegelte "
+        "Aussagen zu einem Auftragsverhältnis vor sich.",
+        "The statement arrived on {at}. It is not an attachment to this case "
+        "but an incoming item of its own: the same route, the same sealing, "
+        "the same completeness check, the same queue. The clearing unit "
+        "therefore has two sealed accounts of one working relationship in "
+        "front of it.",
+    ),
+    "pipeline.statement.arrived.link": (
+        "Zur Arbeitskopie der Stellungnahme",
+        "To the statement's working copy",
+    ),
+    "pipeline.statement.answers.caption": (
+        "Was der Auftraggeber geantwortet hat. Die Werte stehen genau so in "
+        "der Arbeitskopie - hier wird nichts übersetzt und nichts geglättet.",
+        "What the client answered. The values are in the working copy exactly "
+        "as they stand here - nothing is translated and nothing is smoothed "
+        "over.",
+    ),
+    "pipeline.statement.answers.col1": ("Frage", "Question"),
+    "pipeline.statement.answers.col2": ("Antwort", "Answer"),
+    "pipeline.statement.origin.heading": (
+        "Dies ist eine Stellungnahme",
+        "This is a statement",
+    ),
+    "pipeline.statement.origin.body": (
+        "Dieser Vorgang ist die Stellungnahme des Auftraggebers zu einem "
+        "anderen Vorgang. Er ist deswegen kein Sonderfall: er wurde versiegelt, "
+        "geprüft und zugeordnet wie jeder andere Eingang, und die Verbindung "
+        "zwischen den beiden ist eine Anzeige - kein Journaleintrag und keine "
+        "Regel, die irgendetwas steuert.",
+        "This case is the client's statement on another case. That does not "
+        "make it a special case: it was sealed, checked and routed like every "
+        "other incoming item, and the link between the two is a display - not "
+        "a journal entry and not a rule that steers anything.",
+    ),
+    "pipeline.statement.origin.link": (
+        "Zum Vorgang der antragstellenden Person",
+        "To the applicant's case",
+    ),
+    "pipeline.statement.minimal": (
+        "Diese Stellungnahme trägt Versicherungsnummer und Geburtsdatum der "
+        "auftragnehmenden Person bewusst nicht: eine Stellungnahme braucht "
+        "sie nicht, also bekommt die Gegenseite sie auch nicht zu sehen. Die "
+        "Vollständigkeitsprüfung meldet beide deshalb als Lücke und die "
+        "Clearingstelle fragt nach - genau die Behandlung, die jeder andere "
+        "unvollständige Eingang bekommt.",
+        "This statement deliberately carries neither the contractor's "
+        "insurance number nor their date of birth: a statement does not need "
+        "them, so the other party never gets to see them. The completeness "
+        "check therefore reports both as gaps and the clearing unit asks for "
+        "them - exactly the treatment every other incomplete item gets.",
+    ),
+    # ------------------------------------- the counterparty page (part 19) --
+    "gegenpartei.title": (
+        "EingangsLotse - Stellungnahme des Auftraggebers",
+        "EingangsLotse - the client's statement",
+    ),
+    "gegenpartei.headline": (
+        "Sie sind jetzt der Auftraggeber",
+        "You are now the client",
+    ),
+    "gegenpartei.intro.heading": ("Worum es geht", "What this is"),
+    # Says what the page IS, and claims nothing about what the reader did. It
+    # renders in all four states of this surface, including the one reached
+    # from the menu by somebody who has submitted nothing - and "Sie haben eben
+    # einen Antrag gestellt" would be false on exactly that page.
+    "gegenpartei.intro.body": (
+        "Die Clearingstelle hört vor ihrer Entscheidung beide Seiten "
+        "(par. 7a Abs. 4 SGB IV). Auf dieser Seite wechseln Sie die Seite: Sie "
+        "antworten als das Unternehmen, das in einem Statusfeststellungsantrag "
+        "als Auftraggeber benannt wurde. Was Sie hier absenden, ist kein "
+        "Formular neben der Anlage - es geht durch denselben Eingang und wird "
+        "ein eigener, versiegelter Vorgang.",
+        "The clearing unit hears both sides before it decides (par. 7a Abs. 4 "
+        "SGB IV). This page is where you switch sides: you answer as the "
+        "company an employment-status application named as the client. What "
+        "you send here is not a form beside the system - it goes through the "
+        "same intake and becomes a sealed case of its own.",
+    ),
+    "gegenpartei.sealed_note": (
+        "Auch Ihre Angaben werden versiegelt. Ansprechpartner, Firmenname, "
+        "Betriebsnummer und Anschrift verlassen den Rohbereich am Eingang und "
+        "erscheinen danach nur noch als Platzhalter - dieselbe Grenze, die "
+        "vorhin die Daten der antragstellenden Person versiegelt hat. Die "
+        "Versiegelung ist eine Eigenschaft der Anlage, kein Entgegenkommen "
+        "gegenüber einer Partei.",
+        "Your own answers are sealed too. The contact person, the company "
+        "name, the employer reference number and the address leave the raw "
+        "plane at the intake and appear afterwards only as placeholders - the "
+        "same boundary that sealed the applicant's data a moment ago. Sealing "
+        "is a property of the system, not a courtesy extended to one party.",
+    ),
+    "gegenpartei.minimal": (
+        "Was Sie hier nicht sehen: Versicherungsnummer und Geburtsdatum der "
+        "auftragnehmenden Person. Eine Stellungnahme braucht beides nicht, "
+        "also bekommt die Gegenseite beides nicht - und die Stellungnahme "
+        "trägt es auch nicht weiter. Der Name steht im Anschreiben, weil eine "
+        "Anhörung sagen muss, um welches Auftragsverhältnis es geht, und weil "
+        "Sie als Auftraggeber die andere Seite genau dieses Verhältnisses "
+        "sind: ihn wegzulassen wäre Theater, nicht Datensparsamkeit.",
+        "What you do not see here: the contractor's insurance number and date "
+        "of birth. A statement needs neither, so the other party gets "
+        "neither - and the statement does not carry them onward. The name IS "
+        "in the letter, because a hearing has to say which working "
+        "relationship it is about and because you, as the client, are the "
+        "other side of exactly that relationship: leaving it out would be "
+        "theatre rather than data minimisation.",
+    ),
+    "gegenpartei.unknown.heading": (
+        "Zu diesem Zeichen liegt keine Anhörung vor",
+        "No hearing is on file for this reference",
+    ),
+    "gegenpartei.unknown.body": (
+        "Diese Seite beantwortet die Anhörung zu einem bestimmten Vorgang, und "
+        "dafür braucht sie das Zeichen aus dem Anschreiben. Entweder ist "
+        "keines übergeben worden, oder die Anhörung wird nicht mehr "
+        "vorgehalten: der Zwischenspeicher dieser Demonstration hält sie nur "
+        "kurze Zeit und ausschließlich im Arbeitsspeicher, und ein Neustart "
+        "leert ihn vollständig. Welcher der beiden Fälle vorliegt, kann diese "
+        "Seite nicht sagen - und tut deshalb auch nicht so.",
+        "This page answers the hearing for one particular case, and for that "
+        "it needs the reference from the letter. Either none was passed, or "
+        "the hearing is no longer held: this demonstration's buffer keeps it "
+        "for a short time and in memory only, and a restart empties it "
+        "completely. Which of the two applies is something this page cannot "
+        "tell - so it does not pretend to.",
+    ),
+    "gegenpartei.unknown.cta": (
+        "Einen Antrag stellen und die Anhörung auslösen",
+        "File an application and trigger the hearing",
+    ),
+    "gegenpartei.letter.heading": (
+        "Das Anschreiben, das bei Ihnen eingegangen ist",
+        "The letter that arrived for you",
+    ),
+    "gegenpartei.letter.note": (
+        "Das Schreiben bleibt deutsch, wie jedes Behördenschreiben auf diesen "
+        "Seiten. Es ist simuliert: es wurde nirgendwohin versandt, und es gibt "
+        "auf diesen Seiten nichts, was etwas versenden könnte.",
+        "The letter stays German, like every official letter on this site. It "
+        "is simulated: it was sent nowhere, and there is nothing on these "
+        "pages that could send anything.",
+    ),
+    "gegenpartei.form.heading": ("Ihre Stellungnahme", "Your statement"),
+    "gegenpartei.party.legend": ("Wer antwortet", "Who is answering"),
+    # NOT `intake.required.note`, and the difference is a defect a browser walk
+    # found. That sentence names the three fields the INTAKE hints tell a
+    # visitor to delete - Versicherungsnummer, Auftraggeber, Vorname - and this
+    # form has no hints and none of those three fields. A page that explained an
+    # exemption it does not have would be worse than one that explained nothing.
+    "gegenpartei.required.note": (
+        "Jedes Feld dieses Formulars ist ein Pflichtfeld. Leeren Sie eines und "
+        "versuchen Sie abzuschicken: Ihr Browser markiert es rot und sendet "
+        "nichts. Diese Prüfung findet im Browser statt, ohne JavaScript; die "
+        "Vollständigkeitsprüfung der Anlage läuft danach und noch einmal "
+        "getrennt davon.",
+        "Every field on this form is required. Empty one and try to submit: "
+        "your browser marks it red and sends nothing. That check happens in "
+        "the browser, without JavaScript; the system's own completeness check "
+        "runs afterwards and separately from it.",
+    ),
+    "gegenpartei.questions.legend": (
+        "Ihre Angaben zum Auftragsverhältnis",
+        "Your account of the working relationship",
+    ),
+    "gegenpartei.questions.note": (
+        "Die Auswahlwerte sind die, mit denen auch der Goldsatz dieses "
+        "Verfahrens arbeitet. Sie sind Abwägungsmaterial und keine Checkliste: "
+        "die Verfahrenskonfiguration macht daraus bewusst keine Pflichtangabe, "
+        "weil par. 7a Abs. 2 Satz 1 SGB IV eine Gesamtwürdigung verlangt und "
+        "kein Kreuz an der richtigen Stelle.",
+        "The options are the ones this procedure's gold set works with. They "
+        "are material for an appraisal rather than a checklist: the procedure "
+        "configuration deliberately makes none of them mandatory, because "
+        "par. 7a Abs. 2 Satz 1 SGB IV demands an overall appraisal and not a "
+        "tick in the right box.",
+    ),
+    "gegenpartei.prose.legend": (
+        "Ihre Schilderung im Freitext",
+        "Your account in prose",
+    ),
+    "gegenpartei.prose.label": (
+        "Stellungnahme zum Auftragsverhältnis",
+        "Statement on the working relationship",
+    ),
+    "gegenpartei.prose.help": (
+        "Vorbelegt mit einer Schilderung, die dem Antrag widerspricht - das "
+        "ist der interessante Fall. Sie können sie überschreiben. Der Text "
+        "wird Zeichenstelle für Zeichenstelle versiegelt, bevor irgendetwas "
+        "ihn liest.",
+        "Prefilled with an account that contradicts the application, which is "
+        "the interesting case. You may rewrite it. The text is sealed span by "
+        "span before anything reads it.",
+    ),
+    "gegenpartei.contradiction": (
+        "Die Vorbelegung sagt bewusst das Gegenteil des Antrags: dort teilt "
+        "sich die auftragnehmende Person die Zeit frei ein und arbeitet ohne "
+        "Weisungsbindung, hier gibt der Auftraggeber Zeiten, Ort und "
+        "Arbeitsmittel vor. Genau diesen Widerspruch kann keine Checkliste "
+        "auflösen - und genau deshalb ist für dieses Verfahren Tier 1 gar "
+        "nicht freigeschaltet.",
+        "The prefilled answers deliberately say the opposite of the "
+        "application: there the contractor divides their own time and works "
+        "without instruction, here the client sets the hours, the place and "
+        "the equipment. No checklist can resolve that contradiction - which "
+        "is exactly why tier 1 is not enabled for this procedure at all.",
+    ),
+    "gegenpartei.submit": ("Stellungnahme absenden", "Send the statement"),
+    "gegenpartei.answered.heading": (
+        "Diese Anhörung ist bereits beantwortet",
+        "This hearing has already been answered",
+    ),
+    "gegenpartei.answered.body": (
+        "Zu diesem Zeichen ist am {at} eine Stellungnahme eingegangen. Eine "
+        "zweite wäre kein zweiter Versuch, sondern ein zweiter Vorgang: was "
+        "abgesendet wurde, ist ein Eingang und kein Entwurf, und diese "
+        "Demonstration bietet nichts an, was einen Eingang nachträglich "
+        "ändert.",
+        "A statement for this reference arrived on {at}. A second one would "
+        "not be a second attempt but a second case: what was sent is an "
+        "incoming item rather than a draft, and this demonstration offers "
+        "nothing that edits an incoming item after the fact.",
+    ),
+    "gegenpartei.answered.statement": (
+        "Zur Stellungnahme, die Sie abgesendet haben",
+        "To the statement you sent",
+    ),
+    "gegenpartei.answered.origin": (
+        "Zum Vorgang der antragstellenden Person",
+        "To the applicant's case",
+    ),
+    # The seven questions, labelled for a reader. The VALUES next to them are
+    # never translated: they are what the working copy carries.
+    "gegenpartei.field.antragsteller_rolle": (
+        "Sie antworten als",
+        "You are answering as",
+    ),
+    "gegenpartei.field.taetigkeit_beginn": (
+        "Beginn der Tätigkeit",
+        "Start of the activity",
+    ),
+    "gegenpartei.field.weisungsgebunden": (
+        "Weisungsgebunden",
+        "Bound by instructions",
+    ),
+    "gegenpartei.field.eingliederung_arbeitsorganisation": (
+        "In die Arbeitsorganisation eingegliedert",
+        "Integrated into the work organisation",
+    ),
+    "gegenpartei.field.arbeitsort": ("Arbeitsort", "Place of work"),
+    "gegenpartei.field.weitere_auftraggeber": (
+        "Weitere Auftraggeber bekannt",
+        "Other clients known",
+    ),
+    "gegenpartei.field.honorar_modell": ("Honorarmodell", "Fee model"),
     # ------------------------------------------------------------ the inbox --
     "inbox.title": ("EingangsLotse - Postfach", "EingangsLotse - applicant inbox"),
     "inbox.headline": (

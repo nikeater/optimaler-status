@@ -70,6 +70,14 @@ like the landing page, so outside demo mode there is no ``/demo`` anywhere -
 not in the route table, not in the OpenAPI document, and no demo store in the
 process.
 
+**Part 19 adds the second party on the same terms.** ``/demo/gegenpartei`` is
+where the visitor answers as the Auftraggeber a Statusfeststellung named, and
+its POST is the SAME authorized server-side caller as the intake's: one
+``check_ingest``, one ``run_ingest``, one submission, its own sealed case. The
+two cases are correlated by an opaque token in the RAM store, never by a
+journal write - "a statement was requested" has no event type and this part
+does not invent one (ADR-036).
+
 **The extractor switch (part 12) defaults to replay.** ``POST /ingest`` runs the
 deterministic readers unless ``EINGANGSLOTSE_EXTRACTOR=live`` (or an enabled
 ``live`` block in the extraction config) selects the LLM client, which is a
@@ -125,14 +133,16 @@ from api.metrics import (
 )
 from engine.config_loader import ConfigBundle, load_config
 from engine.demo import INGEST_HEADER, DemoPosture, demo_posture
+from engine.demo import gegenpartei as gegenpartei_form
 from engine.demo.personas import (
     CHANNEL_EMAIL,
+    CHANNEL_FORM,
     DEMO_SUBMISSION_PREFIX,
     build_form_submission,
     build_letter_submission,
     demo_personas,
 )
-from engine.demo.store import DemoStore, DemoSubmission
+from engine.demo.store import DemoStore, DemoSubmission, new_token
 from engine.dispatch import dispatch_dir
 from engine.draft import DraftStore, default_draft_store, draft_case
 from engine.draft.projection import DraftOutcome, facts_from
@@ -560,6 +570,7 @@ def create_app(
         journal=store,
         vault=identity_vault,
         drafts=draft_store,
+        demo_store=demo_store,
     )
     _mount_language(app)
     _mount_ingest_gate(app, posture=posture)
@@ -910,12 +921,136 @@ def _mount_demo_journey(
             ),
             now=now,
         )
+        # PART 19: par. 7a Abs. 4 SGB IV hears the other side, so a
+        # Statusfeststellung that named an Auftraggeber earns a statement
+        # request. Recorded in the RAM store and NOWHERE ELSE - no journal
+        # event exists for it and inventing one would be a contract change
+        # (ADR-036). `statement_request` reads the procedure the pipeline just
+        # derived rather than deciding one, and answers None for every case
+        # that has no second party to hear.
+        hearing = gegenpartei_form.statement_request(
+            chosen,
+            form,
+            token=new_token(),
+            case_id=outcome.result.decision.case_id,
+            procedure_id=outcome.result.procedure_id,
+            now=now,
+        )
+        if hearing is not None:
+            demo_store.request_statement(hearing, now=now)
         # 303, like every other POST here: the submission appended to the
         # journal, and a browser reload must not append a second one.
         return RedirectResponse(
             url=f"/demo/case/{outcome.result.decision.case_id}/pipeline",
             status_code=303,
         )
+
+    @app.get("/demo/gegenpartei", response_class=HTMLResponse)
+    def demo_gegenpartei(request: Request, zeichen: str | None = None) -> HTMLResponse:
+        """The counterparty surface: the visitor answers as the Auftraggeber.
+
+        A token this process does not hold is NOT a 404. The page it renders is
+        the explanation of what this surface is plus the way to earn a request,
+        which is the same "never half-select something, never a stack trace"
+        rule the persona picker, the unit picker and the language switch follow
+        - and it is also the only honest answer, because an expired request and
+        a made-up one are indistinguishable here by design.
+        """
+        page = page_context(request)
+        return HTMLResponse(
+            demo_view.render_gegenpartei(
+                demo_view.build_gegenpartei_view(
+                    posture,
+                    demo_store.link_by_token(zeichen or ""),
+                    token=zeichen or "",
+                    config=bundle,
+                    page=page,
+                ),
+                page,
+            )
+        )
+
+    @app.post("/demo/gegenpartei")
+    async def demo_statement(request: Request) -> Response:
+        """The statement, through the ONE ingest path the intake uses.
+
+        No second sealing, no side channel and no privilege of its own: the
+        same authorized server-side caller pattern, the same
+        ``posture.check_ingest``, the same ``run_ingest``, one call. What the
+        counterparty submits becomes its own case - sealed, redacted,
+        span-verified, routed, journaled - and the demo store learns nothing
+        about it except which two case ids belong together.
+        """
+        form = await form_fields(request)
+        page = page_context(request)
+        token = form.get(demo_view.GEGENPARTEI_PARAM, "")
+        now = datetime.now(UTC)
+        link = demo_store.link_by_token(token, now=now)
+        if link is None or link.answered:
+            # An expired request and an answered one both mean "there is
+            # nothing to submit here", and both are 303 to the page that says
+            # which: a POST that re-rendered a form would offer to send a
+            # second statement for a request that already has one.
+            return RedirectResponse(
+                url=demo_view.gegenpartei_href(token), status_code=303
+            )
+        statement = gegenpartei_form.statement_form(link)
+        body = form.get("body", gegenpartei_form.statement_prose(link))
+
+        def refused(message: str, details: Sequence[str] = ()) -> HTMLResponse:
+            return HTMLResponse(
+                demo_view.render_gegenpartei(
+                    demo_view.build_gegenpartei_view(
+                        posture,
+                        link,
+                        token=token,
+                        values=form,
+                        body=body,
+                        error_key=message,
+                        error_details=details,
+                        config=bundle,
+                        page=page,
+                    ),
+                    page,
+                ),
+                status_code=200,
+            )
+
+        verdict = posture.check_ingest(posture.ingest_token)
+        if not verdict.allowed:
+            return refused(verdict.detail)
+        payload = gegenpartei_form.build_statement_submission(
+            statement,
+            form,
+            submission_id=(
+                f"{gegenpartei_form.STATEMENT_SUBMISSION_PREFIX}-{uuid4().hex[:12]}"
+            ),
+            submitted_at=now.isoformat(),
+            body=body,
+        )
+        try:
+            outcome = run_ingest(payload)
+        except RedactionRefusedError as error:
+            return refused(REFUSED_REDACTION, _finding_lines(error))
+        case_id = outcome.result.decision.case_id
+        demo_store.put(
+            DemoSubmission.from_envelope(
+                outcome.result.envelope,
+                persona_id=statement.persona_id,
+                persona_label=statement.display_name,
+                channel=CHANNEL_FORM,
+                created_at=now,
+                echo=demo_view.echo_values(statement, form),
+            ),
+            now=now,
+        )
+        demo_store.record_statement(
+            token,
+            statement_case_id=case_id,
+            answers=gegenpartei_form.statement_answers(form),
+            now=now,
+        )
+        return RedirectResponse(url=f"/demo/case/{case_id}/pipeline", status_code=303)
 
     @app.get("/demo/case/{case_id}/pipeline", response_class=HTMLResponse)
     def demo_pipeline(request: Request, case_id: str) -> HTMLResponse:
@@ -957,6 +1092,7 @@ def _mount_review(
     journal: JournalStore,
     vault: VaultStore,
     drafts: DraftStore,
+    demo_store: DemoStore | None = None,
 ) -> None:
     """The part-10 caseworker surface: three pages and three POST verbs.
 
@@ -966,7 +1102,34 @@ def _mount_review(
     can touch the outbox. ``/inbox`` gains no control here and never will
     (ADR-005) - a notification that a caseworker approved would not be a
     Realakt any more.
+
+    ``demo_store`` is None everywhere except on a demo instance and is read by
+    exactly one line in this whole function (part 19): the case view's
+    display-only cross-link to the other party's case. It reaches the case view
+    as a resolved value rather than as a store, so nothing under ``/review``
+    ever queries demo state; see :class:`api.review.StatementCrossLink`.
     """
+
+    def statement_link(case_id: str) -> review_view.StatementCrossLink | None:
+        """The other end of a two-party correlation, or None. Display only."""
+        if demo_store is None:
+            return None
+        link = demo_store.link_for_case(case_id)
+        if link is None:
+            return None
+        asked = case_id == link.case_id
+        other = link.statement_case_id if asked else link.case_id
+        if not other:
+            # The request went out and nothing came back. There is no second
+            # case to link, and the caseworker surface says nothing at all
+            # rather than announcing an absence it does not act on either.
+            return None
+        return review_view.StatementCrossLink(
+            case_id=other,
+            asked=asked,
+            requested_at=link.created_at,
+            answered_at=link.answered_at,
+        )
 
     def _redirect(case_id: str, unit: str | None, **extra: str) -> RedirectResponse:
         query = {"unit": unit or "", **extra}
@@ -1038,6 +1201,7 @@ def _mount_review(
             drafts=drafts,
             message=message,
             error=error,
+            statement=statement_link(case_id),
         )
         if view is None:
             raise HTTPException(status_code=404, detail=f"unknown case: {case_id}")

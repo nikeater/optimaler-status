@@ -1,0 +1,121 @@
+{# The counterparty surface (part 19): the visitor answers as the Auftraggeber.
+
+   A CITIZEN page, so it renders on the citizen ground with no `ground` block,
+   and the phase indicator stands on phase 1 - because what the visitor is doing
+   here is submitting, and the phase is a property of the doing rather than of
+   the person.
+
+   THE FLOWCHART'S POPUP IS A LETTER. The source drawing for this part put "a
+   popup that the letter to Antragsteller II is being processed" in its own box.
+   A popup would have been the one piece of JavaScript on a site that has none,
+   and it would have shown a notice about a letter instead of the letter. What
+   arrives here is the letter, as a document, on the page.
+
+   FOUR STATES, and each one is a page rather than an error: no reference, a
+   reference this process no longer holds, a live hearing, and one that has
+   already been answered. See `api/demo.py::GegenparteiView`. #}
+{% extends "demo_base.html" %}
+{% import "_field.html" as fields with context %}
+{% block title %}{{ t("gegenpartei.title") }}{% endblock %}
+{% block heading %}{{ t("gegenpartei.headline") }}{% endblock %}
+{% block content %}
+
+<section aria-labelledby="worum-heading">
+  <h2 id="worum-heading">{{ t("gegenpartei.intro.heading") }}</h2>
+  <p>{{ t("gegenpartei.intro.body") }}</p>
+  <p>{{ t(view.ingest_note_key) }}</p>
+</section>
+
+{% if not view.known %}
+<section aria-labelledby="unbekannt-heading">
+  <h2 id="unbekannt-heading">{{ t("gegenpartei.unknown.heading") }}</h2>
+  <p class="notice">{{ t("gegenpartei.unknown.body") }}</p>
+  <p>
+    <a class="cta" href="/demo/antrag">{{ t("gegenpartei.unknown.cta") }}</a>
+  </p>
+</section>
+{% else %}
+
+{% if view.error_key %}
+<section aria-labelledby="ablehnung-heading">
+  <h2 id="ablehnung-heading">{{ t("intake.refusal.heading") }}</h2>
+  <div class="alarm-note flag" role="alert" id="refusal">
+    <p>{{ t(view.error_key) }}</p>
+    {% if view.error_details %}
+    <ul>
+      {% for detail in view.error_details %}
+      <li>{{ detail }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
+<section aria-labelledby="anschreiben-heading">
+  <h2 id="anschreiben-heading">{{ t("gegenpartei.letter.heading") }}</h2>
+  <p class="muted" lang="en">{{ t("gegenpartei.letter.note") }}</p>
+  <div class="letter" lang="de">
+    {% for paragraph in view.letter %}
+    <p>{{ paragraph }}</p>
+    {% endfor %}
+  </div>
+  <p>
+    {{ t("gegenpartei.answered.origin") }}:
+    <a href="{{ view.origin_href }}">{{ view.link.case_id }}</a>
+  </p>
+</section>
+
+{% if view.answered %}
+<section aria-labelledby="beantwortet-heading">
+  <h2 id="beantwortet-heading">{{ t("gegenpartei.answered.heading") }}</h2>
+  <p class="notice">
+    {{ t("gegenpartei.answered.body", at=view.answered_label) }}
+  </p>
+  <p class="handover">
+    <a href="{{ view.statement_href }}">{{ t("gegenpartei.answered.statement") }}</a>
+  </p>
+</section>
+{% else %}
+
+<section aria-labelledby="stellungnahme-heading">
+  <h2 id="stellungnahme-heading">{{ t("gegenpartei.form.heading") }}</h2>
+  <p class="notice">{{ t("gegenpartei.sealed_note") }}</p>
+  <p class="notice">{{ t("gegenpartei.minimal") }}</p>
+  <form class="action-form" method="post" action="/demo/gegenpartei">
+    <input type="hidden" name="zeichen" value="{{ view.token }}">
+    {{ fields.carried(view.carried) }}
+
+    <fieldset>
+      <legend>{{ t("gegenpartei.party.legend") }}</legend>
+      <p class="help">{{ t("gegenpartei.required.note") }}</p>
+      {{ fields.rows(view.party_rows) }}
+    </fieldset>
+
+    <fieldset>
+      <legend>{{ t("gegenpartei.questions.legend") }}</legend>
+      <p class="help">{{ t("gegenpartei.questions.note") }}</p>
+      {{ fields.rows(view.question_rows) }}
+    </fieldset>
+
+    <fieldset>
+      <legend>{{ t("gegenpartei.prose.legend") }}</legend>
+      <p class="help">{{ t("gegenpartei.contradiction") }}</p>
+      <div class="field">
+        <label for="body">{{ t("gegenpartei.prose.label") }}</label>
+        <span class="help" id="body-help">{{ t("gegenpartei.prose.help") }}</span>
+        <textarea id="body" name="body" rows="14" maxlength="8000" aria-describedby="body-help">{{ view.body }}</textarea>
+      </div>
+    </fieldset>
+
+    {% if view.ingest_open %}
+    <button type="submit">{{ t("gegenpartei.submit") }}</button>
+    {% else %}
+    <p class="alarm-note flag">{{ t("intake.closed_button") }}</p>
+    {% endif %}
+  </form>
+</section>
+{% endif %}
+{% endif %}
+
+{% endblock %}

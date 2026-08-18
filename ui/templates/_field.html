@@ -1,0 +1,80 @@
+{# One editable field, for the two forms that have them.
+
+   Extracted in part 19, when the counterparty page became the second surface
+   that renders a `FieldView`. The alternative was thirty lines of markup in two
+   files, and the second copy is the one that stops being edited: the first
+   thing it would have lost is the whitespace discipline below, which this
+   project has already shipped as a bug once.
+
+   EVERY CONDITIONAL ATTRIBUTE CARRIES ITS OWN LEADING SPACE, and that is that
+   bug. The environment runs with `trim_blocks` and `lstrip_blocks`
+   (api/metrics.py), so the newline after an `{% endif %}` and the indent before
+   the next `{% if %}` are both removed - two conditional attributes on
+   consecutive lines therefore render as one attribute with both names glued
+   together (`requiredaria-describedby`), and the browser quietly has neither. A
+   leading space inside each condition is the only form that cannot be undone by
+   whitespace control.
+
+   `first` is the row's business rather than the field's: the "wird versiegelt"
+   tag is shown once per row and not once per input, because four identical tags
+   next to four address boxes teach nothing and crowd the label they belong to.
+
+   IMPORTED `with context` wherever it is used, and that is load-bearing. `t` is
+   installed as an environment global in ONE language (`api/metrics.py::_install`
+   puts German there) and handed to each render as context in the reader's. A
+   macro imported without context would see the global - so an English page
+   would come back with German labels on every field. #}
+{% macro editable(field, first=True) %}
+<div class="field">
+  <label for="feld-{{ field.field_id }}">
+    {{ field.label }}
+    {% if field.kind and first %}
+    <span class="tag">{{ t("intake.sealed_as", kind=t("kind." ~ field.kind)) }}</span>
+    {% endif %}
+  </label>
+  {% if field.help %}
+  <span class="help" id="hilfe-{{ field.field_id }}">{{ field.help }}</span>
+  {% endif %}
+  {% if field.control == "date" %}
+  <input type="date" id="feld-{{ field.field_id }}" name="{{ field.field_id }}"
+         value="{{ field.value }}"{% if field.required %} required{% endif %}
+         {% if field.help %} aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
+  {% elif field.control == "select" %}
+  <select id="feld-{{ field.field_id }}" name="{{ field.field_id }}"{% if field.required %} required{% endif %}
+          {% if field.help %} aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
+    {% for option in field.choices %}
+    <option value="{{ option }}"{% if option == field.value %} selected{% endif %}>{{ option }}</option>
+    {% endfor %}
+  </select>
+  {% else %}
+  <input type="text" id="feld-{{ field.field_id }}" name="{{ field.field_id }}"
+         value="{{ field.value }}" maxlength="200"{% if field.required %} required{% endif %}
+         {% if field.help %} aria-describedby="hilfe-{{ field.field_id }}"{% endif %}>
+  {% endif %}
+  {% if field.required %}
+  <span class="field-error">{{ t("intake.required.error") }}</span>
+  {% endif %}
+</div>
+{% endmacro %}
+
+{# A run of rows, which is how both forms lay their fields out: fields that
+   share a group in the file that declares them sit side by side on a wide
+   screen and stack below 40rem like everything else. #}
+{% macro rows(field_rows) %}
+{% for row in field_rows %}
+<div class="field-row field-row-{{ row|length }}">
+  {% for field in row %}
+  {{ editable(field, loop.first) }}
+  {% endfor %}
+</div>
+{% endfor %}
+{% endmacro %}
+
+{# The values a form carries but does not ask about. No `id`, on purpose: the
+   accessibility sweep pairs every control id with a `for=`, and a hidden input
+   is not a control anybody labels. #}
+{% macro carried(fields) %}
+{% for field in fields %}
+<input type="hidden" name="{{ field.field_id }}" value="{{ field.value }}">
+{% endfor %}
+{% endmacro %}

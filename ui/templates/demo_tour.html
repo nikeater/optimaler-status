@@ -93,6 +93,19 @@
       <a class="cta cta-secondary" href="/review">{{ t("tour.s4.review") }}</a>
     </p>
     {% endif %}
+    {# PART 19: the two-party loop, told inside step 3 rather than as a seventh
+       step. Renumbering four headings to insert one would have changed every
+       anchor a reader might have bookmarked, and the hearing of the second
+       party is part of what happens around the machine's seven stages. The
+       link goes to the counterparty surface with NO reference: the tour points
+       at a seeded case, which nobody submitted and which therefore has no
+       hearing, so the page a visitor lands on is the one that explains the
+       loop and offers the intake. That is the honest destination rather than a
+       reference invented to make a link look alive. #}
+    <p>{{ t("tour.s3.gegenpartei") }}</p>
+    <p>
+      <a class="cta cta-secondary" href="/demo/gegenpartei">{{ t("tour.s3.gegenpartei.cta") }}</a>
+    </p>
   </div>
 </section>
 
