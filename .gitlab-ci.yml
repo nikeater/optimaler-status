@@ -12,15 +12,14 @@
 # remains the full gate; this job proves the same numbers on a second,
 # independent machine.
 
+# No pip cache: GitLab caches must live inside the project directory, and the
+# gate's own clean-tree assertion refuses any untracked file - the first
+# pipeline proved it by failing on `?? .cache/` after every substantive step
+# had passed. A cold pip install per run is the honest price of keeping the
+# clean-tree check verbatim.
 gate:
   image: python:3.13-slim
   timeout: 30m
-  variables:
-    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  cache:
-    key: pip-$CI_COMMIT_REF_SLUG
-    paths:
-      - .cache/pip
   before_script:
     - apt-get update -qq && apt-get install -y -qq git > /dev/null
   script:
