@@ -2140,29 +2140,30 @@ def test_the_paragraph_sign_stays_on_the_one_string_it_was_written_for(
 def test_the_tour_is_offered_once_and_the_start_section_is_its_cards(
     config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """One button per destination, and a heading level for every step down.
+    """One action in the hero, one door to the tour, and no skipped heading.
 
-    The second "Zum Rundgang" sat four hundred pixels under the first. What is
-    left in the section is its heading and the five cards, so the cards moved
-    up a level with the line that used to sit between them - a page that skips
-    from `h2` to `h4` is a page a screen reader reports a missing level in.
+    Part 23 removed the second "Zum Rundgang" button four hundred pixels under
+    the first; part 24 made the intake the painted control the lead asks for;
+    and the user's decision of 2026-08-18 removed the hero's tour button
+    entirely. The hero now offers exactly one action - the intake, which is
+    what the lead has asked for since part 23 - and the tour's one remaining
+    door is the menu's "Rundgang" item, which is navigation rather than a call
+    to action. The button is commented out in `landing.html`, not deleted, so
+    restoring it is an uncomment; this test is what makes that restoration a
+    deliberate act rather than a drift.
 
-    WHICH of the two hero buttons is painted moved in part 24, and this is the
-    assertion that records it. The lead this page has carried since part 23 asks
-    for a test application; the painted card in the section below is the intake;
-    so the primary control is the intake and the tour is the secondary one. The
-    tour is still offered exactly twice - once as a button, once as a menu item.
+    What is left in the start section is its heading and the five cards, the
+    cards a level up with the line that used to sit between them - a page that
+    skips from `h2` to `h4` is a page a screen reader reports a missing level
+    in.
     """
     client = build_client(config, monkeypatch=monkeypatch)
     page = client.get("/").text
-    # One button in the hero and the route in the menu, which is navigation
-    # rather than a call to action. The second button in the section is gone.
-    assert page.count('href="/demo/rundgang"') == 2
-    assert page.count('<a class="cta cta-secondary" href="/demo/rundgang">') == 1
+    # The tour route renders exactly once: the menu item. No hero button, and
+    # no second offer anywhere on the page.
+    assert page.count('href="/demo/rundgang"') == 1
+    assert '<a class="cta cta-secondary" href="/demo/rundgang">' not in page
     assert page.count('<a class="cta" href="/demo/antrag">') == 1
-    assert page.index('<a class="cta" href="/demo/antrag">') < page.index(
-        '<a class="cta cta-secondary" href="/demo/rundgang">'
-    ), "the primary control is the one the lead asks for"
     assert phrase("landing.start.heading") in page
     assert '<section aria-labelledby="start-heading">' in page
     assert '<h2 id="start-heading">' in page

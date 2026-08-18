@@ -45,12 +45,15 @@
      in words and offered a different one in colour. A first-time reader
      resolves that by doing neither.
 
-     The tour did not lose its place - it is the secondary button, one tab stop
-     later, and it now carries the ten minutes its own lead has always quoted,
-     which is the fact that actually decides between two buttons. #}
+     THE TOUR BUTTON IS COMMENTED OUT rather than deleted (a Jinja comment
+     renders zero bytes), on the user's decision of 2026-08-18: the hero offers
+     exactly one action. The tour page stays live; its one remaining door is
+     the menu's "Rundgang" item, which is navigation rather than a call to
+     action. `landing.cta.tour` stays in the table so restoring the button is
+     an uncomment rather than a rewrite. #}
   <p class="hero-actions">
     <a class="cta" href="/demo/antrag">{{ t("landing.cta.intake") }}</a>
-    <a class="cta cta-secondary" href="/demo/rundgang">{{ t("landing.cta.tour") }}</a>
+    {# <a class="cta cta-secondary" href="/demo/rundgang">{{ t("landing.cta.tour") }}</a> #}
   </p>
   <figure class="hero-figure">
     {# WCAG 2.2.2: the loop starts on its own, runs longer than five seconds
