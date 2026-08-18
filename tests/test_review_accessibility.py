@@ -25,7 +25,17 @@ regress silently when somebody adds a form field:
 * no stylesheet removes a focus outline, and the design system restyles it,
 * 1.4.10 reflow: every wide table scrolls inside its own container so the page
   body never scrolls sideways at 320 CSS px (part 15; this is the row that was
-  open on the caseworker pages from part 10 until the redesign).
+  open on the caseworker pages from part 10 until the redesign),
+* the element colours never carry text, over a NAMED SET so that a new one
+  joins the rule by being declared rather than by being remembered (part 16,
+  extended in 17 and again in 21 when the amber family arrived),
+* and, since part 21, the CONTRAST FLOORS THEMSELVES on every ground. The three
+  phase grounds are token sets, so a ground that re-points `--ink` without
+  re-pointing the surface under it is a whole page of unreadable text produced
+  by four lines of CSS. Part 18 shipped a focus ring at 1.34:1 on a surface
+  that had just been invented, and it was found by arithmetic rather than by
+  looking; the arithmetic is in this file now, computed from the stylesheet, so
+  the next ground cannot be measured only by whoever adds it.
 """
 
 from __future__ import annotations
@@ -375,11 +385,13 @@ def test_the_three_things_a_static_reflow_check_could_not_see() -> None:
 
 #: The element colours: too weak for text against at least one surface this
 #: project ships, and each with a text-weight sibling in the same family.
-#: Part 17 added the third when the demo ribbon left the red family.
+#: Part 17 added the third when the demo ribbon left the red family; part 21
+#: added the fourth with the caseworker ground's amber.
 ELEMENT_ONLY = {
     "brand": "brand-ink",  # 2.36:1 on white
     "alarm": "alarm-text",  # 4.32:1 on the darkest surface
     "caution": "caution-text",  # 4.36:1 on its own tint, 4.24:1 on the canvas
+    "amber": "amber-ink",  # 3.83:1 on white, 3.06:1 on the palest amber
 }
 
 
@@ -413,3 +425,369 @@ def test_the_element_colours_that_may_not_carry_text_never_do() -> None:
         assert f"--{text}:" in system, text
     assert "color: var(--brand-ink)" in system
     assert "color: var(--caution-text)" in system
+
+
+# ------------------------------------------------- the three grounds (part 21) ---
+
+#: The body class each page's phase renders on. A citizen page carries NO
+#: class, because `:root` is the citizen ground - which is also why the four
+#: citizen templates that extend `demo_base.html` leave its `ground` block
+#: empty and their `<body>` renders the byte it always did.
+GROUND_OF = {
+    "overview": "ground-casework",
+    "queue": "ground-casework",
+    "clearing": "ground-casework",
+    "case": "ground-casework",
+    "metrics": "ground-machine",
+    "inbox": "",
+}
+
+GROUNDS = ("citizen", "machine", "casework")
+
+#: Selector per ground; the citizen ground IS `:root`.
+GROUND_RULE = {
+    "citizen": ":root",
+    "machine": ".ground-machine",
+    "casework": ".ground-casework",
+}
+
+#: The surface ladder every ground re-points, darkest to lightest on the light
+#: grounds and the other way round on the dark one - which is the whole reason
+#: a component needs no override to follow a ground.
+SURFACES = (
+    "--canvas",
+    "--canvas-top",
+    "--surface",
+    "--surface-alt",
+    "--surface-sunken",
+)
+TINTS = (
+    "--tint-brand",
+    "--tint-brand-soft",
+    "--tint-ok",
+    "--tint-alarm",
+    "--tint-caution",
+    "--tint-sample",
+)
+INKS = ("--ink", "--ink-soft", "--muted")
+
+TEXT_FLOOR = 4.5
+ELEMENT_FLOOR = 3.0
+
+
+def _rule_body(css: str, selector: str) -> str:
+    """The declarations of one top-level rule, comments stripped.
+
+    Comments are removed before anything is read out of the block, so a ratio
+    written in a comment can never be mistaken for a declared value.
+    """
+    start = css.index(selector + " {")
+    depth, index = 0, start
+    while True:
+        if css[index] == "{":
+            depth += 1
+        elif css[index] == "}":
+            depth -= 1
+            if depth == 0:
+                break
+        index += 1
+    return re.sub(r"/\*.*?\*/", "", css[start:index], flags=re.S)
+
+
+def _declarations(css: str, selector: str) -> list[tuple[str, str]]:
+    return re.findall(r"([\w-]+)\s*:\s*([^;]+);", _rule_body(css, selector))
+
+
+def _tokens(css: str, ground: str) -> dict[str, str]:
+    """Every custom property in force on one ground: `:root` plus its overlay."""
+    resolved = {
+        name: value
+        for name, value in _declarations(css, ":root")
+        if name.startswith("--")
+    }
+    if ground != "citizen":
+        resolved.update(
+            (name, value)
+            for name, value in _declarations(css, GROUND_RULE[ground])
+            if name.startswith("--")
+        )
+    return resolved
+
+
+def _value(tokens: dict[str, str], spec: str, depth: int = 0) -> str:
+    """Resolve a token through any chain of `var()` indirection."""
+    assert depth < 8, f"a var() cycle at {spec!r}"
+    spec = spec.strip()
+    reference = re.fullmatch(r"var\((--[\w-]+)\)", spec)
+    if reference:
+        return _value(tokens, tokens[reference.group(1)], depth + 1)
+    if spec.startswith("--"):
+        return _value(tokens, tokens[spec], depth + 1)
+    return spec
+
+
+def _channel(value: float) -> float:
+    value /= 255.0
+    return value / 12.92 if value <= 0.03928 else ((value + 0.055) / 1.055) ** 2.4
+
+
+def _luminance(colour: str) -> float:
+    """WCAG 2.1 relative luminance of an `#rrggbb` value."""
+    digits = colour.lstrip("#")
+    red, green, blue = (int(digits[i : i + 2], 16) for i in (0, 2, 4))
+    return 0.2126 * _channel(red) + 0.7152 * _channel(green) + 0.0722 * _channel(blue)
+
+
+def _ratio(one: str, other: str) -> float:
+    first, second = _luminance(one), _luminance(other)
+    high, low = max(first, second), min(first, second)
+    return (high + 0.05) / (low + 0.05)
+
+
+def _pair(tokens: dict[str, str], foreground: str, background: str) -> float:
+    return _ratio(_value(tokens, foreground), _value(tokens, background))
+
+
+def _stops(tokens: dict[str, str], token: str) -> list[str]:
+    """The colour stops of a gradient token."""
+    found = re.findall(r"#[0-9a-fA-F]{6}", _value(tokens, token))
+    assert found, f"{token} declares no colour stop"
+    return found
+
+
+@pytest.fixture(scope="module")
+def system_css() -> str:
+    return Path("ui/static/system.css").read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("ground", GROUNDS)
+def test_every_ground_declares_the_whole_ladder(ground: str, system_css: str) -> None:
+    """A HALF-DEFINED GROUND IS THE DEFECT THIS WHOLE PART IS EXPOSED TO.
+
+    A ground is a token set: it re-points the surfaces, the inks, the phase
+    family and the gradients that carry them, and every component then follows
+    without an override. The failure mode is a ground that re-points `--ink`
+    and forgets `--surface-sunken`, or re-points the surfaces and forgets
+    `--focus` - four lines of CSS and a page of text nobody can read.
+
+    So a ground that moves the canvas has to move ALL of it. `:root` is the
+    citizen ground and defines everything by construction; the two others are
+    checked against the same list.
+    """
+    tokens = _tokens(system_css, ground)
+    required = (
+        *SURFACES,
+        *TINTS,
+        *INKS,
+        "--brand",
+        "--brand-ink",
+        "--brand-ink-strong",
+        "--focus",
+        "--line",
+        "--line-strong",
+        "--band",
+        "--band-ink",
+        "--band-link",
+        "--cta-ink",
+        "--grad-cta",
+        "--grad-mark",
+        "--grad-rule",
+        "--grad-panel",
+        "--header-veil",
+    )
+    for token in required:
+        assert token in tokens, f"{ground}: {token} is not declared anywhere"
+    if ground == "citizen":
+        return
+    # And the overlay itself has to carry the ladder rather than inherit half of
+    # it: a dark canvas under a light ground's ink is exactly the bug.
+    overlay = {name for name, _ in _declarations(system_css, GROUND_RULE[ground])}
+    for token in (*SURFACES, *INKS, "--focus", "--band", "--line-strong"):
+        assert token in overlay, f"{ground}: {token} is inherited, not re-pointed"
+
+
+@pytest.mark.parametrize("ground", GROUNDS)
+def test_every_ground_meets_the_text_contrast_floor(
+    ground: str, system_css: str
+) -> None:
+    """1.4.3, computed from the stylesheet on every ground rather than once.
+
+    These are the pairs the components actually produce: an ink on a surface,
+    an ink on a tint, a link on a card, a state colour on its own tint, the
+    band's ink on the band, and the label on the button's gradient - which is
+    only as good as its lightest stop, so both stops are checked.
+    """
+    tokens = _tokens(system_css, ground)
+    for ink in INKS:
+        for surface in (*SURFACES, *TINTS):
+            measured = _pair(tokens, ink, surface)
+            assert measured >= TEXT_FLOOR, (
+                f"{ground}: {ink} on {surface} is {measured:.2f}:1"
+            )
+    for ink in ("--brand-ink", "--brand-ink-strong"):
+        for surface in (*SURFACES, "--tint-brand", "--tint-brand-soft"):
+            measured = _pair(tokens, ink, surface)
+            assert measured >= TEXT_FLOOR, (
+                f"{ground}: {ink} on {surface} is {measured:.2f}:1"
+            )
+    for ink, tint in (
+        ("--ok", "--tint-ok"),
+        ("--alarm-text", "--tint-alarm"),
+        ("--caution-text", "--tint-caution"),
+        ("--band-ink", "--band"),
+        ("--band-link", "--band"),
+    ):
+        measured = _pair(tokens, ink, tint)
+        assert measured >= TEXT_FLOOR, f"{ground}: {ink} on {tint} is {measured:.2f}:1"
+    # The label on a fill, against BOTH ends of the gradient it sits on.
+    for gradient in ("--grad-cta", "--grad-mark"):
+        for stop in _stops(tokens, gradient):
+            measured = _ratio(_value(tokens, "--cta-ink"), stop)
+            assert measured >= TEXT_FLOOR, (
+                f"{ground}: --cta-ink on {gradient} stop {stop} is {measured:.2f}:1"
+            )
+
+
+@pytest.mark.parametrize("ground", GROUNDS)
+def test_the_focus_ring_is_visible_on_every_surface_of_every_ground(
+    ground: str, system_css: str
+) -> None:
+    """2.4.7 / 1.4.11, and the part-18 lesson made into a gate.
+
+    Part 18 added one surface and put a 1.34:1 focus ring on it - an indicator
+    nobody could see, on the one band in the project that carries links. It was
+    found by computing the pair and not by looking at the page. Part 21 adds
+    ELEVEN surfaces at once, so the pair is computed here instead of being
+    computed once by whoever wrote the ground.
+
+    `--band` is deliberately absent from the list: the ring is white inside the
+    closing band on every ground, because the band is dark on all three. That
+    override is asserted just below, against the same floor.
+    """
+    tokens = _tokens(system_css, ground)
+    for surface in (*SURFACES, *TINTS):
+        measured = _pair(tokens, "--focus", surface)
+        assert measured >= ELEMENT_FLOOR, (
+            f"{ground}: the focus ring on {surface} is {measured:.2f}:1"
+        )
+    # The band's own ring, which is a literal white on all three grounds.
+    assert ".site-footer :focus-visible" in system_css
+    band_ring = _ratio("#ffffff", _value(tokens, "--band"))
+    assert band_ring >= ELEMENT_FLOOR, (
+        f"{ground}: the band's white ring is {band_ring:.2f}:1"
+    )
+
+
+@pytest.mark.parametrize("ground", GROUNDS)
+def test_a_control_boundary_is_visible_on_every_ground(
+    ground: str, system_css: str
+) -> None:
+    """1.4.11: `--line-strong` draws every boundary that identifies a control.
+
+    `--line` is decorative on every ground and is deliberately not checked -
+    it separates rows inside a card and identifies no component, which is the
+    distinction the two weights exist to make.
+    """
+    tokens = _tokens(system_css, ground)
+    for surface in SURFACES:
+        measured = _pair(tokens, "--line-strong", surface)
+        assert measured >= ELEMENT_FLOOR, (
+            f"{ground}: --line-strong on {surface} is {measured:.2f}:1"
+        )
+
+
+def test_the_amber_family_aliases_element_to_element_and_ink_to_ink(
+    system_css: str,
+) -> None:
+    """The caseworker ground points the blue family at the amber one, and the
+    ELEMENT/TEXT SPLIT HAS TO TRAVEL WITH IT.
+
+    `--brand: var(--amber)` is correct - both are element colours, and the
+    regex above already forbids `color: var(--brand)` so the alias cannot leak
+    into text. `--brand-ink: var(--amber)` would be the defect: a token whose
+    entire job is to carry words, pointing at a 3.83:1 yellow, on every
+    caseworker page at once, with no rule broken that anything else checks.
+    """
+    casework = dict(_declarations(system_css, ".ground-casework"))
+    assert casework["--brand"].strip() == "var(--amber)"
+    assert casework["--brand-ink"].strip() == "var(--amber-ink)"
+    assert casework["--brand-ink-strong"].strip() == "var(--amber-ink-strong)"
+    # An ink token may never be aliased to the element member of any family.
+    elements = {f"var(--{name})" for name in ELEMENT_ONLY}
+    for token, value in casework.items():
+        if token.endswith(("-ink", "-ink-strong", "-text")) or token == "--focus":
+            assert value.strip() not in elements, (
+                f"{token} carries text and is aliased to an element colour"
+            )
+
+
+@pytest.mark.parametrize("ground", ("machine", "casework"))
+def test_a_ground_is_a_token_set_and_never_a_component_rule(
+    ground: str, system_css: str
+) -> None:
+    """ONE DESIGN SYSTEM, NOT THREE STYLESHEETS - held by a test rather than by
+    an intention in a comment.
+
+    The whole claim of this part is that a ground re-points tokens and that
+    every component then follows for free. The moment a ground block carries a
+    `padding` or a `background`, that claim is false and the next component
+    added to the project renders correctly on one ground out of three.
+
+    `color-scheme` is the one permitted exception and it is not styling: it
+    tells the engine which way its OWN widgets - the caret, a scrollbar, a
+    select's dropdown - should be drawn.
+    """
+    for name, _ in _declarations(system_css, GROUND_RULE[ground]):
+        assert name.startswith("--") or name == "color-scheme", (
+            f".{GROUND_RULE[ground]} declares {name}, which is a component rule"
+        )
+
+
+@pytest.mark.parametrize("name", PAGES)
+def test_every_page_renders_on_the_ground_its_phase_belongs_to(
+    name: str, pages: dict[str, str]
+) -> None:
+    """The page shell, pinned: a stable class on `<body>` and nothing else.
+
+    The theming is CSS plus this class. It is UNCONDITIONAL - `/review*` and
+    `/metrics` exist with the demo posture off and the ground is product
+    styling in both postures - so no byte on these pages depends on a flag and
+    the flag-off byte-identity suite is untouched by any of it.
+
+    The inbox is the page this test exists to protect. It is what the applicant
+    sees, so it is a CITIZEN page and stays on the light canvas, even though it
+    is served from the same shell family as the caseworker screens and would be
+    the easiest page in the project to theme by accident.
+    """
+    expected = GROUND_OF[name]
+    body = re.search(r"<body[^>]*>", pages[name])
+    assert body, f"{name}: no <body>"
+    if expected:
+        assert body.group(0) == f'<body class="{expected}">', name
+    else:
+        assert body.group(0) == "<body>", f"{name}: a citizen page carries no ground"
+
+
+def test_the_step_indicator_never_reaches_the_caseworker_ground(
+    pages: dict[str, str], system_css: str
+) -> None:
+    """Why the current step's number needs no amber override.
+
+    `.phase-current .phase-mark` is the one component in the project that puts
+    text on a `--brand` fill. It measures 6.74:1 on the citizen ground, 7.47:1
+    on the machine ground with the override below, and would measure 4.32:1 on
+    the caseworker ground - under the 4.5 a word needs.
+
+    It cannot get there. The strip is included by `demo_base.html` alone, and
+    the caseworker screens are rendered by `review_base.html`, which is a
+    different shell: the caseworker UI never learns that a tour is running
+    (part 13, ruling 5). This test is that argument, checked, rather than a
+    rule with no user added against the day somebody changes it - and if
+    somebody does change it, this fails and names the reason.
+    """
+    for name, html in pages.items():
+        if GROUND_OF[name] == "ground-casework":
+            assert "phase-strip" not in html, f"{name}: the strip reached casework"
+            assert "phase-mark" not in html, f"{name}: the strip reached casework"
+    # And the machine ground, where it DOES render, carries the override.
+    assert ".ground-machine .phase-current .phase-mark" in system_css
