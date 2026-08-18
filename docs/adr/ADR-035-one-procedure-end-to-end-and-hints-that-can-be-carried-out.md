@@ -1,6 +1,6 @@
 # ADR-035: One Procedure End to End, and Hints That Can Be Carried Out
 
-**Status:** Proposed, 2026-08-18 (part 22, the Statusfeststellung refocus)
+**Status:** Accepted, 2026-08-18 (part 22, the Statusfeststellung refocus)
 
 ## Context
 
