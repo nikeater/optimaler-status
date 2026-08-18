@@ -970,7 +970,14 @@ def test_a_closed_instance_offers_no_statement_button(
         )
     )
     store = store_of(client)
-    store.request_statement(link(token="closed-token"), now=datetime.now(UTC))
+    # THE LINK IS CREATED ON THE CLOCK THE PAGE WILL BE READ ON, and that is not
+    # a detail. `link()` defaults to BASE_TIME, the module's frozen instant; the
+    # GET below sweeps the store with the REAL clock and the TTL is thirty
+    # minutes, so a frozen `created_at` makes this test pass until the wall
+    # clock happens to pass BASE_TIME + 30 minutes and fail on every run after
+    # that. Found on 2026-08-18 when it did.
+    now = datetime.now(UTC)
+    store.request_statement(link(token="closed-token", created_at=now), now=now)
     page = client.get("/demo/gegenpartei?zeichen=closed-token")
     assert page.status_code == 200
     assert phrase("intake.closed_button") in page.text
@@ -1266,8 +1273,18 @@ def test_a_capacity_eviction_leaves_the_page_honest(
     store = store_of(client)
     now = datetime.now(UTC)
     for index in range(DEFAULT_CAPACITY + 1):
+        # On the real clock, like the request that has to be evicted BY them: a
+        # filler created at the module's frozen BASE_TIME is older than the TTL
+        # as soon as the wall clock passes it, so every one of them is swept on
+        # arrival, the capacity is never reached and nothing is evicted. Same
+        # trap as the closed-instance test above, found the same day.
         store.request_statement(
-            link(token=f"filler-{index}", case_id=f"case-filler-{index}"), now=now
+            link(
+                token=f"filler-{index}",
+                case_id=f"case-filler-{index}",
+                created_at=now,
+            ),
+            now=now,
         )
     page = client.get(f"/demo/gegenpartei?zeichen={token}")
     assert page.status_code == 200
