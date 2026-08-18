@@ -80,7 +80,9 @@ one, so it is written down here.
 demonstration now render on three grounds - the citizen pages unchanged, the
 two machine pages on a deep blue-slate, the caseworker pages on warm amber
 paper. This is the largest single addition of colour pairs the project has
-made, and five things belong here.
+made, and five things belong here. (Every ratio in this note is part 21's own
+and the machine ground's values moved in part 23, above; the current numbers
+are the tables further down, which are the computed ones.)
 
 1. **Part 15 refused dark mode because it was unmeasured, and that refusal is
    intact.** It was never an argument against a dark surface; it was a
@@ -118,6 +120,40 @@ made, and five things belong here.
    after the theming: every page measures exactly the viewport. Nothing about
    the layout changed - a ground re-points colours and nothing else - and the
    measurement was made anyway.
+
+**Revised 2026-08-18 (part 23, One Dark and the homepage).** The machine
+ground's values were re-anchored on the One Dark Pro editor theme and the
+landing page lost three lines and gained a painted card. Four things belong
+here.
+
+1. **The machine ground got QUIETER and every pair was recomputed.** Body text
+   went from 13.01:1 to 10.00:1, which is deliberate - One Dark is a low-glare
+   theme - and it makes this the tightest of the three grounds rather than the
+   most comfortable: worst text 4.78:1 against 4.99 and 5.06 on the other two,
+   worst element 3.22:1. The table below is the recomputation, not a copy with
+   a new hex in it, and the test that computes it from the stylesheet was
+   extended over the new tokens rather than left measuring the old set.
+2. **A syntax palette entered the project, and every member of it carries
+   characters.** Five tokens paint the working copy on the pipeline page. They
+   are held to 4.5 and not to 3.0 for that reason, on BOTH beds a machine token
+   can land on, and the two One Dark accents that could not reach the floor at
+   their published value were lifted along their own hue instead of being used
+   below it. What is deliberately not coloured is written down with them.
+3. **The call to action on the landing page had an invisible focus ring and it
+   was found by arithmetic.** The card is painted with the button's own fill,
+   the ring is drawn at `outline-offset: 2px` and therefore lands on that fill,
+   and `--focus` measures 1.37:1 against it. Overridden to `--cta-ink` at
+   6.51:1. This is the part-18 band failure in a new place - see "the three
+   pairs a fill broke" below.
+4. **Both sweeps were run again after the change.** 192 tab stops over eleven
+   pages with no ring below 3:1 (lowest 6.51:1, which is that card's
+   overridden ring); 4877 text nodes swept for their computed colour against
+   their effective background with none below its floor, the lowest on a
+   machine page being 4.96:1 on the sealed-placeholder chip and 5.12:1 on an
+   inline `<code>` - the same two numbers the arithmetic predicts. The two
+   stops that report no ring are still the `input[type="date"]` calendar
+   buttons on the intake page, which is the engine's own shadow-tree control,
+   on a page this part did not touch.
 
 **Revised 2026-08-15 (part 17, the browser pass).** Four things changed, and
 the reason for all four is the same: this document described pages that had
@@ -294,10 +330,13 @@ the sunken surface), against 3:1. Part 18 added five surfaces and neither floor
 moved; the table below shows why.
 
 Part 21 added two further GROUNDS, each with its own surfaces, inks and phase
-family. This table is the citizen ground and is unchanged by that part; the two
-new ones have their own tables in "The three phase grounds" below, and both
-clear the same floors - 5.36:1 and 4.99:1 for text, 3.75:1 and 3.06:1 for
-elements. The machine ground's worst numbers are better than this one's.
+family, and part 23 re-anchored the machine one on the One Dark Pro editor
+theme. This table is the citizen ground and is unchanged by either part; the
+two others have their own tables in "The three phase grounds" below, and both
+clear the same floors - **4.78:1** and 4.99:1 for text, **3.22:1** and 3.06:1
+for elements. The machine ground now carries the tightest text margin of the
+three, which is what a low-glare theme costs and is stated rather than
+smoothed over.
 
 ### The part-18 surfaces
 
@@ -409,46 +448,99 @@ everyone.
 
 #### The machine ground: `/demo/case/{id}/pipeline` and `/metrics`
 
-A deep blue-slate in the brand's own hue, not black. The light ladder INVERTED:
-`--canvas` `#101b24` is the darkest value and the surfaces step UP from it, so
-a card still sits above its canvas and a `<code>` token still sits inside its
-card. Surfaces: `--canvas` `#101b24`, `--canvas-top` `#152736` (the wash),
-`--surface` `#1b2836`, `--surface-alt` `#22303e`, `--surface-sunken` `#2a3a4a`.
-The five tints are `--tint-brand` `#1c3b52`, `--tint-brand-soft` `#16232f`,
-`--tint-ok` `#14332a`, `--tint-alarm` `#3a1f22`, `--tint-caution` `#3a2b14` and
-`--tint-sample` `#1e2a3c`; the worst of them for every row is `--tint-brand`,
-which is the lightest, so that is the column shown.
+Re-anchored in part 23 on the One Dark Pro editor theme. The pages this ground
+paints are the ones that show what the machine did inside, and the surface a
+reader already associates with a machine at work is an editor, so the ladder is
+that editor's own chrome. Nothing about the MECHANISM changed - the light ladder
+is still INVERTED, `--canvas` is still the darkest value, the surfaces still
+step UP from it so a card sits above its canvas and a `<code>` token sits inside
+its card, and no component gained an override.
+
+Surfaces: `--canvas` `#1b1d23` (the theme's peek/widget bed), `--canvas-top`
+`#21252b` (its side bar, used here as the wash), `--surface` `#282c34` (the
+editor background itself), `--surface-alt` `#2c313a` (its hovered list row) and
+`--surface-sunken` `#31363f`. The six tints are `--tint-brand` `#2d3745`,
+`--tint-brand-soft` `#2a313c`, `--tint-ok` `#2b3a31`, `--tint-alarm` `#3d2b2e`,
+`--tint-caution` `#3d3324` and `--tint-sample` `#2a2f39`; the worst of them for
+every row is `--tint-ok`, which is the lightest, so that is the column shown.
+
+This ground is deliberately LOWER in contrast than the one it replaces - body
+text went from 13.01:1 to 10.00:1 - because One Dark is a low-glare theme and a
+page that reads like an editor should not shout. Every pair still clears its
+floor and the margins are the tightest of the three grounds, which is stated
+rather than hidden: 4.78:1 against the citizen ground's 5.06 and the caseworker
+ground's 4.99.
+
+The foreground family is anchored on `#abb2bf`, One Dark's own editor
+foreground. It sits in the MIDDLE of the ink ladder rather than at the top of
+it, because in a syntax-coloured buffer that colour is the calm one - what
+plain identifiers and punctuation get - so the ladder steps up to a lighter
+member for headings and body text and down to a dimmer one for labels.
 
 | Foreground | Where it is used | vs `--canvas` | vs `--canvas-top` | vs `--surface` | vs `--surface-alt` | vs `--surface-sunken` | worst tint | Requirement | Verdict |
 |---|---|---|---|---|---|---|---|---|---|
-| `--ink` `#e9f0f6` | body text, headings, table cells, a statistic's value | 15.16 | 13.28 | 13.01 | 11.70 | 10.13 | 10.16 | 4.5 | pass |
-| `--ink-soft` `#c3d2de` | the page lead, a definition value, the default badge, the step circle | 11.29 | 9.88 | 9.69 | 8.71 | 7.54 | 7.57 | 4.5 | pass |
-| `--muted` `#a2b2c0` | help text, `.muted`, table captions, a tile's label, the wordmark subtitle | 8.03 | 7.03 | 6.89 | 6.19 | **5.36** | 5.38 | 4.5 | pass - the lowest text ratio on this ground |
-| `--brand-ink` `#8ecdf2` | links, the empty-state glyph, a focused field's edge | 10.10 | 8.84 | 8.67 | 7.80 | 6.75 | 6.77 | 4.5 | pass |
-| `--brand-ink-strong` `#bfe4fa` | hovered links, a `legend`, the brand badge | 13.03 | 11.41 | 11.18 | 10.06 | 8.71 | 8.73 | 4.5 | pass |
-| `--ok` `#5fd39a` | the gate-passed verdict, the ok note | 9.36 | 8.19 | 8.03 | 7.22 | 6.25 | 6.27 | 4.5 | pass |
-| `--alarm-text` `#ffa9a2` | the gate-failed verdict, the refusal block's prose | 9.51 | 8.32 | 8.16 | 7.34 | 6.35 | 6.37 | 4.5 | pass |
-| `--caution-text` `#f0bf72` | the caution badge's words | 10.30 | 9.02 | 8.84 | 7.95 | 6.88 | 6.90 | 4.5 | pass |
-| `--warn` `#e8bd7a` | reserved for an advisory state, still unused | 9.96 | 8.72 | 8.54 | 7.68 | 6.65 | 6.67 | 4.5 | pass |
-| **`--brand` `#4db2ec`** | **element colour ONLY**: card and stage edges, the sample rule, the header rule. UNCHANGED from the light ground - it finally has surfaces it would pass text on and still may not carry any | 7.39 | 6.47 | 6.34 | 5.70 | 4.93 | 4.95 | 3.0 | pass as an element; the rule is structural, not arithmetic |
-| **`--alarm` `#ef6b6b`** | **element colour ONLY**: the refusal edge, the anomaly flag, the failed-gate frame | 5.80 | 5.08 | 4.98 | 4.48 | 3.88 | 3.89 | 3.0 | pass as an element; below 4.5 on two surfaces, so text uses `--alarm-text` |
-| **`--caution` `#c98126`** | **element colour ONLY**: the caution badge's edge | 5.52 | 4.84 | 4.74 | 4.26 | 3.69 | 3.70 | 3.0 | pass as an element |
-| `--line-strong` `#7f95a6` | every control boundary: inputs, selects, the table frame, the tag and badge border | 5.61 | 4.91 | 4.81 | 4.33 | **3.75** | 3.76 | 3.0 | pass - the lowest element ratio on this ground |
-| `--focus` `#bfe4fa` | the 3px focus ring, offset 2px | 13.03 | 11.41 | 11.18 | 10.06 | 8.71 | 8.73 | 3.0 | pass |
-| `--line` `#33455a` | row separators and card edges, DECORATIVE only | 1.78 | 1.56 | 1.52 | 1.37 | 1.19 | 1.19 | none | not a component boundary; see 1.4.11 |
+| `--ink` `#d7dae0` | body text, headings, table cells, a statistic's value | 12.03 | 10.99 | 10.00 | 9.33 | 8.67 | 8.56 | 4.5 | pass |
+| `--ink-soft` `#abb2bf` | the page lead, a definition value, the default badge, the step circle | 7.90 | 7.22 | 6.57 | 6.13 | 5.69 | 5.62 | 4.5 | pass |
+| `--muted` `#9ba3b2` | help text, `.muted`, table captions, a tile's label, the wordmark subtitle | 6.64 | 6.07 | 5.52 | 5.15 | **4.78** | 4.72 | 4.5 | pass - the lowest text ratio on this ground |
+| `--brand-ink` `#79bbf2` | links, the empty-state glyph, a focused field's edge | 8.18 | 7.48 | 6.80 | 6.35 | 5.90 | 5.82 | 4.5 | pass |
+| `--brand-ink-strong` `#a6d3f7` | hovered links, a `legend`, the brand badge | 10.65 | 9.74 | 8.85 | 8.26 | 7.68 | 7.58 | 4.5 | pass |
+| `--ok` `#98c379` | the gate-passed verdict, the ok note | 8.36 | 7.64 | 6.94 | 6.48 | 6.02 | 5.94 | 4.5 | pass |
+| `--alarm-text` `#ef9a9f` | the gate-failed verdict, the refusal block's prose. The theme's red LIFTED along its own hue, because the red itself cannot carry a word here | 7.86 | 7.18 | 6.53 | 6.09 | 5.66 | 5.59 | 4.5 | pass |
+| `--caution-text` `#e5c07b` | the caution badge's words. One Dark's yellow, which is the family the theme itself would use | 9.75 | 8.91 | 8.10 | 7.56 | 7.03 | 6.94 | 4.5 | pass |
+| `--warn` `#e5c07b` | reserved for an advisory state, still unused | 9.75 | 8.91 | 8.10 | 7.56 | 7.03 | 6.94 | 4.5 | pass |
+| **`--brand` `#61afef`** | **element colour ONLY**: card and stage edges, the sample rule, the header rule. It would pass as text on every surface here and still may not carry any - the rule is structural | 7.13 | 6.51 | 5.92 | 5.53 | 5.14 | 5.07 | 3.0 | pass as an element; the rule is structural, not arithmetic |
+| **`--alarm` `#e06c75`** | **element colour ONLY**: the refusal edge, the anomaly flag, the failed-gate frame | 5.27 | 4.82 | 4.38 | 4.09 | 3.80 | 3.75 | 3.0 | pass as an element; **below 4.5 on four of six surfaces, which is exactly why the text weight above exists** |
+| **`--caution` `#d19a66`** | **element colour ONLY**: the caution badge's edge | 6.84 | 6.25 | 5.68 | 5.30 | 4.93 | 4.87 | 3.0 | pass as an element |
+| `--line-strong` `#7a8496` | every control boundary: inputs, selects, the table frame, the tag and badge border | 4.47 | 4.08 | 3.71 | 3.46 | **3.22** | 3.18 | 3.0 | pass - the lowest element ratio on this ground |
+| `--focus` `#a6d3f7` | the 3px focus ring, offset 2px | 10.65 | 9.74 | 8.85 | 8.26 | 7.68 | 7.58 | 3.0 | pass |
+| `--line` `#3a404b` | row separators and card edges, DECORATIVE only | 1.62 | 1.48 | 1.34 | 1.25 | 1.16 | 1.15 | none | not a component boundary; see 1.4.11 |
 
-The band on this ground is `--band` `#0e456a`, and it is the one place where
-inverting the ladder was not enough. On a light page the closing band is the
-darkest thing on the screen (10.63:1 against the canvas); the same navy
-measures 1.46:1 against this canvas and stops being a band at all. It goes one
-step LIGHTER and bluer than the page instead, which keeps the principle - the
-band is the surface that differs most from the page it ends - at 1.73:1 against
-the canvas. Its ink measures 8.83:1, its link 6.64:1 and its white focus ring
-10.11:1.
+The band on this ground is `--band` `#3e4451` - the theme's own selection
+colour, and the lightest neutral it paints. On a light page the closing band is
+the darkest thing on the screen (10.63:1 against the canvas); on a dark one a
+navy stops being a band at all, so it goes LIGHTER than the page instead, which
+keeps the principle that the band is the surface differing most from the page it
+ends, at 1.73:1 against the canvas. Its ink measures 6.97:1, its link 6.18:1 and
+its white focus ring 9.77:1.
 
-`--grad-cta` runs `#a9d8f2` to `#8ecdf2` here and carries `--cta-ink`
-`#0d1a24` at 11.59:1 and 10.22:1. `--grad-panel` runs `#22303e` to `#1b2836`
-and carries `--ink` at 11.70:1 and 13.01:1.
+`--grad-cta` runs `#a6d3f7` to `#79bbf2` here and carries `--cta-ink` `#1b1d23`
+at 10.65:1 and 8.18:1 - the pair the phase-3 button on the pipeline page uses
+since part 23, where the hand-off stopped being a link inside a panel.
+`--grad-panel` runs `#2c313a` to `#282c34` and carries `--ink` at 9.33:1 and
+10.00:1.
+
+##### The syntax palette (part 23)
+
+The working copy on the pipeline page is painted the way an editor paints a
+buffer: the dotted path, the separator, the value the machine holds, and the
+sealed placeholder that replaced an identity value. Five tokens carry it, they
+are One Dark's own accents, and **every one of them carries characters** - so
+every one is held to the 4.5 a word needs rather than to the 3:1 an edge gets.
+Two beds are possible: a block is `--surface-alt` and an inline `<code>` is
+`--surface-sunken`, so both are measured and neither is assumed.
+
+The two accents that could not reach the floor at their published value are
+LIFTED along their own hue rather than used below it - the same discipline the
+sky blue, the red and the amber have been held to since part 16. On the citizen
+and caseworker grounds all five resolve to that page's own ink, so a machine
+block that ever rendered on one of them is plain monospaced text rather than a
+palette measured against a surface it was never computed for.
+
+| Token | What it paints | One Dark's own value | vs `--surface` | vs `--surface-alt` (a block) | vs `--surface-sunken` (a chip) | Requirement | Verdict |
+|---|---|---|---|---|---|---|---|
+| `--code-ink` `#56b6c2` | an inline `<code>`: a rule id, a part id, a case id, a configuration version | the cyan, verbatim | 5.91 | 5.52 | 5.12 | 4.5 | pass |
+| `--code-key` `#e2858d` | the dotted path left of the `=` | `#e06c75` (variables and properties), lifted - it measures 4.09:1 on a block | 5.32 | 4.96 | **4.61** | 4.5 | pass - the lowest ratio in the palette |
+| `--code-value` `#98c379` | what the machine holds right of it | the green, verbatim | 6.94 | 6.48 | 6.02 | 4.5 | pass |
+| `--code-punct` `#9ba3b2` | the `=` itself | the calm foreground, as in the editor | 5.52 | 5.15 | 4.78 | 4.5 | pass |
+| `--code-seal` `#cd8ee3` | a `[[PII\|KIND\|token]]` placeholder, so the seal pops | `#c678dd` (keywords and storage), lifted - it measures 4.44:1 on a block | 5.72 | 5.33 | 4.96 | 4.5 | pass |
+
+**What is deliberately NOT coloured, on any ground**: prose paragraphs, tables,
+headings, the Anhoerung letter the counterparty receives, and the free text a
+visitor typed. Colour here means "this is machine text"; spending it on a
+sentence somebody wrote would say the opposite of what the page is for. The
+line is drawn on the SHAPE the demo store already recorded for each working-copy
+part rather than on a guess about its content, and the letter is set in the body
+face on the same dark ground, where it stays a document.
 
 #### The caseworker ground: `/review`, `/review/queue/*`, `/review/case/*`
 
@@ -492,16 +584,28 @@ the band is its own surface with its own measured ink.
 10.32:1. `--grad-panel` runs `#fdf5e3` to `#fffdf9` and carries `--ink` at
 15.22:1 and 16.27:1.
 
-#### The two pairs a ground broke, and the one it cannot reach
+#### The three pairs a fill broke, and the one a ground cannot reach
 
 **The current step's number.** `.phase-current .phase-mark` fills a disc with
 `--brand` and writes the number on it in `--ink`. That is 6.74:1 on the citizen
 ground, where the sky blue is a light fill under a near-black ink, and
-**2.05:1** on the machine ground, where `--brand` is the same sky blue and
+**1.69:1** on the machine ground, where `--brand` is the theme's blue and
 `--ink` has gone light. It is the one number on the strip that says which phase
 a visitor is in, on the one page in the project where phase 2 is the current
 phase. `.ground-machine .phase-current .phase-mark` sets it to `--cta-ink`,
-which measures **7.47:1** there.
+which measures **7.13:1** there.
+
+**The call-to-action card's focus ring (part 23).** The first card in the
+landing grid is painted with `--grad-cta` and reads its label out of
+`--cta-ink`, which is the same arithmetic every button on the site already
+ships: white on the gradient's pale stop is 6.51:1 and on its deep stop 8.92:1.
+The ring is the pair that broke. `:focus-visible` is drawn at `outline-offset:
+2px`, so on this card it lands ON the blue rather than beside it, and `--focus`
+`#0c4e73` measures **1.37:1** against `#106393` - no ring at all on the one call
+to action the page makes, for the reader most dependent on seeing it.
+`.card-cta :focus-visible` sets it to `--cta-ink`, which measures **6.51:1**.
+This is the closing band's failure from part 18, in the same shape, found the
+same way: by computing the pair rather than by looking at the page.
 
 On the caseworker ground the same pair would measure **4.32:1**, under the 4.5
 a word needs - and it is not overridden, because the component cannot render
@@ -556,11 +660,11 @@ by requiring words next to every tone.
 | 1.3.4 Orientation | reviewed | No orientation lock; the layout is a single column with `max-width`. |
 | 1.3.5 Identify input purpose | open | The inputs collect no personal data about the USER (unit, reason, note), so the WCAG input-purpose list has nothing to map to. Stated rather than claimed as passed. |
 | 1.4.1 Use of colour | automated | Every queue flag carries its meaning in a `<strong>` label plus a sentence; the tone class only changes a border and a tint. The test asserts each flag block has a label and more than 30 characters of prose. Part 16 added two more places a colour could have been the only carrier and neither is: the step indicator marks the current circle with `aria-current="step"` plus an offscreen "Phase 2 - aktuelle Phase", and a completed circle carries a checkmark GLYPH plus an offscreen "abgeschlossen", so a reader who gets neither the fill nor the icon still gets the state in words. The ribbon says "Demo - synthetische Daten" in text; the tone repeats it and carries nothing on its own - which is why part 17 could change that tone from red to a caution orange without touching a word of it. Part 18 added the badge, which is the same rule made into a component: a badge is a bordered pill drawn AROUND the sentence that was already in the cell - "über Zielwert", "im Zielwert", "Tier 1 - klar und vollstaendig", "offen, wartet auf menschliche Bestaetigung" - so a reader who gets no colour at all loses a box and no information. The gate verdict on `/metrics` gained a glyph for the same reason and under the same rule: it is `aria-hidden`, it repeats the verdict the sentence beside it states in words, and it is a second carrier rather than the only one. |
-| 1.4.3 Contrast (minimum) | automated, with measured ratios | The palette is in `ui/static/system.css` as custom properties, and every pair that actually ships was computed before it was used. The full matrix is the section "Measured contrast ratios" below. On the citizen ground the lowest text ratio anywhere is **5.06:1** (`--muted` on the sunken surface), against a 4.5:1 requirement. (This row said 6.19:1 until part 17: a part-15 number that the part-16 re-measurement replaced in the table below without updating the sentence up here. Corrected against the table, which is the computed one.) **Part 21 added two more grounds and the verdict moves from `reviewed` to `automated`, which is the only verdict change this row has ever had.** The ratios used to be arithmetic somebody did once and wrote down here; `tests/test_review_accessibility.py` now parses the three token blocks out of the stylesheet, resolves the `var()` chains, and computes every pair the components produce - inks on surfaces and tints, links, state colours on their own tints, the band's ink, and the label on BOTH ends of the button gradient, since a gradient under a label is only as good as its lightest stop - on all three grounds against the same formula. The lowest text ratio is 5.06:1 on the citizen ground, **5.36:1** on the machine ground and **4.99:1** on the caseworker ground; the lowest that actually renders on a caseworker page is 5.28:1. Two pairs failed this criterion when the grounds were computed and both were fixed before shipping - the current step's number at 2.05:1 and, under 1.4.11, the primary button; see "The two pairs a ground broke". **Still measured by calculation and not with a photometer on a real display**, which is what keeps the caveat at the bottom of this document and the open item at the end. |
+| 1.4.3 Contrast (minimum) | automated, with measured ratios | The palette is in `ui/static/system.css` as custom properties, and every pair that actually ships was computed before it was used. The full matrix is the section "Measured contrast ratios" below. On the citizen ground the lowest text ratio anywhere is **5.06:1** (`--muted` on the sunken surface), against a 4.5:1 requirement. (This row said 6.19:1 until part 17: a part-15 number that the part-16 re-measurement replaced in the table below without updating the sentence up here. Corrected against the table, which is the computed one.) **Part 21 added two more grounds and the verdict moves from `reviewed` to `automated`, which is the only verdict change this row has ever had.** The ratios used to be arithmetic somebody did once and wrote down here; `tests/test_review_accessibility.py` now parses the three token blocks out of the stylesheet, resolves the `var()` chains, and computes every pair the components produce - inks on surfaces and tints, links, state colours on their own tints, the band's ink, and the label on BOTH ends of the button gradient, since a gradient under a label is only as good as its lightest stop - on all three grounds against the same formula. The lowest text ratio is 5.06:1 on the citizen ground, **4.78:1** on the machine ground and **4.99:1** on the caseworker ground; the lowest that actually renders on a caseworker page is 5.28:1. Two pairs failed this criterion when the grounds were computed and both were fixed before shipping - the current step's number at 1.69:1 and, under 1.4.11, the primary button; see "The three pairs a fill broke". **Part 23 re-anchored the machine ground on the One Dark Pro editor theme and added a five-token syntax palette to it.** The pairs were recomputed rather than carried over, the ground is deliberately quieter (body text 13.01:1 to 10.00:1) and therefore now holds the tightest margin of the three, and the palette is held to this criterion and not to 1.4.11 because every one of its tokens carries characters: two One Dark accents that could not reach 4.5 at their published value were lifted along their own hue rather than shipped below the floor. **Still measured by calculation and not with a photometer on a real display**, which is what keeps the caveat at the bottom of this document and the open item at the end. |
 | 1.4.4 Resize text | automated (partly) | All sizes are `rem`, `em`, `ch` or unitless; the type scale is eight `rem` tokens. A test asserts that no stylesheet in `ui/static` contains a `px` font size or a fixed pixel length of three digits or more - the pill radius is `62em` rather than the conventional `999px` for exactly that reason. **Part 18 added three fluid sizes and they are the one place this criterion could have been lost.** A font size given in `vw` alone ignores the reader's font setting entirely and fails outright. Each of `--text-title`, `--text-hero` and `--text-stat` is a `clamp()` whose preferred value carries a `rem` term as well as a `vw` term - `clamp(1.875rem, 1.55rem + 1.05vw, 2.75rem)` - so the whole expression moves when a reader enlarges text, and the `vw` term only decides how much of the range a given viewport takes. The floor of every ramp is a size this project already shipped. Whether the pages are USABLE at 200 percent is still a browser measurement nobody has made. |
 | 1.4.5 Images of text | automated | There are no images. |
 | 1.4.10 Reflow | automated (static) plus a measured browser pass, every page | **Closed for the caseworker pages in part 15, and closed by fixing the cause rather than the symptom.** The rules that make reflow possible used to live in `demo.css`, which only the three citizen-facing pages loaded - which is precisely why this row was open on the others. They are in the design system now, so every page gets them: every wide table sits in its own `overflow-x: auto` container so the container scrolls and the document body never does, `dl` drops from two columns to one below 40rem (the two-column definition list is what actually overflows at 320 px), `overflow-wrap: break-word` on `body` keeps a case id or a placeholder token from pushing the page wider, and no stylesheet carries a fixed pixel length. Asserted per page in `tests/test_review_accessibility.py` (`/review`, both queue variants, the case view, `/metrics`, `/inbox`) and in `tests/test_demo_journey.py` (`/demo/rundgang`, `/demo/antrag`, the pipeline view). **Part 17 added the measurement the previous sentence used to say did not exist**: every page was rendered at 320 and 390 CSS px and `scrollWidth` compared against the viewport. Three pages failed and were fixed - see the part-17 note at the top for the three causes, none of which a markup check could have seen. All ten now measure exactly the viewport width at both sizes. **Re-measured after the part-18 redesign: all ten pages still measure exactly 320 at 320 and exactly 390 at 390.** Part 18 added one thing that can clip content and it is bounded on purpose. `.scroll-x.is-tall` gives the 41-row queue table a maximum height so its own sticky header has a box to stick to; it applies only from 64rem up, so the single-column phone layout never gets an inner scroller competing with the reader's own scroll, and a `@media print` rule removes the cap so a printed queue carries all its rows rather than the 78vh of them that were in view. Every row in that box contains a link, so a keyboard reader reaches all of them by tabbing, and the box scrolls to follow the focus. What is still open is a real phone in a real hand: this is a headless engine at a set viewport, not a device test, and no person has read these pages on one. |
-| 1.4.11 Non-text contrast | reviewed, with measured ratios | Two border weights exist so the floor cannot be missed by accident. `--line-strong` (`#6f7c85`) draws every control boundary - inputs, selects, the button and menu outline, the table frame - and is at or above **3.56:1** against every surface it is used on, white included (4.29:1). `--line` (`#d8dee3`, 1.36:1 on white) is decorative only: it separates rows inside a card and identifies no component. The focus ring is `--focus` (`#0c4e73`) at 3px with a 2px offset, at or above **7.42:1** on every surface. Two honest notes rather than one. The `.tag` badge's border sits below 3:1 against the brand tint when a tag is inside a selected persona card - a badge is not an interactive component and its text carries 13:1 or better, so 1.4.11 is not engaged, but it is stated rather than left to be found. And the current step's circle is a `--brand` fill inside a `--brand-ink` border: the border measures 6.51:1 against the card BEHIND it, which is the comparison this criterion asks for (is the component distinguishable from its surroundings), and only 2.76:1 against the fill it encloses, which is not - stated here because the second number is the one a reader computing from the table would find first. **Part 18 added a dark band and with it the one place the ring failed.** `--focus` measures 1.34:1 against `--band`, so `.site-footer :focus-visible` sets the ring to white, which measures 11.96:1 there; the finding came out of computing the pair, and the fix was then verified by walking the tab order of all nine pages in a browser and reading the computed outline colour against the computed background at every stop - 159 stops, all at or above 3:1. One further note that belongs next to that walk. `input[type="date"]` has a calendar button inside the engine's own shadow tree with its own tab stop and its own focus ring, which this project can neither restyle nor read; a first pass dimmed it with `opacity: 0.65` and thereby dimmed the ring the engine paints on it, which the walk caught. The rule now sets nothing but `cursor`. **Part 21 added two grounds, which is eleven new surfaces each, and the same two questions were asked of every one of them by arithmetic before anything was opened.** The control boundary holds: `--line-strong` is at or above 3.75:1 on the machine ground and 3.88:1 on the caseworker ground against every surface it is drawn on. The ring holds: at or above 8.71:1 and 8.25:1 respectively, on every surface AND every tint, and the band keeps its white ring on all three grounds because the band is dark on all three (10.11:1 and 13.65:1 on the new ones). One pair failed this criterion outright and is the second of the two the theming broke: `--grad-cta` is a dark gradient and measures **2.30:1 and 1.68:1 against a dark card**, so the primary button, the call to action and the menu control were not distinguishable from their surroundings on the machine ground. There is no dark blue that fixes it - white text needs the fill dark and a dark card needs the fill light - so the fill inverts and its ink inverts with it through one token. The `--brand` sky blue keeps the honest note it has always had: it draws card and stage edges and the accent rules, it is not a component boundary, and it measures 2.36:1 on the citizen ground, 6.34:1 on the machine ground and 3.77:1 as amber on the caseworker ground - the rule that it never carries text is structural rather than a consequence of where it happens to measure well. The tab walk was repeated over all eleven pages after the theming: **215 stops, none below 3:1 on any ground**, plus a sweep of every text-rendering element on every page against its effective background (5767 nodes, none below its floor). |
+| 1.4.11 Non-text contrast | reviewed, with measured ratios | Two border weights exist so the floor cannot be missed by accident. `--line-strong` (`#6f7c85`) draws every control boundary - inputs, selects, the button and menu outline, the table frame - and is at or above **3.56:1** against every surface it is used on, white included (4.29:1). `--line` (`#d8dee3`, 1.36:1 on white) is decorative only: it separates rows inside a card and identifies no component. The focus ring is `--focus` (`#0c4e73`) at 3px with a 2px offset, at or above **7.42:1** on every surface. Two honest notes rather than one. The `.tag` badge's border sits below 3:1 against the brand tint when a tag is inside a selected persona card - a badge is not an interactive component and its text carries 13:1 or better, so 1.4.11 is not engaged, but it is stated rather than left to be found. And the current step's circle is a `--brand` fill inside a `--brand-ink` border: the border measures 6.51:1 against the card BEHIND it, which is the comparison this criterion asks for (is the component distinguishable from its surroundings), and only 2.76:1 against the fill it encloses, which is not - stated here because the second number is the one a reader computing from the table would find first. **Part 18 added a dark band and with it the one place the ring failed.** `--focus` measures 1.34:1 against `--band`, so `.site-footer :focus-visible` sets the ring to white, which measures 11.96:1 there; the finding came out of computing the pair, and the fix was then verified by walking the tab order of all nine pages in a browser and reading the computed outline colour against the computed background at every stop - 159 stops, all at or above 3:1. One further note that belongs next to that walk. `input[type="date"]` has a calendar button inside the engine's own shadow tree with its own tab stop and its own focus ring, which this project can neither restyle nor read; a first pass dimmed it with `opacity: 0.65` and thereby dimmed the ring the engine paints on it, which the walk caught. The rule now sets nothing but `cursor`. **Part 21 added two grounds, which is eleven new surfaces each, and the same two questions were asked of every one of them by arithmetic before anything was opened.** The control boundary holds: `--line-strong` is at or above 3.22:1 on the machine ground and 3.88:1 on the caseworker ground against every surface it is drawn on. The ring holds: at or above 7.58:1 and 8.25:1 respectively, on every surface AND every tint, and the band keeps its white ring on all three grounds because the band is dark on all three (9.77:1 and 13.65:1 on the new ones). One pair failed this criterion outright and is the second of the two the theming broke: `--grad-cta` is a dark gradient and measures **2.30:1 and 1.68:1 against a dark card**, so the primary button, the call to action and the menu control were not distinguishable from their surroundings on the machine ground. There is no dark blue that fixes it - white text needs the fill dark and a dark card needs the fill light - so the fill inverts and its ink inverts with it through one token. The `--brand` sky blue keeps the honest note it has always had: it draws card and stage edges and the accent rules, it is not a component boundary, and it measures 2.36:1 on the citizen ground, 5.92:1 on the machine ground and 3.77:1 as amber on the caseworker ground - the rule that it never carries text is structural rather than a consequence of where it happens to measure well. The tab walk was repeated over all eleven pages after the theming: **215 stops, none below 3:1 on any ground**, plus a sweep of every text-rendering element on every page against its effective background (5767 nodes, none below its floor). **Part 23 produced a third pair of this kind and found it the same way.** The landing page's call-to-action card is painted with the button's own fill, so the ring - drawn at `outline-offset: 2px` - lands on that fill and `--focus` measures **1.37:1** against it. `.card-cta :focus-visible` sets it to `--cta-ink` at 6.51:1. Both sweeps were run again on the re-anchored ground: 192 stops with no ring below 3:1 (lowest 6.51:1, which is that override), and 4877 text nodes with none below its floor. |
 | 1.4.12 Text spacing | reviewed | No fixed heights, no `!important` on line-height. `body` carries `line-height: 1.65`, raised from 1.55 in part 17 to carry the wider measure; every heading keeps 1.2. |
 | 1.4.13 Content on hover or focus | automated | Nothing appears on hover or focus; the test asserts no `onmouseover` anywhere. |
 
@@ -579,7 +683,7 @@ by requiring words next to every tone.
 | 2.4.4 Link purpose (in context) | reviewed | Link text is the queue name or the case id; there is no "here" or "more". |
 | 2.4.5 Multiple ways | reviewed | A case is reachable from its queue and from a direct URL; the nav is on every page. There is no search, which for a demo with one journal is defensible and for a pilot is not. |
 | 2.4.6 Headings and labels | reviewed | Section headings name their content in German administrative vocabulary; labels name what is entered. Whether they are USEFUL to a caseworker is exactly what the pilot has to tell us. |
-| 2.4.7 Focus visible | automated, plus a measured browser walk | `:focus-visible` in the design system sets a 3px outline in `--focus` with a 2px offset, which survives on top of every tinted surface (7.57:1 or better on the citizen ground) and is overridden to white inside the closing band, where `--focus` would measure 1.34:1 - see 1.4.11. The test sweeps EVERY stylesheet in `ui/static` for the two rules that switch an outline off, rather than checking two files named by hand, and additionally asserts the ring is restyled rather than merely present. **Part 18 added the measurement**: every tab stop on all nine pages was focused in a browser and its computed outline colour compared against the computed background behind it. **Part 21 made the ring's floor a test rather than a measurement somebody repeats**, because two new grounds move `--focus` twice and move every surface it can land on: the ring is computed against all eleven surfaces of all three grounds from the stylesheet, and the check is verified against the mistake it exists to catch (a dark ring on the dark ground fails at 1.95:1). The walk was repeated anyway, over all eleven pages: 215 stops, lowest ring 7.57:1 on the citizen ground, 8.71:1 on the machine ground and 8.73:1 on the caseworker ground. Two stops report no ring at all and both are the `input[type="date"]` calendar button described in 1.4.11 - the engine's own shadow-tree control, whose ring this project can neither draw nor read, on a page whose ground did not change. |
+| 2.4.7 Focus visible | automated, plus a measured browser walk | `:focus-visible` in the design system sets a 3px outline in `--focus` with a 2px offset, which survives on top of every tinted surface (7.57:1 or better on the citizen ground) and is overridden to white inside the closing band, where `--focus` would measure 1.34:1 - see 1.4.11. The test sweeps EVERY stylesheet in `ui/static` for the two rules that switch an outline off, rather than checking two files named by hand, and additionally asserts the ring is restyled rather than merely present. **Part 18 added the measurement**: every tab stop on all nine pages was focused in a browser and its computed outline colour compared against the computed background behind it. **Part 21 made the ring's floor a test rather than a measurement somebody repeats**, because two new grounds move `--focus` twice and move every surface it can land on: the ring is computed against all eleven surfaces of all three grounds from the stylesheet, and the check is verified against the mistake it exists to catch (a dark ring on the dark ground fails at 1.95:1). The walk was repeated anyway, over all eleven pages: 215 stops, lowest ring 7.57:1 on the citizen ground, 8.71:1 on the machine ground and 8.73:1 on the caseworker ground. **Part 23 re-anchored the machine ground and painted one card in the button's own fill, which is where the ring failed next**: it is drawn at a 2px offset and therefore lands on that fill at 1.37:1, and is overridden to the button's ink at 6.51:1 - the same shape of finding as the band, found the same way. The walk after that change is 192 stops over the eleven pages, lowest ring 6.51:1 (that override), 7.62:1 on the machine ground and 8.73:1 on the caseworker ground. Two stops report no ring at all and both are the `input[type="date"]` calendar button described in 1.4.11 - the engine's own shadow-tree control, whose ring this project can neither draw nor read, on a page whose ground did not change. |
 | 2.5.1 Pointer gestures | automated | No gesture; every action is a click or a keypress on a native control. |
 | 2.5.2 Pointer cancellation | reviewed | Native buttons only; the browser's own down-then-up semantics apply. |
 | 2.5.3 Label in name | reviewed | The visible label text IS the accessible name: no `aria-label` overrides a visible string anywhere. |

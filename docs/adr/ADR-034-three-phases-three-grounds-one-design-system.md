@@ -1,6 +1,10 @@
 # ADR-034: Three Phases, Three Grounds, One Design System
 
-**Status:** Accepted, 2026-08-18 (part 21, the phase-theming detour)
+**Status:** Accepted, 2026-08-18 (part 21, the phase-theming detour). Amended
+2026-08-18 (part 23): the machine ground's VALUES are re-anchored on the One
+Dark Pro editor theme and the ground gains a syntax palette. The decision below
+is unchanged - see "Amendment (part 23)" at the end for what moved and why it
+did not need a decision of its own.
 
 ## Context
 
@@ -203,3 +207,90 @@ border, the checkmark glyph and `aria-current` already carry four ways over.
 **Let the caseworker ground keep the navy band.** Rejected: measured fine at
 its own floors and visually a footer from a different site. The band's job is
 to be the page's end, and it does that by belonging to the page.
+
+## Amendment (part 23): the machine ground is the editor it shows
+
+**Why this is an amendment and not ADR-037.** The decision above is that a
+phase is a GROUND and that a ground is a token set on a body class. Part 23
+changes values inside one of those token sets and adds five tokens to it. The
+mechanism is untouched: the ladder is still the light one inverted, no
+component gained an override, and the "a ground declares only custom
+properties" test still passes on the block. The Consequences section above
+anticipated exactly this - "revisions stay token-level cheap" - so recording it
+as a second architectural decision would inflate a re-paint into a precedent.
+
+**What moved.** The machine ground was this project's own navy. The pages it
+paints are the ones that show what the machine did internally, and the surface
+a reader already associates with a machine at work is an editor, so the ladder
+is re-anchored on One Dark Pro's own chrome: `#1b1d23` as the canvas, `#21252b`
+as the wash, `#282c34` - the editor background itself - as the card, `#2c313a`
+and `#31363f` above it. The foreground family is anchored on `#abb2bf`, that
+theme's editor foreground, sitting in the MIDDLE of the ink ladder rather than
+at the top of it, because in a syntax-coloured buffer that colour is the calm
+one. The semantic families become the theme's own accents and keep their
+meanings.
+
+**The ground is deliberately quieter, and that is a cost that is stated.** Body
+text goes from 13.01:1 to 10.00:1 and the worst text pair from 5.36:1 to
+4.78:1, which makes this the tightest of the three grounds instead of the most
+comfortable. Every pair still clears its floor, every pair was recomputed
+rather than carried over, and the test that computes them from the stylesheet
+was extended over the new tokens.
+
+**THE ELEMENT/TEXT SPLIT IS THE RULE THAT TRAVELLED, AND IT COST TWO ACCENTS.**
+One Dark's red `#e06c75` measures 4.38:1 on the editor bed and 3.80:1 on the
+surface above it - it cannot carry a word here - so it draws edges and a lifted
+sibling carries the sentence, exactly as the sky blue did in part 16 and the
+amber in part 21. The same happened inside the new syntax palette: the red used
+for keys and the purple used for the sealed placeholders were both lifted along
+their own hue until they cleared 4.5, rather than being used at their published
+value because a theme file says so. A palette borrowed from somewhere else does
+not import an exemption.
+
+**The syntax palette is five tokens and it obeys the same rule as everything
+else.** `--code-ink`, `--code-key`, `--code-value`, `--code-punct` and
+`--code-seal` are declared in `:root` resolving to that page's own ink, and
+re-pointed by `.ground-machine` alone. So the colouring is a property of the
+ground, a machine block that ever rendered on a citizen or caseworker page is
+plain monospaced text rather than an unmeasured palette, and no selector names
+a ground in order to paint something.
+
+**WHERE THE COLOUR STOPS IS THE DECISION WORTH RECORDING.** Colour on these
+blocks means "this is machine text". It is spent on the structured working-copy
+dump - a dotted path, the separator, the value - on the sealed placeholders
+wherever they occur, and on inline identifiers. It is NOT spent on prose, on
+tables, on headings, on the free text a visitor typed, or on the Anhoerung
+letter the counterparty receives, which is a document and is set in the body
+face on the same dark ground. The line is drawn on the SHAPE
+`engine/demo/store.py` already records for each working-copy part, so it is
+read rather than guessed at from content, and over-colouring is the failure
+mode the brief named.
+
+**The spans are written server-side and they wrap, never alter.** There is no
+script and no highlighting library: `api/demo.py` splits the text into runs and
+the template writes an element around each one, so Jinja escapes every run and
+nothing is marked safe. A test asserts that the concatenation of every segment
+is the input, and a second asserts that no segment boundary ever falls inside a
+placeholder token.
+
+**That last property is load-bearing for something outside this ADR, and the
+canary sweep was strengthened rather than trusted.** A substring search over
+markup cannot see a value that a tag fell inside of, so a leak check could have
+gone green by no longer being able to look - the worst failure mode such a
+check has. `assert_no_canary` now reads every blob twice: as served, and with
+every tag removed, which is what reaches a reader. Two existing suites that
+probed the working copy as markup now probe it as text for the same reason.
+Any future part that wraps rendered text in elements inherits this obligation.
+
+**One control changed shape rather than colour.** The hand-off to phase 3 was a
+link inside a tinted panel and is now the primary button the intake submits
+with, through the same `--grad-cta` / `--cta-ink` inversion this ADR already
+records. The panels stay on the two-party side roads beside it, which is the
+hierarchy the page should have had.
+
+**And the landing page's call to action found the part-18 failure again.** The
+first card in the grid is painted with the button's fill; the focus ring is
+drawn at a 2px offset and therefore lands ON that fill, where `--focus`
+measures 1.37:1. Overridden to `--cta-ink` at 6.51:1, in the same shape and for
+the same reason as the closing band's white ring - and found the same way,
+which is by computing the pair rather than by looking at the page.
