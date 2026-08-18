@@ -481,7 +481,7 @@ def test_the_landing_page_introduces_the_product_and_the_instance(
         assert href in page.text, href
     # The source address is fixed to the project's public home; the environment
     # variable no longer reaches any page.
-    assert 'href="https://gitlab.opencode.de/Olajide/eingangslotse"' in page.text
+    assert 'href="https://gitlab.opencode.de/eingangslotse/eingangslotse"' in page.text
     assert "https://example.invalid/repo" not in page.text
     # C-5: the demo role model is stated here too, not only inside the UI.
     assert review_view.PICKER_NOTE in page.text

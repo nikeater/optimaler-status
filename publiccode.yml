@@ -23,7 +23,7 @@
 publiccodeYmlVersion: "0.4"
 
 name: EingangsLotse
-url: "https://gitlab.opencode.de/Olajide/eingangslotse"
+url: "https://gitlab.opencode.de/eingangslotse/eingangslotse"
 # The public demonstration instance. It is the landing page of the software in
 # the sense the standard means: the page a human lands on to see the thing run.
 # Synthetic data only, and it accepts no submissions from outside.
@@ -135,7 +135,7 @@ description:
       - Zweisprachige Oberfläche, serverseitig umgeschaltet, ohne JavaScript
       - Geführter Rundgang und eine vollständige Demo-Strecke über synthetischen Daten
       - Vier Gütezahlen als Gates in beiden CI-Pipelines
-    documentation: "https://gitlab.opencode.de/Olajide/eingangslotse/-/blob/main/docs/technical-spec.md"
+    documentation: "https://gitlab.opencode.de/eingangslotse/eingangslotse/-/blob/main/docs/technical-spec.md"
     apiDocumentation: "https://eingangslotse-demo.onrender.com/docs"
   en:
     shortDescription: >-
@@ -199,7 +199,7 @@ description:
       - Bilingual interface, switched server-side, with no JavaScript
       - A guided tour and a full demonstration journey over synthetic data
       - Four measured gates enforced by both CI pipelines
-    documentation: "https://gitlab.opencode.de/Olajide/eingangslotse/-/blob/main/docs/technical-spec.md"
+    documentation: "https://gitlab.opencode.de/eingangslotse/eingangslotse/-/blob/main/docs/technical-spec.md"
     apiDocumentation: "https://eingangslotse-demo.onrender.com/docs"
 
 legal:

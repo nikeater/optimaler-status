@@ -218,5 +218,5 @@ decide whether this may run on real data:
 - **The accessibility document is a self-assessment**, not a BITV 2.0 audit, and
   no assistive technology has been run against these pages.
 
-[Unreleased]: https://gitlab.opencode.de/Olajide/eingangslotse/-/compare/v0.1.0...main
-[0.1.0]: https://gitlab.opencode.de/Olajide/eingangslotse/-/tags/v0.1.0
+[Unreleased]: https://gitlab.opencode.de/eingangslotse/eingangslotse/-/compare/v0.1.0...main
+[0.1.0]: https://gitlab.opencode.de/eingangslotse/eingangslotse/-/tags/v0.1.0

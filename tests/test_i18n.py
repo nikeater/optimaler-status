@@ -568,7 +568,7 @@ def test_the_header_adds_no_control_to_the_inbox(
 #: The project's public home. Fixed in the templates since the openCode
 #: publication: the address is a fact of the product, not deployment
 #: configuration, so a deploy cannot point the footer somewhere else.
-OPENCODE_URL = "https://gitlab.opencode.de/Olajide/eingangslotse"
+OPENCODE_URL = "https://gitlab.opencode.de/eingangslotse/eingangslotse"
 
 
 def test_the_source_link_is_fixed_to_the_projects_public_home(
@@ -637,7 +637,7 @@ def test_the_source_address_is_a_destination_and_never_a_visible_string(
                 f"{path}: the environment address leaked onto the page"
             )
             outside = body.replace(f'href="{OPENCODE_URL}"', "")
-            assert "gitlab.opencode.de/Olajide" not in outside, (
+            assert "gitlab.opencode.de/eingangslotse" not in outside, (
                 f"{path}: the source address is rendered as visible text"
             )
     # And the label that replaced it is on the page, in both languages. A fresh
