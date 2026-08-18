@@ -1,6 +1,6 @@
 # ADR-036: The Two-Party Loop Is Demo-Scoped, and the Correlation Is a Drawn Token
 
-**Status:** Proposed, 2026-08-18 (part 19, the counterparty loop)
+**Status:** Accepted, 2026-08-18 (part 19, the counterparty loop)
 
 ## Context
 
