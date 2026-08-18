@@ -1,0 +1,1214 @@
+# Demo personas v4 (config/demo/) - part 22, the Statusfeststellung refocus.
+#
+# ITS OWN VERSIONED FILE, and the reason is the standing lesson of parts 06 to
+# 12: `config/thresholds.yaml`, `config/rules/`, `config/decision/` and
+# `config/taxonomy/` carry version strings that are frozen into
+# `corpus/gold/v4/MANIFEST.yaml`, and a gold set is verified by a byte-identical
+# rebuild. A persona added to one of those files would either invalidate a
+# frozen corpus or ship under a version string that no longer describes the
+# file. So this is a NEW file with a NEW id, and `engine.config_loader` does not
+# read `config/demo/` at all: nothing here can reach the pipeline, the decision
+# table or a version stamp. It is read by `engine/demo/personas.py`, which is
+# imported only by the demo routes, which exist only when
+# EINGANGSLOTSE_DEMO_MODE=1.
+#
+# WHY v4 SUPERSEDES v3 RATHER THAN EDITING IT. All four intake personas are now
+# Statusfeststellung nach par. 7a SGB IV (the user's direction of 2026-08-18).
+# Three of the four CHANGED PROCEDURE, which changes their field ids, their
+# paths, their documents and their letters - a shape change of the same weight
+# as the one that produced v2 (`name` split in two) and v3 (`attachments`
+# added). The house rule for a versioned file whose shape changes is to
+# supersede it, with only the current version left on disk.
+#
+# WHAT THE REFOCUS IS AND WHAT IT IS NOT. It is an INTAKE-SURFACE change. The
+# frozen gold corpus keeps its 101 items, the queues and the eval still show
+# every Altersrente case that was ever seeded, and no threshold, rule or table
+# moved. What changed is which four applications a VISITOR can submit: the demo
+# now tells one procedure end to end instead of three at once.
+#
+#   * `schliebermann_statusfeststellung` (NEW, replaces the Regelaltersrente
+#     persona of v1 to v3) - complete, procedure named, tier 3.
+#   * `beispielmann_ohne_taetigkeitsbeginn` (CONVERTED from
+#     `beispielmann_ohne_rentenbeginn`) - one field left empty, tier 2 with a
+#     Nachforderung. The planned deprecation of the Altersrente Bernd happened
+#     as this conversion; the persona kept his name, his identity values and
+#     his arc SHAPE, and changed procedure.
+#   * `musterfrau_statusfeststellung` (UNCHANGED except one stale sentence) -
+#     no channel hint, procedure derived from the content.
+#   * `musterkind_taetigkeitsbeginn_voraus` (CONVERTED from
+#     `musterkind_rentenbeginn_2048`) - complete and permissible, flagged by
+#     the shadow scorer.
+#
+# THE ONE PERSONA WHOSE ARC COULD NOT SURVIVE THE REFOCUS IS TIER 1, and it is
+# said here rather than left to be noticed. `statusfeststellung_v1.yaml` has
+# `tier1_enabled: false` and no `clear_cut` block, because par. 7a Abs. 2 S. 1
+# SGB IV orders a Gesamtwuerdigung and a checklist cannot produce one. So no
+# submission a visitor can make on this page reaches tier 1 any more - a
+# COMPLETE Statusantrag matches no row of the decision table and lands on
+# default_tier 3, and an INCOMPLETE one matches the tier-2 row. Two consequences
+# worth stating plainly:
+#   1. Completing a form does not improve its tier here, it changes what happens
+#      next: tier 2 is "routable, something is missing, ask for it", tier 3 is
+#      "a human decides the whole thing". A visitor who empties a field
+#      therefore moves a case from 3 to 2, which is not an upgrade and not a
+#      downgrade but a different handling path.
+#   2. Tier 1 is still demonstrated, in the queues and in the eval, on the
+#      seeded Altersrente cases - which is where it belongs, because it is a
+#      property of THAT procedure's configuration.
+#
+# WHAT AN ATTACHMENT IS HERE, AND WHAT IT IS NOT. It is a PREPARED, SYNTHETIC
+# document that the demo offers as a checkbox; ticking it puts a real
+# attachment on the submission - `text` plus a `sourceType`, the same shape the
+# corpus's e-mail and scan items ride on - so the boundary seals it span by
+# span, the text layer normalizes it, derivation reads it and the pipeline view
+# shows its working copy. There is NO file upload here and there will not be
+# one: an upload control on a public page is an ingest path around the
+# redaction boundary, which is the part-10 refusal, and the fieldset says so in
+# words rather than leaving it to be noticed.
+#
+# THE DOCUMENT NAMES ARE REAL. They were researched against the Deutsche
+# Rentenversicherung's own forms rather than invented, so a German caseworker
+# reading a screenshot recognises them. `V0027` Ziffer 16 lists what an
+# applicant for a Statusfeststellung encloses: `C0031` (Beschreibung des
+# Auftragsverhaeltnisses) is the narrative annex without which, in V0027's own
+# words, no determination can be made; "Saemtliche Einzelvertraege,
+# Projektbeschreibungen und Aufgabenbeschreibungen" and "Rechnungen in Kopie"
+# are the other two, and the second is required twice over (V0027 Ziffer 3.2 and
+# C0031 Ziffer 3.1). All four personas carry that one set, because all four
+# file the same kind of application - which is the refocus in one sentence.
+#   Two candidates were checked and REJECTED rather than used: `V0028` is the
+#   guidance leaflet the DRV supplies and never something an applicant
+#   encloses, and the Versicherungsverlauf is an OUTBOUND document the DRV
+#   sends to the insured. Both would have read as wrong to a caseworker.
+#   The Altersrente document set of v3 (`R0990`, Geburtsurkunde, `R0810`,
+#   Nachweise ueber Ausbildungszeiten) left this file with the Altersrente
+#   personas; it is still the right set for that procedure and would come back
+#   with one.
+#
+# THE TEXT IS BUILT FROM THE PERSONA'S OWN VALUES. Every `text` below is a
+# template over this persona's field ids (`{versicherungsnummer}`, `{plz}`,
+# ...), rendered once at LOAD time; an unknown key is a load error rather than
+# a half-rendered document in front of a visitor. That is the gold-corpus
+# method and it is what makes the documents deterministic: the same persona
+# always produces the same bytes.
+#
+# WHAT THE TEXT MAY NOT SAY, and it is a rule rather than a style note.
+#   1. DERIVATION. A document is text, and `text.normalized` is where the
+#      content signals of `config/procedures/*.yaml` are read (ADR-020). Two
+#      procedures' signals firing at once is an AMBIGUITY and resolves to "no
+#      procedure", which is tier 3 - so a Statusfeststellung document may not
+#      contain "altersrente" or "Rentenbeginn", and an Altersrente document may
+#      not contain "Auftraggeber" together with "Taetigkeit". Checked by
+#      `tests/test_demo_personas.py`.
+#   2. THE ARC. An attachment may not turn a persona into a different story.
+#      Bernd Beispielmann's documents in particular name no Beginn der
+#      Taetigkeit: his whole arc is the missing one, and a document that
+#      supplied it would close his gap and make him a second Beate. His C0031
+#      and his Einzelvertrag say "noch offen" where the others carry a date,
+#      which is what an applicant who does not know the date actually writes.
+#   3. THE SEALING. Same rule as the letters: identity appears only in shapes
+#      the DETERMINISTIC detector union recognises without the optional NER
+#      model - a name behind "Frau"/"Herr", the address as "<Strasse> <Nr>,
+#      <PLZ> <Ort>", the birth date labelled, the Versicherungsnummer labelled.
+#      A document that needed spaCy to be sealed would be refused on the hosted
+#      demo and accepted on a developer machine.
+#   4. THE COLLISION RULE below applies to every word of them, invented company
+#      and institution names included.
+#
+# WHY NO `extractionFixture`, and it was MEASURED before it was decided. The
+# corpus ships a fixture next to every generated letter so the replay extractor
+# can produce proposals for the verifier. It cannot do that here, and the
+# reason is a property of this channel: a form submission's structured payload
+# already fills every field the procedure's `field_map` declares, and ADR-020's
+# precedence rule says the schema mapper wins - so a text proposal over any of
+# those fields is discarded as `duplicate_field` before the double lock even
+# runs. A fixture here would therefore measure nothing and would cost the one
+# persona whose field is EMPTY his arc, because a proposal over a field the
+# payload does not carry is not a duplicate and would close his gap.
+# `tests/test_demo_personas.py::test_an_attachment_fixture_would_only_ever_be_a_duplicate`
+# runs that measurement so the reason stays true rather than remembered.
+#
+# WHAT A PERSONA IS. A fictional applicant whose submission is PII-SHAPED BY
+# DESIGN. Sealing it live is the demonstration: the visitor watches their own
+# typed Versicherungsnummer disappear behind a placeholder before anything
+# downstream sees it. Every value below is invented for this file.
+#
+# THE NAMING RULE, and it is a rule rather than a preference. Every persona name
+# is Mustermann-class - unmistakably fictional to a German reader, the way
+# "Erika Mustermann" is on the specimen Personalausweis. A demo persona called
+# "Michael Weber" would be indistinguishable from a real person's data on a
+# screenshot, and a screenshot is exactly what a demo produces.
+#   ONE DECLARED EXCEPTION, and it is declared here and in the test rather than
+#   quietly allowed: "Beate Schliebermann" is the name the user chose for the
+#   new persona and it carries no Muster/Beispiel marker. What keeps the rule's
+#   PURPOSE intact for her is that the surname is invented (it collides with
+#   nothing in either frozen set, checked), that her card, the page note, the
+#   ribbon and the footer all say in words that every applicant here is made
+#   up, and that the exception is a named list of one in
+#   `tests/test_demo_personas.py` - so a second name without a marker fails the
+#   test rather than joining her.
+#
+# THE COLLISION RULE. No value here may equal a value in `corpus/pii_golden/`
+# (the redaction-recall canaries) or an identity value in `corpus/gold/`. Two
+# reasons, and the second one is the load-bearing one:
+#   1. A persona that reused a canary string would make the canary sweep over
+#      the demo pages meaningless - it would find the string and could not tell
+#      a leak from a persona.
+#   2. A recall measurement over a corpus that shares values with a live demo
+#      is a measurement that can be gamed by memorisation.
+# `tests/test_demo_personas.py::test_no_persona_value_collides_with_a_frozen_set`
+# asserts it over every value in this file, so the rule is checked rather than
+# promised. It checks the two halves of each name separately, which is a
+# strictly stronger check than checking the joined string was.
+#
+# THE VERSICHERUNGSNUMMER RULE. Each one is checksum-VALID (the weighted
+# modulo-10 scheme in `engine/redact/recognizers.py`) and carries its persona's
+# birth date in positions 3 to 8. Both are necessary: the deterministic
+# recognizer is checksum-gated in prose, so an invented number with a broken
+# check digit would not be sealed out of a letter, and the completeness
+# checker's `birthdate_in_vsnr` cross-field check reads the real value through
+# the transient witness.
+#
+# THE LETTER RULE. Every letter names the person behind a salutation
+# ("Frau ...", "Herrn ..."), writes the address as "<Strasse> <Nr>, <PLZ> <Ort>"
+# and labels the birth date. That is not decoration: those are the shapes the
+# deterministic detector union recognises without the optional NER model
+# (ADR-019, ruling 2), and the hosted demo image ships without it. A letter that
+# needed spaCy to be sealed clean would be refused by the boundary on the demo
+# and accepted on a developer machine. **The letters keep their transliterated
+# spelling on purpose**: they are submission DATA that content-derivation rules
+# read, not interface text (ADR-031). Since part 20 the intake page does not
+# OFFER the e-mail channel, so no visitor sees a letter; they stay because the
+# shape they build is still a legal submission, because
+# `build_letter_submission` is still tested against them, and because
+# uncommenting one template block brings the tab back.
+#
+# THE SPLIT NAME (part 16). `nachname` and `vorname` declare the SAME path and
+# are joined by `join_order` into the one "Vorname Nachname" string the envelope
+# has always carried. The form asks surname-first because a German
+# administrative form asks surname-first; the value is built given-name-first
+# because that is the value. `engine/demo/personas.py::build_form_submission`
+# is the single place the two orders meet.
+#
+# THE CONTROLS (part 16). `control` picks the HTML control and changes nothing
+# about what is submitted. `date` renders a native picker whose value is the
+# same ISO string that used to be typed; `select` renders a dropdown. A select's
+# options come from the procedure configuration when the requirement has a
+# `one_of` (antragsart, antragsteller_rolle - resolved at render time by
+# `api/demo.py::vocabulary`, so the page cannot offer a value the completeness
+# checker would reject), and from an explicit `options` list when it does not.
+# The one explicit list here, for `taetigkeit_bezeichnung`, is READ from the
+# corpus scenario file `corpus/generator/scenarios/statusfeststellung.yaml` and
+# keeps that file's transliterated spelling verbatim, because those strings are
+# data rather than interface text.
+#
+# THE ENGLISH SIBLINGS. `*_en` keys carry the English of every visitor-facing
+# string. Absent means "German is the only wording there is", which is true of
+# every value, every path, every letter and every attachment TEXT, and false of
+# nothing else here. An attachment's `label` and `note` are read by a visitor
+# and therefore have siblings; its `text` is submission data that content rules
+# read, so it keeps the transliterated spelling of the letters (ADR-031).
+version: personas_v4
+
+#: What the intake page says above the picker. One sentence, and it is the same
+#: sentence whether or not anybody reads the ribbon.
+note: >-
+  Alle Personen auf dieser Seite sind frei erfunden. Namen, Geburtsdaten,
+  Versicherungsnummern und Anschriften wurden für diese Demonstration
+  konstruiert und gehören zu keinem Menschen.
+
+note_en: >-
+  Every applicant on this page is invented. The names, dates of birth,
+  insurance numbers and addresses were constructed for this demonstration and
+  belong to nobody.
+
+#: Suggestions shown next to every form, in the "was Sie ausprobieren koennen"
+#: panel. Each one produces a DIFFERENT, real behaviour of the pipeline, which
+#: is the point: a demo you cannot break teaches nothing.
+#:
+#: PART 22 REPLACED THE PANEL WITH THESE FIVE (the user's own text). Three of
+#: them instruct a DELETION followed by a submission, which is why they are
+#: also the required-field contract of this release: a field a hint tells a
+#: visitor to empty may not carry the HTML `required` attribute, or the browser
+#: would refuse the very submission the hint asks for. The rule and its list of
+#: exactly three exemptions live in `api/demo.py::required_for` /
+#: `HINT_DELETED_FIELDS`, next to each other, and a fourth hint that asked for a
+#: deletion would have to add its field there.
+#:
+#: ONE VALUE IN THE USER'S TEXT WAS CORRECTED, and the correction is the whole
+#: difference between a hint that teaches and a hint that lies. The third hint
+#: read "1. Januar 2048", which is the date the Altersrente version of this hint
+#: used and which `altersrente_v1.yaml` allows (its Rentenbeginn bound is
+#: 2050-12-31). `statusfeststellung_v1.yaml` bounds `taetigkeit_beginn` at
+#: 2035-12-31, so 2048 IS caught by the calendar bounds - the field is reported
+#: invalid, a Nachforderung asks about it, and the hint's own sentence ("die
+#: Kalendergrenzen fangen das bewusst nicht ab") would be false on the screen it
+#: is printed on. 2035-01-01 is inside the bounds, keeps every other word of the
+#: hint, and was MEASURED: anomaly score 0.960 against a threshold of 0.86, flag
+#: raised, reason rendered in plain German. See ADR-035.
+#:
+#: TWO HINTS OF v3 SIMPLY GO. "Unterlagen beilegen" and "Platzhalter-Syntax
+#: nachahmen" were dropped by the same direction; the Anlagen fieldset itself
+#: stays and still says what ticking a document does.
+hints:
+  - label: Versicherungsnummer löschen
+    detail: >-
+      Leeren Sie das Textfeld. Die Vollständigkeitsprüfung meldet eine Lücke,
+      der Vorgang fällt auf Tier 2 und es entsteht eine Nachforderung mit genau
+      dem Satz, den die Verfahrenskonfiguration dafür vorsieht.
+  - label: Geburtsdatum unplausibel setzen
+    detail: >-
+      Wählen Sie im Kalender den 1. Januar 1902. Die Versicherungsnummer trägt
+      das Geburtsdatum in den Stellen 3 bis 8 und passt dann nicht mehr dazu:
+      die Kreuzprüfung schlägt an, ohne dass irgendetwas entsiegelt wird.
+  - label: Beginn der Tätigkeit weit in die Zukunft legen
+    detail: >-
+      Wählen Sie den 1. Januar 2035. Die Kalendergrenzen der
+      Verfahrenskonfiguration fangen das bewusst nicht ab - das ist die Aufgabe
+      des Schattenscorers, der den Vorgang markiert und seinen Grund im
+      Klartext nennt.
+  - label: Auftraggeber leeren
+    detail: >-
+      Bei den Vorgängen mit Kanalhinweis entsteht eine Lücke und eine
+      Nachforderung, die genau diese Angabe abfragt. Bei Frau Musterfrau, deren
+      Verfahren aus dem Inhalt abgeleitet wird, verliert die Ableitung damit
+      eine ihrer beiden Stützen - Auftraggeber und Tätigkeit werden dort
+      gemeinsam gelesen.
+  - label: Vornamen leeren
+    detail: >-
+      Der Nachname geht allein durch. Beide Felder schreiben in dieselbe Stelle
+      der Einreichung; die Seite fügt sie zusammen, bevor irgendetwas versiegelt
+      wird, und ein leeres Feld wird weggelassen statt als Leerzeichen gesendet.
+
+hints_en:
+  - label: Delete the insurance number
+    detail: >-
+      Empty the text box. The completeness check reports a gap, the case lands
+      on tier 2, and a request for information is prepared carrying exactly the
+      sentence the procedure configuration provides for it.
+  - label: Make the date of birth implausible
+    detail: >-
+      Pick 1 January 1902 in the calendar. The insurance number carries the
+      date of birth in positions 3 to 8 and no longer matches it: the
+      cross-field check fires, without anything being unsealed.
+  - label: Push the start of the activity far into the future
+    detail: >-
+      Pick 1 January 2035. The calendar bounds in the procedure configuration
+      deliberately do not catch that - it is the shadow scorer's job, and it
+      flags the case and names its reason in plain words.
+  - label: Empty the client
+    detail: >-
+      On the applications that carry a channel hint this opens a gap and
+      prepares a request for information asking for exactly that detail. With
+      Frau Musterfrau, whose procedure is derived from the content, the
+      derivation loses one of its two supports - the client and the activity are
+      read together there.
+  - label: Empty the given name
+    detail: >-
+      The surname goes through on its own. Both boxes write to the same place in
+      the submission; the page joins them before anything is sealed, and an
+      empty box is left out rather than sent as a space.
+
+personas:
+  # ------------------------------ arc 1: complete, procedure named, tier 3 --
+  - persona_id: schliebermann_statusfeststellung
+    display_name: Beate Schliebermann
+    headline: Statusfeststellung nach par. 7a SGB IV, vollständig
+    headline_en: Employment-status determination under par. 7a SGB IV, complete
+    procedure_hint: statusfeststellung
+    story: >-
+      Frau Schliebermann arbeitet seit März als freie technische Redakteurin
+      für einen einzigen Auftraggeber und beantragt die Feststellung ihres
+      Erwerbsstatus. Sie nennt das Verfahren beim Namen und alle Angaben stehen
+      im Formular.
+    story_en: >-
+      Frau Schliebermann has been working since March as a freelance technical
+      writer for a single client and applies for a determination of her
+      employment status. She names the procedure, and every answer is in the
+      form.
+    expectation: >-
+      Vollständig, eindeutig zugeordnet: der Vorgang geht an die Clearingstelle,
+      Referat 340. Weil Par. 7a eine Gesamtwürdigung verlangt und keine
+      Checkliste, ist Tier 1 für dieses Verfahren gar nicht freigeschaltet -
+      eine vollständige Akte kauft hier keine automatische Entscheidung. Es
+      entsteht keine Nachforderung und keine Markierung; der Vorgang liegt
+      vollständig bei einem Menschen.
+    expectation_en: >-
+      Complete and cleanly routed: the case goes to the clearing unit, 340.
+      Because par. 7a demands an overall appraisal rather than a checklist, tier
+      1 is not enabled for this procedure at all - a complete file buys no
+      automatic decision here. No request for information and no flag are
+      produced; the case lands with a human in full.
+    fields:
+      - field_id: nachname
+        label: Nachname
+        label_en: Surname
+        path: antragsteller.name
+        join_order: 2
+        value: Schliebermann
+        kind: NAME
+        group: name
+      - field_id: vorname
+        label: Vorname
+        label_en: Given name
+        path: antragsteller.name
+        join_order: 1
+        value: Beate
+        kind: NAME
+        group: name
+      - field_id: geburtsdatum
+        label: Geburtsdatum
+        label_en: Date of birth
+        path: antragsteller.geburtsdatum
+        control: date
+        value: "1979-05-14"
+        kind: GEBDAT
+      - field_id: versicherungsnummer
+        label: Versicherungsnummer
+        label_en: Insurance number
+        path: antragsteller.versicherungsnummer
+        value: 24140579S013
+        kind: VSNR
+      - field_id: strasse
+        label: Straße
+        label_en: Street
+        path: antragsteller.anschrift.strasse
+        value: Prickenweg
+        kind: ADDR
+        group: anschrift
+      - field_id: hausnummer
+        label: Hausnummer
+        label_en: Number
+        path: antragsteller.anschrift.hausnummer
+        value: "4"
+        kind: ADDR
+        group: anschrift
+      - field_id: plz
+        label: Postleitzahl
+        label_en: Postcode
+        path: antragsteller.anschrift.plz
+        value: "24939"
+        kind: ADDR
+        group: anschrift
+      - field_id: ort
+        label: Ort
+        label_en: Town
+        path: antragsteller.anschrift.ort
+        value: Musterwarft
+        kind: ADDR
+        group: anschrift
+      - field_id: auftraggeber_name
+        label: Auftraggeber
+        label_en: Client
+        path: auftraggeber.firmenname
+        value: Nordlicht Beispieltechnik GmbH
+        kind: ORG
+      - field_id: antragsart
+        label: Antragsart
+        label_en: Kind of application
+        path: antrag.antragsart
+        control: select
+        value: feststellung_nach_aufnahme
+      - field_id: antragsteller_rolle
+        label: Wer stellt den Antrag
+        label_en: Who is applying
+        path: antrag.antragsteller_rolle
+        control: select
+        value: auftragnehmer
+      - field_id: taetigkeit_bezeichnung
+        label: Bezeichnung der Tätigkeit
+        label_en: Description of the activity
+        path: antrag.taetigkeit_bezeichnung
+        control: select
+        value: Technische Redaktion und Dokumentation
+        # READ from corpus/generator/scenarios/statusfeststellung.yaml. The
+        # requirement carries only a length bound, so there is no `one_of` to
+        # resolve; these are the descriptions the corpus itself uses, kept in
+        # its spelling because they are data rather than interface text.
+        options:
+          - IT-Beratung und Datenmigration
+          - IT-Beratung und Softwareentwicklung
+          - Grafikdesign und Illustration
+          - Technische Redaktion und Dokumentation
+          - Fahrdienst im Werkverkehr
+          - Physiotherapie auf Honorarbasis
+          - Buchhaltung und Lohnabrechnung
+          - Kurierfahrten im Stadtgebiet
+      - field_id: taetigkeit_beginn
+        label: Beginn der Tätigkeit
+        label_en: Start of the activity
+        path: antrag.taetigkeit_beginn
+        control: date
+        value: "2026-03-02"
+    attachments:
+      - attachment_id: c0031_auftragsverhaeltnis
+        filename: C0031-beschreibung-des-auftragsverhaeltnisses.pdf
+        label: C0031 - Beschreibung des Auftragsverhältnisses
+        label_en: C0031 - description of the contractual relationship
+        note: >-
+          Der Anhang, ohne den nach dem Wortlaut des Vordrucks V0027 keine
+          Feststellung des Erwerbsstatus erfolgen kann.
+        note_en: >-
+          The annex without which, in form V0027's own words, no determination
+          of employment status can be made.
+        text: |
+          Deutsche Rentenversicherung Bund - Clearingstelle
+          Beschreibung des Auftragsverhaeltnisses zum Antrag auf Feststellung
+          des Erwerbsstatus (Vordruck C0031)
+
+          Auftragnehmerin: Frau {vorname} {nachname}
+          Geburtsdatum: {geburtsdatum}
+          Versicherungsnummer: {versicherungsnummer}
+          Anschrift: {strasse} {hausnummer}, {plz} {ort}
+
+          Auftraggeber: {auftraggeber_name}
+          Taetigkeit: {taetigkeit_bezeichnung}
+          Beginn der Taetigkeit: {taetigkeit_beginn}
+
+          Zur Gesamtwuerdigung: die Arbeitszeit wird frei eingeteilt, die
+          Redaktionsumgebung wird selbst gestellt, es besteht keine
+          Eingliederung in die Arbeitsorganisation und keine Weisungsbindung im
+          Einzelnen.
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
+      - attachment_id: einzelvertrag
+        filename: einzelvertrag-und-projektbeschreibung.pdf
+        label: Einzelvertrag und Projektbeschreibung (Kopie)
+        label_en: Individual contract and project description (copy)
+        note: >-
+          V0027, Ziffer 16 verlangt sämtliche Einzelverträge,
+          Projektbeschreibungen und Aufgabenbeschreibungen.
+        note_en: >-
+          V0027, item 16 asks for all individual contracts, project
+          descriptions and task descriptions.
+        text: |
+          Einzelvertrag und Projektbeschreibung (Kopie)
+
+          Zwischen {auftraggeber_name} (Auftraggeberin)
+          und Frau {vorname} {nachname} (Auftragnehmerin)
+
+          Gegenstand: {taetigkeit_bezeichnung}
+          Beginn der Taetigkeit: {taetigkeit_beginn}
+          Verguetung: nach Aufwand, Abrechnung monatlich gegen Rechnung
+          Arbeitsort: Raeume der Auftragnehmerin
+          Vertretung: die Auftragnehmerin darf Dritte einsetzen
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
+      - attachment_id: rechnungen_kopie
+        filename: rechnungen-in-kopie.pdf
+        label: Rechnungen in Kopie
+        label_en: Copies of invoices
+        note: >-
+          Zweimal verlangt (V0027 Ziffer 3.2 und C0031 Ziffer 3.1): ohne sie
+          kann über den Erwerbsstatus nicht entschieden werden.
+        note_en: >-
+          Asked for twice (V0027 item 3.2 and C0031 item 3.1): without them the
+          employment status cannot be decided.
+        text: |
+          Rechnungen in Kopie
+
+          Rechnungsstellerin: Frau {vorname} {nachname}
+          Anschrift: {strasse} {hausnummer}, {plz} {ort}
+          Versicherungsnummer: {versicherungsnummer}
+          Empfaengerin: {auftraggeber_name}
+
+          Rechnung 2026-031 vom 2026-04-30: {taetigkeit_bezeichnung},
+          3.150,00 Euro
+          Rechnung 2026-040 vom 2026-05-29: {taetigkeit_bezeichnung},
+          2.870,00 Euro
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
+    letter: |
+      Betreff: Antrag auf Feststellung meines Erwerbsstatus
+
+      Sehr geehrte Damen und Herren,
+
+      hiermit beantrage ich die Feststellung meines Erwerbsstatus nach
+      par. 7a SGB IV und lege alle Angaben vollstaendig bei.
+
+      Auftraggeber: Nordlicht Beispieltechnik GmbH
+      Taetigkeit: Technische Redaktion und Dokumentation
+      Beginn der Taetigkeit: 2026-03-02
+      Antragsart: feststellung_nach_aufnahme
+      Ich stelle den Antrag als: auftragnehmer
+
+      Mein Name ist Frau Beate Schliebermann, geboren am 1979-05-14.
+      Meine Anschrift: Prickenweg 4, 24939 Musterwarft.
+      Meine Versicherungsnummer lautet 24140579S013.
+
+      Mit freundlichen Gruessen
+      Frau Beate Schliebermann
+
+  # ------------------------------------------- arc 2: tier 2, Nachforderung --
+  #
+  # CONVERTED FROM ALTERSRENTE IN PART 22, and the conversion IS the deprecation
+  # v3 announced for him. What survived: his name, his identity values, his
+  # documents' role and his arc - one field deliberately empty, a gap that names
+  # exactly that field, and a Nachforderung in the procedure's own words. What
+  # changed: which field it is. `rentenbeginn` became `taetigkeit_beginn`,
+  # because there is no Rentenantrag on this page any more.
+  #
+  # HIS EMPTY FIELD IS NO LONGER THE ONLY NON-REQUIRED CONTROL. Part 22's hints
+  # instruct three deletions, so `versicherungsnummer`, `auftraggeber_name` and
+  # `vorname` lost the `required` attribute on every persona
+  # (`api/demo.py::HINT_DELETED_FIELDS`). His empty Tätigkeitsbeginn is still
+  # the only control that arrives empty, which is a different sentence and the
+  # one his card makes.
+  - persona_id: beispielmann_ohne_taetigkeitsbeginn
+    display_name: Bernd Beispielmann
+    headline: Statusfeststellung ohne Tätigkeitsbeginn
+    headline_en: Employment-status determination with no start date
+    procedure_hint: statusfeststellung
+    story: >-
+      Herr Beispielmann füllt das Formular aus, lässt aber offen, seit wann er
+      für seinen Auftraggeber tätig ist. Sonst ist alles da.
+    story_en: >-
+      Herr Beispielmann fills in the form but leaves open since when he has been
+      working for his client. Everything else is there.
+    expectation: >-
+      Zuordenbar, aber unvollständig: Tier 2 bei der Clearingstelle, Referat
+      340. Es entsteht eine Nachforderung, die genau die fehlende Angabe abfragt
+      - im Wortlaut der Verfahrenskonfiguration, nicht in einem erzeugten Satz.
+    expectation_en: >-
+      Routable but incomplete: tier 2 at the clearing unit, 340. A request for
+      information is prepared that asks for exactly the missing answer - in the
+      procedure configuration's own wording, not in a generated sentence.
+    fields:
+      - field_id: nachname
+        label: Nachname
+        label_en: Surname
+        path: antragsteller.name
+        join_order: 2
+        value: Beispielmann
+        kind: NAME
+        group: name
+      - field_id: vorname
+        label: Vorname
+        label_en: Given name
+        path: antragsteller.name
+        join_order: 1
+        value: Bernd
+        kind: NAME
+        group: name
+      - field_id: geburtsdatum
+        label: Geburtsdatum
+        label_en: Date of birth
+        path: antragsteller.geburtsdatum
+        control: date
+        value: "1961-02-11"
+        kind: GEBDAT
+      - field_id: versicherungsnummer
+        label: Versicherungsnummer
+        label_en: Insurance number
+        path: antragsteller.versicherungsnummer
+        value: 19110261B426
+        kind: VSNR
+      - field_id: strasse
+        label: Straße
+        label_en: Street
+        path: antragsteller.anschrift.strasse
+        value: Deichsteig
+        kind: ADDR
+        group: anschrift
+      - field_id: hausnummer
+        label: Hausnummer
+        label_en: Number
+        path: antragsteller.anschrift.hausnummer
+        value: "12"
+        kind: ADDR
+        group: anschrift
+      - field_id: plz
+        label: Postleitzahl
+        label_en: Postcode
+        path: antragsteller.anschrift.plz
+        value: "25813"
+        kind: ADDR
+        group: anschrift
+      - field_id: ort
+        label: Ort
+        label_en: Town
+        path: antragsteller.anschrift.ort
+        value: Musterkoog
+        kind: ADDR
+        group: anschrift
+      - field_id: auftraggeber_name
+        label: Auftraggeber
+        label_en: Client
+        path: auftraggeber.firmenname
+        value: Deichkrone Beispiellogistik GmbH
+        kind: ORG
+      - field_id: antragsart
+        label: Antragsart
+        label_en: Kind of application
+        path: antrag.antragsart
+        control: select
+        value: feststellung_nach_aufnahme
+      - field_id: antragsteller_rolle
+        label: Wer stellt den Antrag
+        label_en: Who is applying
+        path: antrag.antragsteller_rolle
+        control: select
+        value: auftragnehmer
+      - field_id: taetigkeit_bezeichnung
+        label: Bezeichnung der Tätigkeit
+        label_en: Description of the activity
+        path: antrag.taetigkeit_bezeichnung
+        control: select
+        value: Fahrdienst im Werkverkehr
+        options:
+          - IT-Beratung und Datenmigration
+          - IT-Beratung und Softwareentwicklung
+          - Grafikdesign und Illustration
+          - Technische Redaktion und Dokumentation
+          - Fahrdienst im Werkverkehr
+          - Physiotherapie auf Honorarbasis
+          - Buchhaltung und Lohnabrechnung
+          - Kurierfahrten im Stadtgebiet
+      - field_id: taetigkeit_beginn
+        label: Beginn der Tätigkeit
+        label_en: Start of the activity
+        path: antrag.taetigkeit_beginn
+        control: date
+        value: ""
+        help: bewusst leer gelassen - das ist die Lücke dieser Person
+        help_en: deliberately left empty - this is this applicant's gap
+    # NO DOCUMENT HERE NAMES A BEGINN DER TAETIGKEIT, and that is the arc rule
+    # of the header applied: this persona IS the missing start date. A document
+    # that supplied it would close his gap, and the pipeline would then be right
+    # to make him a second Beate - which is a redesign of the demonstration, not
+    # a feature.
+    attachments:
+      - attachment_id: c0031_auftragsverhaeltnis
+        filename: C0031-beschreibung-des-auftragsverhaeltnisses.pdf
+        label: C0031 - Beschreibung des Auftragsverhältnisses
+        label_en: C0031 - description of the contractual relationship
+        note: >-
+          Der Anhang, ohne den nach dem Wortlaut des Vordrucks V0027 keine
+          Feststellung erfolgen kann. Er reicht ihn unvollständig ein, wie den
+          Antrag selbst.
+        note_en: >-
+          The annex without which, in form V0027's own words, no determination
+          can be made. He files it incomplete, like the application itself.
+        text: |
+          Deutsche Rentenversicherung Bund - Clearingstelle
+          Beschreibung des Auftragsverhaeltnisses zum Antrag auf Feststellung
+          des Erwerbsstatus (Vordruck C0031)
+
+          Auftragnehmer: Herr {vorname} {nachname}
+          Geburtsdatum: {geburtsdatum}
+          Versicherungsnummer: {versicherungsnummer}
+          Anschrift: {strasse} {hausnummer}, {plz} {ort}
+
+          Auftraggeber: {auftraggeber_name}
+          Taetigkeit: {taetigkeit_bezeichnung}
+          Beginn der Taetigkeit: noch offen
+
+          Zur Gesamtwuerdigung: die Touren werden nach Bedarf abgerufen, das
+          Fahrzeug wird selbst gestellt, eine feste Eingliederung in die
+          Arbeitsorganisation besteht nicht.
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
+      - attachment_id: einzelvertrag
+        filename: einzelvertrag-und-projektbeschreibung.pdf
+        label: Einzelvertrag und Projektbeschreibung (Kopie)
+        label_en: Individual contract and project description (copy)
+        note: >-
+          Belegt das Auftragsverhältnis - und sagt nichts darüber, seit wann er
+          für seinen Auftraggeber tätig ist.
+        note_en: >-
+          Evidences the contractual relationship - and says nothing about since
+          when he has been working for his client.
+        text: |
+          Einzelvertrag und Projektbeschreibung (Kopie)
+
+          Zwischen {auftraggeber_name} (Auftraggeberin)
+          und Herrn {vorname} {nachname} (Auftragnehmer)
+
+          Gegenstand: {taetigkeit_bezeichnung}
+          Beginn der Taetigkeit: noch offen
+          Verguetung: nach gefahrener Tour, Abrechnung monatlich gegen Rechnung
+          Fahrzeug: wird vom Auftragnehmer gestellt
+          Vertretung: der Auftragnehmer darf Dritte einsetzen
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
+    letter: |
+      Betreff: Antrag auf Feststellung meines Erwerbsstatus
+
+      Sehr geehrte Damen und Herren,
+
+      ich moechte meinen Erwerbsstatus feststellen lassen. Seit wann genau ich
+      fuer meinen Auftraggeber taetig bin, muss ich noch heraussuchen - bitte
+      melden Sie sich dazu bei mir.
+
+      Auftraggeber: Deichkrone Beispiellogistik GmbH
+      Taetigkeit: Fahrdienst im Werkverkehr
+      Antragsart: feststellung_nach_aufnahme
+      Ich stelle den Antrag als: auftragnehmer
+
+      Mein Name ist Herr Bernd Beispielmann, geboren am 1961-02-11.
+      Meine Anschrift: Deichsteig 12, 25813 Musterkoog.
+      Meine Versicherungsnummer lautet 19110261B426.
+
+      Mit freundlichen Gruessen
+      Herr Bernd Beispielmann
+
+  # ------------------------------ arc 3: no channel hint, derived from content --
+  #
+  # THE ONE PERSONA PART 22 LEFT ALONE, apart from one stale sentence. Her card
+  # said "Sie schreibt einen Brief, kein Formular", which stopped being true in
+  # part 20 when the e-mail tab was removed: she submits the same form as
+  # everyone else. What actually makes her different is that her submission
+  # carries no `procedure_hint`, so the procedure has to come out of the
+  # content - which is what the sentence says now.
+  - persona_id: musterfrau_statusfeststellung
+    display_name: Sabine Musterfrau
+    headline: Statusfeststellung nach par. 7a SGB IV
+    headline_en: Employment-status determination under par. 7a SGB IV
+    procedure_hint: null
+    story: >-
+      Frau Musterfrau arbeitet seit Januar als freie IT-Beraterin für einen
+      einzigen größeren Auftraggeber und will wissen, ob das eine selbständige
+      Tätigkeit ist. Sie nennt das Verfahren nicht beim Namen - ihr Eingang
+      trägt keinen Kanalhinweis.
+    story_en: >-
+      Frau Musterfrau has been working since January as a freelance IT
+      consultant for one larger client and wants to know whether that counts as
+      self-employment. She never names the procedure - her submission carries no
+      channel hint.
+    expectation: >-
+      Ohne Kanalhinweis: das Verfahren wird aus dem INHALT abgeleitet
+      (Auftraggeber und Tätigkeit gemeinsam benannt) und der Vorgang geht an
+      die Clearingstelle, Referat 340. Par. 7a verlangt eine Gesamtwürdigung
+      und keine Checkliste - deshalb ist für dieses Verfahren Tier 1 gar nicht
+      freigeschaltet und der Vorgang landet vollständig bei einem Menschen.
+    expectation_en: >-
+      With no channel hint, the procedure is derived from the CONTENT (a client
+      and an activity named together) and the case goes to the clearing unit,
+      340. Par. 7a demands an overall appraisal rather than a checklist, which
+      is why tier 1 is not enabled for this procedure at all and the case lands
+      with a human in full.
+    fields:
+      - field_id: nachname
+        label: Nachname
+        label_en: Surname
+        path: antragsteller.name
+        join_order: 2
+        value: Musterfrau
+        kind: NAME
+        group: name
+      - field_id: vorname
+        label: Vorname
+        label_en: Given name
+        path: antragsteller.name
+        join_order: 1
+        value: Sabine
+        kind: NAME
+        group: name
+      - field_id: geburtsdatum
+        label: Geburtsdatum
+        label_en: Date of birth
+        path: antragsteller.geburtsdatum
+        control: date
+        value: "1957-03-19"
+        kind: GEBDAT
+      - field_id: versicherungsnummer
+        label: Versicherungsnummer
+        label_en: Insurance number
+        path: antragsteller.versicherungsnummer
+        value: 42190357M724
+        kind: VSNR
+      - field_id: strasse
+        label: Straße
+        label_en: Street
+        path: antragsteller.anschrift.strasse
+        value: Ankerpfad
+        kind: ADDR
+        group: anschrift
+      - field_id: hausnummer
+        label: Hausnummer
+        label_en: Number
+        path: antragsteller.anschrift.hausnummer
+        value: "3"
+        kind: ADDR
+        group: anschrift
+      - field_id: plz
+        label: Postleitzahl
+        label_en: Postcode
+        path: antragsteller.anschrift.plz
+        value: "18055"
+        kind: ADDR
+        group: anschrift
+      - field_id: ort
+        label: Ort
+        label_en: Town
+        path: antragsteller.anschrift.ort
+        value: Musterwiek
+        kind: ADDR
+        group: anschrift
+      - field_id: auftraggeber_name
+        label: Auftraggeber
+        label_en: Client
+        path: auftraggeber.firmenname
+        value: Seezeichen Beispielwerk GmbH
+        kind: ORG
+      - field_id: antragsart
+        label: Antragsart
+        label_en: Kind of application
+        path: antrag.antragsart
+        control: select
+        value: feststellung_nach_aufnahme
+      - field_id: antragsteller_rolle
+        label: Wer stellt den Antrag
+        label_en: Who is applying
+        path: antrag.antragsteller_rolle
+        control: select
+        value: auftragnehmer
+      - field_id: taetigkeit_bezeichnung
+        label: Bezeichnung der Tätigkeit
+        label_en: Description of the activity
+        path: antrag.taetigkeit_bezeichnung
+        control: select
+        value: IT-Beratung und Datenmigration
+        # READ from corpus/generator/scenarios/statusfeststellung.yaml. The
+        # requirement carries only a length bound, so there is no `one_of` to
+        # resolve; these are the descriptions the corpus itself uses, kept in
+        # its spelling because they are data rather than interface text.
+        options:
+          - IT-Beratung und Datenmigration
+          - IT-Beratung und Softwareentwicklung
+          - Grafikdesign und Illustration
+          - Technische Redaktion und Dokumentation
+          - Fahrdienst im Werkverkehr
+          - Physiotherapie auf Honorarbasis
+          - Buchhaltung und Lohnabrechnung
+          - Kurierfahrten im Stadtgebiet
+      - field_id: taetigkeit_beginn
+        label: Beginn der Tätigkeit
+        label_en: Start of the activity
+        path: antrag.taetigkeit_beginn
+        control: date
+        value: "2026-01-08"
+    attachments:
+      - attachment_id: c0031_auftragsverhaeltnis
+        filename: C0031-beschreibung-des-auftragsverhaeltnisses.pdf
+        label: C0031 - Beschreibung des Auftragsverhältnisses
+        label_en: C0031 - description of the contractual relationship
+        note: >-
+          Der Anhang, ohne den nach dem Wortlaut des Vordrucks V0027 keine
+          Feststellung des Erwerbsstatus erfolgen kann.
+        note_en: >-
+          The annex without which, in form V0027's own words, no determination
+          of employment status can be made.
+        text: |
+          Deutsche Rentenversicherung Bund - Clearingstelle
+          Beschreibung des Auftragsverhaeltnisses zum Antrag auf Feststellung
+          des Erwerbsstatus (Vordruck C0031)
+
+          Auftragnehmerin: Frau {vorname} {nachname}
+          Geburtsdatum: {geburtsdatum}
+          Versicherungsnummer: {versicherungsnummer}
+          Anschrift: {strasse} {hausnummer}, {plz} {ort}
+
+          Auftraggeber: {auftraggeber_name}
+          Taetigkeit: {taetigkeit_bezeichnung}
+          Beginn der Taetigkeit: {taetigkeit_beginn}
+
+          Zur Gesamtwuerdigung: die Arbeitszeit wird frei eingeteilt, der
+          Arbeitsplatz wird selbst gestellt, es besteht keine Eingliederung in
+          die Arbeitsorganisation und keine Weisungsbindung im Einzelnen.
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
+      - attachment_id: einzelvertrag
+        filename: einzelvertrag-und-projektbeschreibung.pdf
+        label: Einzelvertrag und Projektbeschreibung (Kopie)
+        label_en: Individual contract and project description (copy)
+        note: >-
+          V0027, Ziffer 16 verlangt sämtliche Einzelverträge,
+          Projektbeschreibungen und Aufgabenbeschreibungen.
+        note_en: >-
+          V0027, item 16 asks for all individual contracts, project
+          descriptions and task descriptions.
+        text: |
+          Einzelvertrag und Projektbeschreibung (Kopie)
+
+          Zwischen {auftraggeber_name} (Auftraggeberin)
+          und Frau {vorname} {nachname} (Auftragnehmerin)
+
+          Gegenstand: {taetigkeit_bezeichnung}
+          Beginn der Taetigkeit: {taetigkeit_beginn}
+          Verguetung: nach Aufwand, Abrechnung monatlich gegen Rechnung
+          Arbeitsort: Raeume der Auftragnehmerin
+          Vertretung: die Auftragnehmerin darf Dritte einsetzen
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
+      - attachment_id: rechnungen_kopie
+        filename: rechnungen-in-kopie.pdf
+        label: Rechnungen in Kopie
+        label_en: Copies of invoices
+        note: >-
+          Zweimal verlangt (V0027 Ziffer 3.2 und C0031 Ziffer 3.1): ohne sie
+          kann über den Erwerbsstatus nicht entschieden werden.
+        note_en: >-
+          Asked for twice (V0027 item 3.2 and C0031 item 3.1): without them the
+          employment status cannot be decided.
+        text: |
+          Rechnungen in Kopie
+
+          Rechnungsstellerin: Frau {vorname} {nachname}
+          Anschrift: {strasse} {hausnummer}, {plz} {ort}
+          Versicherungsnummer: {versicherungsnummer}
+          Empfaengerin: {auftraggeber_name}
+
+          Rechnung 2026-014 vom 2026-02-28: {taetigkeit_bezeichnung},
+          4.480,00 Euro
+          Rechnung 2026-021 vom 2026-03-31: {taetigkeit_bezeichnung},
+          3.920,00 Euro
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
+    letter: |
+      Betreff: Bitte um Klaerung meines Erwerbsstatus
+
+      Sehr geehrte Damen und Herren,
+
+      seit Anfang des Jahres arbeite ich als freie Beraterin. Ich bin nicht
+      sicher, wie mein Erwerbsstatus zu beurteilen ist, und bitte um eine
+      Feststellung.
+
+      Auftraggeber: Seezeichen Beispielwerk GmbH
+      Taetigkeit: IT-Beratung und Datenmigration
+      Beginn der Taetigkeit: 2026-01-08
+      Antragsart: feststellung_nach_aufnahme
+      Ich stelle den Antrag als: auftragnehmer
+
+      Mein Name ist Frau Sabine Musterfrau, geboren am 1957-03-19.
+      Meine Anschrift: Ankerpfad 3, 18055 Musterwiek.
+      Meine Versicherungsnummer lautet 42190357M724.
+
+      Mit freundlichen Gruessen
+      Frau Sabine Musterfrau
+
+  # ------------------------------------------------ arc 4: anomaly-primed --
+  #
+  # CONVERTED FROM ALTERSRENTE IN PART 22. His arc is unchanged in every respect
+  # that matters - complete, permissible field by field, and flagged by the
+  # shadow scorer for the DISTANCE of the procedure's leading date - and the
+  # leading date is now `taetigkeit_beginn`, which is exactly what
+  # `config/scoring/scoring_v1.yaml::leading_date_fields` names for this
+  # procedure.
+  #
+  # THE DATE IS 2035-07-01 AND NOT 2048-01-01, and that is the one value the
+  # refocus forced. `statusfeststellung_v1.yaml` bounds `taetigkeit_beginn`
+  # at 2035-12-31 (Altersrente's Rentenbeginn runs to 2050-12-31), so 2048 would
+  # be caught by the calendar bounds as INVALID - which is a completeness gap,
+  # a Nachforderung and a card whose own text would be wrong: his story is that
+  # every single answer is permissible and that the flag is the scorer's doing
+  # alone. 2035-07-01 is inside the bounds, so the form is complete, and it is
+  # +8.9 years from the day this was measured: anomaly score 0.960 against the
+  # calibrated threshold of 0.86.
+  - persona_id: musterkind_taetigkeitsbeginn_voraus
+    display_name: Theo Musterkind
+    headline: Statusfeststellung mit Tätigkeitsbeginn weit voraus
+    headline_en: Employment-status determination with a start date far ahead
+    procedure_hint: statusfeststellung
+    story: >-
+      Herr Musterkind füllt das Formular vollständig und regelkonform aus - und
+      trägt als Beginn der Tätigkeit ein Datum weit in der Zukunft ein, obwohl
+      er die Feststellung nach Aufnahme der Tätigkeit beantragt. Jede einzelne
+      Angabe ist zulässig.
+    story_en: >-
+      Herr Musterkind fills the form in completely and within every rule - and
+      enters a start of the activity far in the future, even though he is
+      applying for a determination after taking the activity up. Every single
+      answer is permissible.
+    expectation: >-
+      Die Kalendergrenzen der Verfahrenskonfiguration sind absolut und weit; sie
+      fangen "möglich, aber ungewöhnlich" bewusst nicht ab. Genau das ist die
+      Aufgabe des Schattenscorers: er markiert den Vorgang und nennt seinen
+      Grund im Klartext. Weil der Scorer im Modus log_only läuft, BEWEGT die
+      Markierung nichts - die Seite zeigt an, welches Tier ein scharfgestellter
+      Scorer gesetzt hätte, und dass die Entscheidung ohne ihn zustande kam.
+    expectation_en: >-
+      The calendar bounds in the procedure configuration are absolute and wide;
+      they deliberately do not catch "possible, but unusual". That is exactly
+      the shadow scorer's job: it flags the case and names its reason in plain
+      words. Because the scorer runs in log_only mode the flag MOVES nothing -
+      the page shows which tier an armed scorer would have set, and that the
+      decision was reached without it.
+    fields:
+      - field_id: nachname
+        label: Nachname
+        label_en: Surname
+        path: antragsteller.name
+        join_order: 2
+        value: Musterkind
+        kind: NAME
+        group: name
+      - field_id: vorname
+        label: Vorname
+        label_en: Given name
+        path: antragsteller.name
+        join_order: 1
+        value: Theo
+        kind: NAME
+        group: name
+      - field_id: geburtsdatum
+        label: Geburtsdatum
+        label_en: Date of birth
+        path: antragsteller.geburtsdatum
+        control: date
+        value: "1959-09-07"
+        kind: GEBDAT
+      - field_id: versicherungsnummer
+        label: Versicherungsnummer
+        label_en: Insurance number
+        path: antragsteller.versicherungsnummer
+        value: 12070959L221
+        kind: VSNR
+      - field_id: strasse
+        label: Straße
+        label_en: Street
+        path: antragsteller.anschrift.strasse
+        value: Baakenufer
+        kind: ADDR
+        group: anschrift
+      - field_id: hausnummer
+        label: Hausnummer
+        label_en: Number
+        path: antragsteller.anschrift.hausnummer
+        value: "5"
+        kind: ADDR
+        group: anschrift
+      - field_id: plz
+        label: Postleitzahl
+        label_en: Postcode
+        path: antragsteller.anschrift.plz
+        value: "26506"
+        kind: ADDR
+        group: anschrift
+      - field_id: ort
+        label: Ort
+        label_en: Town
+        path: antragsteller.anschrift.ort
+        value: Musterdeich
+        kind: ADDR
+        group: anschrift
+      - field_id: auftraggeber_name
+        label: Auftraggeber
+        label_en: Client
+        path: auftraggeber.firmenname
+        value: Wattkante Beispielkontor GmbH
+        kind: ORG
+      - field_id: antragsart
+        label: Antragsart
+        label_en: Kind of application
+        path: antrag.antragsart
+        control: select
+        value: feststellung_nach_aufnahme
+      - field_id: antragsteller_rolle
+        label: Wer stellt den Antrag
+        label_en: Who is applying
+        path: antrag.antragsteller_rolle
+        control: select
+        value: auftragnehmer
+      - field_id: taetigkeit_bezeichnung
+        label: Bezeichnung der Tätigkeit
+        label_en: Description of the activity
+        path: antrag.taetigkeit_bezeichnung
+        control: select
+        value: Buchhaltung und Lohnabrechnung
+        options:
+          - IT-Beratung und Datenmigration
+          - IT-Beratung und Softwareentwicklung
+          - Grafikdesign und Illustration
+          - Technische Redaktion und Dokumentation
+          - Fahrdienst im Werkverkehr
+          - Physiotherapie auf Honorarbasis
+          - Buchhaltung und Lohnabrechnung
+          - Kurierfahrten im Stadtgebiet
+      - field_id: taetigkeit_beginn
+        label: Beginn der Tätigkeit
+        label_en: Start of the activity
+        path: antrag.taetigkeit_beginn
+        control: date
+        value: "2035-07-01"
+        help: >-
+          bewusst weit in der Zukunft und trotzdem innerhalb der Kalendergrenzen
+          - das ist die Auffälligkeit
+        help_en: >-
+          deliberately far in the future and still inside the calendar bounds -
+          this is the anomaly
+    attachments:
+      - attachment_id: c0031_auftragsverhaeltnis
+        filename: C0031-beschreibung-des-auftragsverhaeltnisses.pdf
+        label: C0031 - Beschreibung des Auftragsverhältnisses
+        label_en: C0031 - description of the contractual relationship
+        note: >-
+          Der Anhang, ohne den nach dem Wortlaut des Vordrucks V0027 keine
+          Feststellung des Erwerbsstatus erfolgen kann.
+        note_en: >-
+          The annex without which, in form V0027's own words, no determination
+          of employment status can be made.
+        text: |
+          Deutsche Rentenversicherung Bund - Clearingstelle
+          Beschreibung des Auftragsverhaeltnisses zum Antrag auf Feststellung
+          des Erwerbsstatus (Vordruck C0031)
+
+          Auftragnehmer: Herr {vorname} {nachname}
+          Geburtsdatum: {geburtsdatum}
+          Versicherungsnummer: {versicherungsnummer}
+          Anschrift: {strasse} {hausnummer}, {plz} {ort}
+
+          Auftraggeber: {auftraggeber_name}
+          Taetigkeit: {taetigkeit_bezeichnung}
+          Beginn der Taetigkeit: {taetigkeit_beginn}
+
+          Zur Gesamtwuerdigung: die Buecher werden in eigenen Raeumen gefuehrt,
+          die Arbeitszeit wird frei eingeteilt, eine Eingliederung in die
+          Arbeitsorganisation besteht nicht.
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
+      - attachment_id: einzelvertrag
+        filename: einzelvertrag-und-projektbeschreibung.pdf
+        label: Einzelvertrag und Projektbeschreibung (Kopie)
+        label_en: Individual contract and project description (copy)
+        note: >-
+          V0027, Ziffer 16 verlangt sämtliche Einzelverträge,
+          Projektbeschreibungen und Aufgabenbeschreibungen - hier mit demselben
+          weit vorausliegenden Beginn wie im Formular.
+        note_en: >-
+          V0027, item 16 asks for all individual contracts, project descriptions
+          and task descriptions - here with the same far-ahead start date the
+          form carries.
+        text: |
+          Einzelvertrag und Projektbeschreibung (Kopie)
+
+          Zwischen {auftraggeber_name} (Auftraggeberin)
+          und Herrn {vorname} {nachname} (Auftragnehmer)
+
+          Gegenstand: {taetigkeit_bezeichnung}
+          Beginn der Taetigkeit: {taetigkeit_beginn}
+          Verguetung: nach Aufwand, Abrechnung monatlich gegen Rechnung
+          Arbeitsort: Raeume des Auftragnehmers
+          Vertretung: der Auftragnehmer darf Dritte einsetzen
+
+          Vorbereitetes Beispieldokument dieser Demonstration.
+    letter: |
+      Betreff: Antrag auf Feststellung meines Erwerbsstatus
+
+      Sehr geehrte Damen und Herren,
+
+      hiermit beantrage ich die Feststellung meines Erwerbsstatus. Den Beginn
+      der Taetigkeit habe ich so eingetragen, wie er im Vertrag steht.
+
+      Auftraggeber: Wattkante Beispielkontor GmbH
+      Taetigkeit: Buchhaltung und Lohnabrechnung
+      Beginn der Taetigkeit: 2035-07-01
+      Antragsart: feststellung_nach_aufnahme
+      Ich stelle den Antrag als: auftragnehmer
+
+      Mein Name ist Herr Theo Musterkind, geboren am 1959-09-07.
+      Meine Anschrift: Baakenufer 5, 26506 Musterdeich.
+      Meine Versicherungsnummer lautet 12070959L221.
+
+      Mit freundlichen Gruessen
+      Herr Theo Musterkind

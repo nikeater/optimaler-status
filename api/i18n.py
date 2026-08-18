@@ -1197,15 +1197,23 @@ TABLE: dict[str, tuple[str, str]] = {
         "the field exactly as typing would.",
     ),
     "intake.required.note": (
-        "Alles, was hier schon ausgefüllt ist, ist ein Pflichtfeld. Leeren Sie "
-        "eines und versuchen Sie abzuschicken: Ihr Browser markiert das Feld "
-        "rot und sendet nichts. Diese Prüfung findet im Browser statt, ohne "
-        "JavaScript; die Vollständigkeitsprüfung der Anlage läuft danach und "
-        "noch einmal getrennt davon.",
-        "Everything already filled in here is a required field. Empty one and "
-        "try to submit: your browser marks the field red and sends nothing. "
-        "That check happens in the browser, without JavaScript; the system's "
-        "own completeness check runs afterwards and separately from it.",
+        "Was hier schon ausgefüllt ist, ist ein Pflichtfeld. Leeren Sie eines "
+        "und versuchen Sie abzuschicken: Ihr Browser markiert das Feld rot und "
+        "sendet nichts. Ausgenommen sind genau die drei Felder, deren Löschung "
+        "die Hinweise unten vorschlagen - Versicherungsnummer, Auftraggeber "
+        "und Vorname: sie lassen sich leer abschicken, weil sonst ein Hinweis "
+        "auf dieser Seite etwas empfehlen würde, was dieselbe Seite blockiert. "
+        "Diese Prüfung findet im Browser statt, ohne JavaScript; die "
+        "Vollständigkeitsprüfung der Anlage läuft danach und noch einmal "
+        "getrennt davon.",
+        "What is already filled in here is a required field. Empty one and try "
+        "to submit: your browser marks the field red and sends nothing. The "
+        "exceptions are exactly the three fields the suggestions below ask you "
+        "to delete - insurance number, client and given name: those can be sent "
+        "empty, because otherwise a suggestion on this page would recommend "
+        "something the same page blocks. That check happens in the browser, "
+        "without JavaScript; the system's own completeness check runs "
+        "afterwards and separately from it.",
     ),
     "intake.required.error": (
         "Diese Angabe fehlt. Ohne sie wird der Antrag nicht abgeschickt.",

@@ -92,12 +92,16 @@ TOKEN = "demo-journey-token"
 BASE_TIME = datetime(2026, 8, 13, 9, 0, tzinfo=UTC)
 
 #: The arcs, as the showcase promises them: which queue the visitor is handed
-#: to, and what phase 3 has waiting there.
+#: to, and what phase 3 has waiting there. Since part 22 all four file a
+#: Statusfeststellung, so all four are handed to the Clearingstelle - and the
+#: two tiers are the par. 7a shape: complete lands on the table's default tier
+#: 3 (tier 1 is disabled for this procedure and no other row matches), an
+#: incomplete one matches the tier-2 row.
 ARCS = {
-    "mustermann_regelaltersrente": ("Referat_312_Renten", "Tier 1"),
-    "beispielmann_ohne_rentenbeginn": ("Referat_312_Renten", "Tier 2"),
+    "schliebermann_statusfeststellung": ("Referat_340_Clearingstelle", "Tier 3"),
+    "beispielmann_ohne_taetigkeitsbeginn": ("Referat_340_Clearingstelle", "Tier 2"),
     "musterfrau_statusfeststellung": ("Referat_340_Clearingstelle", "Tier 3"),
-    "musterkind_rentenbeginn_2048": ("Referat_312_Renten", "Tier 1"),
+    "musterkind_taetigkeitsbeginn_voraus": ("Referat_340_Clearingstelle", "Tier 3"),
 }
 
 #: Every citizen-facing page behind the demo flag. The tour joined in part 15
@@ -321,7 +325,7 @@ def test_the_raw_endpoint_stays_403_while_the_intake_page_works(
     # And a malformed body is still refused without being decoded.
     assert client.post("/ingest", content=b"{ not json").status_code == 403
     # The page, holding the token, gets the whole pipeline.
-    case_id = submit(client, form_data("mustermann_regelaltersrente"))
+    case_id = submit(client, form_data("schliebermann_statusfeststellung"))
     assert client.get(f"/cases/{case_id}").status_code == 200
 
 
@@ -341,7 +345,7 @@ def test_with_no_token_configured_the_intake_page_is_closed_too(
     assert phrase("intake.submit") not in page.text
     refused = client.post(
         "/demo/antrag",
-        data=form_data("mustermann_regelaltersrente"),
+        data=form_data("schliebermann_statusfeststellung"),
         follow_redirects=False,
     )
     assert refused.status_code == 200
@@ -488,41 +492,68 @@ def test_a_tampered_submission_fires_the_gap_and_the_flag(
 ) -> None:
     """The hints panel promises real behaviour; this is the behaviour.
 
-    Two of the three probes below are what a visitor can now do in a browser
-    (the panel names both). The first is not: since part 20 every prefilled
-    field is required, so nobody can empty the Versicherungsnummer from the
-    form - the missing-field path moved to Bernd Beispielmann's own arc, which
-    ``tests/test_demo_personas.py`` pins. It stays HERE as a server-side probe
-    because the pipeline behaviour it exercises is unchanged and worth keeping
-    under test: a field that arrives absent is MISSING, not invalid, and it
-    carries the procedure's own Nachforderung wording.
+    All four probes below are what a visitor can do in a browser with nothing
+    but the keyboard, because part 22's panel asks for three deletions and one
+    date and ``demo_view.HINT_DELETED_FIELDS`` makes the first three possible.
+    Each one is a different half of the machine: a missing field, an invalid
+    one produced by a CROSS-field check, the shadow scorer, and the second gap
+    the derivation is not allowed to paper over.
     """
     client = build_client(config, monkeypatch=monkeypatch)
 
-    # Delete the Versicherungsnummer: a gap, a Nachforderung sentence, tier 2.
+    # Hint 1. Delete the Versicherungsnummer: a gap, the procedure's own
+    # Nachforderung sentence, tier 2. Absent is MISSING and never invalid.
     gap_case = submit(
-        client, form_data("mustermann_regelaltersrente", versicherungsnummer="")
+        client, form_data("schliebermann_statusfeststellung", versicherungsnummer="")
     )
     gap_page = client.get(f"/demo/case/{gap_case}/pipeline").text
     assert "Tier 2" in gap_page
     assert "versicherungsnummer" in gap_page
     assert "Sozialversicherungsausweis" in gap_page
 
-    # Push the Rentenbeginn out: the shadow scorer flags it and moves nothing.
+    # Hint 2. A birth date the Versicherungsnummer does not carry: the
+    # cross-field check fires, and it names its reason without unsealing
+    # anything - the comparison happens through the transient witness.
+    cross_case = submit(
+        client, form_data("schliebermann_statusfeststellung", geburtsdatum="1902-01-01")
+    )
+    cross_page = client.get(f"/demo/case/{cross_case}/pipeline").text
+    assert "Tier 2" in cross_page
+    assert "Stellen 3 bis 8" in cross_page
+    assert "cross_field.birthdate_in_vsnr" in cross_page
+    # "ohne dass irgendetwas entsiegelt wird": the check reads the typed value
+    # through the transient witness, so the WORKING COPY still holds a
+    # placeholder where the date was. (The visitor's own echo beside it is not
+    # the working copy - it is what they typed, held for half an hour.)
+    store = client.app.state.demo_store  # type: ignore[attr-defined]
+    held = store.get(cross_case)
+    assert held is not None
+    working = "\n".join(part.text for part in held.working_copy)
+    assert "1902-01-01" not in working
+    assert "[[PII|GEBDAT|" in working
+
+    # Hint 3. Push the start of the activity out, INSIDE the calendar bounds:
+    # the shadow scorer flags it and moves nothing.
     flag_case = submit(
-        client, form_data("mustermann_regelaltersrente", rentenbeginn="2048-01-01")
+        client,
+        form_data("schliebermann_statusfeststellung", taetigkeit_beginn="2035-01-01"),
     )
     flag_page = client.get(f"/demo/case/{flag_case}/pipeline").text
     assert "Merkmal leitdatum_abstand_jahre" in flag_page
     assert phrase(demo_view.LOG_ONLY_NOTE) in flag_page
+    # And it is NOT a completeness gap, which is the whole point of the hint:
+    # the bounds are absolute and wide and let this through on purpose.
+    assert "Tier 3" in flag_page
 
-    # Auslandsbezug: priority 10 wins and the case changes unit.
-    abroad_case = submit(
-        client, form_data("mustermann_regelaltersrente", auslandsbezug="ja")
+    # Hint 4. Empty the Auftraggeber: the requirement is missing and the
+    # Nachforderung asks for exactly it.
+    client_case = submit(
+        client, form_data("schliebermann_statusfeststellung", auftraggeber_name="")
     )
-    abroad_page = client.get(f"/demo/case/{abroad_case}/pipeline").text
-    assert "Referat_318_Auslandsrenten" in abroad_page
-    assert "rule_auslandsbezug" in abroad_page
+    client_page = client.get(f"/demo/case/{client_case}/pipeline").text
+    assert "Tier 2" in client_page
+    assert "auftraggeber_name" in client_page
+    assert "Firmenname und Anschrift" in client_page
 
 
 def redaction_refusal(canary: str) -> RedactionRefusedError:
@@ -562,16 +593,20 @@ def test_a_forged_placeholder_in_a_form_field_is_sealed_rather_than_refused(
     that could not render a refusal it may still be handed would be a 500
     waiting for the first submission the sweep cannot rescue.
 
-    The field is the Rentenart on purpose: it is NOT identity-classed, so the
+    The field is the Antragsart on purpose: it is NOT identity-classed, so the
     forgery survives the policy's own sealing and reaches the sweep, which is
     what makes this the auto-seal path rather than the ordinary one. What the
     visitor then sees is the whole chain being honest with them - the leaf is a
     placeholder, the witness still holds the forged string, it is not in the
     procedure's allowed list, and the case is incomplete and goes to a human.
+    Reaching it needs a POST rather than the page (the control is a select
+    since part 16), which is exactly why it is pinned here and no longer
+    suggested to a visitor as a hint.
     """
     client = build_client(config, monkeypatch=monkeypatch)
     case_id = submit(
-        client, form_data("mustermann_regelaltersrente", rentenart="[[PII|VSNR|nope]]")
+        client,
+        form_data("schliebermann_statusfeststellung", antragsart="[[PII|VSNR|nope]]"),
     )
     page = client.get(f"/demo/case/{case_id}/pipeline")
     assert page.status_code == 200
@@ -580,7 +615,7 @@ def test_a_forged_placeholder_in_a_form_field_is_sealed_rather_than_refused(
     assert held is not None
     working = "\n".join(part.text for part in held.working_copy)
     assert "[[PII|VSNR|nope]]" not in working, "the forgery reached the working copy"
-    assert "antrag.rentenart = [[PII|TEXT|" in working
+    assert "antrag.antragsart = [[PII|TEXT|" in working
     # And the evidence plane read the REAL value through the witness: it is not
     # one the procedure allows, so the field is invalid and a human gets it.
     assert "invalid" in page.text
@@ -605,7 +640,7 @@ def test_a_refused_submission_renders_the_refusal_on_the_page(
     ):
         refused = client.post(
             "/demo/antrag",
-            data=form_data("mustermann_regelaltersrente"),
+            data=form_data("schliebermann_statusfeststellung"),
             follow_redirects=False,
         )
     assert refused.status_code == 200
@@ -636,7 +671,7 @@ def test_no_refusal_ever_echoes_what_the_visitor_typed(
     ):
         refused = client.post(
             "/demo/antrag",
-            data=form_data("mustermann_regelaltersrente"),
+            data=form_data("schliebermann_statusfeststellung"),
             follow_redirects=False,
         )
     assert refused.status_code == 200
@@ -784,13 +819,14 @@ def attributes(tag: str) -> set[str]:
 def test_what_the_persona_arrived_with_is_a_required_field(
     config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Part 20's rule, pinned as a RULE and not as a list of field names.
+    """The rule and its declared exemptions, pinned in both directions.
 
-    Prefilled implies required; empty by design implies not. Asserted over
-    every persona and every field of every persona, in both directions, so a
-    renamed field, a new persona or a reordered config file cannot quietly
-    exempt anything - and so the ONE exception the shipped demo has is a
-    consequence of the rule rather than a special case in the template.
+    Prefilled implies required; empty by design implies not; a field a HINT
+    tells the visitor to delete implies not, however full it arrives (part 22,
+    ``demo_view.HINT_DELETED_FIELDS``). Asserted over every persona and every
+    field of every persona, so a renamed field, a new persona or a reordered
+    config file cannot quietly exempt anything, and a fourth exemption has to
+    be declared rather than acquired.
 
     The blocking itself is the browser's. What is checkable from here is that
     the attribute is on the control the visitor uses, that the sentence the
@@ -808,13 +844,16 @@ def test_what_the_persona_arrived_with_is_a_required_field(
             )
             assert control, f"{chosen.persona_id}.{entry.field_id} is not rendered"
             names = attributes(control.group(0))
-            expected = bool(entry.value.strip())
+            expected = (
+                bool(entry.value.strip())
+                and entry.field_id not in demo_view.HINT_DELETED_FIELDS
+            )
             assert demo_view.required_for(entry) is expected
             assert ("required" in names) is expected, (
                 f"{chosen.persona_id}.{entry.field_id}: required attribute "
                 f"{'missing' if expected else 'present'} ({sorted(names)}) - the "
                 "rule is that a field the persona arrived with a value for must "
-                "be sent with one"
+                "be sent with one unless a hint says to delete it"
             )
             # And the help sentence is still ADDRESSED, which is the attribute
             # `required` was glued to the first time this shipped. Checked
@@ -825,20 +864,34 @@ def test_what_the_persona_arrived_with_is_a_required_field(
                 f"{chosen.persona_id}.{entry.field_id}: {sorted(names)}"
             )
         # The sentence exists once per required field, before anybody submits.
-        required = sum(1 for entry in chosen.fields if entry.value.strip())
+        required = sum(1 for entry in chosen.fields if demo_view.required_for(entry))
         assert body.count('<span class="field-error">') == required
         assert phrase("intake.required.error") in body
         assert phrase("intake.required.note") in body
 
-    # And the exception the rule produces is exactly one control in the whole
-    # demonstration, which is what makes Bernd's card able to name it.
-    optional = [
+    # THE EXEMPTION LIST AS IT LANDS ON THE PAGE, both halves. Every field the
+    # list names is a field some persona actually has (an exemption for a field
+    # nobody carries would outlive its reason unnoticed), and the only controls
+    # the whole demonstration leaves optional are those three plus the one that
+    # arrives empty by design - which is what lets Bernd's card name his.
+    all_fields = {
+        entry.field_id for chosen in demo_personas().personas for entry in chosen.fields
+    }
+    assert all_fields >= demo_view.HINT_DELETED_FIELDS
+    optional = {
         (chosen.persona_id, entry.field_id)
         for chosen in demo_personas().personas
         for entry in chosen.fields
         if not demo_view.required_for(entry)
-    ]
-    assert optional == [("beispielmann_ohne_rentenbeginn", "rentenbeginn")]
+    }
+    assert {field_id for _persona_id, field_id in optional} == (
+        demo_view.HINT_DELETED_FIELDS | {"taetigkeit_beginn"}
+    )
+    assert ("beispielmann_ohne_taetigkeitsbeginn", "taetigkeit_beginn") in optional
+    assert (
+        sum(1 for _persona_id, field_id in optional if field_id == "taetigkeit_beginn")
+        == 1
+    )
 
 
 def test_the_prepared_documents_are_offered_and_say_what_they_are(
@@ -975,7 +1028,7 @@ def test_the_selection_survives_a_refusal_like_every_other_answer(
     enclosures.
     """
     client = build_client(config, monkeypatch=monkeypatch)
-    chosen = persona("mustermann_regelaltersrente")
+    chosen = persona("schliebermann_statusfeststellung")
     ticked = chosen.attachments[0]
     with patch.object(
         app_module, "run_pipeline", side_effect=redaction_refusal("egal")
@@ -1089,17 +1142,17 @@ def test_the_working_copy_holds_placeholders_and_never_a_sealed_value(
     config: ConfigBundle,
 ) -> None:
     """The structural guarantee: it is built from the envelope and nothing else."""
-    entry = held_submission(config, "mustermann_regelaltersrente")
+    entry = held_submission(config, "schliebermann_statusfeststellung")
     text = "\n".join(part.text for part in entry.working_copy)
     assert PLACEHOLDER_RE.search(text) is not None
-    for value in identity_strings("mustermann_regelaltersrente"):
+    for value in identity_strings("schliebermann_statusfeststellung"):
         assert value not in text, value
     # The echo is the visitor's own input and is deliberately NOT placeholders.
-    assert any(value.value == "Renate Mustermann" for value in entry.echo)
+    assert any(value.value == "Beate Schliebermann" for value in entry.echo)
     # The four address inputs became ONE entry, because sealing groups them.
     address = [value for value in entry.echo if value.kind == "ADDR"]
     assert len(address) == 1
-    assert address[0].value == "Lotsenweg 7 21029 Musterhafen"
+    assert address[0].value == "Prickenweg 4 24939 Musterwarft"
 
 
 def test_the_working_copy_carries_a_text_part_as_text(config: ConfigBundle) -> None:
@@ -1148,7 +1201,7 @@ def test_the_store_expires_by_ttl_and_forgets_completely(
     config: ConfigBundle,
 ) -> None:
     store = DemoStore(ttl=timedelta(minutes=5))
-    entry = held_submission(config, "mustermann_regelaltersrente")
+    entry = held_submission(config, "schliebermann_statusfeststellung")
     store.put(entry, now=BASE_TIME)
     assert store.get(entry.case_id, now=BASE_TIME + timedelta(minutes=4)) is entry
     assert store.get(entry.case_id, now=BASE_TIME + timedelta(minutes=5)) is None
@@ -1160,7 +1213,7 @@ def test_the_store_evicts_the_oldest_beyond_its_capacity(
 ) -> None:
     """A demo nobody stops must not become the memory profile of the process."""
     store = DemoStore(capacity=3)
-    base = held_submission(config, "mustermann_regelaltersrente")
+    base = held_submission(config, "schliebermann_statusfeststellung")
     for index in range(5):
         store.put(
             DemoSubmission(
@@ -1228,7 +1281,7 @@ def test_a_list_in_the_payload_renders_with_its_index(config: ConfigBundle) -> N
 def test_reset_wipes_the_store(config: ConfigBundle) -> None:
     """The in-process wipe. A restart does the same thing by construction."""
     store = DemoStore()
-    entry = held_submission(config, "mustermann_regelaltersrente")
+    entry = held_submission(config, "schliebermann_statusfeststellung")
     store.put(entry, now=BASE_TIME)
     assert len(store) == 1
     store.reset()
@@ -1238,7 +1291,7 @@ def test_reset_wipes_the_store(config: ConfigBundle) -> None:
 
 def test_the_store_clips_what_it_holds(config: ConfigBundle) -> None:
     """A per-entry size cap, so one large paste cannot become the process."""
-    chosen = persona("mustermann_regelaltersrente")
+    chosen = persona("schliebermann_statusfeststellung")
     entry = DemoSubmission.from_envelope(
         envelope_of(config, chosen.persona_id),  # type: ignore[arg-type]
         persona_id=chosen.persona_id,
@@ -1285,7 +1338,7 @@ def test_an_expired_submission_leaves_the_journal_half_readable(
 ) -> None:
     """The page degrades to what the journal holds, and says which half is gone."""
     client = build_client(config, monkeypatch=monkeypatch)
-    case_id = submit(client, form_data("mustermann_regelaltersrente"))
+    case_id = submit(client, form_data("schliebermann_statusfeststellung"))
     store = client.app.state.demo_store  # type: ignore[attr-defined]
     assert isinstance(store, DemoStore)
     store.reset()
@@ -1294,8 +1347,8 @@ def test_an_expired_submission_leaves_the_journal_half_readable(
     assert phrase(demo_view.EXPIRED_NOTE) in page.text
     assert "Von Ihnen eingegeben" not in page.text
     # Everything the journal holds is still there.
-    assert "Referat_312_Renten" in page.text
-    assert "Tier 1" in page.text
+    assert "Referat_340_Clearingstelle" in page.text
+    assert "Tier 3" in page.text
 
 
 # ------------------------------------------------------- 5. the canary sweep ---
@@ -1317,17 +1370,17 @@ def test_no_page_shows_another_visitors_identity(
     gated form into a second window onto the working copy.
     """
     client = build_client(config, monkeypatch=monkeypatch)
-    first = submit(client, form_data("mustermann_regelaltersrente"))
-    second = submit(client, form_data("musterkind_rentenbeginn_2048"))
-    first_values = identity_strings("mustermann_regelaltersrente")
+    first = submit(client, form_data("schliebermann_statusfeststellung"))
+    second = submit(client, form_data("musterkind_taetigkeitsbeginn_voraus"))
+    first_values = identity_strings("schliebermann_statusfeststellung")
 
     for path in (
         f"/demo/case/{second}/pipeline",
         "/demo/rundgang",
         "/hinweise",
         "/review",
-        "/review/queue/Referat_312_Renten",
-        f"/review/queue/Referat_312_Renten?highlight={first}",
+        "/review/queue/Referat_340_Clearingstelle",
+        f"/review/queue/Referat_340_Clearingstelle?highlight={first}",
         f"/review/case/{first}",
         "/inbox",
         "/metrics",
@@ -1385,7 +1438,7 @@ def test_every_demo_page_reaches_the_synthetic_data_notice(
     from the one that was asked for.
     """
     client = build_client(config, monkeypatch=monkeypatch)
-    case_id = submit(client, form_data("mustermann_regelaltersrente"))
+    case_id = submit(client, form_data("schliebermann_statusfeststellung"))
     for page in CITIZEN_PAGES:
         path = citizen_path(page, case_id)
         body = client.get(path).text
@@ -1405,11 +1458,16 @@ def test_the_highlight_never_reorders_or_hides_anything(
     """Display only, asserted on the ROWS rather than on the sentence."""
     client = build_client(config, monkeypatch=monkeypatch)
     ids = [
-        submit(client, form_data("mustermann_regelaltersrente", versicherungsnummer=""))
+        submit(
+            client,
+            form_data("schliebermann_statusfeststellung", versicherungsnummer=""),
+        )
         for _ in range(3)
     ]
-    plain = client.get("/review/queue/Referat_312_Renten").text
-    marked = client.get(f"/review/queue/Referat_312_Renten?highlight={ids[0]}").text
+    plain = client.get("/review/queue/Referat_340_Clearingstelle").text
+    marked = client.get(
+        f"/review/queue/Referat_340_Clearingstelle?highlight={ids[0]}"
+    ).text
     assert _rows(plain) == _rows(marked)
     assert len(_rows(plain)) == 3
     assert "Ihr Vorgang" in marked
@@ -1421,13 +1479,15 @@ def test_a_highlight_for_a_case_not_in_this_queue_says_so(
 ) -> None:
     """After a confirmation the row is gone, and the page is honest about it."""
     client = build_client(config, monkeypatch=monkeypatch)
-    case_id = submit(client, form_data("mustermann_regelaltersrente"))
+    case_id = submit(client, form_data("schliebermann_statusfeststellung"))
     client.post(
         f"/review/case/{case_id}/confirm",
-        data={"unit": "Referat_312_Renten"},
+        data={"unit": "Referat_340_Clearingstelle"},
         follow_redirects=False,
     )
-    page = client.get(f"/review/queue/Referat_312_Renten?highlight={case_id}").text
+    page = client.get(
+        f"/review/queue/Referat_340_Clearingstelle?highlight={case_id}"
+    ).text
     assert "steht nicht (mehr) in dieser Warteschlange" in page
     assert 'href="/inbox"' in page
 
@@ -1437,7 +1497,7 @@ def test_the_demo_adds_no_control_to_the_inbox(
 ) -> None:
     """The part-07 line, checked from the part-13 side (ADR-005)."""
     client = build_client(config, monkeypatch=monkeypatch)
-    case_id = submit(client, form_data("mustermann_regelaltersrente"))
+    case_id = submit(client, form_data("schliebermann_statusfeststellung"))
     inbox = client.get("/inbox").text
     assert "<form" not in inbox
     assert "<button" not in inbox
@@ -1466,7 +1526,7 @@ def test_the_inbox_can_be_asked_again_without_gaining_a_control(
     part was called in to fix on the metrics page.
     """
     client = build_client(config, monkeypatch=monkeypatch)
-    submit(client, form_data("mustermann_regelaltersrente"))
+    submit(client, form_data("schliebermann_statusfeststellung"))
     for lang in ("de", "en"):
         client.get(f"/inbox?lang={lang}", follow_redirects=True)
         body = client.get("/inbox").text
@@ -1497,7 +1557,7 @@ def test_the_new_pages_meet_the_mechanical_accessibility_bar(
 ) -> None:
     """The same criteria part 10's suite asserts, on the citizen pages."""
     client = build_client(config, monkeypatch=monkeypatch)
-    case_id = submit(client, form_data("mustermann_regelaltersrente"))
+    case_id = submit(client, form_data("schliebermann_statusfeststellung"))
     body = client.get(citizen_path(phase, case_id)).text
 
     assert '<html lang="de">' in body
@@ -1698,7 +1758,7 @@ def test_the_new_pages_are_built_to_reflow_at_320_css_pixels(
     is what part 15 closed.
     """
     client = build_client(config, monkeypatch=monkeypatch)
-    case_id = submit(client, form_data("mustermann_regelaltersrente"))
+    case_id = submit(client, form_data("schliebermann_statusfeststellung"))
     body = client.get(citizen_path(phase, case_id)).text
     assert 'name="viewport" content="width=device-width, initial-scale=1"' in body
     assert body.count("<table") == body.count('<div class="scroll-x">')
@@ -1783,7 +1843,7 @@ def test_the_name_is_two_boxes_that_submit_one_string(
     changed. The arcs are the proof that nothing did (test_demo_personas).
     """
     client = build_client(config, monkeypatch=monkeypatch)
-    body = intake(client, "mustermann_regelaltersrente")
+    body = intake(client, "schliebermann_statusfeststellung")
     for field_id in ("nachname", "vorname"):
         assert f'id="feld-{field_id}"' in body, field_id
         assert f'for="feld-{field_id}"' in body, field_id
@@ -1793,12 +1853,12 @@ def test_the_name_is_two_boxes_that_submit_one_string(
     # And the single field the form used to have is gone from the page.
     assert 'id="feld-name"' not in body
 
-    case_id = submit(client, form_data("mustermann_regelaltersrente"))
+    case_id = submit(client, form_data("schliebermann_statusfeststellung"))
     page = client.get(f"/demo/case/{case_id}/pipeline").text
     # The echo shows the visitor the string the machine received, not the
     # order the boxes were in.
-    assert "Renate Mustermann" in page
-    assert "Mustermann Renate" not in page
+    assert "Beate Schliebermann" in page
+    assert "Schliebermann Beate" not in page
 
 
 def test_emptying_one_half_of_the_name_submits_the_other(
@@ -1806,10 +1866,10 @@ def test_emptying_one_half_of_the_name_submits_the_other(
 ) -> None:
     """A blank half is dropped, not joined into a string with a stray space."""
     client = build_client(config, monkeypatch=monkeypatch)
-    case_id = submit(client, form_data("mustermann_regelaltersrente", vorname=""))
+    case_id = submit(client, form_data("schliebermann_statusfeststellung", vorname=""))
     page = client.get(f"/demo/case/{case_id}/pipeline").text
-    assert "Mustermann" in page
-    assert " Mustermann" not in page.split("Von Ihnen eingegeben")[1][:400]
+    assert "Schliebermann" in page
+    assert " Schliebermann" not in page.split("Von Ihnen eingegeben")[1][:400]
 
 
 def test_the_two_dates_are_native_pickers_with_a_text_fallback_hint(
@@ -1822,15 +1882,15 @@ def test_the_two_dates_are_native_pickers_with_a_text_fallback_hint(
     plausible orderings this field wants.
     """
     client = build_client(config, monkeypatch=monkeypatch)
-    body = intake(client, "mustermann_regelaltersrente")
-    for field_id in ("geburtsdatum", "rentenbeginn"):
+    body = intake(client, "schliebermann_statusfeststellung")
+    for field_id in ("geburtsdatum", "taetigkeit_beginn"):
         assert f'<input type="date" id="feld-{field_id}"' in body, field_id
         assert f'aria-describedby="hilfe-{field_id}"' in body, field_id
     assert phrase("intake.date.hint") in body
     # A date the calendar allows is a date the pipeline still judges: the
     # tampering the hints panel promises keeps working through the new control.
     case_id = submit(
-        client, form_data("mustermann_regelaltersrente", geburtsdatum="1902-01-01")
+        client, form_data("schliebermann_statusfeststellung", geburtsdatum="1902-01-01")
     )
     assert "geburtsdatum" in client.get(f"/demo/case/{case_id}/pipeline").text
 
@@ -1925,20 +1985,39 @@ def test_a_select_with_no_vocabulary_degrades_to_a_text_box(
 def test_the_hints_panel_describes_the_controls_the_form_renders(
     config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The panel promises real behaviour; part 16 changed how it is reached.
+    """The panel promises real behaviour; every promise names a real control.
 
-    Two of the five suggestions are now made in a calendar rather than typed,
-    one is made in a text box that deliberately stayed a text box, and one is
-    new: the split name is a thing a visitor can break too.
+    Part 22 replaced the panel with five suggestions the user wrote. Two are
+    made in a calendar, three are DELETIONS - and a deletion the browser would
+    block is a promise the page breaks, so the field each one names has to be
+    on the page, has to be one a visitor can actually empty
+    (``demo_view.HINT_DELETED_FIELDS``), and has to be one every persona
+    carries: the panel is the same on all four screens.
     """
     client = build_client(config, monkeypatch=monkeypatch)
-    body = intake(client, "mustermann_regelaltersrente")
-    for label, detail in demo_personas().hints:
-        # Escaped, because a hint that quotes a value (``"ja"``) is not in the
-        # HTML verbatim - Jinja escapes everything it renders.
+    body = intake(client, "schliebermann_statusfeststellung")
+    hints = demo_personas().hints
+    assert len(hints) == 5
+    for label, detail in hints:
+        # Escaped, because a hint that quotes a value is not in the HTML
+        # verbatim - Jinja escapes everything it renders.
         assert str(escape(label)) in body, label
         assert str(escape(detail[:40])) in body, label
     assert "Kalender" in body, "the date suggestions name the control"
-    assert "Textfeld" in body, "the VSNR and the Rentenart stay text boxes"
+    assert "Textfeld" in body, "the deletion hint names the control it means"
     assert '<input type="text" id="feld-versicherungsnummer"' in body
-    assert '<input type="text" id="feld-rentenart"' in body
+    assert '<input type="text" id="feld-auftraggeber_name"' in body
+    assert '<input type="date" id="feld-taetigkeit_beginn"' in body
+
+    # Every field a hint asks to delete is on every persona's form and none of
+    # them asks the browser to block the deletion.
+    for chosen in demo_personas().personas:
+        page = intake(client, chosen.persona_id)
+        for field_id in demo_view.HINT_DELETED_FIELDS:
+            entry = chosen.field(field_id)
+            assert entry is not None, f"{chosen.persona_id} has no {field_id}"
+            control = re.search(
+                rf'<(input|select)[^>]*id="feld-{field_id}"[^>]*>', page
+            )
+            assert control, f"{chosen.persona_id}.{field_id} is not rendered"
+            assert "required" not in attributes(control.group(0))

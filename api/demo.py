@@ -16,7 +16,7 @@ Three pages, all demo-mode-only, all server-rendered like everything else here.
     caseworker surface instead of a case that is not there.
 
 ``/demo/antrag``
-    The intake surface. A persona picker over ``config/demo/personas_v3.yaml``,
+    The intake surface. A persona picker over ``config/demo/personas_v4.yaml``,
     an EDITABLE prefilled form, the prepared documents that persona may enclose,
     and a panel that suggests what to break. The submission goes
     through the app's own ``run_ingest`` - the same sealing, the same
@@ -24,8 +24,9 @@ Three pages, all demo-mode-only, all server-rendered like everything else here.
     ingest token presented server-side. The raw endpoint keeps its 403 posture
     for direct callers; what changes is who is holding the token, not what the
     gate does. Since part 20 there is one channel and no chooser
-    (:data:`OFFERED_CHANNELS`), every prefilled field is a required field
-    (:func:`required_for`), and a ticked document becomes a real attachment.
+    (:data:`OFFERED_CHANNELS`) and a ticked document becomes a real attachment;
+    since part 22 a prefilled field is required UNLESS a hint tells the visitor
+    to delete it (:func:`required_for`, :data:`HINT_DELETED_FIELDS`).
 
 ``/demo/case/{case_id}/pipeline``
     The glass pipeline. Seven stages, one plain sentence each in the
@@ -255,9 +256,10 @@ class FieldView:
     from the procedure configuration or from the persona file and never
     invented here.
 
-    ``required`` is part 20 and is a RULE rather than a list of field names:
-    a field the persona arrived with a value for must still carry one when it
-    is sent. See :func:`required_for`.
+    ``required`` is a RULE plus one declared exemption list rather than a list
+    of field names: a field the persona arrived with a value for must still
+    carry one when it is sent, unless a hint tells the visitor to delete it.
+    See :func:`required_for` and :data:`HINT_DELETED_FIELDS`.
     """
 
     field_id: str
@@ -358,17 +360,19 @@ def resolve_channel(raw: str | None) -> str:
 #: Which persona a visitor lands on with no ``?persona=`` in the URL, and which
 #: one is offered first in the picker.
 #:
-#: A VIEW DECISION, not a configuration one. `config/demo/personas_v2.yaml` is
-#: frozen and its order is the order the personas were written in; which of
+#: A VIEW DECISION, not a configuration one. `config/demo/personas_v4.yaml` is
+#: versioned and its order is the order the personas were written in; which of
 #: them a first-time visitor should meet is a question about this page, and the
 #: answer changes with what the demonstration is trying to show. Keeping it
 #: here means the config stays a description of four applicants rather than
 #: also being a running order.
 #:
-#: Statusfeststellung is the choice because it is the richest of the four on
-#: first load: it is the persona whose form carries the three configured
-#: selects and whose story the hints panel is written against, so a visitor who
-#: touches nothing still sees the interesting screen.
+#: Sabine Musterfrau is still the choice after the part-22 refocus, and now for
+#: a different reason than before: all four applicants file a
+#: Statusfeststellung, so the interesting question on first load is no longer
+#: which procedure but where the procedure comes from - and hers is the one
+#: submission that carries no channel hint at all, so the machine has to read it
+#: out of the content. Her card is also the one the fourth hint names by name.
 LEAD_PERSONA = "musterfrau_statusfeststellung"
 
 
@@ -424,14 +428,38 @@ def vocabulary(config: ConfigBundle, path: str) -> tuple[str, ...]:
     return ()
 
 
+#: The fields a HINT tells the visitor to delete, and therefore the fields that
+#: may not ask the browser to block an empty submission (part 22).
+#:
+#: THIS LIST IS DERIVED FROM THE HINTS PANEL AND FROM NOTHING ELSE. Three of the
+#: five hints in ``config/demo/personas_v4.yaml`` instruct a deletion followed
+#: by a submission - "Versicherungsnummer loeschen", "Auftraggeber leeren",
+#: "Vornamen leeren" - and a field carrying the HTML ``required`` attribute
+#: makes the browser refuse exactly the submission the hint just asked for. A
+#: page that printed an instruction it then blocked would be worse than either
+#: half alone, so the panel and this tuple are one decision written in two
+#: places, and the second place is here, three lines from the rule it modifies.
+#:
+#: A SIXTH HINT ASKING FOR A FOURTH DELETION WOULD HAVE TO ADD ITS FIELD HERE,
+#: which is the point of a declared list over a clever rule: the exemption is
+#: visible, it is countable, and ``tests/test_demo_journey.py`` asserts that
+#: every field named here is a field some persona actually has and that nothing
+#: else on the form lost its attribute.
+HINT_DELETED_FIELDS: frozenset[str] = frozenset(
+    {"versicherungsnummer", "auftraggeber_name", "vorname"}
+)
+
+
 def required_for(entry: PersonaField) -> bool:
     """Whether this field renders with the HTML ``required`` attribute.
 
-    **The rule: what the persona ARRIVED with has to be sent.** A field the
-    persona file gives a value for is required; a field it deliberately leaves
-    empty is not. That is one expression over the persona's own declaration,
-    not a list of field names and not per-persona machinery - rename a field,
-    add a persona, reorder the file, and the rule still says the same thing.
+    **The rule: what the persona ARRIVED with has to be sent, unless a hint
+    tells the visitor to delete it.** A field the persona file gives a value for
+    is required; a field it deliberately leaves empty is not; a field named by
+    :data:`HINT_DELETED_FIELDS` is not, however full it arrives. That is one
+    expression over the persona's own declaration plus one declared list of
+    three - not per-persona machinery, and not a list of every field name on
+    the page.
 
     Read off ``entry.value`` - the DECLARED value - and never off what is
     currently in the box. The difference shows on a re-render: a page that
@@ -439,20 +467,20 @@ def required_for(entry: PersonaField) -> bool:
     exactly the field somebody had just emptied, which is the one moment it
     exists for.
 
-    What the rule buys is the user's own sentence for part 20: press "Antrag
-    absenden" with an empty field and the browser marks it and refuses to send.
-    The blocking is the browser's - no JavaScript is added anywhere here - and
-    what this function does is decide which fields get to ask for it.
+    What the first half of the rule buys is the user's own sentence for part 20:
+    press "Antrag absenden" with an empty field and the browser marks it and
+    refuses to send. The blocking is the browser's - no JavaScript is added
+    anywhere here - and what this function does is decide which fields get to
+    ask for it. What the second half buys is part 22's: three of the five hints
+    are deletions, and a hint that cannot be carried out teaches nothing.
 
-    The one field in the shipped demo that this leaves optional is Bernd
-    Beispielmann's Rentenbeginn, which is empty BY DESIGN because his whole
-    arc is the incomplete submission: tier 2, and a Nachforderung in the
+    The one field in the shipped demo that the FIRST half leaves optional is
+    Bernd Beispielmann's Taetigkeitsbeginn, which is empty BY DESIGN because his
+    whole arc is the incomplete submission: tier 2, and a Nachforderung in the
     procedure's own words. His card says so, because a form that behaves
-    differently on one screen has to explain itself on that screen. He is
-    deprecation-pending (see ``config/demo/``), and when he goes the rule does
-    not change - it simply has nothing left to except.
+    differently on one screen has to explain itself on that screen.
     """
-    return bool(entry.value.strip())
+    return bool(entry.value.strip()) and entry.field_id not in HINT_DELETED_FIELDS
 
 
 def _field_view(

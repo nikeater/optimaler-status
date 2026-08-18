@@ -11,11 +11,14 @@ comment in a worse repository.
    persona sharing a string with either would make the canary sweep over the
    demo pages unable to tell a leak from a persona, and would let a recall
    number be reached by memorisation.
-3. **Each persona still produces its arc.** The showcase promises a tier-1
-   Bewilligungsentwurf, a tier-2 Nachforderung, a Clearingstelle case and a
-   flagged one. Those are properties of the REAL pipeline over these values, so
-   a config edit that quietly broke an arc has to fail here rather than on a
-   screen in front of an audience.
+3. **Each persona still produces its arc.** Since part 22 all four file a
+   Statusfeststellung nach par. 7a SGB IV, and the four arcs the showcase
+   promises are a complete application that still lands with a human, a
+   tier-2 Nachforderung naming the one missing answer, a case whose procedure
+   is read out of its content because it carries no channel hint, and a
+   complete case the shadow scorer flags. Those are properties of the REAL
+   pipeline over these values, so a config edit that quietly broke an arc has
+   to fail here rather than on a screen in front of an audience.
 """
 
 from __future__ import annotations
@@ -49,16 +52,40 @@ NOW = datetime(2026, 8, 13, 9, 0, tzinfo=UTC)
 
 #: What each persona must produce through the FORM tab. The arcs of the
 #: showcase, pinned: (procedure, tier, unit, flagged).
+#:
+#: PART 22: ONE PROCEDURE AND ONE UNIT FOR ALL FOUR, which is the refocus stated
+#: as a table. What still differs between them is everything that matters -
+#: complete against incomplete, hinted against derived, flagged against quiet -
+#: and the two tiers read the way `statusfeststellung_v1.yaml` explains: a
+#: COMPLETE par. 7a application matches no row of the decision table and lands
+#: on default_tier 3 (a human decides the whole thing), an INCOMPLETE one
+#: matches the tier-2 row (routable, ask for what is missing). Tier 1 is not
+#: reachable here at all, because the procedure disables it.
 FORM_ARCS = {
-    "mustermann_regelaltersrente": ("altersrente", 1, "Referat_312_Renten", False),
-    "beispielmann_ohne_rentenbeginn": ("altersrente", 2, "Referat_312_Renten", False),
+    "schliebermann_statusfeststellung": (
+        "statusfeststellung",
+        3,
+        "Referat_340_Clearingstelle",
+        False,
+    ),
+    "beispielmann_ohne_taetigkeitsbeginn": (
+        "statusfeststellung",
+        2,
+        "Referat_340_Clearingstelle",
+        False,
+    ),
     "musterfrau_statusfeststellung": (
         "statusfeststellung",
         3,
         "Referat_340_Clearingstelle",
         False,
     ),
-    "musterkind_rentenbeginn_2048": ("altersrente", 1, "Referat_312_Renten", True),
+    "musterkind_taetigkeitsbeginn_voraus": (
+        "statusfeststellung",
+        3,
+        "Referat_340_Clearingstelle",
+        True,
+    ),
 }
 
 
@@ -81,10 +108,10 @@ def run(
 
 def test_the_shipped_persona_file_loads_and_covers_the_four_arcs() -> None:
     personas = demo_personas()
-    assert personas.version == "personas_v3"
+    assert personas.version == "personas_v4"
     assert {persona.persona_id for persona in personas.personas} == set(FORM_ARCS)
     assert personas.note
-    assert len(personas.hints) >= 3
+    assert len(personas.hints) == 5
     for persona in personas.personas:
         assert persona.display_name
         assert persona.headline
@@ -178,8 +205,8 @@ def test_an_unreadable_persona_file_names_itself(tmp_path: Path) -> None:
 
 def test_a_field_id_the_persona_does_not_have_is_none() -> None:
     """Looked up by name in tests and in the collision checks; never an error."""
-    chosen = _persona("mustermann_regelaltersrente")
-    assert chosen.field("rentenart") is not None
+    chosen = _persona("schliebermann_statusfeststellung")
+    assert chosen.field("taetigkeit_bezeichnung") is not None
     assert chosen.field("lieblingsfarbe") is None
 
 
@@ -269,16 +296,36 @@ def test_no_persona_value_collides_with_a_frozen_set(gold_v4_dir: Path) -> None:
     assert "17170459B012" in haystack, "the gold corpus must be in scope"
 
 
+#: The one persona name that carries no Muster/Beispiel marker, named here so
+#: the exception is countable rather than implied (part 22, the user's own
+#: naming choice for the new persona). What keeps the rule's PURPOSE intact for
+#: her: the surname is invented and collides with nothing in either frozen set
+#: (the test above), and the page says in four separate places that every
+#: applicant on it is made up. A second unmarked name does not join her by
+#: being added to the file - it fails the test below until somebody adds it
+#: here on purpose.
+UNMARKED_NAMES = frozenset({"Beate Schliebermann"})
+
+
 def test_every_persona_name_is_mustermann_class() -> None:
     """Unmistakably fictional to a German reader - the rule, not a preference."""
     marker = ("muster", "beispiel", "demo")
     for persona in demo_personas().personas:
+        if persona.display_name in UNMARKED_NAMES:
+            continue
         lowered = persona.display_name.lower()
         assert any(part in lowered for part in marker), (
             f"{persona.display_name!r} is not obviously fictional; a demo "
             "persona indistinguishable from a real person ends up on a "
-            "screenshot as one"
+            "screenshot as one. If that is deliberate, add it to "
+            "UNMARKED_NAMES with a reason rather than widening the marker list"
         )
+
+
+def test_the_declared_naming_exception_is_a_persona_that_exists() -> None:
+    """An exemption for a name nobody carries would silently outlive its reason."""
+    names = {persona.display_name for persona in demo_personas().personas}
+    assert names >= UNMARKED_NAMES, UNMARKED_NAMES - names
 
 
 def test_every_persona_versicherungsnummer_is_checksum_valid_for_its_birthdate() -> (
@@ -318,13 +365,13 @@ def test_the_persona_file_is_not_read_by_the_config_loader(
     stamp = config.version_stamp().model_dump(mode="json")
     assert "personas" not in json.dumps(stamp)
     document = yaml.safe_load(
-        Path("config/demo/personas_v3.yaml").read_text(encoding="utf-8")
+        Path("config/demo/personas_v4.yaml").read_text(encoding="utf-8")
     )
-    assert document["version"] == "personas_v3"
+    assert document["version"] == "personas_v4"
     # Only the current version stays on disk - the house rule for a superseded
     # versioned file, and the reason a reader never has to ask which one is live.
     assert sorted(p.name for p in Path("config/demo").glob("personas_*.yaml")) == [
-        "personas_v3.yaml"
+        "personas_v4.yaml"
     ]
 
 
@@ -505,7 +552,7 @@ def test_a_ticked_document_becomes_a_real_part_of_the_envelope(
     counts are reported per part. Born-digital rather than OCR, because that
     decides whether a span is verified exactly or fuzzily.
     """
-    persona = _persona("mustermann_regelaltersrente")
+    persona = _persona("schliebermann_statusfeststellung")
     ticked = persona.attachments[0]
     payload = build_form_submission(
         persona,
@@ -552,7 +599,7 @@ def test_a_ticked_document_becomes_a_real_part_of_the_envelope(
 
 def test_a_checkbox_for_a_document_a_persona_does_not_have_is_ignored() -> None:
     """The same "never half-select something" rule the pickers follow."""
-    persona = _persona("mustermann_regelaltersrente")
+    persona = _persona("schliebermann_statusfeststellung")
     values = {
         **persona.form_values(),
         "anlage-gibt-es-nicht": "1",
@@ -593,13 +640,20 @@ def test_an_attachment_fixture_would_only_ever_be_a_duplicate(
     precedence rule says the schema mapper wins - so a text proposal over any
     of them is discarded as ``duplicate_field`` BEFORE the double lock runs.
 
-    The cost is not theoretical either. ``extraction.discarded_count == 0`` is
-    a qualifying condition of the tier-1 row, so one such entry takes a
-    complete persona from tier 1 to the default tier 3. A fixture here would
-    measure nothing and cost two personas their arc, which is why there is
-    none - and this test is the measurement, so the reason stays true.
+    The cost is not theoretical either, and part 22 changed only where it is
+    VISIBLE. ``extraction.discarded_count == 0`` is still a qualifying condition
+    of the tier-1 row - read out of the shipped decision table below rather than
+    remembered - so one such entry still costs a tier-1 row its qualification on
+    any procedure that has one. It cannot be shown on these four personas any
+    more, because ``statusfeststellung_v1.yaml`` disables tier 1 outright and
+    all four are already at the tier a discard would have pushed them to. So
+    what this test measures now is the discard itself, plus the condition that
+    makes it expensive, plus the ONE arc a fixture would still take away here:
+    Bernd Beispielmann's, whose payload does NOT carry the field he leaves
+    empty, so a proposal over it would not be a duplicate at all. That is the
+    reason his documents say "noch offen" instead of a date.
     """
-    persona = _persona("mustermann_regelaltersrente")
+    persona = _persona("schliebermann_statusfeststellung")
     ticked = persona.attachments[0]
     payload = build_form_submission(
         persona,
@@ -619,13 +673,34 @@ def test_an_attachment_fixture_would_only_ever_be_a_duplicate(
     assert result.extraction is not None
     assert result.extraction.failure_counts() == {"duplicate_field": 1}
     assert result.extractions.discarded_count == 1
-    assert int(result.decision.tier) == 3
-    # And without the fixture the same submission is the tier-1 arc it always
-    # was, so the discard is what moved it and nothing else.
+    # Without the fixture nothing is discarded, so the entry is what produced
+    # the discard and nothing else did.
     del payload["extractionFixture"]
     unfixed, _ = run(config, payload)
-    assert int(unfixed.decision.tier) == 1
     assert unfixed.extractions.discarded_count == 0
+
+    # And the condition that makes a discard cost a tier, read from the table
+    # that would apply it rather than from memory.
+    tier1 = next(row for row in config.decision_table.rows if int(row.tier) == 1)
+    assert any(
+        condition.field == "extraction.discarded_count" and condition.value == 0
+        for condition in tier1.when_all
+    ), "the tier-1 row no longer requires a clean extraction"
+
+    # The one arc a fixture could still take away here: the gap persona's
+    # payload does not carry the field he leaves empty.
+    gap_persona = _persona("beispielmann_ohne_taetigkeitsbeginn")
+    gap_payload = build_form_submission(
+        gap_persona,
+        gap_persona.form_values(),
+        submission_id="demo-fixture-gap",
+        submitted_at=NOW.isoformat(),
+    )
+    data = gap_payload["data"]
+    assert isinstance(data, dict)
+    assert "taetigkeit_beginn" not in data["antrag"]
+    for entry in gap_persona.attachments:
+        assert "Beginn der Taetigkeit: noch offen" in entry.text, entry.attachment_id
 
 
 # ------------------------------------------------------------- the arcs ---
@@ -702,43 +777,66 @@ def test_enclosing_every_document_leaves_the_arc_where_it_was(
     assert all(count > 0 for count in laden.redaction.text_sealed_counts.values())
 
 
-def test_the_tier_one_persona_is_complete_and_clear_cut(config: ConfigBundle) -> None:
-    """Arc 1: nothing missing, the clear-cut criteria hold, a draft can follow."""
-    result, _ = run(config, _form("mustermann_regelaltersrente"))
+def test_the_complete_persona_still_lands_with_a_human(config: ConfigBundle) -> None:
+    """Arc 1: nothing missing, and that is exactly why it is tier 3.
+
+    The par. 7a shape, asserted rather than described: a COMPLETE application
+    fails the tier-1 row on ``procedure.tier1_enabled`` and the tier-2 row on
+    ``completeness.verdict``, so no row matches and the table's own default
+    tier 3 applies. Both reasons are checked, because "no row matched" is only
+    reassuring when the rows are the ones that were meant to fail.
+    """
+    result, _ = run(config, _form("schliebermann_statusfeststellung"))
     assert result.evidence.completeness.verdict.value == "complete"
-    assert result.clear_cut is True
     assert result.evidence.completeness.gaps == []
+    assert result.clear_cut is False
+    assert int(result.decision.tier) == 3
+    reasons = {reason.rule_id: reason for reason in result.decision.reasons}
+    assert reasons["default"].kind.value == "defaulted"
+    assert "tier1_enabled" in reasons["tier1_clear_and_complete"].detail
+    assert "complete" in reasons["tier2_routable_incomplete"].detail
 
 
 def test_the_gap_persona_reports_exactly_the_field_it_left_blank(
     config: ConfigBundle,
 ) -> None:
     """Arc 2: an empty field is MISSING, never invalid - different wording."""
-    result, _ = run(config, _form("beispielmann_ohne_rentenbeginn"))
+    result, _ = run(config, _form("beispielmann_ohne_taetigkeitsbeginn"))
     gaps = result.evidence.completeness.gaps
-    assert [gap.requirement_id for gap in gaps] == ["rentenbeginn"]
+    assert [gap.requirement_id for gap in gaps] == ["taetigkeit_beginn"]
     assert gaps[0].status.value == "missing"
     assert any(
-        "Rente beziehen moechten" in rendering.sentence
+        "wann die zu beurteilende Taetigkeit begonnen hat" in rendering.sentence
         for rendering in result.gap_renderings
     )
+    assert int(result.decision.tier) == 2
 
 
 def test_the_anomaly_persona_is_flagged_with_readable_reasons(
     config: ConfigBundle,
 ) -> None:
-    """Arc 4: tier 1 by the rules AND flagged by the scorer, which moves nothing.
+    """Arc 4: complete and permissible by the rules AND flagged by the scorer.
 
-    That combination is the whole demonstration of ADR-024: the shadow scorer
-    runs in log_only mode, so a flag is a sentence a caseworker reads and never
-    a tier the machine changed.
+    The demonstration of ADR-024: the shadow scorer runs in log_only mode, so a
+    flag is a sentence a caseworker reads and never a tier the machine changed.
+    Since part 22 the case is a Statusfeststellung, so the tier it does not move
+    is 3 rather than 1 - the flag moves nothing in the strongest possible sense,
+    and the reason it names is the distance of the procedure's own leading date.
     """
-    result, _ = run(config, _form("musterkind_rentenbeginn_2048"))
+    result, _ = run(config, _form("musterkind_taetigkeitsbeginn_voraus"))
     assert result.anomaly is not None
     assert result.anomaly.flagged is True
     assert result.anomaly.reasons
-    assert int(result.decision.tier) == 1
-    assert int(result.decision.pre_downgrade_tier) == 1
+    assert result.evidence.completeness.verdict.value == "complete"
+    assert int(result.decision.tier) == 3
+    assert int(result.decision.pre_downgrade_tier) == 3
+    # The reason is about the leading date this procedure declares, in words.
+    assert any(
+        reason.feature == "leitdatum_abstand_jahre" for reason in result.anomaly.reasons
+    )
+    assert any(
+        "taetigkeit_beginn" in reason.observed for reason in result.anomaly.reasons
+    )
 
 
 def test_the_letter_tab_derives_its_procedure_from_the_sealed_text(
@@ -806,7 +904,7 @@ def test_every_persona_letter_seals_clean_without_the_optional_model(
 
 def test_a_blank_field_is_omitted_rather_than_sent_empty() -> None:
     """ "Missing" and "invalid" are different verdicts with different wording."""
-    persona = _persona("mustermann_regelaltersrente")
+    persona = _persona("schliebermann_statusfeststellung")
     payload = build_form_submission(
         persona,
         {**persona.form_values(), "versicherungsnummer": "   "},
@@ -822,22 +920,26 @@ def test_a_blank_field_is_omitted_rather_than_sent_empty() -> None:
 
 
 def test_an_edited_value_reaches_the_submission_at_its_declared_path() -> None:
-    persona = _persona("mustermann_regelaltersrente")
+    persona = _persona("schliebermann_statusfeststellung")
     payload = build_form_submission(
         persona,
-        {**persona.form_values(), "ort": "Musterbucht", "auslandsbezug": "ja"},
+        {
+            **persona.form_values(),
+            "ort": "Musterbucht",
+            "antragsart": "prognose_vor_aufnahme",
+        },
         submission_id="demo-edit",
         submitted_at=NOW.isoformat(),
     )
     data = payload["data"]
     assert isinstance(data, dict)
     assert data["antragsteller"]["anschrift"]["ort"] == "Musterbucht"
-    assert data["antrag"]["auslandsbezug"] == "ja"
+    assert data["antrag"]["antragsart"] == "prognose_vor_aufnahme"
 
 
 def test_a_value_for_an_unknown_field_id_is_ignored() -> None:
     """The form posts what the page rendered; anything else is not a field."""
-    persona = _persona("mustermann_regelaltersrente")
+    persona = _persona("schliebermann_statusfeststellung")
     payload = build_form_submission(
         persona,
         {**persona.form_values(), "smuggled": "x"},
@@ -855,11 +957,13 @@ def test_the_split_name_produces_the_envelope_the_single_field_produced() -> Non
     the submission is the one string ``antragsteller.name`` has always carried,
     at the same path, with the same neighbours in the same order - which is
     what makes every downstream arc unchanged rather than merely equivalent.
-    The dictionary below is the v1 payload, typed out here so that a future
+    The dictionary below is the whole payload, typed out here so that a future
     edit to the persona file has to disagree with a literal instead of with
-    another derivation of itself.
+    another derivation of itself. Part 22 retyped it for a Statusfeststellung
+    applicant; the shape of the claim did not move, only which fields ride in
+    ``antrag`` and the ``auftraggeber`` namespace no Altersrente form has.
     """
-    persona = _persona("mustermann_regelaltersrente")
+    persona = _persona("schliebermann_statusfeststellung")
     payload = build_form_submission(
         persona,
         persona.form_values(),
@@ -868,20 +972,22 @@ def test_the_split_name_produces_the_envelope_the_single_field_produced() -> Non
     )
     assert payload["data"] == {
         "antragsteller": {
-            "name": "Renate Mustermann",
-            "geburtsdatum": "1960-06-26",
-            "versicherungsnummer": "65260660M123",
+            "name": "Beate Schliebermann",
+            "geburtsdatum": "1979-05-14",
+            "versicherungsnummer": "24140579S013",
             "anschrift": {
-                "strasse": "Lotsenweg",
-                "hausnummer": "7",
-                "plz": "21029",
-                "ort": "Musterhafen",
+                "strasse": "Prickenweg",
+                "hausnummer": "4",
+                "plz": "24939",
+                "ort": "Musterwarft",
             },
         },
+        "auftraggeber": {"firmenname": "Nordlicht Beispieltechnik GmbH"},
         "antrag": {
-            "rentenart": "regelaltersrente",
-            "rentenbeginn": "2026-12-01",
-            "auslandsbezug": "nein",
+            "antragsart": "feststellung_nach_aufnahme",
+            "antragsteller_rolle": "auftragnehmer",
+            "taetigkeit_bezeichnung": "Technische Redaktion und Dokumentation",
+            "taetigkeit_beginn": "2026-03-02",
         },
     }
     # The key ORDER too, because a byte-identical envelope is the claim.
@@ -895,7 +1001,7 @@ def test_the_split_name_produces_the_envelope_the_single_field_produced() -> Non
 
 def test_a_half_of_the_name_left_blank_is_dropped_rather_than_joined() -> None:
     """Emptying one box submits the other alone, with no stray space."""
-    persona = _persona("beispielmann_ohne_rentenbeginn")
+    persona = _persona("beispielmann_ohne_taetigkeitsbeginn")
     values = {**persona.form_values(), "vorname": "  "}
     data = build_form_submission(
         persona, values, submission_id="demo-half", submitted_at=NOW.isoformat()

@@ -1,9 +1,16 @@
 """The demo's fictional applicants, and the submissions they turn into.
 
-Read from ``config/demo/personas_v3.yaml`` - a NEW independently versioned file
+Read from ``config/demo/personas_v4.yaml`` - a NEW independently versioned file
 that ``engine.config_loader`` deliberately does not know about. Nothing here
 reaches the pipeline, the decision table or a version stamp; the module is
 imported only by the demo routes, which exist only when the demo flag is on.
+
+**All four applicants file the same procedure since part 22.** The intake
+surface is a Statusfeststellung nach par. 7a SGB IV demonstration: one complete
+application, one missing a single answer, one with no channel hint at all, one
+complete and flagged by the shadow scorer. That is an INTAKE change and nothing
+else - the frozen gold corpus, the queues and the eval keep every Altersrente
+case they ever had, and no threshold, rule or table moved.
 
 **A persona is PII-shaped on purpose.** The whole showcase is that a visitor
 watches their own typed Versicherungsnummer vanish behind a placeholder before
@@ -55,7 +62,7 @@ import yaml
 PERSONAS_DIR_ENV = "EINGANGSLOTSE_PERSONAS_FILE"
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_PERSONAS_FILE = REPO_ROOT / "config" / "demo" / "personas_v3.yaml"
+DEFAULT_PERSONAS_FILE = REPO_ROOT / "config" / "demo" / "personas_v4.yaml"
 
 #: The destination every demo submission declares. The same test destination the
 #: gold corpus uses, because it is not a fact about the person.
