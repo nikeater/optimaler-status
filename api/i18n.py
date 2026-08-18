@@ -1569,6 +1569,14 @@ TABLE: dict[str, tuple[str, str]] = {
         "uncertainty act in one direction only anyway - towards a human, never "
         "away from one.",
     ),
+    "pipeline.e.would_be_tier": (
+        "Ein scharfgestellter Scorer hätte den Vorgang auf {tier} gesetzt. Die "
+        "Entscheidung oben ist ohne ihn zustande gekommen - sie steht in der "
+        "Entscheidungstabelle Zeile für Zeile begründet.",
+        "An armed scorer would have set this case to {tier}. The decision above "
+        "was reached without it, and the decision table justifies that decision "
+        "row by row.",
+    ),
     "pipeline.e.anomaly.heading": ("Auffälligkeitsprüfung", "Anomaly check"),
     "pipeline.e.anomaly.score": ("Score", "Score"),
     "pipeline.e.anomaly.flagged": ("Markiert", "Flagged"),

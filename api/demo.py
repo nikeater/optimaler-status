@@ -710,6 +710,23 @@ class PipelineView:
     unit_label: str
     held: bool
     sampled: bool
+    #: What an ARMED scorer would have set this case to, READ from the decision
+    #: table's downgrade rows rather than computed here (part 22). Empty when
+    #: the table declares no downgrade at all.
+    #:
+    #: Why it is on the page: the flagged persona's card promises that the page
+    #: "shows which tier an armed scorer would have set, and that the decision
+    #: was reached without it". Until this part the page showed the first half
+    #: only by implication - mode `log_only`, and a note saying no tier moved -
+    #: and a reader had to know that a downgrade's target is fixed at 3 to
+    #: complete the sentence. Now it says so.
+    #:
+    #: Why it is not a derivation: the schema constrains every downgrade to a
+    #: fixed ``to_tier`` of 3 (ADR-004, the one-way valve), so this reads one
+    #: number out of the configuration that WOULD have applied it. Nothing is
+    #: recomputed and no second answer to "what tier is this" exists - the
+    #: decided tier still comes from the journal through ``review_state``.
+    would_be_tier: int | None = None
     phase: str = "maschine"
     phases: tuple[str, ...] = PHASES
 
@@ -790,7 +807,22 @@ def build_pipeline_view(
         # sampled case renders as Qualitaetssicherung and never with anomaly
         # styling, and two definitions of "sampled" would be one too many.
         sampled=state.sampled,
+        would_be_tier=armed_scorer_tier(config),
     )
+
+
+def armed_scorer_tier(config: ConfigBundle) -> int | None:
+    """The tier a downgrade would set if the scorer were armed, or None.
+
+    One number, read out of the shipped decision table. The schema already
+    forces every downgrade to a fixed ``to_tier`` of 3 with monotone operators
+    (ADR-004), so a table with more than one downgrade row cannot disagree with
+    itself about the target - but this takes the WORST of them anyway rather
+    than the first, because "the strictest thing that could have happened" is
+    the honest reading of a sentence about what a case escaped.
+    """
+    targets = [int(row.to_tier) for row in config.decision_table.downgrades]
+    return max(targets) if targets else None
 
 
 def render_intake(view: IntakeView, page: PageContext | None = None) -> str:

@@ -312,6 +312,16 @@
   </ul>
   {% if view.flagged_but_log_only %}
   <p class="notice">{{ t("pipeline.e.log_only") }}</p>
+  {# PART 22: the second half of the same sentence, said rather than implied.
+     `would_be_tier` is READ from the decision table's downgrade rows
+     (api/demo.py::armed_scorer_tier); the schema fixes every downgrade at tier
+     3, so this is one number out of the configuration and not a second opinion
+     about what tier this case is. #}
+  {% if view.would_be_tier %}
+  <p class="notice">
+    {{ t("pipeline.e.would_be_tier", tier=t("tier." ~ view.would_be_tier)) }}
+  </p>
+  {% endif %}
   {% endif %}
   {% else %}
   <p class="muted">{{ t("pipeline.e.anomaly.noreasons") }}</p>

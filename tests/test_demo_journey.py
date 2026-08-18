@@ -544,6 +544,11 @@ def test_a_tampered_submission_fires_the_gap_and_the_flag(
     # And it is NOT a completeness gap, which is the whole point of the hint:
     # the bounds are absolute and wide and let this through on purpose.
     assert "Tier 3" in flag_page
+    # Both halves of the sentence the flagged persona's card promises: the tier
+    # an armed scorer would have set, and that this decision was reached
+    # without it. The number is READ from the decision table's downgrade rows.
+    assert "Ein scharfgestellter Scorer" in flag_page
+    assert demo_view.armed_scorer_tier(config) == 3
 
     # Hint 4. Empty the Auftraggeber: the requirement is missing and the
     # Nachforderung asks for exactly it.
