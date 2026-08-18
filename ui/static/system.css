@@ -199,8 +199,17 @@
      WHAT IS DELIBERATELY NOT COLOURED, on any ground: prose, tables, headings,
      the letter the counterparty receives, and the free text a visitor typed.
      Colour here means "this is machine text"; spending it on a paragraph would
-     say the opposite of what the page is for. */
-  --code-ink: var(--ink);
+     say the opposite of what the page is for.
+
+     `--code-ink` IS `currentColor` AND NOT `--ink`, and the difference is a
+     pixel diff that caught it. An inline `<code>` is the one member of this set
+     that renders on every page in the project, and it renders inside whatever
+     is around it - a `.muted` sentence, a table caption, a help line. Pointing
+     it at `--ink` would have DARKENED a filename chip on the intake page and a
+     configuration path on the caseworker overview, which is a light ground this
+     part is not allowed to touch. On the `color` property `currentColor` is
+     defined as `inherit`, so this is the byte those pages already shipped. */
+  --code-ink: currentColor;
   --code-key: var(--ink);
   --code-value: var(--ink);
   --code-punct: var(--ink);

@@ -529,6 +529,18 @@ palette measured against a surface it was never computed for.
 | Token | What it paints | One Dark's own value | vs `--surface` | vs `--surface-alt` (a block) | vs `--surface-sunken` (a chip) | Requirement | Verdict |
 |---|---|---|---|---|---|---|---|
 | `--code-ink` `#56b6c2` | an inline `<code>`: a rule id, a part id, a case id, a configuration version | the cyan, verbatim | 5.91 | 5.52 | 5.12 | 4.5 | pass |
+
+`--code-ink` is the one member of the set that renders on EVERY page - an
+inline `<code>` appears in a muted sentence, a caption, a help line - so on
+the light grounds it is `currentColor` rather than `--ink`. On the `color`
+property that keyword is defined as `inherit`, which is the byte those pages
+already shipped; pointing it at `--ink` would have darkened a filename chip on
+the intake page and a configuration path on the caseworker overview, and a
+pixel diff against the pre-change shots is what caught it. A colour that
+inherits is measured wherever the text it inherits from is measured, so it is
+held to the table above on the machine ground and to the surrounding row
+everywhere else.
+
 | `--code-key` `#e2858d` | the dotted path left of the `=` | `#e06c75` (variables and properties), lifted - it measures 4.09:1 on a block | 5.32 | 4.96 | **4.61** | 4.5 | pass - the lowest ratio in the palette |
 | `--code-value` `#98c379` | what the machine holds right of it | the green, verbatim | 6.94 | 6.48 | 6.02 | 4.5 | pass |
 | `--code-punct` `#9ba3b2` | the `=` itself | the calm foreground, as in the editor | 5.52 | 5.15 | 4.78 | 4.5 | pass |

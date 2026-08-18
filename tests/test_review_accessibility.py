@@ -538,12 +538,21 @@ INKS = ("--ink", "--ink-soft", "--muted")
 #: to the 3:1 an edge gets. `pre` is `--surface-alt` and an inline `<code>` is
 #: `--surface-sunken`, which is why both are checked and neither is assumed.
 CODE_INKS = (
-    "--code-ink",
     "--code-key",
     "--code-value",
     "--code-punct",
     "--code-seal",
 )
+
+#: `--code-ink` is the fifth and it is measured on the machine ground only,
+#: because on the light grounds it is `currentColor`. An inline `<code>` is the
+#: one member of the set that renders on every page, inside whatever is around
+#: it - a muted sentence, a caption, a help line - so pointing it at `--ink`
+#: would darken a filename chip on a page this part may not touch. On the
+#: `color` property `currentColor` is defined as `inherit`, which is what those
+#: pages already shipped, and a colour that inherits is measured wherever the
+#: text it inherits from is measured.
+CODE_INK_ON_MACHINE = "--code-ink"
 CODE_BEDS = ("--surface", "--surface-alt", "--surface-sunken")
 
 TEXT_FLOOR = 4.5
@@ -655,6 +664,7 @@ def test_every_ground_declares_the_whole_ladder(ground: str, system_css: str) ->
         *TINTS,
         *INKS,
         *CODE_INKS,
+        CODE_INK_ON_MACHINE,
         "--brand",
         "--brand-ink",
         "--brand-ink-strong",
@@ -725,7 +735,8 @@ def test_every_ground_meets_the_text_contrast_floor(
                 f"{ground}: --cta-ink on {gradient} stop {stop} is {measured:.2f}:1"
             )
     # And the syntax palette, on both of the beds a machine token can land on.
-    for ink in CODE_INKS:
+    inks = CODE_INKS + ((CODE_INK_ON_MACHINE,) if ground == "machine" else ())
+    for ink in inks:
         for bed in CODE_BEDS:
             measured = _pair(tokens, ink, bed)
             assert measured >= TEXT_FLOOR, (
@@ -860,6 +871,9 @@ def test_only_the_machine_ground_syntax_colours_anything(
     tokens = _tokens(system_css, ground)
     for ink in CODE_INKS:
         assert _value(tokens, ink) == _value(tokens, "--ink"), ink
+    # And the one that renders on every page keeps the colour around it, which
+    # is the byte these grounds shipped before the palette existed.
+    assert tokens[CODE_INK_ON_MACHINE].strip() == "currentColor"
 
 
 @pytest.mark.parametrize("ground", ("machine", "casework"))
