@@ -41,6 +41,10 @@ demo-state/
 deploy/state/
 var/
 
+# The keep-alive script writes its ping log next to itself; runtime state,
+# one line per run, never committed.
+ops/keepalive.log
+
 # Editors and operating systems
 .idea/
 .vscode/
