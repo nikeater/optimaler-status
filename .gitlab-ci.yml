@@ -1,0 +1,57 @@
+# The gate on GitLab CI - the same commands the GitHub workflow runs, in the
+# same order, per docs/BUILD.md (the document is the specification; both CI
+# files are downstream of it).
+#
+# CPU-only, NO EXTRAS, NO MODEL DOWNLOADS - the same design property the
+# GitHub job protects: a gate whose numbers depend on which wheels a machine
+# happens to have is not a gate.
+#
+# The image-build and container-smoke half of the GitHub gate is deliberately
+# absent here: it needs docker-in-docker, whose availability on this
+# instance's shared runners has not been established. The GitHub workflow
+# remains the full gate; this job proves the same numbers on a second,
+# independent machine.
+
+gate:
+  image: python:3.13-slim
+  timeout: 30m
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  cache:
+    key: pip-$CI_COMMIT_REF_SLUG
+    paths:
+      - .cache/pip
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq git > /dev/null
+  script:
+    - python -m pip install --upgrade pip
+    - python -m pip install -e ".[dev]"
+    - |
+      python - <<'PY'
+      import importlib.util as u
+      leaked = [
+          name
+          for name in ("presidio_analyzer", "spacy", "torch", "sentence_transformers")
+          if u.find_spec(name) is not None
+      ]
+      if leaked:
+          raise SystemExit(f"optional extras must not be installed in CI: {leaked}")
+      print("extras absent: presidio_analyzer, spacy, torch, sentence_transformers")
+      PY
+    - python -m pytest
+    - python -m ruff format --check .
+    - python -m ruff check .
+    - python -m mypy
+    - python -m corpus.generator.build --out corpus/gold/v1 --check
+    - python -m corpus.generator.build --out corpus/gold/v2 --check
+    - python -m corpus.generator.build --out corpus/gold/v3 --check
+    - python -m corpus.generator.build --out corpus/gold/v4 --check
+    - python -m corpus.pii_golden.build --check
+    - python -m eval.score_fit --check
+    - python -m eval.run
+    - python -m schemas.export_json_schema
+    - git status --porcelain
+    - test -z "$(git status --porcelain)"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
