@@ -75,6 +75,15 @@
   letter-spacing: -0.03em;
   line-height: 1.04;
   max-width: 22ch;
+  /* PART 23, AND THE HEADLINE IS WHY. "Statusfeststellungsverfahren" is
+     twenty-seven characters and at 390 px it is wider than the column, so
+     `overflow-wrap: break-word` on `body` did what it is there to do and split
+     it mid-syllable with no hyphen - which reads as a rendering fault on the
+     first line a visitor sees. The document declares its language, so the
+     engine can break the compound where German breaks it and set the hyphen
+     itself. Where an engine has no dictionary this changes nothing and the
+     old behaviour is still the fallback. */
+  hyphens: auto;
 }
 
 .hero-lead {
