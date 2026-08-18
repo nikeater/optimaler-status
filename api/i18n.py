@@ -1253,17 +1253,17 @@ TABLE: dict[str, tuple[str, str]] = {
         "Alles, was hier schon ausgefüllt ist, ist ein Pflichtfeld: leeren Sie "
         "eines und schicken Sie ab, markiert Ihr Browser es rot und sendet "
         "nichts. Ausgenommen sind die drei Felder, deren Löschung die Hinweise "
-        "unten vorschlagen - Versicherungsnummer, Auftraggeber und Vorname -, "
-        "denn sonst würde diese Seite empfehlen, was sie selbst blockiert. "
-        "Diese Prüfung läuft im Browser und ohne JavaScript; die "
+        "über dem Formular vorschlagen - Versicherungsnummer, Auftraggeber und "
+        "Vorname -, denn sonst würde diese Seite empfehlen, was sie selbst "
+        "blockiert. Diese Prüfung läuft im Browser und ohne JavaScript; die "
         "Vollständigkeitsprüfung der Anlage kommt danach und getrennt davon.",
         "Every field already filled in here is required: empty one and hit "
         "submit, and your browser marks it red and sends nothing. The "
-        "exceptions are the three fields the suggestions below ask you to "
-        "delete - insurance number, client and given name - because otherwise "
-        "this page would recommend something it blocks itself. That check runs "
-        "in the browser and without JavaScript; the system's own completeness "
-        "check comes afterwards and separately from it.",
+        "exceptions are the three fields the suggestions above the form ask "
+        "you to delete - insurance number, client and given name - because "
+        "otherwise this page would recommend something it blocks itself. That "
+        "check runs in the browser and without JavaScript; the system's own "
+        "completeness check comes afterwards and separately from it.",
     ),
     "intake.required.error": (
         "Diese Angabe fehlt. Ohne sie wird der Antrag nicht abgeschickt.",
