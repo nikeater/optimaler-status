@@ -1437,18 +1437,30 @@ def test_the_caseworker_pages_never_show_the_working_copy_text(
     demo store's dotted-path rendering of the REDACTED structured payload -
     content the caseworker UI has never had a window onto, and the exact thing
     ADR-026 left open.
+
+    Part 23 reads the demo page as TEXT rather than as markup, and the change is
+    the point rather than an accommodation. The working copy is now painted like
+    code, which means one line of it arrives as a key element, a separator
+    element and a value element; a probe over the raw HTML would stop seeing the
+    sentence and would have gone green by seeing nothing. What has to be true is
+    that a READER sees it, so the assertion is made against what a reader gets.
+    The caseworker half is unchanged and is still asserted over the raw bytes,
+    where it is strictly the stronger check.
     """
     client = build_client(config, monkeypatch=monkeypatch)
     case_id = submit(client, form_data("musterfrau_statusfeststellung"))
     case_page = client.get(f"/review/case/{case_id}?unit=Referat_340_Clearingstelle")
     assert case_page.status_code == 200
+    pipeline = client.get(f"/demo/case/{case_id}/pipeline").text
+    shown = re.sub(r"<[^>]*>", "", pipeline)
     for sentence in (
         "antrag.taetigkeit_bezeichnung = IT-Beratung und Datenmigration",
         "antrag.antragsart = feststellung_nach_aufnahme",
     ):
         assert sentence not in case_page.text, sentence
+        assert sentence not in re.sub(r"<[^>]*>", "", case_page.text), sentence
         # And the demo page does show it, which is the difference part 13 makes.
-        assert sentence in client.get(f"/demo/case/{case_id}/pipeline").text
+        assert sentence in shown
 
 
 #: The two citizen pages that carry the ribbon itself since part 18. The other
@@ -2177,3 +2189,143 @@ def test_the_call_to_action_card_paints_itself_out_of_the_button_tokens(
     assert "color: var(--cta-ink);" in block
     assert ".card-grid > .card-cta::before {\n  background: var(--cta-ink);" in system
     assert ".card-cta :focus-visible {\n  outline-color: var(--cta-ink);" in system
+
+
+# ------------------- 13. the working copy is painted like code (part 23) ---
+
+
+#: Inputs `segments()` has to survive without changing a character of them.
+#: The last three are the shapes a naive line parser gets wrong: a value that
+#: contains the separator, a line that has none, and text that ends on one.
+WORKING_COPY_TEXTS = (
+    "",
+    "antrag.antragsart = feststellung_nach_aufnahme",
+    "antragsteller.name = [[PII|NAME|BCDFGHJKMNPQ]]",
+    "antrag.anlagen[0] = c0031_auftragsverhaeltnis\nantrag.kanal = fit_connect",
+    "a.b = one = two = three",
+    "Sehr geehrte Damen und Herren,\n\nAnschrift: [[PII|ADDR|22233344455M]]\n",
+    "antrag.freitext = erste Zeile\nzweite Zeile ohne Trenner\n",
+)
+
+
+@pytest.mark.parametrize("text", WORKING_COPY_TEXTS)
+@pytest.mark.parametrize("shape", ("structured", "text", "something-else"))
+def test_the_spans_wrap_the_working_copy_and_never_alter_it(
+    text: str, shape: str
+) -> None:
+    """THE PROPERTY THE WHOLE TREATMENT RESTS ON.
+
+    A coloured working copy has to be the same working copy. The page is built
+    by concatenating segment texts into elements, so if that concatenation is
+    the input then nothing was added, dropped, reordered or rewritten - and the
+    colouring is presentation in the strict sense.
+    """
+    assert "".join(run.text for run in demo_view.segments(text, shape)) == text
+
+
+@pytest.mark.parametrize("shape", ("structured", "text"))
+def test_no_span_boundary_ever_falls_inside_a_placeholder(shape: str) -> None:
+    """WHY THE CANARY SWEEP IS STILL A SWEEP.
+
+    A substring search over markup cannot see a value a tag fell inside of. The
+    placeholders are the strings that sweep is looking for, so every one of them
+    has to arrive as exactly one segment: the boundaries are placed at their
+    edges and never within them.
+    """
+    text = (
+        "antragsteller.name = [[PII|NAME|BCDFGHJKMNPQ]]\n"
+        "antragsteller.anschrift = [[PII|ADDR|22233344455M]], "
+        "[[PII|ADDR|RSTVWXZ23456]]\n"
+        "antrag.antragsart = feststellung_nach_aufnahme"
+    )
+    runs = demo_view.segments(text, shape)
+    assert [run.text for run in runs if run.placeholder] == [
+        "[[PII|NAME|BCDFGHJKMNPQ]]",
+        "[[PII|ADDR|22233344455M]]",
+        "[[PII|ADDR|RSTVWXZ23456]]",
+    ]
+    # And a placeholder is never given a role, so it is never wrapped twice.
+    assert all(run.role == "" for run in runs if run.placeholder)
+
+
+def test_a_structured_dump_gets_the_grammar_and_a_letter_gets_none() -> None:
+    """The line between machine text and a person's words, drawn on the shape.
+
+    The store already records which of the two a part is, so the distinction is
+    read rather than guessed at. A structured dump has a key, a separator and a
+    value; a text part is what somebody wrote with the identity values sealed
+    out of it, and marking its nouns would say the machine had parsed a
+    sentence it never parsed.
+    """
+    line = "antrag.antragsart = feststellung_nach_aufnahme"
+    structured = demo_view.segments(line, "structured")
+    assert [(run.role, run.text) for run in structured] == [
+        ("key", "antrag.antragsart"),
+        ("punct", " = "),
+        ("value", "feststellung_nach_aufnahme"),
+    ]
+    assert all(run.role == "" for run in demo_view.segments(line, "text"))
+    # A continuation line inside a structured part has no key and gets no key.
+    wrapped = demo_view.segments("a.b = one\nnoch eine Zeile", "structured")
+    assert [run.role for run in wrapped] == ["key", "punct", "value", "", ""]
+
+
+def test_the_pipeline_paints_the_machines_copy_and_not_the_visitors(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Two blocks side by side, and only one of them is code.
+
+    The left half is the letter a visitor typed; the right half is what the
+    machine holds instead. Colouring both would say the two are the same kind of
+    thing, which is the one claim this comparison exists to deny - so the
+    grammar appears in the structured dump, the seals appear in both, and the
+    visitor's own paragraph carries no span at all.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    # With the C0031 annex ticked, so the working copy has BOTH shapes in it:
+    # the structured dump and the prepared document's free text.
+    chosen = persona("musterfrau_statusfeststellung")
+    case_id = submit(
+        client,
+        form_data(
+            "musterfrau_statusfeststellung",
+            **{chosen.attachments[0].field_name: "1"},
+        ),
+    )
+    page = client.get(f"/demo/case/{case_id}/pipeline").text
+    assert '<span class="tok-key">antrag.antragsart</span>' in page
+    assert '<span class="tok-punct"> = </span>' in page
+    assert '<span class="tok-value">feststellung_nach_aufnahme</span>' in page
+    assert '<mark class="placeholder">[[PII|NAME|' in page
+    # The free-text part is machine text too, but it is somebody's sentences:
+    # its placeholders are marked and nothing in it is given a grammar.
+    blocks = re.findall(r"<pre>(.*?)</pre>", page, re.S)
+    assert blocks, "the pipeline page renders no working copy at all"
+    prose = [block for block in blocks if "Clearingstelle" in block]
+    assert prose, "the free-text part is not on the page"
+    for block in prose:
+        assert "tok-key" not in block
+        assert "tok-value" not in block
+        assert 'class="placeholder"' in block
+
+
+def test_the_hand_off_to_phase_three_is_the_primary_button(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """One forward action per page, rendered as the control it is.
+
+    It used to be a link inside a tinted panel. It is now the same `.cta` the
+    intake submits with, whose fill and ink invert together on the machine
+    ground - and it is still a link, so it navigates with scripting off and is
+    one tab stop. The panels stay on the two-party side roads below it.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    case_id = submit(client, form_data("musterfrau_statusfeststellung"))
+    page = client.get(f"/demo/case/{case_id}/pipeline").text
+    handover = phrase("pipeline.g.handover")
+    found = re.search(rf'<a class="cta" href="([^"]+)">{re.escape(handover)}</a>', page)
+    assert found, "the phase-3 control is not a primary button"
+    assert found.group(1).startswith("/review/queue/")
+    assert f'<p class="handover">\n    <a href="{found.group(1)}"' not in page
+    # The side roads keep the panel they had.
+    assert '<p class="handover">' in page

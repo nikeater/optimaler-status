@@ -703,16 +703,45 @@
 
 /* A placeholder token is monospaced and boxed so it reads as a MACHINE token
    rather than as text somebody wrote. `mark` keeps its own semantics; the
-   border is what survives a monochrome display. */
+   border is what survives a monochrome display, and the colour is what makes
+   the seal POP on the machine ground - `--code-seal` is the page's own ink
+   everywhere else, so a placeholder that ever renders on a light page looks
+   exactly as it always has. */
 .placeholder {
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-sm);
   background: var(--surface-sunken);
-  color: var(--ink);
+  color: var(--code-seal);
   padding: 0 var(--space-1);
   font-family: var(--font-mono);
   font-size: 0.9em;
   word-break: break-all;
+}
+
+/* THE WORKING COPY IS CODE AND IS PAINTED AS CODE (part 23).
+
+   Three classes, written by `api/demo.py::segments` around runs it identified
+   server-side - no script, no highlighting library, no second parse of the
+   page after it loaded. They appear on the STRUCTURED dumps only, which is the
+   `antragsteller.name = [[PII|NAME|...]]` block: a key, the separator, and
+   what the machine actually holds. The free-text parts beside them are a
+   person's own words with the identity values sealed out, so they get the seal
+   and nothing else, and the Anhoerung letter further down the page is a
+   document and gets neither.
+
+   Each token resolves to the page's own ink on the citizen and caseworker
+   grounds. This is a machine-ground treatment, held in tokens rather than in a
+   selector that names a ground, so it follows the design system's one rule. */
+.tok-key {
+  color: var(--code-key);
+}
+
+.tok-punct {
+  color: var(--code-punct);
+}
+
+.tok-value {
+  color: var(--code-value);
 }
 
 .side-by-side {

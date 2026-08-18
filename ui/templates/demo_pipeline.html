@@ -11,6 +11,16 @@
 {% block heading %}{{ t("pipeline.headline") }}{% endblock %}
 {% block content %}
 
+{# THE WORKING COPY, PAINTED THE WAY AN EDITOR PAINTS IT (part 23). One line,
+   deliberately: everything inside a `<pre>` is significant whitespace, so a
+   readable indented version of this loop would print its own indentation into
+   the block. Every segment comes out of `api/demo.py::segments`, which decides
+   what a run IS - a placeholder, the key of a structured line, the separator,
+   the value - and this only says which element carries it. Nothing is marked
+   safe and nothing is injected: Jinja escapes each `segment.text` and the tags
+   are written around it. #}
+{% macro working_copy(part) %}<pre>{% for segment in part.segments %}{% if segment.placeholder %}<mark class="placeholder">{{ segment.text }}</mark>{% elif segment.role %}<span class="tok-{{ segment.role }}">{{ segment.text }}</span>{% else %}{{ segment.text }}{% endif %}{% endfor %}</pre>{% endmacro %}
+
 <section aria-labelledby="ueberblick-heading">
   <h2 id="ueberblick-heading">{{ t("pipeline.overview.heading") }}</h2>
   <p>{{ t("pipeline.overview.body") }}</p>
@@ -106,13 +116,17 @@
   <p>{{ t("pipeline.b.letter.body") }}</p>
   <div class="side-by-side">
     <div>
+      {# WHAT THE VISITOR TYPED, AND IT IS NOT COLOURED. This half is a person's
+         own letter; the half beside it is the machine's copy of it. Painting
+         both would say the two are the same kind of thing, which is the one
+         thing this comparison exists to deny. #}
       <h4>{{ t("pipeline.b.letter.yours") }}</h4>
       <pre>{{ view.echo_body }}</pre>
     </div>
     <div>
       <h4>{{ t("pipeline.b.letter.machine") }}</h4>
       {% for part in view.parts %}
-      <pre>{% for segment in part.segments %}{% if segment.placeholder %}<mark class="placeholder">{{ segment.text }}</mark>{% else %}{{ segment.text }}{% endif %}{% endfor %}</pre>
+      {{ working_copy(part) }}
       {% endfor %}
     </div>
   </div>
@@ -121,7 +135,7 @@
   <p>{{ t("pipeline.b.copy.body") }}</p>
   {% for part in view.parts %}
   <p class="muted"><code>{{ part.part_id }}</code></p>
-  <pre>{% for segment in part.segments %}{% if segment.placeholder %}<mark class="placeholder">{{ segment.text }}</mark>{% else %}{{ segment.text }}{% endif %}{% endfor %}</pre>
+  {{ working_copy(part) }}
   {% endfor %}
   {% endif %}
 
@@ -457,8 +471,18 @@
   <h2 id="g-heading">{{ t("pipeline.g.heading") }}</h2>
   <p>{{ m("pipeline.g.body", queue=view.queue_label) }}</p>
   <p class="notice">{{ t("pipeline.g.note") }}</p>
-  <p class="handover">
-    <a href="{{ view.queue_href }}">{{ t("pipeline.g.handover") }}</a>
+  {# THE ONE FORWARD ACTION ON THIS PAGE IS A BUTTON (part 23). It used to be a
+     link inside a tinted panel - the loudest BLOCK on the page, which is not
+     the same thing as the clearest control, and a visitor who had just read
+     seven stages of machine work had to recognise a paragraph as the way out.
+     It is now the same primary control the intake submits with: `.cta`, the
+     `--grad-cta` fill and the `--cta-ink` label, which invert together on this
+     ground so a light fill carries a dark label rather than a dark button
+     disappearing into a dark card. Still a link, still one tab stop, still
+     works with scripting off. The panels stay on the two-party links below,
+     where a side road is what they are. #}
+  <p>
+    <a class="cta" href="{{ view.queue_href }}">{{ t("pipeline.g.handover") }}</a>
   </p>
   <p>
     {{ t("pipeline.g.after") }}

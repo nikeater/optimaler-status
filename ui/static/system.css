@@ -180,6 +180,32 @@
      A token because it is a colour and every ground has its own. */
   --header-veil: rgba(255, 255, 255, 0.86);
 
+  /* THE SYNTAX PALETTE, AND WHY IT IS FIVE TOKENS RATHER THAN FIVE RULES
+     (part 23). The machine pages show a working copy - dotted paths, their
+     values, and the sealed placeholders that replaced every identity value in
+     them - and on the machine ground those blocks are coloured the way an
+     editor colours them. That colouring is a GROUND'S BUSINESS, so it lives
+     where a ground can re-point it, and here it resolves to the page's own ink:
+     the citizen and caseworker grounds do not syntax-colour anything, and a
+     machine block that ever rendered on one of them is plain monospaced text
+     rather than a palette nobody measured against cream paper.
+
+       --code-ink    an inline <code>: a rule id, a part id, a case id
+       --code-key    the dotted path on the left of an `=`
+       --code-value  what the machine holds on the right of it
+       --code-punct  the `=` itself
+       --code-seal   a [[PII|KIND|token]] placeholder, so the seal pops
+
+     WHAT IS DELIBERATELY NOT COLOURED, on any ground: prose, tables, headings,
+     the letter the counterparty receives, and the free text a visitor typed.
+     Colour here means "this is machine text"; spending it on a paragraph would
+     say the opposite of what the page is for. */
+  --code-ink: var(--ink);
+  --code-key: var(--ink);
+  --code-value: var(--ink);
+  --code-punct: var(--ink);
+  --code-seal: var(--ink);
+
   /* THE TYPE SCALE. Two ramps: a fixed one in `rem` for everything that reads
      as text, and a fluid one for the three sizes that are the page speaking
      rather than the page explaining.
@@ -299,90 +325,123 @@
    caution family's ONLY consumer outside the demo ribbon is `.badge-warn`, and
    the ribbon renders on `/` and `/hinweise`, which are citizen pages. */
 
-/* THE MACHINE GROUND. Not black: a deep blue-slate at the brand's own hue,
-   lifted through five surfaces so a card still sits above a canvas and a
-   `<code>` token still sits inside it. The ladder is the light one inverted -
-   `--canvas` is the darkest, `--surface` is a step up, `--surface-alt` and
-   `--surface-sunken` are two more - which is what keeps every part-18 component
-   rendering correctly without a single component-level override.
+/* THE MACHINE GROUND, RE-ANCHORED ON ONE DARK PRO (part 23).
 
-   Worst text ratio on this ground: 5.36:1 (`--muted` on `--surface-sunken`),
-   against 4.5. Worst element ratio: 3.75:1 (`--line-strong` on the same),
-   against 3.0. Both are BETTER than the light ground's own worst numbers
-   (5.06 and 3.56). */
+   Part 21 built this ground out of the brand's own navy. It was correct and it
+   was this project's invention; the pages it paints are the ones that show what
+   the machine did inside, and the surface a reader already associates with
+   "machine at work" is an editor. So the ladder is re-anchored on the One Dark
+   Pro editor theme, whose neutrals are the chrome of the editor itself:
+
+     #1b1d23  the peek/widget bed        -> --canvas       the page ground
+     #21252b  the side bar and panels    -> --canvas-top    the wash
+     #282c34  THE EDITOR BACKGROUND      -> --surface       cards, the header
+     #2c313a  the hovered list row       -> --surface-alt   articles, notices, pre
+     #31363f  a step above it            -> --surface-sunken  <code>, the token
+
+   Nothing about the MECHANISM changes: the ladder is still the light one
+   inverted, `--canvas` is still the darkest and `--surface-sunken` the
+   lightest, and every component still follows the ground with no
+   component-level override. What changed is the values, and every pair below
+   was recomputed before it shipped.
+
+   THE FOREGROUND FAMILY IS ANCHORED ON #abb2bf, One Dark's own editor
+   foreground, which sits in the middle of the ladder rather than at the top of
+   it: in a syntax-coloured buffer #abb2bf is the CALM colour - the one plain
+   identifiers and punctuation get - so it is this ground's `--ink-soft` and the
+   ladder steps up to a lighter member for headings and body and down to a
+   dimmer one for labels.
+
+   This ground is deliberately LOWER in contrast than the one it replaces
+   (13.01:1 body text became 10.00:1) because One Dark is a low-glare theme and
+   a page that reads like an editor should not shout. Worst text ratio: 4.78:1
+   (`--muted` on `--surface-sunken`), against 4.5 - the tightest of the three
+   grounds, next to casework's 4.99 and the citizen ground's 5.06 (the syntax
+   palette's own dimmest member measures 4.61:1 on that surface, and only in a
+   place it never renders). Worst element ratio: 3.22:1 (`--line-strong` on the
+   same), against 3.0. */
 .ground-machine {
   /* Native controls, the caret and the viewport's scrollbar follow this rather
      than a stylesheet, and the used value is taken from the ROOT element -
      which is why the rule under this block reaches for the root instead. */
   color-scheme: dark;
 
-  --canvas: #101b24; /* --ink 15.16:1 */
-  --canvas-top: #152736; /* the wash, bluer at the top; --ink 13.28:1 */
-  --surface: #1b2836; /* cards and the header; --ink 13.01:1 */
-  --surface-alt: #22303e; /* table heads, articles, notices; --ink 11.70:1 */
-  --surface-sunken: #2a3a4a; /* <code>, the placeholder token; --ink 10.13:1 */
+  --canvas: #1b1d23; /* --ink 12.03:1 */
+  --canvas-top: #21252b; /* the wash, one step toward the editor; --ink 10.99:1 */
+  --surface: #282c34; /* One Dark's editor bed: cards and the header; --ink 10.00:1 */
+  --surface-alt: #2c313a; /* table heads, articles, notices, pre; --ink 9.33:1 */
+  --surface-sunken: #31363f; /* <code>, the placeholder token; --ink 8.67:1 */
 
-  --tint-brand: #1c3b52; /* --brand-ink-strong 8.73:1 */
-  --tint-brand-soft: #16232f; /* a hovered row, a tinted zone; --ink 13.88:1 */
-  --tint-ok: #14332a; /* --ok 7.33:1 */
-  --tint-alarm: #3a1f22; /* --alarm-text 7.46:1 */
-  --tint-caution: #3a2b14; /* --caution-text 8.08:1 */
-  --tint-sample: #1e2a3c; /* the calmest surface here too (ADR-025) */
+  --tint-brand: #2d3745; /* --brand-ink-strong 7.62:1 */
+  --tint-brand-soft: #2a313c; /* a hovered row, a tinted zone; --ink 9.35:1 */
+  --tint-ok: #2b3a31; /* --ok 5.94:1 */
+  --tint-alarm: #3d2b2e; /* --alarm-text 6.18:1 */
+  --tint-caution: #3d3324; /* --caution-text 7.16:1 */
+  --tint-sample: #2a2f39; /* the calmest surface here too (ADR-025) */
 
-  --ink: #e9f0f6; /* 13.01:1 on --surface */
-  --ink-soft: #c3d2de; /* 9.69:1 */
-  --muted: #a2b2c0; /* 6.89:1, and 5.36:1 on the sunken surface */
+  --ink: #d7dae0; /* One Dark Pro's bright foreground; 10.00:1 on --surface */
+  --ink-soft: #abb2bf; /* One Dark's editor foreground, verbatim; 6.57:1 */
+  --muted: #9ba3b2; /* 5.52:1, and 4.78:1 on the sunken surface */
 
-  /* The sky blue is unchanged and still may not carry text. It finally has a
-     ground it would pass on - 6.34:1 against a card - and the rule that it is
-     a fill, a rule and an edge is structural rather than a matter of where it
-     happens to measure well. What inverts is the family's TEXT weights: on a
-     dark surface the readable member of a blue family is a light blue. */
-  --brand: #4db2ec; /* 6.34:1 on --surface - element only */
-  --brand-ink: #8ecdf2; /* 8.67:1 - links */
-  --brand-ink-strong: #bfe4fa; /* 11.18:1 - hover, buttons, the ring */
-  --focus: #bfe4fa; /* 8.71:1 at its worst, on --surface-sunken */
+  /* THE BLUE FAMILY IS ONE DARK'S BLUE. #61afef is the theme's function and
+     link colour and it measures 5.93:1 on the editor bed - it would pass as
+     text here - but the rule that `--brand` is a fill, a rule and an edge is
+     STRUCTURAL rather than a matter of where it happens to measure well, and it
+     holds on this ground as on the other two. What the family's text weights
+     do is what they did before: on a dark surface the readable member of a blue
+     family is a lighter blue. */
+  --brand: #61afef; /* One Dark's blue; 5.92:1 on --surface - element only */
+  --brand-ink: #79bbf2; /* 6.80:1 - links */
+  --brand-ink-strong: #a6d3f7; /* 8.85:1 - hover, buttons, the ring */
+  --focus: #a6d3f7; /* 7.68:1 at its worst, on --surface-sunken */
 
-  /* The semantic families keep their meanings and lose their darkness: a green
-     at #10683c measures 1.4:1 on this canvas and would be a state nobody could
-     read. Same hue, inverted weight. */
-  --ok: #5fd39a; /* 8.03:1 on --surface */
-  --alarm: #ef6b6b; /* 4.98:1 on --surface, 3.88:1 at its worst - edges only */
-  --alarm-text: #ffa9a2; /* 8.16:1 on --surface */
-  --caution: #c98126; /* 4.74:1 on --surface, 3.69:1 at its worst */
-  --caution-text: #f0bf72; /* 8.84:1 on --surface */
-  --warn: #e8bd7a; /* still reserved, still unused; 8.54:1 if it is ever used */
+  /* The semantic families are One Dark's own accents, and they keep their
+     meanings: the theme's green is the good state, its red is the refusal, its
+     orange the caution. Two of them cannot carry a word and say so in the
+     split this project has used since part 16 - #e06c75 measures 4.38:1 on the
+     editor bed and 3.80:1 on the sunken one, so the red draws edges and the
+     lifted #ef9a9f carries the sentence; the orange passes at 5.68:1 but keeps
+     its text sibling, because putting `--caution` on text duty is forbidden
+     everywhere by one regex and that rule does not bend per ground. One Dark's
+     yellow #e5c07b is that sibling, and it is the family the theme itself
+     would use. */
+  --ok: #98c379; /* One Dark's green; 6.94:1 on --surface */
+  --alarm: #e06c75; /* One Dark's red; 4.38:1 on --surface - edges only */
+  --alarm-text: #ef9a9f; /* the same red lifted to carry words; 6.53:1 */
+  --caution: #d19a66; /* One Dark's orange; 5.68:1 on --surface */
+  --caution-text: #e5c07b; /* One Dark's yellow; 8.11:1 on --surface */
+  --warn: #e5c07b; /* still reserved, still unused; 8.11:1 if it is ever used */
 
-  --line: #33455a; /* 1.52:1 on --surface - decorative, like its light twin */
-  --line-strong: #7f95a6; /* 4.81:1 on --surface, 3.75:1 at its worst */
+  --line: #3a404b; /* 1.34:1 on --surface - decorative, like its light twin */
+  --line-strong: #7a8496; /* 3.71:1 on --surface, 3.22:1 at its worst */
 
   /* THE BUTTON HAD TO INVERT. `--grad-cta` runs #106393 to #0c4e73 on the light
      ground and measures 2.30:1 and 1.68:1 against a dark card - a control that
      is not distinguishable from its surroundings, which is exactly what 1.4.11
      forbids. There is no dark blue that fixes it: white text needs the fill
      dark and the dark card needs the fill light, and the two requirements have
-     no overlap. So the fill goes light and `--cta-ink` goes dark with it. */
-  --cta-ink: #0d1a24; /* 11.59:1 and 10.22:1 on the two stops */
-  --grad-cta: linear-gradient(135deg, #a9d8f2, #8ecdf2);
-  --grad-mark: linear-gradient(135deg, #a9d8f2, #8ecdf2);
-  /* Decorative, and brighter here so the 3px masthead line is a line rather
-     than a smudge: the light ground's #0c4e73 end stops measure 1.68:1 on this
-     surface. */
-  --grad-rule: linear-gradient(90deg, #2f8fc7, #4db2ec 50%, #2f8fc7);
-  --grad-panel: linear-gradient(160deg, #22303e, #1b2836 62%);
+     no overlap. So the fill goes light and `--cta-ink` goes dark with it. The
+     ink is the ground's own darkest neutral, which is what an editor puts under
+     a bright accent. */
+  --cta-ink: #1b1d23; /* 10.65:1 and 8.18:1 on the two stops */
+  --grad-cta: linear-gradient(135deg, #a6d3f7, #79bbf2);
+  --grad-mark: linear-gradient(135deg, #a6d3f7, #79bbf2);
+  /* Decorative, and brighter at the ends than the fill so the 3px masthead line
+     is a line rather than a smudge: 4.28:1 on a card at its darkest stop. */
+  --grad-rule: linear-gradient(90deg, #4a93d4, #61afef 50%, #4a93d4);
+  --grad-panel: linear-gradient(160deg, #2c313a, #282c34 62%);
 
-  --header-veil: rgba(27, 40, 54, 0.86);
+  --header-veil: rgba(40, 44, 52, 0.86);
 
   /* THE CLOSING BAND, INVERTED SO IT STILL READS AS A FOOTER. On a light page
      the band is the darkest thing on the screen (10.63:1 against the canvas);
-     on this one the same navy measures 1.46:1 against the canvas and stops
-     being a band. It goes one step LIGHTER and bluer than the page instead -
-     the same principle, which is that the closing band is the surface that
-     differs most from the page it ends. Its own ink and link are unchanged and
-     both still clear their floors on the new value. */
-  --band: #0e456a; /* 1.73:1 against --canvas, 1.48:1 against --surface */
-  --band-ink: #e8f1f7; /* 8.83:1 on the band */
-  --band-link: #a9d8f2; /* 6.64:1 on the band */
+     on a dark one the same navy stops being a band. It goes LIGHTER than the
+     page instead - the same principle, which is that the closing band is the
+     surface that differs most from the page it ends - and on this ground the
+     lightest neutral One Dark paints is its selection colour. */
+  --band: #3e4451; /* One Dark's selection; 1.73:1 against --canvas */
+  --band-ink: #d7dae0; /* 6.97:1 on the band */
+  --band-link: #a6d3f7; /* 6.18:1 on the band */
 
   /* A blue-tinted shadow is invisible on a blue-slate page. Black, and deeper,
      because on a dark ground elevation is carried by the shadow and by the
@@ -390,6 +449,19 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.36), 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.36), 0 10px 24px -8px rgba(0, 0, 0, 0.6);
   --shadow-lg: 0 4px 10px rgba(0, 0, 0, 0.4), 0 22px 44px -14px rgba(0, 0, 0, 0.7);
+
+  /* THE SYNTAX PALETTE. Five tokens, and they carry colour on THIS ground only
+     - see the block where they are declared for what they are and what they
+     deliberately are not. Every one is a One Dark accent, and the two that
+     could not carry a word at their published value are lifted along their own
+     hue until they can rather than being used below the floor. Measured on both
+     beds a machine token can land on: `pre` is `--surface-alt`, an inline
+     `<code>` is `--surface-sunken`. */
+  --code-ink: #56b6c2; /* One Dark's cyan; 5.52:1 on --surface-alt, 5.12:1 sunken */
+  --code-key: #e2858d; /* #e06c75 lifted; 4.96:1 on --surface-alt, 4.61:1 sunken */
+  --code-value: #98c379; /* One Dark's green, verbatim; 6.48:1 / 6.02:1 */
+  --code-punct: #9ba3b2; /* the calm foreground, as in the editor; 5.15:1 / 4.78:1 */
+  --code-seal: #cd8ee3; /* #c678dd lifted; 5.33:1 on --surface-alt, 4.96:1 sunken */
 }
 
 /* The used `color-scheme` is propagated to the viewport from the ROOT element
@@ -601,10 +673,16 @@ strong {
   font-weight: 650;
 }
 
+/* An inline `<code>` is an IDENTIFIER: a rule id, a part id, a case id, a
+   configuration version. On the light grounds `--code-ink` is the page's own
+   ink and this renders exactly as it always has; on the machine ground it is
+   One Dark's cyan, which is what tells a reader at a glance that the string is
+   the machine's name for something rather than a word somebody wrote. */
 code {
   background: var(--surface-sunken);
   border-radius: var(--radius-sm);
   padding: 0.1em 0.35em;
+  color: var(--code-ink);
   font-family: var(--font-mono);
   font-size: 0.9em;
 }

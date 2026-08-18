@@ -124,6 +124,17 @@ def shown(key: str, lang: str = "de") -> str:
     return str(escape(phrase(key, lang)))
 
 
+def reads(body: str) -> str:
+    """One rendered page, as a READER receives it rather than as markup.
+
+    Part 23 paints the working-copy dumps like code, so a line of one arrives
+    as three elements and no longer occurs in the HTML as a single string.
+    What has to hold is that the line is on the page, so the assertions that
+    care about the dump are made against this.
+    """
+    return re.sub(r"<[^>]*>", "", body)
+
+
 def persona(persona_id: str = SABINE) -> Persona:
     found = demo_personas().get(persona_id)
     assert found is not None
@@ -286,7 +297,7 @@ def test_the_contradiction_the_loop_exists_for(
     assert "keine Weisungsbindung im Einzelnen" in applicant_page
 
     statement_id = answer(client, reference(applicant_page))
-    statement_page = client.get(f"/demo/case/{statement_id}/pipeline").text
+    statement_page = reads(client.get(f"/demo/case/{statement_id}/pipeline").text)
     assert "antrag.weisungsgebunden = ja" in statement_page
     assert "antrag.eingliederung_arbeitsorganisation = ja" in statement_page
     assert "antrag.arbeitsort = beim_auftraggeber" in statement_page
@@ -305,12 +316,11 @@ def test_a_different_start_date_is_a_real_contradiction(
     case_id = submit(client)
     page = client.get(f"/demo/case/{case_id}/pipeline").text
     statement_id = answer(client, reference(page), taetigkeit_beginn="2025-11-03")
-    statement_page = client.get(f"/demo/case/{statement_id}/pipeline").text
+    statement_page = reads(client.get(f"/demo/case/{statement_id}/pipeline").text)
     assert "antrag.taetigkeit_beginn = 2025-11-03" in statement_page
     # The applicant's own answer is untouched on the applicant's own case.
-    assert (
-        "antrag.taetigkeit_beginn = 2026-01-08"
-        in client.get(f"/demo/case/{case_id}/pipeline").text
+    assert "antrag.taetigkeit_beginn = 2026-01-08" in reads(
+        client.get(f"/demo/case/{case_id}/pipeline").text
     )
     # And the summary on the applicant's page repeats what the OTHER side said.
     assert (

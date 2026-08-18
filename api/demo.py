@@ -67,7 +67,8 @@ produces, edits or re-sends one.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+import re
+from collections.abc import Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
@@ -705,10 +706,19 @@ def echo_values(persona: Persona, values: Mapping[str, str]) -> tuple[TypedValue
 
 @dataclass(frozen=True)
 class Segment:
-    """A run of working-copy text, marked when it IS a placeholder."""
+    """A run of working-copy text, marked when it IS a placeholder.
+
+    ``role`` is what the page paints it as and it is PRESENTATION and nothing
+    else: an empty role is text the page shows plainly, and the three named
+    ones are the parts of one line of a structured dump. It exists so the
+    colouring is decided here, where the shape of the text is known, rather
+    than in a template writing regular expressions or in a script re-parsing
+    the page after it loaded.
+    """
 
     text: str
     kind: str
+    role: str = ""
 
     @property
     def placeholder(self) -> bool:
@@ -1180,23 +1190,67 @@ def render_pipeline(view: PipelineView, page: PageContext | None = None) -> str:
     return render_template("demo_pipeline.html", view, page)
 
 
-def segments(text: str) -> tuple[Segment, ...]:
-    """Split working-copy text into plain runs and placeholder runs.
+#: The two shapes ``engine.demo.store`` records a working-copy part in. Only
+#: the structured one is a machine dump with a grammar; the other is the text a
+#: person wrote, with its identity values sealed out of it.
+SHAPE_STRUCTURED = "structured"
 
-    Built in Python rather than with a template filter so the page never has to
-    mark anything safe: Jinja escapes every segment, and the ``<mark>`` element
-    is written by the template around text it was handed rather than injected
-    into it.
+#: One line of a structured dump: a dotted path, the separator it is written
+#: with, and everything to the right of it. ``engine/demo/store.py`` renders
+#: those lines as ``f"{path} = {value}"``, and the key can hold neither a space
+#: nor an equals sign, so this matches the leading path and never eats into a
+#: value that happens to contain one.
+STRUCTURED_LINE_RE = re.compile(r"^(?P<key>[^\s=]+)(?P<punct> = )(?P<value>.*)$")
+
+
+def _plain_runs(text: str, role: str) -> Iterator[Segment]:
+    """One run of text, split where the placeholders are.
+
+    The placeholder tokens come out as their own segments, VERBATIM: a segment
+    boundary is only ever placed at the edge of one, so a token is never split
+    across two elements and the canary sweep still reads it as one string.
     """
-    parts: list[Segment] = []
     position = 0
     for match in PLACEHOLDER_RE.finditer(text):
         if match.start() > position:
-            parts.append(Segment(text=text[position : match.start()], kind=""))
-        parts.append(Segment(text=match.group(0), kind=match.group("kind")))
+            yield Segment(text=text[position : match.start()], kind="", role=role)
+        yield Segment(text=match.group(0), kind=match.group("kind"))
         position = match.end()
     if position < len(text):
-        parts.append(Segment(text=text[position:], kind=""))
+        yield Segment(text=text[position:], kind="", role=role)
+
+
+def segments(text: str, shape: str = "") -> tuple[Segment, ...]:
+    """Split working-copy text into the runs the page paints separately.
+
+    Built in Python rather than with a template filter so the page never has to
+    mark anything safe: Jinja escapes every segment, and the ``<mark>`` and
+    ``<span>`` elements are written by the template AROUND text it was handed
+    rather than injected into it. Nothing here rewrites a character - the
+    concatenation of every segment's text is the input, which is what makes a
+    coloured working copy the same working copy.
+
+    A STRUCTURED part is a machine dump and gets the grammar of one; a text
+    part is what a person wrote and gets nothing but its placeholders marked.
+    That line is drawn on the shape the store already recorded rather than on a
+    guess about the content, and it is the whole of "colour means machine
+    text": the prose in a letter is not syntax, so it is not coloured.
+    """
+    if shape != SHAPE_STRUCTURED:
+        return tuple(_plain_runs(text, ""))
+    parts: list[Segment] = []
+    for index, line in enumerate(text.split("\n")):
+        if index:
+            parts.append(Segment(text="\n", kind=""))
+        found = STRUCTURED_LINE_RE.match(line)
+        if found is None:
+            # A value that carried its own line break: still the machine's
+            # text, but this line has no key and gets no key colour.
+            parts.extend(_plain_runs(line, ""))
+            continue
+        parts.append(Segment(text=found.group("key"), kind="", role="key"))
+        parts.append(Segment(text=found.group("punct"), kind="", role="punct"))
+        parts.extend(_plain_runs(found.group("value"), "value"))
     return tuple(parts)
 
 
@@ -1204,7 +1258,11 @@ def _part_views(held: DemoSubmission | None) -> Sequence[PartView]:
     if held is None:
         return ()
     return [
-        PartView(part_id=part.part_id, shape=part.shape, segments=segments(part.text))
+        PartView(
+            part_id=part.part_id,
+            shape=part.shape,
+            segments=segments(part.text, part.shape),
+        )
         for part in held.working_copy
     ]
 

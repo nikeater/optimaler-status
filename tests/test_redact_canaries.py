@@ -57,6 +57,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
@@ -260,10 +261,33 @@ def canary_altersrente_submission(
     }
 
 
+#: Anything that looks like a tag. Used to read a served page the way a reader
+#: reads it, which is a different string from the one the server sent.
+TAG_RE = re.compile(r"<[^>]*>")
+
+
 def assert_no_canary(blob: str, where: str) -> None:
-    """The one assertion this whole module exists for."""
+    """The one assertion this whole module exists for.
+
+    IT READS THE BLOB TWICE SINCE PART 23, and the second read is the one that
+    matters now. That part paints the working copy like code, which means a run
+    of machine text arrives wrapped in elements rather than as one string - and
+    a substring sweep over markup CANNOT see a value that a tag happens to fall
+    inside of. A sweep that goes green by no longer being able to look is the
+    worst failure mode a leak check has, so the blob is also read with every tag
+    removed, which is what ends up in front of a reader.
+
+    Stripping tags out of a JSON body or a log line is a no-op on anything this
+    project emits, and where it is not, it can only ever make the check find
+    MORE. The cost of the extra pass is nothing and the property it protects is
+    the whole module.
+    """
+    stripped = TAG_RE.sub("", blob)
     for canary in CANARIES:
         assert canary not in blob, f"canary {canary!r} leaked into {where}"
+        assert canary not in stripped, (
+            f"canary {canary!r} leaked into {where}, split across tags"
+        )
 
 
 #: What a re-hydrated Altersrente draft has to contain. Not the whole canary

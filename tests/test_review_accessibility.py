@@ -531,6 +531,21 @@ TINTS = (
 )
 INKS = ("--ink", "--ink-soft", "--muted")
 
+#: THE SYNTAX PALETTE (part 23) and the two beds it can land on. The machine
+#: pages paint the working copy the way an editor paints a buffer, and a colour
+#: that is a colour SCHEME is still a colour a reader has to read: every one of
+#: these carries characters, so every one is held to the text floor rather than
+#: to the 3:1 an edge gets. `pre` is `--surface-alt` and an inline `<code>` is
+#: `--surface-sunken`, which is why both are checked and neither is assumed.
+CODE_INKS = (
+    "--code-ink",
+    "--code-key",
+    "--code-value",
+    "--code-punct",
+    "--code-seal",
+)
+CODE_BEDS = ("--surface", "--surface-alt", "--surface-sunken")
+
 TEXT_FLOOR = 4.5
 ELEMENT_FLOOR = 3.0
 
@@ -639,6 +654,7 @@ def test_every_ground_declares_the_whole_ladder(ground: str, system_css: str) ->
         *SURFACES,
         *TINTS,
         *INKS,
+        *CODE_INKS,
         "--brand",
         "--brand-ink",
         "--brand-ink-strong",
@@ -699,12 +715,21 @@ def test_every_ground_meets_the_text_contrast_floor(
     ):
         measured = _pair(tokens, ink, tint)
         assert measured >= TEXT_FLOOR, f"{ground}: {ink} on {tint} is {measured:.2f}:1"
-    # The label on a fill, against BOTH ends of the gradient it sits on.
+    # The label on a fill, against BOTH ends of the gradient it sits on. Since
+    # part 23 that fill also carries a whole card - the call to action in the
+    # landing grid - so the same two numbers are the card's title and its body.
     for gradient in ("--grad-cta", "--grad-mark"):
         for stop in _stops(tokens, gradient):
             measured = _ratio(_value(tokens, "--cta-ink"), stop)
             assert measured >= TEXT_FLOOR, (
                 f"{ground}: --cta-ink on {gradient} stop {stop} is {measured:.2f}:1"
+            )
+    # And the syntax palette, on both of the beds a machine token can land on.
+    for ink in CODE_INKS:
+        for bed in CODE_BEDS:
+            measured = _pair(tokens, ink, bed)
+            assert measured >= TEXT_FLOOR, (
+                f"{ground}: {ink} on {bed} is {measured:.2f}:1"
             )
 
 
@@ -779,6 +804,62 @@ def test_the_amber_family_aliases_element_to_element_and_ink_to_ink(
             assert value.strip() not in elements, (
                 f"{token} carries text and is aliased to an element colour"
             )
+
+
+def test_the_machine_ground_is_anchored_on_the_editor_it_borrows_from(
+    system_css: str,
+) -> None:
+    """Part 23: the dark ground's values ARE One Dark Pro's, and stay its.
+
+    The claim this part makes is not "a dark theme" but "the editor a reader
+    already associates with a machine at work", and the way that claim erodes
+    is one plausible tweak at a time until the palette is nobody's. So the
+    anchors are pinned with the role each plays in the theme, and a change to
+    one fails here and says which.
+
+    The lifted members are deliberately NOT pinned: they are derived, their
+    reason is the contrast floor above, and the arithmetic that produced them is
+    the test that has to keep holding.
+    """
+    machine = dict(_declarations(system_css, ".ground-machine"))
+    for token, value, role in (
+        ("--surface", "#282c34", "editor.background"),
+        ("--surface-alt", "#2c313a", "list.hoverBackground"),
+        ("--canvas-top", "#21252b", "sideBar.background"),
+        ("--ink-soft", "#abb2bf", "editor.foreground"),
+        ("--brand", "#61afef", "the blue"),
+        ("--ok", "#98c379", "the green"),
+        ("--alarm", "#e06c75", "the red"),
+        ("--caution", "#d19a66", "the orange"),
+        ("--caution-text", "#e5c07b", "the yellow"),
+        ("--code-value", "#98c379", "strings"),
+        ("--code-ink", "#56b6c2", "the cyan"),
+        ("--band", "#3e4451", "editor.selectionBackground"),
+    ):
+        assert machine[token].strip() == value, f"{token} ({role})"
+    # The ladder still ASCENDS on the dark ground, which is the property every
+    # component depends on for its elevation to read the right way round.
+    tokens = _tokens(system_css, "machine")
+    rungs = ("--canvas", "--surface", "--surface-alt", "--surface-sunken")
+    lit = [_luminance(_value(tokens, name)) for name in rungs]
+    assert lit == sorted(lit), dict(zip(rungs, lit, strict=True))
+
+
+@pytest.mark.parametrize("ground", ("citizen", "casework"))
+def test_only_the_machine_ground_syntax_colours_anything(
+    ground: str, system_css: str
+) -> None:
+    """A light page shows a working copy as plain text, and that is the design.
+
+    Colour on this project's machine blocks means "this is machine text". The
+    citizen and caseworker grounds have no machine blocks to say it about, so
+    their syntax tokens resolve to the page's own ink and a block that ever
+    rendered there is monospaced text rather than a palette measured against a
+    surface it was never computed for.
+    """
+    tokens = _tokens(system_css, ground)
+    for ink in CODE_INKS:
+        assert _value(tokens, ink) == _value(tokens, "--ink"), ink
 
 
 @pytest.mark.parametrize("ground", ("machine", "casework"))
