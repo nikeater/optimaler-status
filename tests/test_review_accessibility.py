@@ -383,6 +383,66 @@ def test_the_three_things_a_static_reflow_check_could_not_see() -> None:
     )
 
 
+#: The selectors that may cap their width in CHARACTERS, and the reason each
+#: one is allowed to (part 22).
+#:
+#: WHY THIS LIST EXISTS. A `ch` cap on flowing text is typographically orthodox
+#: and, on this layout, wrong: the container is 80rem and a 68ch cap resolves to
+#: roughly half of it, so the text renders as a column down the left of a box
+#: that spans the page. Part 17 removed the caps from paragraphs, list items and
+#: notices after the user read one as a broken layout; part 20 reintroduced one
+#: by giving `.help` two jobs it had never been measured for (a fieldset intro
+#: and a checkbox description, neither of them beside a control); part 22
+#: removed it again. Three times is a class of bug, and a class of bug that
+#: nothing checks comes back.
+#:
+#: WHAT IS STILL ALLOWED, and both are DISPLAY type on the landing page rather
+#: than flowing body text: the hero headline, where a character cap is what
+#: stops a three-word last line, and the hero lead directly under it. Neither
+#: sits in a fieldset, a table or a form.
+MEASURE_CAP_ALLOWED = {
+    ".page-head-hero > h1": "display headline, capped so it breaks in three lines",
+    ".hero-lead": "the one lead paragraph under the display headline",
+}
+
+
+def test_no_flowing_text_carries_a_character_measure_cap() -> None:
+    """The part-17 rule, checked instead of remembered: the measure is the container.
+
+    Every ``max-width`` in ``ch`` in either stylesheet has to belong to a
+    selector in :data:`MEASURE_CAP_ALLOWED`. A new one is not forbidden - it has
+    to be argued in that dict, next to the two that earned their place - and
+    the ones this project has removed twice cannot come back by being typed
+    again.
+    """
+    capped: dict[str, str] = {}
+    for sheet in sorted(Path("ui/static").glob("*.css")):
+        css = sheet.read_text(encoding="utf-8")
+        # Comments carry prose about the caps that were removed; strip them so
+        # the check reads declarations rather than the story of the fix.
+        code = re.sub(r"/\*.*?\*/", "", css, flags=re.DOTALL)
+        for block in re.finditer(r"([^{}]+)\{([^{}]*)\}", code):
+            cap = re.search(r"max-width:\s*[\d.]+ch", block.group(2))
+            if cap:
+                capped[" ".join(block.group(1).split())] = cap.group(0)
+    assert set(capped) == set(MEASURE_CAP_ALLOWED), (
+        f"character measure caps changed: {capped}. The measure on this layout "
+        "is the container (--measure on main); a ch cap inside it renders as a "
+        "narrow column beside empty space, which is what part 17 removed and "
+        "part 20 reintroduced. Declare a new one in MEASURE_CAP_ALLOWED with "
+        "its reason, or take the cap off."
+    )
+    # And the class this bug came back through twice, named so the reason is
+    # attached to the selector rather than to the count.
+    system = Path("ui/static/system.css").read_text(encoding="utf-8")
+    help_rule = re.search(r"^\.help\s*\{([^}]*)\}", system, re.MULTILINE)
+    assert help_rule and "max-width" not in help_rule.group(1), (
+        ".help is a fieldset intro and a checkbox description as well as a "
+        "field's own sentence; it fills its container like every other prose "
+        "block"
+    )
+
+
 #: The element colours: too weak for text against at least one surface this
 #: project ships, and each with a text-weight sibling in the same family.
 #: Part 17 added the third when the demo ribbon left the red family; part 21

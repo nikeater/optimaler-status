@@ -1841,12 +1841,36 @@ textarea {
   line-height: 1.6;
 }
 
+/* THE THIRD TIME THIS CLASS OF BUG SHIPPED, and the last one it can ship
+   silently (part 22).
+
+   `.help` was the one flowing-text class part 17 let keep a `ch` cap, on the
+   reasoning that a help sentence "belongs to a field and reads with it". That
+   reasoning held while every `.help` sat under an input. Part 20 gave the class
+   two jobs it was never measured for: the intro paragraph of a fieldset and the
+   description under each document checkbox - neither of which is beside a
+   control, both of which span the fieldset. At `--text-sm` the 68ch cap
+   resolves to roughly 500px inside a fieldset about 1180px wide on a 1920px
+   screen, so the Anlagen descriptions rendered as a narrow column down the left
+   of a box that spans the page. The user reported it from a screenshot, which
+   is the same way the part-17 caps were found.
+
+   The fix is the part-17 rule applied without the exception: THE MEASURE IS THE
+   CONTAINER. Removing a `max-width` can only widen an element up to its
+   container and never past it, so nothing about reflow changes - at 320px the
+   container binds, as it always did. Under an input the sentence now matches
+   the width of the control it describes, which is what "reads with it" should
+   have meant in the first place.
+
+   `tests/test_review_accessibility.py::test_no_flowing_text_carries_a_character
+   _measure_cap` parses every `ch` cap out of both stylesheets and requires it to
+   be a DECLARED exception, so a fourth one has to be argued rather than
+   noticed. */
 .help {
   display: block;
   margin-bottom: var(--space-2);
   color: var(--muted);
   font-size: var(--text-sm);
-  max-width: 68ch;
 }
 
 button {
