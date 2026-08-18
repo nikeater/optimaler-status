@@ -2053,3 +2053,127 @@ def test_the_hints_panel_describes_the_controls_the_form_renders(
             )
             assert control, f"{chosen.persona_id}.{field_id} is not rendered"
             assert "required" not in attributes(control.group(0))
+
+
+# ------------------------- 12. the homepage says less (part 23) ---
+
+
+#: The three things the "Fangen Sie hier an" section used to say before it said
+#: the same thing a fourth time with five cards. Pinned by their ABSENCE, in
+#: both languages, because the reason each one went is that the page already
+#: carried it: the tour has a button in the hero, and a grid of five named
+#: cards does not need a line announcing that a grid of five named cards
+#: follows.
+REMOVED_FROM_THE_HOMEPAGE = (
+    "Oder direkt an eine Stelle springen",
+    "Or jump straight in",
+    "erzaehlt das ganze System",
+    "erzählt das ganze System",
+    "walks the whole system end to end",
+)
+
+
+def test_the_homepage_names_the_procedure_and_invites_one_thing(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The hero says which procedure this is and what to do about it.
+
+    The headline is a legal citation and it is the one string in this project
+    that carries a Paragraphenzeichen - every other citation on every other page
+    is written "par. 7a Abs. 4 SGB IV", which is the house convention and is
+    untouched. This asserts both halves of that: the sign is here, and it did
+    not spread.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    for lang, headline, lead in (
+        (
+            "de",
+            "Optimiertes Statusfeststellungsverfahren nach § 7a SGB IV",
+            "Stellen Sie testweise einen Antrag mit Beispielszenarien",
+        ),
+        (
+            "en",
+            "Streamlined status determination under § 7a SGB IV",
+            "Submit a test application using one of the example scenarios",
+        ),
+    ):
+        client.get(f"/?lang={lang}", follow_redirects=True)
+        page = client.get("/").text
+        assert f"<h1>{headline}</h1>" in page, lang
+        assert f'<p class="hero-lead">{lead}</p>' in page, lang
+        # The sign appears once, in that headline, and nowhere else on the page.
+        assert page.count("§") == 1, lang
+        for gone in REMOVED_FROM_THE_HOMEPAGE:
+            assert gone not in page, (lang, gone)
+
+
+def test_the_paragraph_sign_stays_on_the_one_string_it_was_written_for(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The house convention, checked where it could most easily erode.
+
+    A sign introduced for one headline is a sign somebody copies into the next
+    citation they write. Every other visitor-facing page carries several, so
+    this walks them and asserts the ASCII form is still what they use.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    for path in ("/hinweise", "/demo/rundgang", "/demo/antrag", "/demo/gegenpartei"):
+        body = client.get(path).text
+        assert "§" not in body, path
+    assert "par. 7a Abs. 4 SGB IV" in client.get("/demo/rundgang").text
+
+
+def test_the_tour_is_offered_once_and_the_start_section_is_its_cards(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """One button per destination, and a heading level for every step down.
+
+    The second "Zum Rundgang" sat four hundred pixels under the first. What is
+    left in the section is its heading and the five cards, so the cards moved
+    up a level with the line that used to sit between them - a page that skips
+    from `h2` to `h4` is a page a screen reader reports a missing level in.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    page = client.get("/").text
+    # One button in the hero and the route in the menu, which is navigation
+    # rather than a call to action. The second button in the section is gone.
+    assert page.count('href="/demo/rundgang"') == 2
+    assert page.count('<a class="cta" href="/demo/rundgang">') == 1
+    assert phrase("landing.start.heading") in page
+    assert '<section aria-labelledby="start-heading">' in page
+    assert '<h2 id="start-heading">' in page
+    levels = [int(level) for level in re.findall(r"<h([1-6])", page)]
+    assert all(later - earlier <= 1 for earlier, later in pairwise(levels))
+    # The card grid is intact: five cards, the first one the call to action.
+    section = page[page.index('<section aria-labelledby="start-heading">') :]
+    section = section[: section.index("</section>")]
+    assert section.count('<li class="card') == 5
+    assert section.startswith(
+        '<section aria-labelledby="start-heading">\n  <h2 id="start-heading">'
+    )
+    assert '<li class="card card-cta">' in section
+    assert section.index('<li class="card card-cta">') < section.index(
+        'href="/review"'
+    ), "the call to action is the first card"
+
+
+def test_the_call_to_action_card_paints_itself_out_of_the_button_tokens(
+    config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A standout card is a token re-point, not a second palette.
+
+    The fill and the label are `--grad-cta` and `--cta-ink` - the pair every
+    button on the site already uses, so the card inverts with a ground rather
+    than needing one rule per ground. The focus ring is overridden to the same
+    ink for the reason the closing band's is: the design system's ring measures
+    1.37:1 against this fill and a keyboard reader would see nothing.
+    """
+    client = build_client(config, monkeypatch=monkeypatch)
+    assert '<li class="card card-cta">' in client.get("/").text
+    system = Path("ui/static/system.css").read_text(encoding="utf-8")
+    block = system[system.index(".card-grid > .card-cta {") :]
+    block = block[: block.index("}")]
+    assert "background: var(--grad-cta);" in block
+    assert "color: var(--cta-ink);" in block
+    assert ".card-grid > .card-cta::before {\n  background: var(--cta-ink);" in system
+    assert ".card-cta :focus-visible {\n  outline-color: var(--cta-ink);" in system

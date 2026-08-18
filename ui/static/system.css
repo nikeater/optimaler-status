@@ -1172,6 +1172,55 @@ main > div:not(.page-head) > *:last-child {
   text-decoration: underline;
 }
 
+/* THE ONE CARD IN A GRID THAT IS AN ACTION (part 23). A grid of identical
+   white cards says every destination on it is worth the same, and on the
+   landing page one of them is not: four are places to look at and the first
+   one is the thing the page is asking a visitor to DO. So it is painted with
+   the fill the buttons are painted with and inverts everything a card carries
+   - the title, the body, the hairline along its top edge, its own border.
+
+   No new colour. `--grad-cta` and `--cta-ink` are the pair part 21 built for
+   exactly this - a fill and the ink that goes on it, which is white on the two
+   light grounds and dark on the machine ground - so the card follows a ground
+   without a second rule, and the arithmetic is the arithmetic already shipped
+   on every button: white on the gradient's pale stop is 6.51:1 and on its deep
+   stop 8.92:1. The border goes to `--brand-ink-strong` (8.92:1 against the
+   white section it sits in) and to the ink under the pointer.
+
+   THE FOCUS RING HAD TO BE OVERRIDDEN AND THAT IS THE PART WORTH READING.
+   `--focus` is #0c4e73 on the citizen ground and measures 1.37:1 against this
+   card's own fill - the ring drawn at `outline-offset: 2px` lands ON the blue,
+   so a keyboard reader tabbing into the one call to action would have seen
+   nothing at all. Same failure the closing band had in part 18, same fix and
+   the same reason it is a separate rule: the ink measures 6.51:1 there. */
+.card-grid > .card-cta {
+  background: var(--grad-cta);
+  border-color: var(--brand-ink-strong);
+  color: var(--cta-ink);
+}
+
+.card-grid > .card-cta::before {
+  background: var(--cta-ink);
+}
+
+.card-grid > .card-cta h3,
+.card-grid > .card-cta h4,
+.card-grid > .card-cta h3 a,
+.card-grid > .card-cta h4 a,
+.card-grid > .card-cta h3 a:hover,
+.card-grid > .card-cta h4 a:hover {
+  color: var(--cta-ink);
+}
+
+.card-grid > .card-cta:hover,
+.card-grid > .card-cta:focus-within {
+  border-color: var(--cta-ink);
+}
+
+.card-cta :focus-visible {
+  outline-color: var(--cta-ink);
+}
+
 /* A nested article is a sub-card: a message in the inbox, a prepared letter. */
 article {
   margin: var(--space-4) 0;

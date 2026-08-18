@@ -145,32 +145,40 @@
 {% endblock %}
 
 {% block content %}
-<section aria-labelledby="rundgang-heading">
-  <h2 id="rundgang-heading">{{ t("landing.start.heading") }}</h2>
-  <p class="lead">{{ m("landing.start.lead") }}</p>
-  <p>
-    <a class="cta" href="/demo/rundgang">{{ t("landing.cta.tour") }}</a>
-  </p>
-  <h3>{{ t("landing.start.jump") }}</h3>
+{# FIVE PLACES TO START, UNDER THE HEADING THAT NAMES THEM (part 23).
+   What used to be here: a paragraph retelling the tour, a second "Zum
+   Rundgang" button four hundred pixels below the one in the hero, and a third
+   line announcing the card grid that follows it. All three are gone. The
+   heading stays, because it is what the section IS and what the landmark is
+   named by; the cards were promoted from `h4` to `h3` with the line that used
+   to sit between them, so the document still steps one level at a time.
+
+   THE FIRST CARD IS THE CALL TO ACTION AND LOOKS LIKE ONE. Everything else on
+   this page is a place a reader may go; this is the one thing the page wants
+   them to do, so it is painted rather than listed - the same `--grad-cta` fill
+   and `--cta-ink` label the buttons carry, with the hairline along its top
+   flipped to the ink. The link is still a link and still the whole title. #}
+<section aria-labelledby="start-heading">
+  <h2 id="start-heading">{{ t("landing.start.heading") }}</h2>
   <ul class="card-grid">
-    <li class="card">
-      <h4><a href="/demo/antrag">{{ t("landing.card.intake.title") }}</a></h4>
+    <li class="card card-cta">
+      <h3><a href="/demo/antrag">{{ t("landing.card.intake.title") }}</a></h3>
       <p>{{ t("landing.card.intake.body") }}</p>
     </li>
     <li class="card">
-      <h4><a href="/review">{{ t("landing.card.review.title") }}</a></h4>
+      <h3><a href="/review">{{ t("landing.card.review.title") }}</a></h3>
       <p>{{ t("landing.card.review.body") }}</p>
     </li>
     <li class="card">
-      <h4><a href="/metrics">{{ t("landing.card.metrics.title") }}</a></h4>
+      <h3><a href="/metrics">{{ t("landing.card.metrics.title") }}</a></h3>
       <p>{{ t("landing.card.metrics.body") }}</p>
     </li>
     <li class="card">
-      <h4><a href="/inbox">{{ t("landing.card.inbox.title") }}</a></h4>
+      <h3><a href="/inbox">{{ t("landing.card.inbox.title") }}</a></h3>
       <p>{{ t("landing.card.inbox.body") }}</p>
     </li>
     <li class="card">
-      <h4>{{ t("landing.card.health.title") }}</h4>
+      <h3>{{ t("landing.card.health.title") }}</h3>
       <p>{{ m("landing.card.health.body") }}</p>
       <p><a href="/health">/health</a> &middot; <a href="/healthz">/healthz</a></p>
     </li>

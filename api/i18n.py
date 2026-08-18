@@ -239,22 +239,24 @@ TABLE: dict[str, tuple[str, str]] = {
     "phase.number": ("Phase {number}", "Phase {number}"),
     # ---------------------------------------------------------- the landing --
     "landing.title": ("EingangsLotse - Demo", "EingangsLotse - demo"),
+    # THE ONE STRING IN THE PROJECT THAT CARRIES A PARAGRAPHENZEICHEN, and it
+    # is deliberate rather than an oversight. Every other legal citation in
+    # this table is written "par. 7a Abs. 4 SGB IV" - the house convention,
+    # unchanged and not up for review here. The headline is the page's own
+    # claim about which procedure this is, it is the first thing a reader
+    # sees, and a proper German citation of a Sozialgesetzbuch norm is set
+    # with the section sign and the book number. So this key, and only this
+    # key, sets it that way; the sign never spreads by anybody copying it.
+    # The English half keeps it too, because the pair is one sentence in two
+    # languages and English-language writing about German law cites it the
+    # same way.
     "landing.headline": (
-        "Eingänge sortieren, ohne über Menschen zu entscheiden",
-        "Sorting incoming cases without deciding about people",
+        "Optimiertes Statusfeststellungsverfahren nach § 7a SGB IV",
+        "Streamlined status determination under § 7a SGB IV",
     ),
     "landing.lead": (
-        "Ein Eingangs-Assistent für Massenverfahren der öffentlichen "
-        "Verwaltung: Er liest einen Eingang, belegt jede Aussage, ordnet ihn "
-        "einer Einheit zu und entscheidet nach einer versionierten "
-        "Entscheidungstabelle, ob ein Mensch ihn sehen muss. Er entscheidet "
-        "nichts über Menschen - er sortiert Arbeit und legt offen, warum.",
-        "An intake assistant for high-volume German public administration "
-        "procedures. It reads an incoming case, proves every extracted value "
-        "against the document it came from, routes it to an organisational "
-        "unit, and lets a versioned decision table decide whether a human has "
-        "to look. It decides nothing about people - it sorts work and shows "
-        "its reasoning.",
+        "Stellen Sie testweise einen Antrag mit Beispielszenarien",
+        "Submit a test application using one of the example scenarios",
     ),
     "landing.cta.tour": ("Zum Rundgang", "Take the guided tour"),
     "landing.cta.intake": ("Antrag stellen", "Submit an application"),
@@ -321,22 +323,13 @@ TABLE: dict[str, tuple[str, str]] = {
         "Was in diesem Schritt passiert",
         "What happens at this step",
     ),
+    # The section that once introduced the tour in a paragraph, offered a
+    # second button to it and then announced the card grid in a third line
+    # keeps its heading and nothing else: the hero already carries the tour,
+    # and five named cards do not need a sentence saying that they are five
+    # named cards. The two keys those lines used are gone with them rather
+    # than kept as translations nobody can check against a page.
     "landing.start.heading": ("Fangen Sie hier an", "Start here"),
-    "landing.start.lead": (
-        "Der <strong>Rundgang</strong> erzählt das ganze System von der ersten "
-        "Einreichung bis zum geschlossenen Kreis - in sechs Schritten, jeder "
-        "mit einem Link auf die Stelle, an der er tatsächlich passiert. Er ist "
-        "für Besucherinnen und Besucher gedacht, die dieses Projekt noch nie "
-        "gesehen haben.",
-        "The <strong>guided tour</strong> walks the whole system end to end, "
-        "from the first submission to the closed loop - six steps, each one "
-        "linking to the page where that step really happens. It is written for "
-        "somebody who has never seen this project.",
-    ),
-    "landing.start.jump": (
-        "Oder direkt an eine Stelle springen:",
-        "Or jump straight in:",
-    ),
     "landing.card.intake.title": ("Antrag stellen", "Submit an application"),
     "landing.card.intake.body": (
         "Sie stellen als erfundene Person einen Antrag und sehen danach "
