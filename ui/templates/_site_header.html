@@ -83,9 +83,9 @@
             {% if demo.enabled %}
             <li><a href="/hinweise">{{ icons.icon("info") }}<span>{{ t("chrome.nav.hinweise") }}</span></a></li>
             {% endif %}
-            {% if repo_url %}
-            <li><a href="{{ repo_url }}">{{ icons.icon("code") }}<span>{{ t("chrome.nav.source") }}</span></a></li>
-            {% endif %}
+            {# Fixed to the project's public home on openCode - a fact of the
+               product, not deployment configuration. #}
+            <li><a href="https://gitlab.opencode.de/Olajide/eingangslotse">{{ icons.icon("code") }}<span>{{ t("chrome.nav.source") }}</span></a></li>
           </ul>
         </nav>
       </details>

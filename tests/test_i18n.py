@@ -565,21 +565,34 @@ def test_the_header_adds_no_control_to_the_inbox(
     assert '<details class="menu">' in body
 
 
-def test_the_source_link_appears_only_when_it_is_configured(
+#: The project's public home. Fixed in the templates since the openCode
+#: publication: the address is a fact of the product, not deployment
+#: configuration, so a deploy cannot point the footer somewhere else.
+OPENCODE_URL = "https://gitlab.opencode.de/Olajide/eingangslotse"
+
+
+def test_the_source_link_is_fixed_to_the_projects_public_home(
     config: ConfigBundle, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A menu item pointing at github.com/OWNER/... is a broken link."""
-    from engine.demo import REPO_URL_ENV, REPO_URL_PLACEHOLDER
+    """The source link renders on every instance and ignores the environment.
+
+    Until the openCode publication it pointed wherever `EINGANGSLOTSE_REPO_URL`
+    said and disappeared when nothing was configured. Both behaviours are gone:
+    the address is fixed, the link is always offered, and the environment
+    variable moves nothing on any page.
+    """
+    from engine.demo import REPO_URL_ENV
 
     item = f"<span>{phrase('chrome.nav.source')}</span>"
     monkeypatch.delenv(REPO_URL_ENV, raising=False)
     unset = build_client(config, monkeypatch).get("/demo/rundgang").text
-    assert REPO_URL_PLACEHOLDER not in unset
-    assert item not in unset
+    assert f'href="{OPENCODE_URL}"' in unset
+    assert item in unset
 
     monkeypatch.setenv(REPO_URL_ENV, "https://example.invalid/repo")
     configured = build_client(config, monkeypatch).get("/demo/rundgang").text
-    assert 'href="https://example.invalid/repo"' in configured
+    assert f'href="{OPENCODE_URL}"' in configured
+    assert "https://example.invalid/repo" not in configured
     assert item in configured
 
 
@@ -620,9 +633,11 @@ def test_the_source_address_is_a_destination_and_never_a_visible_string(
     paths = (*VISITOR_PAGES, "/demo/rundgang", *GERMAN_PAGES)
     for path in paths:
         for body in (client.get(path).text, in_english(client, path)):
-            assert NAMED_REPO_URL in body or "/demo/gegenpartei" in path, path
-            outside = body.replace(f'href="{NAMED_REPO_URL}"', "")
-            assert NAMED_REPO_URL not in outside, (
+            assert NAMED_REPO_URL not in body, (
+                f"{path}: the environment address leaked onto the page"
+            )
+            outside = body.replace(f'href="{OPENCODE_URL}"', "")
+            assert "gitlab.opencode.de/Olajide" not in outside, (
                 f"{path}: the source address is rendered as visible text"
             )
     # And the label that replaced it is on the page, in both languages. A fresh

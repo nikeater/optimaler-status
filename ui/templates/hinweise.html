@@ -60,16 +60,12 @@
   <h2 id="lizenz-heading">{{ t("hinweise.licence.heading") }}</h2>
   <p>{{ t("hinweise.licence.body") }}</p>
   {# The address is the destination and never the link text (part 24); the base
-     template's footer block says why. #}
-  {% if repo_url %}
+     template's footer block says why. Fixed to the project's public home on
+     openCode - a fact of the product, not deployment configuration. #}
   <p>
-    {{ t("footer.source") }} <a href="{{ repo_url }}">{{ t("footer.source.link") }}</a>.
+    {{ t("footer.source") }} <a href="https://gitlab.opencode.de/Olajide/eingangslotse">{{ t("footer.source.link") }}</a>.
     {{ t("footer.license") }}
   </p>
-  {% else %}
-  <p>{{ m("hinweise.licence.unset") }}</p>
-  <p>{{ t("footer.license") }}</p>
-  {% endif %}
 </section>
 
 <section aria-labelledby="barriere-heading">

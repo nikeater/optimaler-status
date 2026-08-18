@@ -241,14 +241,12 @@
 
 {% block footer %}
 {# The address is the destination and never the link text (part 24); the base
-   template's footer block says why. #}
-{% if repo_url %}
+   template's footer block says why. The address itself is fixed to the
+   project's public home on openCode - a fact of the product, not deployment
+   configuration. #}
 <p>
-  {{ t("footer.source") }} <a href="{{ repo_url }}">{{ t("footer.source.link") }}</a>.
+  {{ t("footer.source") }} <a href="https://gitlab.opencode.de/Olajide/eingangslotse">{{ t("footer.source.link") }}</a>.
   {{ t("footer.license") }}
 </p>
-{% else %}
-<p>{{ t("footer.license") }}</p>
-{% endif %}
 <p>{{ m("footer.a11y") }}</p>
 {% endblock %}

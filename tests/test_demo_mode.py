@@ -479,7 +479,10 @@ def test_the_landing_page_introduces_the_product_and_the_instance(
     assert "Kein Modelltext" in page.text
     for href in ('href="/review"', 'href="/metrics"', 'href="/inbox"'):
         assert href in page.text, href
-    assert "https://example.invalid/repo" in page.text
+    # The source address is fixed to the project's public home; the environment
+    # variable no longer reaches any page.
+    assert 'href="https://gitlab.opencode.de/Olajide/eingangslotse"' in page.text
+    assert "https://example.invalid/repo" not in page.text
     # C-5: the demo role model is stated here too, not only inside the UI.
     assert review_view.PICKER_NOTE in page.text
     assert "EUPL-1.2" in page.text
@@ -489,9 +492,10 @@ def test_the_landing_page_falls_back_to_the_repo_placeholder() -> None:
     """An unset repo URL must render a visible placeholder, not an empty link."""
     view = landing_view.build_view(DemoPosture(enabled=True), gold_dir="corpus/gold/v4")
     assert view.repo_url == REPO_URL_PLACEHOLDER
-    # The PLACEHOLDER is never rendered as a link (part 16): a menu item or a
-    # footer pointing at github.com/OWNER/... is a broken link in the one place
-    # a reader looks for the code, so an unconfigured deployment shows none.
+    # The PLACEHOLDER is never rendered (part 16): a link to github.com/OWNER/
+    # ... would be broken in the one place a reader looks for the code. Since
+    # the source address became fixed, every deployment shows the openCode link
+    # instead - the placeholder still may not leak.
     assert REPO_URL_PLACEHOLDER not in landing_view.render_page(view)
     assert phrase(landing_view.INGEST_CLOSED_NOTE) in landing_view.render_page(view)
     gated = landing_view.build_view(

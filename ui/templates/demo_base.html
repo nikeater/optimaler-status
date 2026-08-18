@@ -68,19 +68,16 @@
         <p>{{ t("footer.real") }}</p>
         <p>{{ m("footer.no_message") }}</p>
         <p>{{ m("footer.a11y") }}</p>
-        {# THE ADDRESS IS THE DESTINATION, NEVER THE LINK TEXT (part 24). A
-           configured `EINGANGSLOTSE_REPO_URL` carries a hosting ACCOUNT in its
-           path, and an account namespace is a person's name - printing the
-           address as the anchor's text published the maintainer's name in the
-           footer of every page. The `href` is untouched. #}
-        {% if repo_url %}
+        {# THE ADDRESS IS THE DESTINATION, NEVER THE LINK TEXT (part 24). An
+           account namespace is a person's name - printing the address as the
+           anchor's text published the maintainer's name in the footer of
+           every page. The address itself is fixed to the project's public
+           home on openCode: a fact of the product, not deployment
+           configuration. #}
         <p>
-          {{ t("footer.source") }} <a href="{{ repo_url }}">{{ t("footer.source.link") }}</a>.
+          {{ t("footer.source") }} <a href="https://gitlab.opencode.de/Olajide/eingangslotse">{{ t("footer.source.link") }}</a>.
           {{ t("footer.license") }}
         </p>
-        {% else %}
-        <p>{{ t("footer.license") }}</p>
-        {% endif %}
         {% endblock %}
       </div>
     </div>
