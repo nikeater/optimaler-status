@@ -127,10 +127,12 @@ entering one** - nothing here needs a paid plan.
 3. Apply. The first build takes several minutes - it installs the dependencies
    and then runs `python -m eval.run` inside the image, so the build itself
    fails if the gate fails.
-4. When it is live, go to **Environment** and set
-   `EINGANGSLOTSE_REPO_URL` to `https://github.com/OWNER/eingangslotse`
-   (the blueprint ships the `OWNER` placeholder, and the landing page links to
-   it).
+4. **There is nothing to set for the source link any more.** It used to be
+   `EINGANGSLOTSE_REPO_URL`; since 2026-08-18 the address is fixed in the
+   templates, because where a project's source lives is a fact of the product
+   and not a property of whoever deployed it. The variable still appears in
+   `render.yaml` and in `engine/demo/mode.py`, it reaches no page, and it is a
+   cleanup candidate rather than a setting.
 5. **Do not set `EINGANGSLOTSE_INGEST_TOKEN`.** Its absence is the setting:
    with no token, `POST /ingest` is refused for everybody and the instance
    cannot receive a submission from anybody. Only set it if you have a reason
@@ -198,11 +200,137 @@ the frozen corpus on every boot, so nothing a visitor does survives a restart.
 
 ## Part 4. After it is public
 
-- Put the demo URL in the README where it says `DEMO URL` and push. The landing
-  page's repository link comes from `EINGANGSLOTSE_REPO_URL` on the host, not
-  from the README, so both places need doing.
+- The demo URL is written down in three places and they move together:
+  `README.md`, `landingURL` in `publiccode.yml`, and the header of
+  `docs/transparency-record.md`. It is
+  `https://eingangslotse-demo.onrender.com`.
 - Watch the first `gate` run to completion before telling anyone about the
   repository.
-- If you later publish on **openCode**, REUSE-style per-file license annotation
-  is the known refinement (ADR-006) and the published known-errors log per
-  release is the open half of compliance item P-12.
+- **openCode publication has happened**, and Part 5 is the section that matters
+  from here on: it carries the rule that a release goes to BOTH remotes. The
+  per-release known-errors log that was the open half of compliance item P-12 is
+  closed - `docs/known-errors/v0.1.0.md`, one snapshot per tag. REUSE-style
+  per-file license annotation remains the one known refinement (ADR-006).
+
+---
+
+## Part 5. Two remotes, and the rule that binds them
+
+This repository is published in two places, and they do not serve the same
+purpose:
+
+- **openCode** (`gitlab.opencode.de`) is the **public release channel**. It is
+  the platform this project was asked to publish on, its Softwareverzeichnis is
+  built by reading `publiccode.yml` out of each repository's root, and it is the
+  address the running site's source link points at.
+- **GitHub** is the **Render deploy source**. Render's free plan builds from a
+  GitHub repository and reads `render.yaml` there, so the demonstration instance
+  cannot move to openCode without changing hosts.
+
+Both remotes are configured locally, and neither carries a credential in its
+URL:
+
+```powershell
+git remote -v
+# opencode  https://gitlab.opencode.de/NAMESPACE/eingangslotse.git
+# origin    https://github.com/OWNER/eingangslotse.git
+```
+
+### The rule
+
+**Every release pushes to both.** A release that reaches only GitHub is a
+demonstration whose source cannot be found on the platform it was published
+for; a release that reaches only openCode is a published repository that no
+longer describes the instance people are clicking on. Neither remote is
+optional, and neither is a mirror of the other in any automated sense - there
+is no mirroring configured, and adding one would need a stored credential.
+
+Two mechanics that are not negotiable either:
+
+1. **Push a SHA, never a branch name.** `git push origin main` pushes whatever
+   `main` happens to point at, which during a build queue is somebody's
+   in-flight work. `git push origin <GATED-SHA>:refs/heads/main` pushes exactly
+   what was verified.
+2. **Push the GATED commit.** The gate in Part 0 is what makes the SHA
+   publishable. A commit that has not been through it has no business on either
+   remote.
+
+Order: **GitHub first** - it starts the Actions run and the Render deploy, which
+are the slow parts - then openCode.
+
+### The protection dance, for a push that is not a fast-forward
+
+GitLab protects `main` by default, and that protection blocks **force-pushes**
+only. An ordinary fast-forward therefore needs nothing special:
+
+```powershell
+git push opencode <GATED-SHA>:refs/heads/main
+```
+
+The sequence below is for the two cases that are not fast-forwards: the first
+publication, which overwrites the auto-init commit a new GitLab project is
+created with, and any later history rewrite. It is what the first publication
+actually ran, with an api-scoped token created for that push alone.
+
+```powershell
+# The token is created in the openCode UI (Access tokens, `api` scope), used
+# from the shell, and REVOKED when the push is done. It is never written into a
+# file in this repository - including into this one.
+$h    = @{ "PRIVATE-TOKEN" = $env:OPENCODE_TOKEN }
+$proj = "https://gitlab.opencode.de/api/v4/projects/NAMESPACE%2Feingangslotse"
+
+# 1. Allow a force push on the protected branch.
+Invoke-RestMethod -Method Patch -Headers $h `
+  -Uri "$proj/protected_branches/main?allow_force_push=true"
+
+# 2. Push EXACTLY the gated commit, by SHA. Not HEAD, not `main`.
+git push opencode <GATED-SHA>:refs/heads/main --force
+
+# 3. Restore the protection IMMEDIATELY. This is the step that gets forgotten,
+#    and a repository left force-pushable is the one thing this dance must not
+#    leave behind.
+Invoke-RestMethod -Method Patch -Headers $h `
+  -Uri "$proj/protected_branches/main?allow_force_push=false"
+
+# 4. Verify what LANDED, from the API rather than from the push output.
+(Invoke-RestMethod -Headers $h -Uri "$proj/repository/commits/main").id
+```
+
+Then look with your own eyes: the project is still **public**, the sidebar still
+says **EUPL-1.2**, and the Softwareverzeichnis entry has picked up
+`publiccode.yml` from the root.
+
+### Watch both pipelines, because they are not the same pipeline
+
+`.github/workflows/gate.yml` and `.gitlab-ci.yml` run the same commands out of
+`docs/BUILD.md`, but GitHub additionally builds the container image and smoke
+tests it, and the two runners differ in ways that have already cost a red
+pipeline: the first openCode run failed its clean-tree assertion because a pip
+cache had to live inside the project directory, which is a GitLab constraint
+GitHub does not have. Assume a first run on either platform tells you something
+about that platform, not about the commit.
+
+### Tagging a release
+
+The tag is the thing `CHANGELOG.md`, `docs/transparency-record.md` and
+`docs/known-errors/vX.Y.Z.md` all describe, so it goes on the same commit they
+were verified against, and it goes to both remotes:
+
+```powershell
+git tag -a v0.1.0 -m "EingangsLotse v0.1.0" <GATED-SHA>
+git push origin v0.1.0
+git push opencode v0.1.0
+```
+
+Before tagging, three things have to be true, and each is a file somebody has to
+have written rather than a box to tick:
+
+1. `CHANGELOG.md` has an entry for the version, dated the day the tag is
+   applied.
+2. `docs/transparency-record.md` describes the configuration versions the tagged
+   commit actually carries.
+3. `docs/known-errors/vX.Y.Z.md` exists as a snapshot of `docs/KNOWN-ERRORS.md`
+   taken at that commit, and is never edited afterwards.
+
+`publiccode.yml` carries `softwareVersion` and `releaseDate`, so it moves with
+the tag as well - openCode's Softwareverzeichnis reads them.

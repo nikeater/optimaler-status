@@ -1,0 +1,256 @@
+# publiccode.yml - the metadata standard openCode reads to build this
+# repository's entry in its Softwareverzeichnis. It must sit at the repository
+# root and be spelled exactly this way; only one per repository is read.
+#
+# STANDARD VERSION. `publiccodeYmlVersion` is "0.4", the generation openCode's
+# own guide documents and its editor validates against. The upstream standard
+# has since moved on; every key used below exists unchanged in both generations,
+# and none of the keys the newer one deprecates appears here (genericName,
+# monochromeLogo, inputTypes, outputTypes, legal/repoOwner, legal/authorsFile,
+# and the country-specific `it` section are all absent). The mandatory set is
+# filled to the OLDER, stricter rule - categories and releaseDate included -
+# because a file that satisfies the strict reading satisfies the relaxed one
+# too.
+#
+# EVERY CLAIM BELOW IS CHECKABLE IN THIS REPOSITORY. What is deliberately NOT
+# here matters as much: no `usedBy`, because no public administration uses this
+# system; no `roadmap`, because there is no published one; no `logo` and no
+# `screenshots`, because the repository ships no image files. What the software
+# does not do is in README.md's own section, the shipped configuration versions
+# and thresholds are in docs/transparency-record.md, and the failure modes that
+# are known and unfixed are in docs/KNOWN-ERRORS.md.
+
+publiccodeYmlVersion: "0.4"
+
+name: EingangsLotse
+url: "https://gitlab.opencode.de/Olajide/eingangslotse"
+# The public demonstration instance. It is the landing page of the software in
+# the sense the standard means: the page a human lands on to see the thing run.
+# Synthetic data only, and it accepts no submissions from outside.
+landingURL: "https://eingangslotse-demo.onrender.com"
+
+# The first release. `softwareVersion` is the string pyproject.toml already
+# declares; `releaseDate` is the day the v0.1.0 tag is applied, and if the tag
+# moves this line moves with it.
+softwareVersion: "0.1.0"
+releaseDate: "2026-08-18"
+
+# A web application: FastAPI with server-rendered templates, no build step and
+# no external fetch of any kind. Linux is the python:3.13-slim image the
+# Dockerfile builds and the runner both CI pipelines use; Windows is the
+# development machine docs/BUILD.md records, wheel caveats and all. macOS is not
+# listed because nobody ran it there.
+platforms:
+  - web
+  - linux
+  - windows
+
+softwareType: standalone/web
+
+categories:
+  - workflow-management
+  - document-management
+  - business-process-management
+
+# HONEST STATUS, and the reason it is not one notch higher. The system runs end
+# to end, is publicly demonstrable and holds four gates on every commit - but it
+# has no authentication, its vault's development backend is plaintext JSONL,
+# there is no database, and every number it reports was measured over a
+# synthetic corpus. That is a prototype, not something ready to be piloted on
+# real data, and README.md lists all of it under "What it does not do".
+developmentStatus: development
+
+intendedAudience:
+  countries:
+    - de
+  scope:
+    - government
+    - welfare
+
+description:
+  de:
+    shortDescription: >-
+      Eingangsassistenz für Massenverfahren der öffentlichen Verwaltung:
+      bereitet Entscheidungen vor und trifft keine.
+    longDescription: |
+      EingangsLotse liest einen eingehenden Vorgang - ein strukturiertes
+      Formular oder ein freies Anschreiben, auch als Scan - und bereitet die
+      Entscheidung darüber vor, ob ein Mensch ihn ansehen muss. Die
+      Entscheidung selbst trifft das System nie.
+
+      **Zwei Ebenen, und nur eine entscheidet.** Die Beweisebene darf
+      probabilistisch sein: Extraktion, ein Zero-Shot-Klassifikator für die
+      Zuordnung, ein Anomalie-Scorer. Die Entscheidungsebene ist eine
+      versionierte Entscheidungstabelle, die ausschließlich belegte Werte
+      liest. Gleiche Belege und gleiche Konfiguration ergeben dieselbe
+      Entscheidung, jedes Mal.
+
+      **Das Ventil öffnet nur in eine Richtung.** Unsicherheit kann Aufsicht
+      hinzufügen und nie entfernen. Das ist keine Verabredung, sondern eine
+      Eigenschaft, die bei jedem Commit gegen die echte Entscheidungstabelle
+      und die 101 Belegdatensätze des eingefrorenen Goldbestands nachgewiesen
+      wird.
+
+      **Identitätsdaten werden beim Eingang versiegelt**, bevor überhaupt ein
+      Journaleintrag entsteht. Sie gehen in einen Tresor, die Arbeitskopie
+      trägt Platzhalter aus einem reservierten Alphabet, und ein Nachlauf
+      rechnet nach, ob die Arbeitskopie sauber ist, statt es zu behaupten.
+      Wieder eingesetzt werden die Daten genau einmal, beim Rendern eines
+      Schreibens, in dem einen Modul, das den Tresor liest.
+
+      **Kein maschinell geschriebener Satz erreicht eine antragstellende
+      Person.** Benachrichtigungen entstehen aus Vorlagen in versionierter
+      Konfiguration, vorbereitete Bescheide warten auf einen Menschen. Ein
+      Sprachmodell darf lesen; schreiben darf es nie.
+
+      **Das Journal ist die einzige Wahrheit.** Es ist append-only und
+      versionsgestempelt; Warteschlangen, Kennzahlen und Fallansicht sind
+      Faltungen darüber. Eine Korrektur hängt an, eine zweite Bestätigung wird
+      abgelehnt statt überschrieben.
+
+      Konfiguriert sind drei Verfahren der gesetzlichen Rentenversicherung:
+      Altersrente, Erwerbsminderungsrente und die Feststellung des
+      Erwerbsstatus nach par. 7a SGB IV. Das letzte führt bewusst keine
+      Freigabekriterien: seine Entscheidung ist eine Gesamtwürdigung, und ein
+      formal vollständiger Antrag endet dort planmäßig in der höchsten
+      Prüfstufe.
+
+      **Der Stand ist ein Prototyp mit vollständiger Strecke, kein
+      Produktivsystem.** Es gibt keine Authentifizierung, keine Datenbank, das
+      Tresor-Backend für die Entwicklung schreibt Klartext-JSONL, und jede
+      gemessene Zahl stammt aus einem synthetischen Bestand. Die öffentliche
+      Demo-Instanz nimmt keine Einreichungen von außen an.
+    features:
+      - Zwei getrennte Ebenen - probabilistische Belege, deterministische Entscheidung
+      - Versionierte Entscheidungstabelle statt Modellurteil
+      - Einwegventil - Unsicherheit fügt Aufsicht hinzu und entfernt nie welche
+      - Versiegelung der Identitätsdaten beim Eingang, mit nachrechnender Kontrolle
+      - Doppelte Sicherung jedes ausgelesenen Werts - wörtliches Zitat und Zeichenoffset
+      - Vollständigkeitsprüfung gegen die Anforderungen des Verfahrens
+      - Regelbasierte Zuordnung zu Fachreferaten mit ausdrücklicher Konfliktschlichtung
+      - Append-only-Journal als einzige Wahrheit, Kennzahlen als Faltung darüber
+      - Anomalie-Scorer im Nur-Protokoll-Betrieb, mit lesbarer Begründung je Merkmal
+      - Benachrichtigungen und Bescheidentwürfe aus versionierten Vorlagen
+      - Bearbeitungsoberfläche für Fachkräfte - bestätigen, umleiten, eskalieren
+      - Zweisprachige Oberfläche, serverseitig umgeschaltet, ohne JavaScript
+      - Geführter Rundgang und eine vollständige Demo-Strecke über synthetischen Daten
+      - Vier Gütezahlen als Gates in beiden CI-Pipelines
+    documentation: "https://gitlab.opencode.de/Olajide/eingangslotse/-/blob/main/docs/technical-spec.md"
+    apiDocumentation: "https://eingangslotse-demo.onrender.com/docs"
+  en:
+    shortDescription: >-
+      Intake assistant for German public-administration mass procedures: it
+      prepares decisions and never takes one.
+    longDescription: |
+      EingangsLotse reads an inbound item - a structured form or a free-text
+      letter, scanned or born digital - and prepares the decision about whether
+      a human has to look at it. It never takes that decision itself.
+
+      **Two planes, and only one of them decides.** The evidence plane is
+      allowed to be probabilistic: extraction, a zero-shot unit classifier, an
+      anomaly scorer. The decision plane is a versioned decision table that
+      reads only what is proven. Same evidence plus same configuration equals
+      the same decision, every time.
+
+      **The valve only opens one way.** Uncertainty can add oversight and can
+      never remove it. That is not a convention: it is proved on every commit
+      against the real decision table and the 101 evidence records of the
+      frozen gold set.
+
+      **Identity is sealed at ingest**, before a journal event exists.
+      Identity-classed fields go into a vault and the working copy carries
+      randomized placeholders from a reserved alphabet; a post-redaction sweep
+      computes whether the item is clean instead of asserting it. Re-hydration
+      happens once, at render time, in the one module that reads the vault.
+
+      **No model-written sentence reaches a citizen.** Notifications render
+      from templates in versioned configuration and prepared decisions wait for
+      a human. A language model may read; it may never write to an applicant.
+
+      **The journal is the only truth.** Every event is append-only and
+      version-stamped; queues, metrics and the case view are folds over it. A
+      correction appends, and a second confirmation is refused rather than
+      overwritten.
+
+      Three statutory-pension procedures are configured: old-age pension,
+      reduced-earning-capacity pension, and the employment-status determination
+      under par. 7a SGB IV. The last one deliberately ships no clear-cut
+      criteria, because its decision is a statutory overall appraisal: a
+      formally complete application still ends at the highest review tier, by
+      design.
+
+      **This is a prototype with a complete pipeline, not a production
+      system.** There is no authentication, no database, the vault's
+      development backend writes plaintext JSONL, and every measured number
+      comes from a synthetic corpus. The public demonstration instance accepts
+      no submissions from outside.
+    features:
+      - Two separated planes - probabilistic evidence, deterministic decision
+      - A versioned decision table instead of a model verdict
+      - One-way valve - uncertainty adds oversight and never removes it
+      - Identity sealed at ingest, with a sweep that computes cleanliness
+      - Double lock on every extracted value - verbatim quote and character offset
+      - Completeness checked against the procedure's own requirements
+      - Rule-based routing to organisational units with explicit arbitration
+      - Append-only journal as the only truth, metrics as folds over it
+      - Anomaly scorer in log-only mode, with a readable feature-level reason
+      - Notifications and prepared decisions from versioned templates
+      - Caseworker review surface - confirm, re-route, escalate
+      - Bilingual interface, switched server-side, with no JavaScript
+      - A guided tour and a full demonstration journey over synthetic data
+      - Four measured gates enforced by both CI pipelines
+    documentation: "https://gitlab.opencode.de/Olajide/eingangslotse/-/blob/main/docs/technical-spec.md"
+    apiDocumentation: "https://eingangslotse-demo.onrender.com/docs"
+
+legal:
+  # ADR-006. LICENSE is the official English text of the EUPL-1.2, fetched
+  # verbatim from the European Commission and not retyped; every official
+  # language version is equally authoritative.
+  license: EUPL-1.2
+  # The same collective form pyproject.toml's `authors` field carries. This
+  # project publishes no member's name.
+  mainCopyrightOwner: EingangsLotse project
+
+maintenance:
+  # Volunteer-maintained, with no commercial contract and no institutional
+  # owner behind it. Contributions are accepted under the same licence with no
+  # CLA (docs/CONTRIBUTING.md).
+  type: community
+  contacts:
+    # The standard asks for a physical person here. This project publishes no
+    # member's name, so the collective form stands in - the same one
+    # pyproject.toml uses. The repository's issue tracker on openCode is the
+    # working contact channel.
+    - name: EingangsLotse project
+
+localisation:
+  # The interface is genuinely bilingual: one server-side phrase table, a
+  # language switch that sets a cookie and redirects, and no JavaScript
+  # involved. Visitor-facing pages are translated in full; the caseworker
+  # screens stay German in both settings and say so, because half-translated
+  # administrative vocabulary is less usable than the German.
+  localisationReady: true
+  availableLanguages:
+    - de
+    - en
+
+dependsOn:
+  open:
+    # pyproject.toml pins requires-python >= 3.12. The container image, both CI
+    # pipelines and the development machine all run 3.13, so that is the
+    # version the pins are actually exercised against.
+    - name: Python
+      versionMin: "3.12"
+      optional: false
+    # The alternative to a virtual environment: `docker compose up --build`
+    # builds one slim image with core dependencies only, and the build runs the
+    # evaluation, so an image that cannot pass its own gate is never produced.
+    - name: Docker
+      optional: true
+    # The two model-backed extras, [redact] and [classify]. Both are optional
+    # by design and no gate depends on either: the redaction recall gate is met
+    # by the deterministic recognizers alone. See docs/BUILD.md.
+    - name: presidio-analyzer
+      optional: true
+    - name: sentence-transformers
+      optional: true

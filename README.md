@@ -7,20 +7,31 @@ value against the document it came from, and then lets a deterministic,
 versioned decision table decide whether a human has to look at it. Anything the
 machine is unsure about moves toward a caseworker; nothing moves away from one.
 
-Built as a complete S1-S10 sequence and measured on a frozen synthetic corpus
-of 101 items: **1294 tests, 98.91% coverage over the gated packages, four eval
-gates green, zero false clears.**
+Built end to end - ingest and sealing, text layer, extraction, evidence, the
+decision plane, notifications, drafting, review - and measured on a frozen
+synthetic corpus of 101 items: **1613 tests, 99.01% coverage over the gated
+packages, four eval gates green, zero false clears.**
 
-> **Live demo:** `DEMO URL` - a public instance over synthetic data only. Start
-> at **`/demo/rundgang`**, the guided tour: the whole system from the first
-> submission to the closed loop in six steps, each one linking to the page
-> where it actually happens. The state resets on every restart. On a free plan
-> the first load after an idle period can take about a minute.
+> **Live demo: <https://eingangslotse-demo.onrender.com>** - a public instance
+> over synthetic data only, which accepts no submissions from outside. Start at
+> **[`/demo/rundgang`](https://eingangslotse-demo.onrender.com/demo/rundgang)**,
+> the guided tour: the whole system from the first submission to the closed loop
+> in six steps, each one linking to the page where it actually happens. The
+> state resets on every restart. On a free plan the first load after an idle
+> period can take about a minute.
 
 Licensed under the [EUPL-1.2](#license). Contracts in `schemas/`,
 agency-editable policy in `config/`, decisions in
 [`docs/adr/`](docs/adr/), the whole system in
 [`docs/technical-spec.md`](docs/technical-spec.md).
+
+**This release is v0.1.0**, and three documents say what that means rather than
+leaving it to be inferred: [`CHANGELOG.md`](CHANGELOG.md) is what it contains,
+[`docs/transparency-record.md`](docs/transparency-record.md) is what it actually
+ships - every configuration version, every threshold, and where each number came
+from - and [`docs/known-errors/v0.1.0.md`](docs/known-errors/v0.1.0.md) is what
+was known to be broken on the day it shipped. [`publiccode.yml`](publiccode.yml)
+at the root is the openCode software-directory metadata.
 
 ---
 
@@ -81,12 +92,25 @@ GATES - the command exits non-zero if any of them moves.
 | Prepared drafts | 60, 0 unresolved tokens | 160 tokens re-hydrated |
 | Anomaly scorer | 15 / 101 flagged at 0.86 | log-only; nothing it produces can lower a tier |
 | Review queues | 101 open over 7 queues | 5 unrouted to central clearing |
-| Tests | 1294 passing | 98.91% coverage over the gated packages |
+| Tests | 1613 passing | 99.01% coverage over the gated packages |
+
+Every number in that table, plus the configuration versions and thresholds it
+was measured under, is traced to its source in
+[`docs/transparency-record.md`](docs/transparency-record.md).
 
 The redaction recall is the DETERMINISTIC number: it is 1.000 without the
 optional NER model, which is why no gate in this project depends on which
 wheels a machine has. The same rule holds for the classifier's embedding model
 and for the live LLM extractor - neither is ever loaded by a gate.
+
+**Both platforms run that gate on every push.**
+[`.gitlab-ci.yml`](.gitlab-ci.yml) runs it on openCode and
+[`.github/workflows/gate.yml`](.github/workflows/gate.yml) on GitHub, from the
+same command list in [`docs/BUILD.md`](docs/BUILD.md): tests with the coverage
+floor, ruff, mypy, a byte-identical rebuild of all four gold corpora and the PII
+golden set, the four eval gates, a re-export of the JSON Schema artifacts, and a
+clean-tree assertion. The GitHub run also builds the container image and smoke
+tests it.
 
 ## Quickstart
 
@@ -97,16 +121,31 @@ python -m venv .venv
 . .venv/bin/activate          # Windows: .\.venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
 
-python -m pytest              # 1294 tests
+python -m pytest              # 1613 tests
 python -m eval.run            # the four gates, over frozen gold v4
 python -m uvicorn api.app:app --reload
 ```
 
-Then `http://127.0.0.1:8000/review` for the caseworker surface,
-`/metrics` for the numbers, `/inbox` for what an applicant would have received,
-`/docs` for the OpenAPI page. For the guided tour, set
-`EINGANGSLOTSE_DEMO_MODE=1` and `EINGANGSLOTSE_INGEST_TOKEN` to any non-empty
-string and start at `/demo/rundgang`.
+Then `http://127.0.0.1:8000/review` for the caseworker surface, `/metrics` for
+the numbers, `/inbox` for what an applicant would have received, and `/docs` for
+the OpenAPI page.
+
+**The visitor side of the site is behind a switch, and `/` is part of it.**
+Demo mode is a deployment posture, default OFF: with the flag unset, `GET /` is
+not in the route table at all, and `/hinweise` and every `/demo` page answer 404
+([ADR-027](docs/adr/ADR-027-demo-posture-and-reset-by-restart.md)). Set the flag
+and the landing page, the synthetic-data banner and the ingest gate arm
+together:
+
+```bash
+export EINGANGSLOTSE_DEMO_MODE=1      # PowerShell: $env:EINGANGSLOTSE_DEMO_MODE = "1"
+python -m uvicorn api.app:app --reload
+```
+
+The guided tour at `/demo/rundgang` is walkable with nothing else set. Only
+SUBMITTING needs `EINGANGSLOTSE_INGEST_TOKEN` set to a non-empty string as well;
+the hosted demo deliberately runs without one, which is precisely what makes
+`POST /ingest` refuse everybody there.
 
 ### With Docker
 
@@ -128,8 +167,8 @@ schemas/    the contracts. Single source of truth, exported as JSON Schema
 engine/     ingest and sealing, text layer, extraction, evidence, the
             decision plane, notifications, drafting, the shadow scorer,
             the review actions, the demo posture
-api/        FastAPI: /ingest, /review, /metrics, /inbox, /drafts, and the
-            demo-only /demo journey
+api/        FastAPI: /ingest, /review, /metrics, /inbox, /cases/{id},
+            /drafts/{id}, and the demo-only /demo journey
 config/     what an agency edits: taxonomy, routing rules, requirements,
             decision table, thresholds, templates. Versioned, and a frozen
             version cannot change without a supersession
@@ -169,9 +208,12 @@ decorative. Both rules are enforced by a test that greps every stylesheet
 rather than by anybody remembering them.
 
 Three procedures are configured (Altersrente, Erwerbsminderungsrente, and the
-Statusfeststellung under par. 7a SGB IV). The last of them ships no clear-cut
-criteria at all, because its decision is a statutory Gesamtwuerdigung: a
-formally complete application still ends at tier 3, by design.
+Feststellung des Erwerbsstatus under par. 7a SGB IV). The last of them ships no
+clear-cut criteria at all, because its decision is a statutory
+Gesamtwuerdigung: a formally complete application still ends at tier 3, by
+design. It is also the procedure the demonstration journey walks, all four
+personas and both parties, because a system that only looks good on the easy
+procedure has not been shown.
 
 ## The guided showcase
 
@@ -184,20 +226,28 @@ frozen gold set, so the seven stages of the glass pipeline are walkable before
 you have submitted anything - including on an instance that accepts no
 submissions at all.
 
-Before the tour there is `/`, which opens with the pipeline told as a picture:
-five stages on a rail, a sealed envelope travelling between them, and one
-sentence per stage that fades in with it. It is one inline SVG, one 16-second
+Before the tour there is `/`, whose headline names the procedure the
+demonstration walks rather than the software category, and which opens with the
+pipeline told as a picture: five stages on a rail, a sealed envelope travelling
+between them, and one sentence per stage that fades in with it. It is one inline SVG, one 16-second
 CSS loop and zero JavaScript; the captions are real text in the document rather
 than glyphs in the drawing, there is a checkbox above the figure that stops the
 loop, and `prefers-reduced-motion` reaches the same still frame without being
 asked.
 
 With `EINGANGSLOTSE_DEMO_MODE=1` and an ingest token set, `/demo/antrag` opens
-a three-phase journey that is the architecture told as a story. **Phase 1:** you
-pick one of four unmistakably fictional applicants, edit or deliberately break
-their prefilled application (delete the Versicherungsnummer, pick a Rentenbeginn
-twenty years out in the calendar, flip `auslandsbezug` to `ja`), and send it as
-a form or as a letter. The form asks the way an administrative form asks -
+a three-phase journey that is the architecture told as a story. All four
+personas file the same procedure - the Feststellung des Erwerbsstatus under par.
+7a SGB IV - so the journey walks one procedure end to end instead of sampling
+three ([ADR-035](docs/adr/ADR-035-one-procedure-end-to-end-and-hints-that-can-be-carried-out.md)).
+**Phase 1:** you pick one of the four unmistakably fictional applicants, edit or
+deliberately break their prefilled application, and send it as a form or as a
+letter. The page names five things to try and says what each one will do: delete
+the Versicherungsnummer and a gap opens with the Nachforderung the procedure
+configuration itself writes; set the Geburtsdatum to 1902 and the cross-check
+against the insurance number fires without anything being unsealed; put the
+Beginn der Taetigkeit in 2035 and the shadow scorer marks it and says why, in
+words. The form asks the way an administrative form asks -
 Nachname before Vorname, native date pickers, dropdowns whose options are read
 from the procedure configuration's own allowed values - and what it submits is
 byte for byte what it always submitted. **Phase 2:** `/demo/case/{id}/pipeline` narrates the seven stages that
@@ -215,6 +265,19 @@ copy lives, is in
 [ADR-029](docs/adr/ADR-029-demo-journey-and-working-copy-in-ram.md); the
 commands are in [`docs/BUILD.md`](docs/BUILD.md).
 
+**The loop has two parties, because par. 7a SGB IV does.** A Statusfeststellung
+is decided about two people, so the pipeline page offers the Anhoerung letter
+that goes to the other party, and `/demo/gegenpartei` is where that party
+answers - prefilled to contradict the application, which is the interesting
+case. The statement is not a note attached to the first case: it travels the one
+real ingest path as a case of its own, sealed, redacted, span-verified, routed
+and journaled like anything else, and it lands at tier 2 with two gaps because
+minimising what the form asks for costs something and the demo shows the cost.
+The two cases are correlated by a drawn 96-bit token held in a RAM compartment
+with a TTL - never derived from the case data, never in a journal payload, and
+gone on the next restart
+([ADR-036](docs/adr/ADR-036-the-two-party-loop-is-demo-scoped-and-correlated-by-a-drawn-token.md)).
+
 ## What it does not do
 
 Stated here rather than in a footnote, because a system that claims to be
@@ -227,9 +290,13 @@ trustworthy has to be honest about its edges.
   docstring. Production is encrypted at rest; the requirements are in
   [`docs/vault-dpia-input.md`](docs/vault-dpia-input.md).
 - **An OCR-mangled identifier can evade the detector union entirely.** That is
-  measured, documented and not fixable with a threshold
-  ([`docs/KNOWN-ERRORS.md`](docs/KNOWN-ERRORS.md)).
-- **The accessibility document is a self-assessment**, not a BITV 2.0 audit.
+  measured, documented and not fixable with a threshold. It is one of eight
+  known errors, each with what it costs and what would actually fix it: the
+  living list is [`docs/KNOWN-ERRORS.md`](docs/KNOWN-ERRORS.md) and the snapshot
+  taken for this release is
+  [`docs/known-errors/v0.1.0.md`](docs/known-errors/v0.1.0.md).
+- **The accessibility document is a self-assessment**, not a BITV 2.0 audit, and
+  two focus stops on the intake page draw no ring at all (KE-8).
 - **The corpus is synthetic.** Every number above is a measurement over
   generated data, and generated data is easier than the world.
 - No database yet: the stores are in-memory or JSONL behind a protocol that
@@ -259,7 +326,8 @@ language versions are published by the Commission at
 Article 5's compatibility clause lists the copyleft licenses a derivative may
 be distributed under, and the Appendix in `LICENSE` carries that list.
 
-Per-file license headers are deliberately absent; REUSE-style annotation is
-scoped to a possible openCode release (ADR-006). Contributions are accepted
+Per-file license headers are deliberately absent; REUSE-style annotation stays
+the one known refinement (ADR-006), and it is the only openCode-facing item left
+open now that the repository is published there. Contributions are accepted
 under the same license and there is no CLA - see
 [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md).
