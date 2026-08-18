@@ -1250,13 +1250,13 @@ TABLE: dict[str, tuple[str, str]] = {
         "the field exactly as typing would.",
     ),
     "intake.required.note": (
-        "Alles, was hier schon ausgefüllt ist, ist ein Pflichtfeld: leeren Sie "
-        "eines und schicken Sie ab, markiert Ihr Browser es rot und sendet "
+        "Jedes Feld, das hier schon ausgefüllt ist, ist ein Pflichtfeld: leeren "
+        "Sie eines und schicken Sie ab, markiert Ihr Browser es rot und sendet "
         "nichts. Ausgenommen sind die drei Felder, deren Löschung die Hinweise "
         "über dem Formular vorschlagen - Versicherungsnummer, Auftraggeber und "
         "Vorname -, denn sonst würde diese Seite empfehlen, was sie selbst "
         "blockiert. Diese Prüfung läuft im Browser und ohne JavaScript; die "
-        "Vollständigkeitsprüfung der Anlage kommt danach und getrennt davon.",
+        "Vollständigkeitsprüfung der Anlage läuft danach und unabhängig davon.",
         "Every field already filled in here is required: empty one and hit "
         "submit, and your browser marks it red and sends nothing. The "
         "exceptions are the three fields the suggestions above the form ask "
@@ -1796,7 +1796,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "Statement received",
     ),
     "pipeline.statement.arrived.body": (
-        "Am {at} ist die Stellungnahme eingegangen. Sie ist kein Anhang an "
+        "Am {at} ist die Stellungnahme eingegangen. Sie ist kein Anhang zu "
         "diesem Vorgang, sondern ein eigener Eingang: derselbe Weg, dieselbe "
         "Versiegelung, dieselbe Vollständigkeitsprüfung, dieselbe "
         "Warteschlange. Die Clearingstelle hat damit zwei versiegelte "
@@ -1826,10 +1826,10 @@ TABLE: dict[str, tuple[str, str]] = {
     ),
     "pipeline.statement.origin.body": (
         "Dieser Vorgang ist die Stellungnahme des Auftraggebers zu einem "
-        "anderen Vorgang. Er ist deswegen kein Sonderfall: er wurde versiegelt, "
-        "geprüft und zugeordnet wie jeder andere Eingang, und die Verbindung "
-        "zwischen den beiden ist eine Anzeige - kein Journaleintrag und keine "
-        "Regel, die irgendetwas steuert.",
+        "anderen Vorgang. Das macht ihn zu keinem Sonderfall: er wurde "
+        "versiegelt, geprüft und zugeordnet wie jeder andere Eingang, und die "
+        "Verbindung zwischen den beiden ist eine Anzeige - kein Journaleintrag "
+        "und keine Regel, die irgendetwas steuert.",
         "This case is the client's statement on another case. That does not "
         "make it a special case: it was sealed, checked and routed like every "
         "other incoming case, and the link between the two is a display - not "
