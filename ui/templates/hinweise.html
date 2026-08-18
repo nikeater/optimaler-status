@@ -20,11 +20,20 @@
    and a notice that vanishes at the moment you follow it would read as having
    been dismissed rather than expanded. #}
 {% block ribbon %}{% include "_demo_ribbon.html" %}{% endblock %}
+
+{# THE LEAD IS THE PAGE'S LEAD, SO IT SITS IN THE PAGE HEAD (part 24). It used
+   to be the first paragraph inside the section headed "Der vollstaendige
+   Hinweis", where it read as an introduction to the deployment's banner rather
+   than to the page - it names five things, and only one of them is in that
+   section. Same class and same position as the inbox's lead, which is the one
+   other page that carries one. #}
+{% block hero %}
+<p class="lead">{{ t("hinweise.lead") }}</p>
+{% endblock %}
 {% block content %}
 
 <section aria-labelledby="einleitung-heading">
   <h2 id="einleitung-heading">{{ t("hinweise.banner.heading") }}</h2>
-  <p class="lead">{{ t("hinweise.lead") }}</p>
   <p class="notice">{{ demo.banner }}</p>
   <p class="muted">{{ t("hinweise.banner.note") }}</p>
 </section>

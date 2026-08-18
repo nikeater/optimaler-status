@@ -38,9 +38,19 @@
 {% block hero %}
 <div class="hero">
   <p class="hero-lead">{{ t("landing.lead") }}</p>
+  {# THE PAINTED BUTTON IS THE ONE THE LEAD ASKS FOR (part 24). Part 23 gave
+     this page a lead that says "stellen Sie testweise einen Antrag" and made
+     the intake the one painted card in the section below; the hero button was
+     the last piece still pointing at the tour, so the page asked for one thing
+     in words and offered a different one in colour. A first-time reader
+     resolves that by doing neither.
+
+     The tour did not lose its place - it is the secondary button, one tab stop
+     later, and it now carries the ten minutes its own lead has always quoted,
+     which is the fact that actually decides between two buttons. #}
   <p class="hero-actions">
-    <a class="cta" href="/demo/rundgang">{{ t("landing.cta.tour") }}</a>
-    <a class="cta cta-secondary" href="/demo/antrag">{{ t("landing.cta.intake") }}</a>
+    <a class="cta" href="/demo/antrag">{{ t("landing.cta.intake") }}</a>
+    <a class="cta cta-secondary" href="/demo/rundgang">{{ t("landing.cta.tour") }}</a>
   </p>
   <figure class="hero-figure">
     {# WCAG 2.2.2: the loop starts on its own, runs longer than five seconds
@@ -207,14 +217,20 @@
   </ul>
 </section>
 
+{# THE PICKER NOTE IS A BULLET IN THE LIST IT BELONGS TO (part 24). It used to
+   stand as a tinted notice ABOVE the heading's list, which made the first thing
+   this section said an answer about a unit picker the reader has not met yet -
+   there is none on this page. It is the same class of fact as the four bullets
+   under it ("what this instance is not"), it is unchanged word for word, and
+   `api/review.py::PICKER_NOTE` still finds it here. #}
 <section aria-labelledby="demo-heading">
   <h2 id="demo-heading">{{ t("landing.instance.heading") }}</h2>
-  <p class="notice">{{ t("picker.note") }}</p>
   <ul>
     <li>{{ m("landing.instance.synthetic", gold_dir=view.gold_dir) }}</li>
     <li>{{ t(view.ingest_note_key) }}</li>
     <li>{{ t("landing.instance.reset") }}</li>
     <li>{{ m("landing.instance.storage") }}</li>
+    <li>{{ t("picker.note") }}</li>
   </ul>
   <p>
     {{ t("landing.instance.more") }}

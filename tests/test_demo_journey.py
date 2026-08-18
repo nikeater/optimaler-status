@@ -1635,8 +1635,10 @@ def test_the_landing_page_opens_the_tour_and_reflows_with_it(
     """
     client = build_client(config, monkeypatch=monkeypatch)
     page = client.get("/").text
-    # The tour is the FIRST thing offered, ahead of the individual pages: a
-    # visitor with ninety seconds should spend them walking the system.
+    # Both routes into the demo are offered above the individual pages: a
+    # visitor with ninety seconds should spend them inside the system rather
+    # than on the metrics table. Which of the two is PAINTED is part 24's
+    # decision and is asserted in its own test, not here.
     assert 'href="/demo/rundgang"' in page
     assert page.index('href="/demo/rundgang"') < page.index('href="/metrics"')
     assert 'href="/demo/antrag"' in page
@@ -2144,13 +2146,23 @@ def test_the_tour_is_offered_once_and_the_start_section_is_its_cards(
     left in the section is its heading and the five cards, so the cards moved
     up a level with the line that used to sit between them - a page that skips
     from `h2` to `h4` is a page a screen reader reports a missing level in.
+
+    WHICH of the two hero buttons is painted moved in part 24, and this is the
+    assertion that records it. The lead this page has carried since part 23 asks
+    for a test application; the painted card in the section below is the intake;
+    so the primary control is the intake and the tour is the secondary one. The
+    tour is still offered exactly twice - once as a button, once as a menu item.
     """
     client = build_client(config, monkeypatch=monkeypatch)
     page = client.get("/").text
     # One button in the hero and the route in the menu, which is navigation
     # rather than a call to action. The second button in the section is gone.
     assert page.count('href="/demo/rundgang"') == 2
-    assert page.count('<a class="cta" href="/demo/rundgang">') == 1
+    assert page.count('<a class="cta cta-secondary" href="/demo/rundgang">') == 1
+    assert page.count('<a class="cta" href="/demo/antrag">') == 1
+    assert page.index('<a class="cta" href="/demo/antrag">') < page.index(
+        '<a class="cta cta-secondary" href="/demo/rundgang">'
+    ), "the primary control is the one the lead asks for"
     assert phrase("landing.start.heading") in page
     assert '<section aria-labelledby="start-heading">' in page
     assert '<h2 id="start-heading">' in page

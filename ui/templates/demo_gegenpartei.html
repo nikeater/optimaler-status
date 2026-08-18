@@ -20,10 +20,19 @@
 {% block heading %}{{ t("gegenpartei.headline") }}{% endblock %}
 {% block content %}
 
+{# THE INGEST NOTE ONLY WHERE IT SAYS SOMETHING (part 24). The open variant is
+   the intake's sentence about how a form gets its token, and the paragraph
+   directly above it has just said that what you send here runs through the same
+   intake - so on this page it repeated the point in different words and called
+   a Stellungnahme "Ihr Antrag". The CLOSED variant is the opposite: it is the
+   only thing on the page that explains where the submit button went, so it
+   stays and it stays a notice. #}
 <section aria-labelledby="worum-heading">
   <h2 id="worum-heading">{{ t("gegenpartei.intro.heading") }}</h2>
   <p>{{ t("gegenpartei.intro.body") }}</p>
-  <p>{{ t(view.ingest_note_key) }}</p>
+  {% if not view.ingest_open %}
+  <p class="notice">{{ t(view.ingest_note_key) }}</p>
+  {% endif %}
 </section>
 
 {% if not view.known %}
@@ -60,9 +69,13 @@
     <p>{{ paragraph }}</p>
     {% endfor %}
   </div>
+  {# The link text is the destination, not the case id (2.4.4). A bare
+     `case-demo-...` beside a label says where it goes only to somebody who
+     reads the label as part of the link, which is exactly what a reader
+     tabbing through links does not do. #}
   <p>
-    {{ t("gegenpartei.answered.origin") }}:
-    <a href="{{ view.origin_href }}">{{ view.link.case_id }}</a>
+    <a href="{{ view.origin_href }}">{{ t("gegenpartei.answered.origin") }}</a>
+    (<code>{{ view.link.case_id }}</code>)
   </p>
 </section>
 
