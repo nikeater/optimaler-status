@@ -132,7 +132,7 @@
     {{ "%.3f"|format(view.redaction.get("overall_recall", 0.0)) }}.
     NER-Extra:
     {{ "installiert" if view.redaction.get("ner_installed") else "nicht installiert" }}.
-    Precision wird je Art berichtet und NICHT gegated: Ueberredaktion kostet
+    Precision wird je Art berichtet und NICHT gegated: Überredaktion kostet
     Nutzbarkeit, Unterredaktion kostet die Daten einer Person.
   </p>
   <div class="scroll-x">
@@ -164,7 +164,7 @@
   <h3>Spanprüfung (P-8, P-12)</h3>
   <p>
     Jede Angabe aus Freitext muss ein wörtliches Zitat UND eine Zeichenposition
-    mitbringen; beide werden unabhängig geprüft. Ueber
+    mitbringen; beide werden unabhängig geprüft. Über
     {{ view.span_verification.get("text_items", 0) }} Vorgänge mit Freitext:
     {{ view.span_verification.get("verified", 0) }} von
     {{ view.span_verification.get("proposals", 0) }} Fundstellen belegt,

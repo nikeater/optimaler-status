@@ -167,7 +167,6 @@ TABLE: dict[str, tuple[str, str]] = {
         "Triage assistant for administrative procedures",
     ),
     "chrome.skip": ("Direkt zum Inhalt", "Skip to content"),
-    "chrome.home": ("Zur Startseite", "To the start page"),
     "chrome.language": ("Sprache", "Language"),
     "chrome.language.current": ("aktuelle Sprache", "current language"),
     "chrome.menu": ("Menü", "Menu"),
@@ -187,15 +186,19 @@ TABLE: dict[str, tuple[str, str]] = {
     "ribbon.label": ("Hinweis zur Demo-Instanz", "Note about this demo instance"),
     "ribbon.text": ("Demo - synthetische Daten.", "Demo - synthetic data."),
     "ribbon.more": ("Mehr dazu", "Learn more"),
+    # The subject is "diese Seiten" rather than "dieser Rundgang": this footer
+    # renders on the intake and on the counterparty surface too, where nobody
+    # is on a Rundgang, and a sentence that names the wrong thing is the one a
+    # reader stops trusting. The claim itself is unchanged.
     "footer.real": (
-        "Dieser Rundgang läuft durch die ECHTE Verarbeitung. Es gibt keinen "
-        "Demo-Pfad neben der Anlage: dieselbe Versiegelung, dieselbe Prüfung, "
+        "Diese Seiten laufen durch die ECHTE Verarbeitung. Es gibt keinen "
+        "Demo-Pfad daneben: dieselbe Versiegelung, dieselbe Prüfung, "
         "dasselbe Journal. Was Sie hier auslösen, steht danach genauso in der "
         "Sachbearbeitung wie jeder andere Eingang.",
-        "This walkthrough runs through the REAL processing. There is no demo "
-        "path beside the system: the same sealing, the same validation, the "
-        "same journal. What you trigger here lands in the caseworker queues "
-        "exactly like any other incoming case.",
+        "These pages run the REAL processing. There is no demo path beside "
+        "it: the same sealing, the same validation, the same journal. What "
+        "you trigger here lands in the caseworker queues exactly like any "
+        "other incoming case.",
     ),
     "footer.no_message": (
         "Diese Seiten erzeugen keine Nachricht an antragstellende Personen. "
@@ -233,7 +236,10 @@ TABLE: dict[str, tuple[str, str]] = {
     "phase.antrag": ("Antrag", "Application"),
     "phase.maschine": ("Maschine", "Machine"),
     "phase.sachbearbeitung": ("Sachbearbeitung", "Caseworker"),
-    "phase.label": ("Rundgang in drei Phasen", "The walkthrough in three phases"),
+    # Not "Rundgang in drei Phasen": the strip renders on the intake, the
+    # pipeline and the counterparty surface, each of which a visitor can reach
+    # from the menu without ever opening the tour.
+    "phase.label": ("Der Weg in drei Phasen", "The path in three phases"),
     "phase.current": ("aktuelle Phase", "current phase"),
     "phase.done": ("abgeschlossen", "completed"),
     "phase.number": ("Phase {number}", "Phase {number}"),
@@ -258,7 +264,11 @@ TABLE: dict[str, tuple[str, str]] = {
         "Stellen Sie testweise einen Antrag mit Beispielszenarien",
         "Submit a test application using one of the example scenarios",
     ),
-    "landing.cta.tour": ("Zum Rundgang", "Take the guided tour"),
+    # The tour button carries its price. Two buttons side by side ask a first
+    # time visitor to choose between them, and "ten minutes" is the fact that
+    # decides it; the tour's own lead has said so since part 13, four hundred
+    # pixels further down a page nobody has scrolled yet.
+    "landing.cta.tour": ("Zum Rundgang (10 Minuten)", "Take the tour (10 minutes)"),
     "landing.cta.intake": ("Antrag stellen", "Submit an application"),
     "landing.hero.label": (
         "Der Weg eines Eingangs durch die Anlage, in fünf Schritten",
@@ -296,7 +306,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "Eine versionierte Entscheidungstabelle prüft Vollständigkeit und "
         "Zuständigkeit und begründet jede Zeile.",
         "A versioned decision table checks completeness and responsibility, "
-        "and justifies every row.",
+        "and gives a reason for every row.",
     ),
     "landing.hero.c4": (
         "Der Vorgang landet in der Warteschlange des zuständigen Referats und "
@@ -361,7 +371,10 @@ TABLE: dict[str, tuple[str, str]] = {
         "jede Bedienung.",
         "What an applicant would have received. Read-only, with no controls at all.",
     ),
-    "landing.card.health.title": ("Betriebspunkte", "Operational endpoints"),
+    "landing.card.health.title": (
+        "Endpunkte für den Betrieb",
+        "Operational endpoints",
+    ),
     "landing.card.health.body": (
         "<code>/health</code> nennt die Konfigurationsversionen dieses "
         "Prozesses, <code>/healthz</code> ist die Betriebsprüfung des "
@@ -434,17 +447,23 @@ TABLE: dict[str, tuple[str, str]] = {
         "verschwindet damit wieder - deshalb sind die Aktionen offen.",
         "The whole state is deleted on every restart and rebuilt from the gold "
         "corpus. Whatever you confirm or re-route here disappears with it - "
-        "which is what makes leaving the actions open harmless.",
+        "which is why leaving the actions open does no harm.",
     ),
+    # "niemandem ohne Token" rather than "gesperrt", because this bullet sits
+    # directly under the one that says the ingest is reachable WITH the token
+    # of this deployment, and the pair read as a contradiction. The clause is
+    # true in both postures - with no token configured, nobody holds one.
     "landing.instance.storage": (
         "Der Ablagespeicher dieser Demo ist unverschlüsseltes JSONL. Das ist "
         "genau deshalb vertretbar, weil er nur synthetische Daten enthält und "
-        "der Eingang gesperrt ist; ein Produktivbetrieb ersetzt ihn durch den "
-        "verschlüsselten Speicher aus <code>docs/vault-dpia-input.md</code>.",
+        "der Eingang niemandem ohne Token offensteht; ein Produktivbetrieb "
+        "ersetzt ihn durch den verschlüsselten Speicher aus "
+        "<code>docs/vault-dpia-input.md</code>.",
         "The demo's storage backend is unencrypted JSONL. That is defensible "
         "precisely because it holds nothing but synthetic data and because "
-        "ingest is closed; a production deployment replaces it with the "
-        "encrypted store described in <code>docs/vault-dpia-input.md</code>.",
+        "ingest is closed to anyone without the token; a production deployment "
+        "replaces it with the encrypted store described in "
+        "<code>docs/vault-dpia-input.md</code>.",
     ),
     "landing.ingest.closed": (
         "Der Eingang ist gesperrt: POST /ingest antwortet mit 403, ohne die "
@@ -477,15 +496,16 @@ TABLE: dict[str, tuple[str, str]] = {
         "Hinweise zu dieser Demo-Instanz",
         "About this demonstration instance",
     ),
+    # The banner archaeology is gone: a first-time reader has never seen the
+    # banner and does not need the site's own release history to understand a
+    # page. What is left is the list of what the page answers.
     "hinweise.lead": (
-        "Diese Seite sammelt, was sonst in einem Banner über jeder Seite "
-        "stünde: woher die Daten kommen, was diese Instanz annehmen kann, was "
-        "ein Neustart tut, unter welcher Lizenz der Quellcode steht und wie es "
-        "um die Barrierefreiheit bestellt ist.",
-        "This page collects what used to sit in a banner above every screen: "
-        "where the data comes from, what this instance can accept, what a "
-        "restart does, the licence the source is published under, and where "
-        "the accessibility posture stands.",
+        "Alles zu dieser Instanz an einer Stelle: woher die Daten kommen, was "
+        "sie annehmen kann, was ein Neustart tut, unter welcher Lizenz der "
+        "Quellcode steht und wie es um die Barrierefreiheit bestellt ist.",
+        "Everything about this instance in one place: where the data comes "
+        "from, what it can accept, what a restart does, the licence the source "
+        "is published under, and how things stand on accessibility.",
     ),
     "hinweise.banner.heading": (
         "Der vollständige Hinweis",
@@ -531,14 +551,14 @@ TABLE: dict[str, tuple[str, str]] = {
         "Die Prüfung ist eine Middleware und keine Routen-Abhängigkeit. Das "
         'ist der Unterschied zwischen "abgelehnt" und "gar nicht gelesen": '
         "ein Framework dekodiert den Anfragekörper, bevor es die "
-        "Abhängigkeiten einer Route auflöst, und eine Ablehnung danach wäre "
-        "eine Ablehnung, nach der dieser Prozess die Einreichung einer fremden "
-        "Person bereits gelesen hat.",
+        "Abhängigkeiten einer Route auflöst. Eine Ablehnung an dieser Stelle "
+        "käme zu spät - dieser Prozess hätte die Einreichung einer fremden "
+        "Person dann bereits gelesen.",
         "The check is middleware, not a route dependency, and that is the "
-        'difference between "refused" and "never read": a framework '
-        "decodes the request body before it solves a route's dependencies, so "
-        "a refusal at that point would be a refusal issued after this process "
-        "has already read a stranger's submission.",
+        'difference between "refused" and "never read": a framework decodes '
+        "the request body before it resolves a route's dependencies. A refusal "
+        "at that point would come too late - this process would already have "
+        "read a stranger's submission.",
     ),
     "hinweise.reset.heading": ("Zurücksetzen durch Neustart", "Reset by restart"),
     "hinweise.reset.body": (
@@ -555,7 +575,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "same state. That is exactly why the caseworker actions are left open: "
         "whatever you confirm, re-route or escalate is gone at the next start. "
         "The intake page's scratch store lives in memory only, holds an entry "
-        "for a short time and survives no process.",
+        "for a short time and dies with the process.",
     ),
     "hinweise.licence.heading": ("Lizenz und Quellcode", "Licence and source"),
     "hinweise.licence.body": (
@@ -578,8 +598,8 @@ TABLE: dict[str, tuple[str, str]] = {
     "hinweise.a11y.body": (
         "Es gibt eine Selbsteinschätzung nach EN 301 549 V3.2.1 / WCAG 2.1 AA "
         "in <code>docs/accessibility-selfcheck.md</code>. Sie ist eine "
-        "Selbsteinschätzung und kein Test nach BITV 2.0: geprüft wurde von der "
-        "umsetzenden Person, keine Nutzerin und kein Nutzer mit einer "
+        "Selbsteinschätzung und kein Test nach BITV 2.0: geprüft hat die "
+        "umsetzende Person selbst, keine Nutzerin und kein Nutzer mit einer "
         "Behinderung hat diese Seiten bedient, und keine assistive Technologie "
         "ist dagegen gelaufen. Eine Erklärung zur Barrierefreiheit nach "
         "par. 12b BGG darf daraus NICHT abgeleitet werden.",
@@ -606,7 +626,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "reflow rules for a 320 pixel viewport. What a static test cannot "
         "decide is listed in the document as open rather than as passed.",
     ),
-    "hinweise.back": ("Zurück zur Startseite", "Back to the start page"),
+    "hinweise.back": ("Zurück zur Startseite", "Back to the home page"),
     # ------------------------------------------- shared vocabulary of a case --
     "tier.1": ("Tier 1 - klar und vollständig", "Tier 1 - clear and complete"),
     "tier.2": (
@@ -635,9 +655,9 @@ TABLE: dict[str, tuple[str, str]] = {
         "in der Adresszeile. Ein echtes Berechtigungskonzept mit "
         "Identitätsanbieter ist Pilotvoraussetzung (C-5) und existiert hier "
         "nicht.",
-        "Picking a unit is a demo affordance with no sign-in: the unit sits in "
-        "the address bar. A real authorisation model with an identity provider "
-        "is a pilot prerequisite (C-5) and does not exist here.",
+        "Picking a unit is a demo convenience with no sign-in: the unit sits "
+        "in the address bar. A real authorisation model with an identity "
+        "provider is a pilot prerequisite (C-5) and does not exist here.",
     ),
     "channel.fit_connect": (
         "Formular (FIT-Connect)",
@@ -760,20 +780,29 @@ TABLE: dict[str, tuple[str, str]] = {
         "applicant.</strong> Messages are rendered from templates in versioned "
         "configuration; drafts wait for a human to confirm them.",
     ),
+    # THE THREE WAYS TO BREAK IT ARE THE THREE THE INTAKE PAGE ACTUALLY OFFERS.
+    # This sentence still named a Rentenart, a Rentenbeginn and an
+    # Auslandsbezug - the part-13 pension scenarios, none of which has existed
+    # on that form since part 22 turned the whole site into a
+    # Statusfeststellung. The tour was sending a judge to look for three
+    # controls that are not there. The three named now are hints one, two and
+    # three of `config/demo/personas_v4.yaml`, which is where they are
+    # executable.
     "tour.s2.p1": (
         "Auf der Antragsseite wählen Sie eine von vier <em>erfundenen</em> "
         "Personen - offenkundig erfundene Namen, damit ein Bildschirmfoto "
-        "dieser Demo niemals wie ein echter Vorgang aussieht - und bearbeiten deren "
-        "vorausgefüllten Antrag. Sie dürfen ihn kaputt machen: eine Rentenart "
-        "eintragen, die es nicht gibt, den Rentenbeginn zwanzig Jahre in die "
-        "Zukunft schieben, den Auslandsbezug einschalten. Jede dieser "
-        "Änderungen löst ein anderes, echtes Verhalten der Anlage aus.",
+        "dieser Demo niemals wie ein echter Vorgang aussieht - und bearbeiten "
+        "deren vorausgefüllten Statusfeststellungsantrag. Sie dürfen ihn "
+        "kaputt machen: die Versicherungsnummer löschen, ein unmögliches "
+        "Geburtsdatum eintragen, den Beginn der Tätigkeit weit in die Zukunft "
+        "schieben. Jede dieser Änderungen löst ein anderes, echtes Verhalten "
+        "der Anlage aus.",
         "On the intake page you pick one of four openly <em>fictional</em> "
-        "applicants - Mustermann-class names, so that a screenshot of this "
+        "applicants - obviously invented names, so that a screenshot of this "
         "demo can never look like a real case - and edit their prefilled "
-        "application. You are meant to break it: enter a pension type that "
-        "does not exist, push the pension start date twenty years into the "
-        "future, switch on the cross-border flag. Each of those changes "
+        "employment-status application. You are meant to break it: delete the "
+        "insurance number, enter a date of birth that cannot be right, push "
+        "the start of the activity far into the future. Each of those changes "
         "triggers a different, real behaviour of the system.",
     ),
     "tour.s2.p2": (
@@ -804,13 +833,17 @@ TABLE: dict[str, tuple[str, str]] = {
         "Antragsseite ansehen (ohne Absenden)",
         "View the intake page (without submitting)",
     ),
+    # "Glasrohr-Ansicht" is what this codebase calls that page among itself.
+    # The page's own heading says "Phase 2", the step indicator above it says
+    # "Maschine", and nothing a visitor can see anywhere says Glasrohr - so a
+    # reader was sent to look for a name that is not written down.
     "tour.s3.p1": (
-        "Die Glasrohr-Ansicht zeigt sieben Schritte in der Reihenfolge, in der "
+        "Phase 2 zeigt sieben Schritte in der Reihenfolge, in der "
         "sie gelaufen sind: Eingang, Versiegelung, Extraktion, Evidenz, "
         "Entscheidung, Nachricht, Warteschlange. Jede Zahl darauf kommt aus "
         "dem Journal des Vorgangs. Die Seite rechnet nichts nach - sie kann "
         "dem, was tatsächlich passiert ist, gar nicht widersprechen.",
-        "The glass pipeline shows seven stages in the order they ran: arrival, "
+        "Phase 2 shows seven stages in the order they ran: arrival, "
         "sealing, extraction, evidence, decision, message, queue. Every number "
         "on it comes from that case's journal. The page recomputes nothing - "
         "it cannot contradict what actually happened.",
@@ -907,7 +940,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "unverzüglichen Weiterleitung). In der Vorgangsansicht stehen "
         "sämtliche Belege über den drei Aktionen: bestätigen, umsteuern, "
         "eskalieren.",
-        "Now you change hats. The caseworker surface shows queues per "
+        "Now you swap hats. The caseworker surface shows queues per "
         "organisational unit, oldest case first, plus a central clearing queue "
         "for anything no rule could route (par. 16 Abs. 2 S. 1 SGB I obliges "
         "the wrong authority to forward without delay). The case view puts "
@@ -995,11 +1028,10 @@ TABLE: dict[str, tuple[str, str]] = {
     ),
     "tour.s5.cta": ("Zum Postfach (nur Ansicht)", "To the inbox (read-only)"),
     "tour.s6.p1": (
-        "Eine Demo, die nur gut aussieht, ist ein Prospekt. Was diese hier von "
-        "einem Prospekt unterscheidet, sind fünf Dinge, die alle nachprüfbar "
-        "sind:",
-        "A demo that only looks good is a brochure. Five things separate this "
-        "one from a brochure, and all five are checkable:",
+        "Eine Demo, die nur gut aussieht, ist ein Prospekt. Fünf Dinge "
+        "unterscheiden diese hier davon, und alle fünf lassen sich nachprüfen:",
+        "A demo that only looks good is a brochure. Five things set this one "
+        "apart, and all five can be checked:",
     ),
     "tour.s6.d1.title": ("Alle Daten sind synthetisch", "All data is synthetic"),
     "tour.s6.d1.body": (
@@ -1061,7 +1093,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "The state is rebuilt from the gold corpus at every start. Whatever "
         "you confirm or re-route here disappears with it - which is the only "
         "reason those actions can be left open at all. The intake page's "
-        "scratch store lives in memory alone and survives no process.",
+        "scratch store lives in memory alone and dies with the process.",
     ),
     "tour.s6.d5.title": (
         "Der Quellcode ist offen und vollständig dokumentiert",
@@ -1092,10 +1124,10 @@ TABLE: dict[str, tuple[str, str]] = {
     ),
     "tour.ingest.open": (
         "Diese Bereitstellung nimmt Anträge entgegen: Sie können den Rundgang "
-        "mit Ihrem EIGENEN Vorgang laufen, von der Einreichung bis zur "
+        "mit einem EIGENEN Vorgang durchlaufen, von der Einreichung bis zur "
         "Eingangsbestätigung im Postfach.",
-        "This deployment accepts submissions: you can walk the tour with YOUR "
-        "OWN case, from the submission to the receipt in the inbox.",
+        "This deployment accepts submissions: you can walk the tour on a case "
+        "of YOUR OWN, from submitting it to the receipt landing in the inbox.",
     ),
     "tour.ingest.closed": (
         "Diese Bereitstellung nimmt zurzeit keine Anträge entgegen: ohne "
@@ -1119,10 +1151,10 @@ TABLE: dict[str, tuple[str, str]] = {
         "dem Journal und steht vollständig da.",
         "The case this step points at comes from the frozen gold corpus and "
         "not from anything you typed. That is why the side-by-side comparison "
-        "of typed value and working copy is missing over there: that scratch "
+        "of typed value and working copy is missing on that page: the scratch "
         "store holds only what a visitor typed themselves, and only for a "
         "short time, in memory. Everything else - sealing, spans, gaps, "
-        "routing, decision, messages - comes from the journal and is fully "
+        "routing, decision, messages - comes from the journal and is all "
         "there.",
     ),
     "tour.unseeded": (
@@ -1154,7 +1186,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "Aufrufer mit 403 gesperrt.",
         "Your application goes through the same processing as any other "
         "incoming case: seal, working copy, extract, prove, decide, notify. "
-        "This page presents the deployment's own token server-side; the raw "
+        "This page attaches the deployment's own token on the server; the raw "
         "endpoint POST /ingest stays closed with a 403 for direct callers.",
     ),
     "intake.ingest.closed": (
@@ -1218,23 +1250,20 @@ TABLE: dict[str, tuple[str, str]] = {
         "the field exactly as typing would.",
     ),
     "intake.required.note": (
-        "Was hier schon ausgefüllt ist, ist ein Pflichtfeld. Leeren Sie eines "
-        "und versuchen Sie abzuschicken: Ihr Browser markiert das Feld rot und "
-        "sendet nichts. Ausgenommen sind genau die drei Felder, deren Löschung "
-        "die Hinweise unten vorschlagen - Versicherungsnummer, Auftraggeber "
-        "und Vorname: sie lassen sich leer abschicken, weil sonst ein Hinweis "
-        "auf dieser Seite etwas empfehlen würde, was dieselbe Seite blockiert. "
-        "Diese Prüfung findet im Browser statt, ohne JavaScript; die "
-        "Vollständigkeitsprüfung der Anlage läuft danach und noch einmal "
-        "getrennt davon.",
-        "What is already filled in here is a required field. Empty one and try "
-        "to submit: your browser marks the field red and sends nothing. The "
-        "exceptions are exactly the three fields the suggestions below ask you "
-        "to delete - insurance number, client and given name: those can be sent "
-        "empty, because otherwise a suggestion on this page would recommend "
-        "something the same page blocks. That check happens in the browser, "
-        "without JavaScript; the system's own completeness check runs "
-        "afterwards and separately from it.",
+        "Alles, was hier schon ausgefüllt ist, ist ein Pflichtfeld: leeren Sie "
+        "eines und schicken Sie ab, markiert Ihr Browser es rot und sendet "
+        "nichts. Ausgenommen sind die drei Felder, deren Löschung die Hinweise "
+        "unten vorschlagen - Versicherungsnummer, Auftraggeber und Vorname -, "
+        "denn sonst würde diese Seite empfehlen, was sie selbst blockiert. "
+        "Diese Prüfung läuft im Browser und ohne JavaScript; die "
+        "Vollständigkeitsprüfung der Anlage kommt danach und getrennt davon.",
+        "Every field already filled in here is required: empty one and hit "
+        "submit, and your browser marks it red and sends nothing. The "
+        "exceptions are the three fields the suggestions below ask you to "
+        "delete - insurance number, client and given name - because otherwise "
+        "this page would recommend something it blocks itself. That check runs "
+        "in the browser and without JavaScript; the system's own completeness "
+        "check comes afterwards and separately from it.",
     ),
     "intake.required.error": (
         "Diese Angabe fehlt. Ohne sie wird der Antrag nicht abgeschickt.",
@@ -1279,9 +1308,9 @@ TABLE: dict[str, tuple[str, str]] = {
         "Ändern Sie die Angaben ruhig. Jede der folgenden Änderungen löst ein "
         "ANDERES, echtes Verhalten der Anlage aus - und Sie sehen im nächsten "
         "Schritt genau, welches.",
-        "Go ahead and change things. Each of the following produces a "
-        "DIFFERENT, real behaviour of the system - and the next step shows you "
-        "exactly which one.",
+        "Go ahead and change things. Each of the changes below makes the "
+        "system do something DIFFERENT, and something real - and the next step "
+        "shows you exactly what.",
     ),
     "intake.refused.redaction": (
         "Der Eingang wurde ABGELEHNT. Die Schwärzungsprüfung konnte die "
@@ -1322,9 +1351,9 @@ TABLE: dict[str, tuple[str, str]] = {
         "rechnet nichts nach: sie kann dem, was tatsächlich passiert ist, "
         "nicht widersprechen.",
         "Seven stages, in the order they ran. Every number and every sentence "
-        "on this page comes from your case's journal or from a store that "
-        "exists anyway. This page recomputes nothing: it cannot contradict "
-        "what actually happened.",
+        "on this page comes from your case's journal or from a store the "
+        "system keeps anyway. This page recomputes nothing: it cannot "
+        "contradict what actually happened.",
     ),
     "pipeline.sampled": (
         "Dieser Vorgang wurde zufällig zur Qualitätssicherung ausgewählt. Das "
@@ -1358,12 +1387,12 @@ TABLE: dict[str, tuple[str, str]] = {
     "pipeline.a.events": ("Ereignisse im Journal", "Journal events"),
     "pipeline.b.heading": ("b) Versiegelung", "b) Sealing"),
     "pipeline.b.seal_sentence": (
-        "Die Maschine hat Ihren Namen nie gesehen. Was Sie oben eingegeben "
-        "haben, wurde am Eingang versiegelt - bevor die Arbeitskopie entstand, "
-        "auf der alles Weitere rechnet.",
-        "The machine never saw your name. What you entered above was sealed at "
-        "the boundary - before the working copy existed, which is what "
-        "everything downstream computes on.",
+        "Die Maschine hat Ihren Namen nie gesehen. Was Sie eingegeben haben, "
+        "wurde am Eingang versiegelt - bevor die Arbeitskopie entstand, auf "
+        "der alles Weitere rechnet.",
+        "The machine never saw your name. What you entered was sealed at the "
+        "boundary, before the working copy existed - and everything downstream "
+        "computes on that copy alone.",
     ),
     "pipeline.b.sealed": ("Versiegelte Werte", "Values sealed"),
     "pipeline.b.verified": ("Nachprüfung", "Verification"),
@@ -1387,10 +1416,10 @@ TABLE: dict[str, tuple[str, str]] = {
         "dem Tresor geholt, um diese Tabelle zu bauen - er stammt aus Ihrer "
         "eigenen Eingabe von eben und wird nur für kurze Zeit im "
         "Arbeitsspeicher gehalten.",
-        "On the left is what you typed. On the right is what stands in that "
-        "place in the working copy. The plain text was not fetched from the "
-        "vault to build this table - it comes from your own input a moment ago "
-        "and is held in memory for a short time only.",
+        "On the left is what you typed. On the right is what the working copy "
+        "holds in its place. The plain text was not fetched from the vault to "
+        "build this table - it comes from your own input a moment ago and is "
+        "held in memory for a short time only.",
     ),
     "pipeline.b.pairs.caption": (
         "Gegenüberstellung: eingegebener Wert und Platzhalter",
@@ -1433,9 +1462,9 @@ TABLE: dict[str, tuple[str, str]] = {
         "Jede Stelle, an der ein Platzhalter steht, hat vorher eine Ihrer "
         "Angaben getragen. Alles danach - Ableitung, Auslesen, Regeln, "
         "Entscheidung, Scorer - hat ausschließlich diese Fassung gelesen.",
-        "Every place where a placeholder stands carried one of your values "
-        "before. Everything after that - derivation, extraction, rules, "
-        "decision, scorer - read this version and nothing else.",
+        "Every placeholder below stands where one of your values used to be. "
+        "Everything after that - derivation, extraction, rules, decision, "
+        "scorer - read this version and nothing else.",
     ),
     # Part 20 renamed these three from `pipeline.b.kinds.*` and dropped a
     # fourth. The table counts spans PER TEXT PART and always did; calling its
@@ -1452,9 +1481,9 @@ TABLE: dict[str, tuple[str, str]] = {
         "Jetzt wird gelesen, was in der Arbeitskopie steht - und jede gefundene "
         "Angabe muss zweifach belegt sein: das Zitat UND die Zeichenposition, "
         "unabhängig voneinander gegen dieselbe Textfassung geprüft.",
-        "Now what stands in the working copy is read - and every value found "
-        "must be proven twice: the quote AND the character offsets, checked "
-        "independently against the same text.",
+        "Now the working copy is read - and every value found must be proven "
+        "twice: the quote AND the character offsets, checked independently "
+        "against the same text.",
     ),
     "pipeline.c.found": ("Gefundene Felder", "Fields found"),
     "pipeline.c.none": ("keine", "none"),
@@ -1464,7 +1493,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "nicht bestanden hat. Er wird nicht übernommen und schiebt den Vorgang "
         "Richtung Tier 3.",
         "a DISCARDED proposal is a value whose span failed verification. It is "
-        "not taken over and it pushes the case towards tier 3.",
+        "not adopted, and it pushes the case towards tier 3.",
     ),
     "pipeline.c.no_extraction": (
         "Aus diesem Anschreiben wurde nichts ausgelesen, und das ist kein "
@@ -1595,8 +1624,8 @@ TABLE: dict[str, tuple[str, str]] = {
         "Entscheidung oben ist ohne ihn zustande gekommen - sie steht in der "
         "Entscheidungstabelle Zeile für Zeile begründet.",
         "An armed scorer would have set this case to {tier}. The decision above "
-        "was reached without it, and the decision table justifies that decision "
-        "row by row.",
+        "was reached without it, and the decision table justifies it row by "
+        "row.",
     ),
     "pipeline.e.anomaly.heading": ("Auffälligkeitsprüfung", "Anomaly check"),
     "pipeline.e.anomaly.score": ("Score", "Score"),
@@ -1622,16 +1651,20 @@ TABLE: dict[str, tuple[str, str]] = {
         "No anomaly check was recorded.",
     ),
     "pipeline.f.heading": ("f) Nachricht", "f) Message"),
+    # "nach dieser Einreichung" rather than "als antragstellende Person": this
+    # page also renders for the Auftraggeber's statement, whose sender is not
+    # an antragstellende Person and who would have read a sentence about
+    # somebody else.
     "pipeline.f.body": (
-        "Was Sie als antragstellende Person bekommen hätten. Diese Nachrichten "
+        "Was Sie nach dieser Einreichung erhalten hätten. Diese Nachrichten "
         "entstehen automatisch aus dem Journal und durchlaufen keine "
         "menschliche Prüfung - genau deshalb gibt es hier und im Postfach "
         "keine Bedienung, mit der jemand eine davon auslösen, ändern oder "
         "erneut senden könnte.",
-        "What you, as the applicant, would have received. These messages are "
-        "produced automatically from the journal and pass no human review - "
-        "which is exactly why neither this page nor the inbox has any control "
-        "with which somebody could trigger, edit or re-send one.",
+        "What you would have received after this submission. These messages "
+        "are produced automatically from the journal and pass no human "
+        "review - which is exactly why neither this page nor the inbox has any "
+        "control with which somebody could trigger, edit or re-send one.",
     ),
     "pipeline.f.caption": (
         "Zugestellte Nachrichten zu diesem Vorgang",
@@ -1663,8 +1696,8 @@ TABLE: dict[str, tuple[str, str]] = {
         "Ihr Vorgang wird dort gekennzeichnet, damit Sie ihn finden - die "
         "Kennzeichnung ist reine Anzeige und verändert die Reihenfolge nicht.",
         "The queue is ordered by age, oldest case first. Your case is marked "
-        "there so that you can find it - the marker is display only and "
-        "changes no ordering.",
+        "there so that you can find it - the marker is display only and does "
+        "not change the order.",
     ),
     "pipeline.g.handover": (
         "Weiter zu Phase 3: Vorgang bearbeiten",
@@ -1769,7 +1802,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "Warteschlange. Die Clearingstelle hat damit zwei versiegelte "
         "Aussagen zu einem Auftragsverhältnis vor sich.",
         "The statement arrived on {at}. It is not an attachment to this case "
-        "but an incoming item of its own: the same route, the same sealing, "
+        "but an incoming case of its own: the same route, the same sealing, "
         "the same completeness check, the same queue. The clearing unit "
         "therefore has two sealed accounts of one working relationship in "
         "front of it.",
@@ -1799,7 +1832,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "Regel, die irgendetwas steuert.",
         "This case is the client's statement on another case. That does not "
         "make it a special case: it was sealed, checked and routed like every "
-        "other incoming item, and the link between the two is a display - not "
+        "other incoming case, and the link between the two is a display - not "
         "a journal entry and not a rule that steers anything.",
     ),
     "pipeline.statement.origin.link": (
@@ -1817,7 +1850,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "insurance number nor their date of birth: a statement does not need "
         "them, so the other party never gets to see them. The completeness "
         "check therefore reports both as gaps and the clearing unit asks for "
-        "them - exactly the treatment every other incomplete item gets.",
+        "them - exactly the treatment every other incomplete case gets.",
     ),
     # ------------------------------------- the counterparty page (part 19) --
     "gegenpartei.title": (
@@ -1842,7 +1875,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "ein eigener, versiegelter Vorgang.",
         "The clearing unit hears both sides before it decides (par. 7a Abs. 4 "
         "SGB IV). This page is where you switch sides: you answer as the "
-        "company an employment-status application named as the client. What "
+        "company named as the client in an employment-status application. What "
         "you send here is not a form beside the system - it goes through the "
         "same intake and becomes a sealed case of its own.",
     ),
@@ -1889,9 +1922,9 @@ TABLE: dict[str, tuple[str, str]] = {
         "Seite nicht sagen - und tut deshalb auch nicht so.",
         "This page answers the hearing for one particular case, and for that "
         "it needs the reference from the letter. Either none was passed, or "
-        "the hearing is no longer held: this demonstration's buffer keeps it "
-        "for a short time and in memory only, and a restart empties it "
-        "completely. Which of the two applies is something this page cannot "
+        "the hearing is no longer held: this demonstration's scratch store "
+        "keeps it for a short time and in memory only, and a restart empties "
+        "it completely. Which of the two applies is something this page cannot "
         "tell - so it does not pretend to.",
     ),
     "gegenpartei.unknown.cta": (
@@ -1987,8 +2020,8 @@ TABLE: dict[str, tuple[str, str]] = {
         "ändert.",
         "A statement for this reference arrived on {at}. A second one would "
         "not be a second attempt but a second case: what was sent is an "
-        "incoming item rather than a draft, and this demonstration offers "
-        "nothing that edits an incoming item after the fact.",
+        "incoming case rather than a draft, and this demonstration offers "
+        "nothing that edits an incoming case after the fact.",
     ),
     "gegenpartei.answered.statement": (
         "Zur Stellungnahme, die Sie abgesendet haben",

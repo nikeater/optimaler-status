@@ -239,7 +239,7 @@
 
 <section aria-labelledby="gaps-heading">
   <h2 id="gaps-heading">Vollständigkeit</h2>
-  <p>Verdikt: <strong>{{ case.completeness_verdict or "unbekannt" }}</strong>.</p>
+  <p>Ergebnis: <strong>{{ case.completeness_verdict or "unbekannt" }}</strong>.</p>
   {% if case.gaps %}
   <div class="scroll-x">
     <table>
@@ -305,16 +305,16 @@
   <div class="log-only">
     <h3>Vorschlag (nur Protokoll)</h3>
     <p>
-      Ein Aehnlichkeitsmodell hat die folgende Rangfolge vorgeschlagen. Sie hat
+      Ein Ähnlichkeitsmodell hat die folgende Rangfolge vorgeschlagen. Sie hat
       diesen Vorgang NICHT zugeordnet und kein Tier bewegt: die
       Entscheidungsebene baut ausschließlich auf Regelbelegen auf, solange die
       Behörde die Quelle nicht ausdrücklich zulässt (ADR-021). Die Rangfolge
-      steht hier, damit sie widersprochen werden kann, nicht damit sie
+      steht hier, damit ihr widersprochen werden kann, nicht damit sie
       mitentscheidet.
     </p>
     <div class="scroll-x">
       <table>
-        <caption>Rangfolge des Aehnlichkeitsmodells; ohne Wirkung auf diesen Vorgang</caption>
+        <caption>Rangfolge des Ähnlichkeitsmodells; ohne Wirkung auf diesen Vorgang</caption>
         <thead><tr><th scope="col">Rang</th><th scope="col">Einheit</th><th scope="col">Wert</th></tr></thead>
         <tbody>
           {% for entry in view.classifier_ranking %}
@@ -529,7 +529,7 @@
   <p>
     Dieser Vorgang ist bestätigt. Es gibt keine Schaltfläche, die das
     rückgängig macht: eine Korrektur nach der Bestätigung ist eine neue
-    Entscheidung und kein Ueberschreiben dieser (ADR-008).
+    Entscheidung und überschreibt die alte nicht (ADR-008).
   </p>
   <div class="scroll-x">
     <table>
