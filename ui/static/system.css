@@ -1227,6 +1227,18 @@ main > div:not(.page-head) > *:last-child {
   transform: translateY(-2px);
 }
 
+/* A `card-grid-links` grid holds single-destination cards: the heading
+   carries the one anchor and the whole box is its click target - the anchor's
+   `::after` stretches over the card, which already has `position: relative`
+   for its hairline. The hover lift above promised a clickable object; this is
+   what makes the promise true anywhere on the box. The focus ring stays on
+   the heading text, drawn by the same rule as every other link's. */
+.card-grid-links > .card h3 a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
 /* A card that contains a link is reached by keyboard through that link, so the
    whole object answers the link's focus rather than only the word. */
 .card-grid > .card:focus-within {

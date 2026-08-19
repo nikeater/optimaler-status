@@ -173,7 +173,11 @@
    flipped to the ink. The link is still a link and still the whole title. #}
 <section aria-labelledby="start-heading">
   <h2 id="start-heading">{{ t("landing.start.heading") }}</h2>
-  <ul class="card-grid">
+  {# `card-grid-links`: every card in THIS grid is a single destination, so
+     the whole box is the click target (the heading's anchor stretches over
+     the card in CSS), not just the title words (user direction 2026-08-19).
+     The guarantees grid below carries no links and no such class. #}
+  <ul class="card-grid card-grid-links">
     <li class="card card-cta">
       <h3><a href="/demo/antrag">{{ t("landing.card.intake.title") }}</a></h3>
       <p>{{ t("landing.card.intake.body") }}</p>
@@ -190,11 +194,19 @@
       <h3><a href="/inbox">{{ t("landing.card.inbox.title") }}</a></h3>
       <p>{{ t("landing.card.inbox.body") }}</p>
     </li>
+    {# THE OPERATIONS-ENDPOINTS CARD, COMMENTED OUT rather than deleted, on
+       the user's decision of 2026-08-19: its two links answer JSON, which
+       made it the one box in this section that led nowhere a visitor could
+       read - and the one card whose heading was not a link, which the
+       stretched-link grid above would have turned into a dead surface.
+       /health and /healthz stay live and documented in the README; restoring
+       the card is an uncomment, and its keys are still in the table.
     <li class="card">
       <h3>{{ t("landing.card.health.title") }}</h3>
       <p>{{ m("landing.card.health.body") }}</p>
       <p><a href="/health">/health</a> &middot; <a href="/healthz">/healthz</a></p>
     </li>
+    #}
   </ul>
 </section>
 

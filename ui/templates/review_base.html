@@ -66,17 +66,25 @@
 
          German on every caseworker screen, like the rest of this template and
          for the reason `_german_note.html` gives - so no translation key. #}
+      {# The one sentence that differs per page since the queue picker began
+         to NAVIGATE (user direction 2026-08-19): on the overview and the
+         case view the choice changes no view, and the notice says so; on a
+         queue page the button leads to the adopted unit's queue, and saying
+         the old sentence there would state a falsehood. Each branch exposes
+         its sentence as a block the queue template overrides. #}
       {% if view.acting_unit %}
       <p class="notice ok-note" id="acting-unit">
         Aktive Einheit: <strong>{{ view.acting_unit }}</strong>
         (<code>{{ view.unit_id }}</code>). Damit sind die Entwürfe auf der
-        Vorgangsansicht lesbar. Die Warteschlangen ändern sich dadurch nicht:
-        jede Einheit sieht jede Warteschlange (ADR-026).
+        Vorgangsansicht lesbar. {% block picker_effect %}Die Warteschlangen
+        ändern sich dadurch nicht: jede Einheit sieht jede Warteschlange
+        (ADR-026).{% endblock %}
       </p>
       {% else %}
       <p class="notice" id="acting-unit">
-        Keine Einheit gewählt. Die Warteschlangen sind trotzdem vollständig
-        sichtbar - die Wahl steuert keine Ansicht. Was sie freischaltet, ist
+        Keine Einheit gewählt. {% block picker_effect_unchosen %}Die
+        Warteschlangen sind trotzdem vollständig sichtbar - die Wahl steuert
+        keine Ansicht.{% endblock %} Was sie freischaltet, ist
         die Anzeige der vorbereiteten <strong>Entwürfe</strong> auf der
         Vorgangsansicht: deren Text trägt rückbefüllte personenbezogene Daten
         und bleibt ohne gewählte Einheit verborgen.

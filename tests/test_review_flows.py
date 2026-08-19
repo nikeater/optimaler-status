@@ -935,9 +935,83 @@ def test_the_picker_says_which_unit_is_acting_and_the_unit_survives_a_click(
     assert f'<input type="hidden" name="highlight" value="{case_id}">' in marked
     assert "highlight" not in client.get(f"/review/queue/{UNIT}?unit={UNIT}").text
 
-    # And the picker still targets the page it is on, so submitting it stays.
-    assert f'action="/review/queue/{UNIT}"' in queue
+    # The overview and case pickers target the page they are on, so submitting
+    # them stays. The QUEUE picker submits to the switch route and names its
+    # origin queue, because on that page the button navigates to the adopted
+    # unit's own queue (user direction 2026-08-19) - the redirect itself is
+    # pinned in the test below this one.
+    overview = client.get(f"/review?unit={UNIT}").text
+    assert 'action="/review"' in overview
+    assert 'action="/review/queue"' in queue
+    assert f'<input type="hidden" name="origin" value="{UNIT}">' in queue
     assert f'action="/review/case/{case_id}"' in case
+
+
+def test_taking_over_a_unit_on_a_queue_page_lands_on_that_units_queue(
+    client: TestClient,
+    config: ConfigBundle,
+    journal: InMemoryJournalStore,
+    vault: InMemoryVaultStore,
+    drafts: InMemoryDraftStore,
+    gold_v4_dir: Path,
+) -> None:
+    """The queue picker navigates; the switch route decides where to.
+
+    Part 17 made the picker say what it did; it still did not go anywhere,
+    and a reader who took over Referat 312 while looking at another unit's
+    queue stayed on that other unit's queue. On a queue page the question
+    behind the choice is "what is this unit's work", so the form submits to
+    `/review/queue` and lands on the adopted unit's own queue (user direction
+    2026-08-19). Everything else about ADR-026 is unchanged: every queue
+    stays readable by every unit through the overview's links, and the
+    overview and case pickers still stay put.
+    """
+    case_id = ingest(config, journal, vault, drafts, gold_v4_dir, TIER2_ITEM)
+    other = next(node.unit_id for node in config.taxonomy.nodes if node.unit_id != UNIT)
+
+    # Adopting a unit lands on ITS queue, acting as it.
+    moved = client.get(
+        f"/review/queue?unit={other}&origin={UNIT}", follow_redirects=False
+    )
+    assert moved.status_code == 303
+    assert moved.headers["location"] == f"/review/queue/{other}?unit={other}"
+    landed = client.get(moved.headers["location"])
+    assert landed.status_code == 200
+    assert "Aktive Einheit" in landed.text
+
+    # The tour's highlight travels only when the destination IS the origin
+    # queue - anywhere else it would mark no row and the page would explain
+    # the absence with a sentence that is not what happened.
+    same = client.get(
+        f"/review/queue?unit={UNIT}&origin={UNIT}&highlight={case_id}",
+        follow_redirects=False,
+    )
+    assert (
+        same.headers["location"]
+        == f"/review/queue/{UNIT}?unit={UNIT}&highlight={case_id}"
+    )
+    elsewhere = client.get(
+        f"/review/queue?unit={other}&origin={UNIT}&highlight={case_id}",
+        follow_redirects=False,
+    )
+    assert elsewhere.headers["location"] == f"/review/queue/{other}?unit={other}"
+
+    # Clearing the choice returns to the queue the form was on, without a
+    # unit - including the clearing queue, which is not a taxonomy unit.
+    cleared = client.get(f"/review/queue?origin={UNIT}", follow_redirects=False)
+    assert cleared.headers["location"] == f"/review/queue/{UNIT}"
+    clearing = client.get("/review/queue?origin=__clearing__", follow_redirects=False)
+    assert clearing.headers["location"] == "/review/queue/__clearing__"
+
+    # A unit the taxonomy does not know is not a role (the draft gate's own
+    # rule), so it clears rather than navigates; with no origin either, the
+    # only honest destination left is the overview.
+    unknown = client.get(
+        f"/review/queue?unit=Referat_999&origin={UNIT}", follow_redirects=False
+    )
+    assert unknown.headers["location"] == f"/review/queue/{UNIT}"
+    homeless = client.get("/review/queue?unit=Referat_999", follow_redirects=False)
+    assert homeless.headers["location"] == "/review"
 
 
 def test_an_unknown_case_is_a_404_and_not_an_empty_page(

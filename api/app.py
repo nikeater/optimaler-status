@@ -1157,6 +1157,46 @@ def _mount_review(
             )
         )
 
+    @app.get("/review/queue")
+    def review_queue_switch(
+        unit: str | None = None,
+        origin: str = "",
+        highlight: str = "",
+    ) -> RedirectResponse:
+        """The queue page's picker lands on the CHOSEN unit's own queue.
+
+        Part 17 made the picker stateful and visible; what it still did not
+        do was go anywhere - taking over Referat 312 while reading Referat
+        340's queue re-rendered Referat 340's. On a QUEUE page the question
+        behind the choice is "what is this unit's work", so that page's form
+        submits here and this redirects to the adopted unit's queue (user
+        direction 2026-08-19). Nothing is hidden by it: every queue stays
+        readable by every unit (ADR-026), the overview and the case view
+        keep their stay-put pickers, and clearing the choice returns to the
+        queue the form was on - which `origin` names, because a GET form
+        replaces the whole query string and the URL path with its action.
+
+        The tour's highlight travels only when the destination IS the origin
+        queue: carried anywhere else it would mark no row, and the page would
+        explain the absence with a sentence ("bestaetigt oder umgesteuert")
+        that is not what happened.
+        """
+        adopted = review_view.resolve_unit(bundle, unit)
+        if adopted is not None:
+            target = f"/review/queue/{adopted}?unit={quote(adopted)}"
+            if highlight and origin == adopted:
+                target += f"&highlight={quote(highlight)}"
+            return RedirectResponse(url=target, status_code=303)
+        back = review_view.resolve_unit(bundle, origin)
+        if back is None and origin == review_view.CLEARING_QUEUE:
+            back = review_view.CLEARING_QUEUE
+        if back is not None:
+            target = f"/review/queue/{back}"
+            if highlight:
+                target += f"?highlight={quote(highlight)}"
+            return RedirectResponse(url=target, status_code=303)
+        return RedirectResponse(url="/review", status_code=303)
+
     @app.get("/review/queue/{queue_id}", response_class=HTMLResponse)
     def review_queue(
         request: Request,

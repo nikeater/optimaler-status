@@ -2,16 +2,30 @@
 {% import "_icons.html" as icons %}
 {% block title %}EingangsLotse - {{ view.queue.label }}{% endblock %}
 {% block heading %}{{ view.queue.label }}{% endblock %}
-{% block picker_action %}/review/queue/{{ view.queue.queue_id }}{% endblock %}
+{# THE QUEUE PICKER NAVIGATES (user direction 2026-08-19). Taking over a unit
+   on a queue page used to re-render the same queue with only the acting unit
+   changed - correct under ADR-026, and read as a dead button. The form now
+   submits to `/review/queue`, which redirects to the adopted unit's OWN
+   queue. `origin` names this queue so that clearing the choice comes back
+   here instead of losing the reader's place. #}
+{% block picker_action %}/review/queue{% endblock %}
 {# The picker is a GET form, so submitting it replaces the whole query string.
-   Without this the demo tour's `highlight` fell off the moment a visitor
-   adopted a unit, and the row they had just been handed stopped being marked
-   (part 17). Display only, exactly as everywhere else. #}
+   Without the hidden `highlight` the demo tour's marker fell off the moment a
+   visitor adopted a unit, and the row they had just been handed stopped being
+   marked (part 17). It survives only when the destination is this same queue
+   - on any other queue it would mark nothing. Display only, as everywhere. #}
 {% block picker_hidden %}
+<input type="hidden" name="origin" value="{{ view.queue.queue_id }}">
 {% if view.highlight %}
 <input type="hidden" name="highlight" value="{{ view.highlight }}">
 {% endif %}
 {% endblock %}
+{% block picker_effect %}"Einheit übernehmen" führt zur Warteschlange der
+gewählten Einheit. Ausgeblendet wird dabei nichts: jede Einheit kann jede
+Warteschlange lesen (ADR-026).{% endblock %}
+{% block picker_effect_unchosen %}Diese Warteschlange ist auch ohne Wahl
+vollständig sichtbar; "Einheit übernehmen" führt zur Warteschlange der
+gewählten Einheit.{% endblock %}
 {% block content %}
 <nav class="backlink" aria-label="Zurück">
   <a href="/review{% if view.unit_id %}?unit={{ view.unit_id }}{% endif %}">Zurück zur Warteschlangen-Übersicht</a>
