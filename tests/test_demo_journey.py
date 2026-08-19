@@ -2152,11 +2152,11 @@ def test_the_tour_is_offered_once_and_the_start_section_is_its_cards(
     restoring it is an uncomment; this test is what makes that restoration a
     deliberate act rather than a drift.
 
-    What is left in the start section is its heading and four fully clickable
-    cards (the operations-endpoints card left with the same 2026-08-19
-    direction), the cards a level up with the line that used to sit between
-    them - a page that skips from `h2` to `h4` is a page a screen reader
-    reports a missing level in.
+    What is left in the start section is its heading and three fully
+    clickable cards (the operations-endpoints and Postfach cards left with
+    the same 2026-08-19 direction), the cards a level up with the line that
+    used to sit between them - a page that skips from `h2` to `h4` is a page
+    a screen reader reports a missing level in.
     """
     client = build_client(config, monkeypatch=monkeypatch)
     page = client.get("/").text
@@ -2170,17 +2170,20 @@ def test_the_tour_is_offered_once_and_the_start_section_is_its_cards(
     assert '<h2 id="start-heading">' in page
     levels = [int(level) for level in re.findall(r"<h([1-6])", page)]
     assert all(later - earlier <= 1 for earlier, later in pairwise(levels))
-    # The card grid: FOUR cards since the operations-endpoints card left on
-    # the user's decision of 2026-08-19 (its /health links answer JSON - the
-    # one box that led nowhere a visitor could read), each one a single
-    # destination whose whole box is the click target: the grid carries the
-    # stretched-link class and every heading holds the anchor.
+    # The card grid: THREE cards - the operations-endpoints card left on the
+    # user's decision of 2026-08-19 (its /health links answer JSON - the one
+    # box that led nowhere a visitor could read) and the Postfach card with
+    # it (mid-journey material; the tour, the queue page's closing note and
+    # the menu still lead there). Each remaining card is a single destination
+    # whose whole box is the click target: the grid carries the stretched-link
+    # class and every heading holds the anchor.
     section = page[page.index('<section aria-labelledby="start-heading">') :]
     section = section[: section.index("</section>")]
     assert '<ul class="card-grid card-grid-links">' in section
-    assert section.count('<li class="card') == 4
-    assert section.count("<h3><a href=") == 4
+    assert section.count('<li class="card') == 3
+    assert section.count("<h3><a href=") == 3
     assert 'href="/health' not in section
+    assert 'href="/inbox"' not in section
     assert section.startswith(
         '<section aria-labelledby="start-heading">\n  <h2 id="start-heading">'
     )
