@@ -1,88 +1,12 @@
-/* The citizen-facing pages - landing, disclaimer, tour, intake, glass pipeline
-   - on top of system.css. Page-specific leftovers, plus the one animated thing
-   in this project.
-
-   The reflow rules live in the design system and apply to every page. What is
-   here is what only a citizen page has: the hero, the persona grid, the tour's
-   step layout, the placeholder token, the before/after panels.
-
-   THE HERO, IN ONE PARAGRAPH. Five stages are drawn once and stay drawn; a
-   highlight ring and a sealed envelope walk along them on a 16 second loop,
-   and the five captions in the document fade with the SAME keyframes at the
-   same offsets, so the sentence a visitor reads always belongs to the stage
-   that is lit. One keyframe set does all of it: the stagger is five negative
-   `animation-delay` values, which is why the timing of the picture and the
-   timing of the text cannot drift apart. Every animated property is `opacity`
-   or `transform`. There is no JavaScript on this page and no request to
-   anywhere.
-
-   WHAT PART 18 CHANGED ABOUT THE HERO, AND WHAT IT DID NOT TOUCH. It is the
-   flagship of the site and it looked like a diagram in a white box: same
-   elevation as every card under it, 0.95rem stage names, a grey caption strip
-   with a coloured edge. It is now a panel of its own - a tinted gradient
-   surface, its own elevation, larger discs, heavier stage names, and a caption
-   block that reads as a caption rather than as a note. NONE of the mechanics
-   moved. The 16 second period, the five negative delays, the `hero-travel`
-   geometry in 192 user-unit steps, the sibling-combinator pause control and
-   the reduced-motion still frame are the part-17 versions character for
-   character, because they were only just corrected and every one of them is
-   pinned by a test that reads this file. */
-
-/* ----------------------------------------------------------------- shared */
-
-/* `.lead` MOVED TO system.css IN PART 21, found the same way the `.cta` move
-   below was found: auditing every component on the two new grounds. `/metrics`
-   and `/inbox` both open with `<p class="lead">` and neither of them loads this
-   file, so on both of those pages the class resolved to nothing at all.
-
-   IT DID NOT LOOK WRONG, AND THAT IS THE WHOLE REASON TO MOVE IT. Both of those
-   paragraphs sit inside `.page-head`, and `.page-head > p` in the design system
-   already sets the same size and the same ink - so those two pages rendered
-   correctly by coincidence of WHERE the paragraph sits rather than because the
-   class they ask for exists. Move that `<p>` out of the page head, or add a
-   second lead further down either page, and the sentence silently becomes body
-   text. `.cta` below was this same omission with a visible consequence, which
-   is why it was found in part 17 by looking; this is the same omission with no
-   visible consequence, which is why it took an audit. A component five
-   templates ask for belongs in the one file every page loads.
-
-   `.cta` MOVED TO system.css IN PART 17. It was defined here and used by
-   `metrics.html`, which loads system.css and metrics.css and never loaded this
-   file - so the metrics reload control asked for a class that did not exist on
-   its page and rendered as a bare inline link with no background, no border
-   and no padding. A control that does not look like one is most of the reason
-   it read as dead. It is a design-system component and now lives there. */
-
-/* ------------------------------------------------------------- the hero */
-
 .hero {
   margin-top: var(--space-5);
 }
 
-/* THE ONE PIECE OF DISPLAY TYPE IN THE PROJECT. The landing headline is the
-   page's voice; everywhere else the type ramp is a reading ramp. Fluid between
-   2.125rem and 3.75rem, tracked in as it grows, and `text-wrap: balance` so a
-   three-word last line never happens. Its `rem` term is what keeps a reader's
-   own font size in the expression (1.4.4).
-
-   SCOPED BY A CLASS, ON PURPOSE. `demo.css` is loaded by five pages and a rule
-   on `.page-head > h1` would have given the tour, the intake form, the
-   pipeline and the disclaimer page a 3.75rem headline too - four pages whose
-   title is a label rather than a statement. `demo_base.html` exposes
-   `page_head_class` and only `landing.html` fills it. */
 .page-head-hero > h1 {
   font-size: var(--text-hero);
   letter-spacing: -0.03em;
   line-height: 1.04;
   max-width: 80ch;
-  /* PART 23, AND THE HEADLINE IS WHY. "Statusfeststellungsverfahren" is
-     twenty-seven characters and at 390 px it is wider than the column, so
-     `overflow-wrap: break-word` on `body` did what it is there to do and split
-     it mid-syllable with no hyphen - which reads as a rendering fault on the
-     first line a visitor sees. The document declares its language, so the
-     engine can break the compound where German breaks it and set the hyphen
-     itself. Where an engine has no dictionary this changes nothing and the
-     old behaviour is still the fallback. */
   hyphens: auto;
 }
 
@@ -649,6 +573,8 @@
 .persona {
   display: flex;
   flex-direction: column;
+  position: relative;
+  display: flex;
   margin: 0;
   max-width: none;
   padding: var(--space-5);
@@ -683,6 +609,12 @@
 
 .persona h3 a:hover {
   text-decoration: underline;
+}
+
+.persona h3 a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
 }
 
 .persona > *:last-child {

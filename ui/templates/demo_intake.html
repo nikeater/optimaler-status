@@ -30,12 +30,6 @@
 {% block heading %}{{ t("intake.headline") }}{% endblock %}
 {% block content %}
 
-<section aria-labelledby="einleitung-heading">
-  <h2 id="einleitung-heading">{{ t("intake.what.heading") }}</h2>
-  <p>{{ t(view.ingest_note_key) }}</p>
-  <p class="notice">{{ view.note }}</p>
-</section>
-
 {% if view.error_key %}
 <section aria-labelledby="ablehnung-heading">
   <h2 id="ablehnung-heading">{{ t("intake.refusal.heading") }}</h2>
@@ -61,7 +55,7 @@
         {% if persona.persona_id == view.persona.persona_id %}
         {{ persona.display_name }} <span class="tag">{{ t("intake.persona.chosen") }}</span>
         {% else %}
-        <a href="/demo/antrag?persona={{ persona.persona_id }}">{{ persona.display_name }}</a>
+        <a href="/demo/antrag?persona={{ persona.persona_id }}#personen-heading">{{ persona.display_name }}</a>
         {% endif %}
       </h3>
       <p class="muted">{{ persona.headline_for(lang) }}</p>
@@ -93,23 +87,6 @@
 
 #}
 
-{# THE FIVE THINGS TO TRY COME BEFORE THE FORM (part 24). They used to sit
-   under it, which put the most interesting section on the page below the submit
-   button: a judge reading top to bottom met a prefilled form, pressed the
-   button, and never learned that the page was asking to be broken. Their own
-   lead says "Aendern Sie die Angaben ruhig", which is a sentence that only
-   works in front of the fields it means. Nothing here changed but the order -
-   same heading, same five entries, same ids. #}
-<section aria-labelledby="hinweise-heading">
-  <h2 id="hinweise-heading">{{ t("intake.hints.heading") }}</h2>
-  <p>{{ t("intake.hints.lead") }}</p>
-  <dl class="hints">
-    {% for label, detail in view.hints %}
-    <dt>{{ label }}</dt>
-    <dd>{{ detail }}</dd>
-    {% endfor %}
-  </dl>
-</section>
 
 <section aria-labelledby="formular-heading">
   <h2 id="formular-heading">

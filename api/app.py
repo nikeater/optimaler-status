@@ -1,99 +1,3 @@
-"""FastAPI app: ingest one submission, read one case, read the numbers.
-
-``GET /cases/{case_id}`` is the S1 "UI": the raw event list plus the derived
-state, as JSON. That is deliberate - the first thing the project renders is the
-audit trail, and the caseworker UI in part 07 is a view on exactly this data,
-not a second source of truth.
-
-``GET /metrics`` (part 02) is the second thing it renders: the eval report as a
-plain HTML page. Same principle - the panel reads the report the eval harness
-wrote and computes nothing itself, so the page can never disagree with the CI
-gate.
-
-**No error path echoes payload content** (part 04). A pydantic ``ValidationError``
-carries the offending input values, and FastAPI's own request validation puts
-the whole body into its 422 by default; both are sanitized here to location and
-error type. An error message is the easiest place in a web application to leak
-the thing the rest of the architecture spent a whole part sealing, and a canary
-test asserts it does not happen on ``/ingest``, ``/cases/{id}`` and the 422.
-
-``GET /inbox`` (part 07) is the third: the simulated applicant inbox. The
-notification worker runs INLINE after the pipeline, in the same request, because
-the whole of ADR-005 is that a notification is a projection of the journal - and
-an inline fold cannot drift from the journal it folds. No queue, no scheduler,
-no async infrastructure; ``python -m engine.notify.replay`` is the same fold with
-a directory in front of it.
-
-``GET /drafts/{case_id}`` (part 08) is the fourth, and it is the ONE route that
-returns identity data: a prepared Nachforderung or Bewilligungsentwurf with the
-applicant re-hydrated into it (ADR-023). Read-only, open only because the data
-here is synthetic, and behind roles in part 10.
-
-``GET /healthz`` (part 11) is the container's healthcheck and answers nothing
-else; ``GET /health`` keeps answering the question it always did, which config
-versions this process is running.
-
-**Demo mode (part 11) is OFF unless ``EINGANGSLOTSE_DEMO_MODE=1``.** When it is
-on, ``POST /ingest`` closes behind a token (or entirely, when no token is set),
-every rendered page gains a synthetic-data ribbon (part 16; part 11's
-banner block, slimmed to one line and linking ``GET /hinweise``, which
-carries the whole notice) and ``GET /`` becomes a landing page. The posture
-is read here, once, at app construction; see
-``engine/demo/mode.py`` for why each of the three exists and why the review
-actions deliberately stay open. With the flag off, none of it is observable -
-not in a response body, not in the route table and not in the middleware
-stack, because the things demo mode adds are added conditionally.
-
-**Two languages, resolved on the server (part 16).** ``?lang=`` sets a cookie
-and redirects back; the cookie then governs. The switch is middleware, so it
-works on any page and preserves every other query parameter, and it is
-registered UNCONDITIONALLY - the language machinery is not demo surface. What
-it does not do outside demo mode is link anything demo. See ``api/i18n.py``.
-
-**Every response carries ``Cache-Control: no-cache`` (part 17b).** Without that
-header a browser invents its own freshness window and keeps a stylesheet it was
-never told it could keep, which is how a deploy of new markup came to be
-rendered with the previous deploy's CSS. ``no-cache`` means "store it, but
-revalidate before every use", so the static mount's ETags turn a repeat visit
-into a 304 and a redeploy is visible on the next request. The middleware is
-registered unconditionally and outermost; see ``_mount_cache_control``.
-
-**The guided showcase (part 13) rides on the same flag and adds two pages.**
-``GET /demo/antrag`` is a citizen intake surface over fictional personas;
-``GET /demo/case/{id}/pipeline`` narrates what the pipeline did to the
-submission the visitor just made and hands over to the caseworker UI. The
-intake page is the AUTHORIZED SERVER-SIDE CALLER of the token-gated ingest: it
-presents the deployment's own token to the same check the middleware runs, and
-then calls the same ``run_ingest`` this module's ``POST /ingest`` calls. Direct
-callers of the raw endpoint keep the 403 they had. Registered conditionally
-like the landing page, so outside demo mode there is no ``/demo`` anywhere -
-not in the route table, not in the OpenAPI document, and no demo store in the
-process.
-
-**Part 19 adds the second party on the same terms.** ``/demo/gegenpartei`` is
-where the visitor answers as the Auftraggeber a Statusfeststellung named, and
-its POST is the SAME authorized server-side caller as the intake's: one
-``check_ingest``, one ``run_ingest``, one submission, its own sealed case. The
-two cases are correlated by an opaque token in the RAM store, never by a
-journal write - "a statement was requested" has no event type and this part
-does not invent one (ADR-036).
-
-**The extractor switch (part 12) defaults to replay.** ``POST /ingest`` runs the
-deterministic readers unless ``EINGANGSLOTSE_EXTRACTOR=live`` (or an enabled
-``live`` block in the extraction config) selects the LLM client, which is a
-LOCAL showcase posture: the gate, CI and the hosted demonstration have no model
-endpoint and never ask for one. The posture is resolved once here, nothing is
-probed at startup, and a live-mode endpoint that is down costs discards toward
-tier 3 rather than an error to the caller. See ``engine/extract/selection.py``.
-
-Backends are in-memory by default and file-backed when their env var is set:
-``EINGANGSLOTSE_JOURNAL_DIR`` for the journal, ``EINGANGSLOTSE_VAULT_DIR`` for
-the identity vault, ``EINGANGSLOTSE_OUTBOX_DIR`` for the applicant outbox and
-``EINGANGSLOTSE_DRAFTS_DIR`` for the prepared drafts. PostgreSQL replaces them
-in a later part; the vault's production form is encrypted at rest, and the draft
-store needs exactly the same treatment (docs/vault-dpia-input.md).
-"""
-
 from __future__ import annotations
 
 import os
@@ -1067,6 +971,23 @@ def _mount_demo_journey(
         if view is None:
             raise HTTPException(status_code=404, detail=f"unknown case: {case_id}")
         return HTMLResponse(demo_view.render_pipeline(view, page))
+
+    @app.get("/demo/case/{case_id}/backend", response_class=HTMLResponse)
+    def demo_backend(request: Request, case_id: str) -> HTMLResponse:
+        """Phase 2: the seven stages, over the journal and nothing else."""
+        page = page_context(request)
+        view = demo_view.build_backend_view(
+            journal,
+            config=bundle,
+            case_id=case_id,
+            outbox=outbox,
+            store=demo_store,
+            page=page,
+        )
+        if view is None:
+            raise HTTPException(status_code=404, detail=f"unknown case: {case_id}")
+        return HTMLResponse(demo_view.render_backend(view, page))
+
 
 
 def _finding_lines(error: RedactionRefusedError) -> tuple[str, ...]:

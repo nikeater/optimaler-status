@@ -7,8 +7,8 @@
    "Maschine", made visible. Nothing but the class changes here: every rule the
    ground re-points lives in `system.css`. #}
 {% block ground %} class="ground-machine"{% endblock %}
-{% block title %}{{ t("pipeline.title") }}{% endblock %}
-{% block heading %}{{ t("pipeline.headline") }}{% endblock %}
+{% block title %}{{ t("backend.title") }}{% endblock %}
+{% block heading %}{{ t("backend.headline") }}{% endblock %}
 {% block content %}
 
 {# THE WORKING COPY, PAINTED THE WAY AN EDITOR PAINTS IT (part 23). One line,
@@ -22,14 +22,13 @@
 {% macro working_copy(part) %}<pre>{% for segment in part.segments %}{% if segment.placeholder %}<mark class="placeholder">{{ segment.text }}</mark>{% elif segment.role %}<span class="tok-{{ segment.role }}">{{ segment.text }}</span>{% else %}{{ segment.text }}{% endif %}{% endfor %}</pre>{% endmacro %}
 
 <section aria-labelledby="ueberblick-heading">
-  <h2 id="ueberblick-heading">{{ t("pipeline.overview.heading") }}</h2>
-  <a href="/demo/case/{{ view.case_id }}/backend">{{ t("pipeline.backend.link") }}</a>
-  <p>{{ t("pipeline.overview.body") }}</p>
+  <h2 id="ueberblick-heading">{{ t("backend.overview.heading") }}</h2>
+  <p>{{ t("backend.overview.body") }}</p>
   {% if not view.held %}
-  <p class="notice">{{ t("pipeline.expired") }}</p>
+  <p class="notice">{{ t("backend.expired") }}</p>
   {% endif %}
   {% if view.sampled %}
-  <p class="notice sample-note">{{ t("pipeline.sampled") }}</p>
+  <p class="notice sample-note">{{ t("backend.sampled") }}</p>
   {% endif %}
   {# PART 19, and the position is the whole of the reasoning: the two-party
      section itself sits where it belongs in the story (between the message and
@@ -40,56 +39,56 @@
   {% if view.statement and view.statement.asked %}
   <p class="notice">
     {% if view.statement.answered %}
-    {{ m("pipeline.statement.notice.arrived") }}
+    {{ m("backend.statement.notice.arrived") }}
     {% else %}
-    {{ m("pipeline.statement.notice") }}
+    {{ m("backend.statement.notice") }}
     {% endif %}
-    <a href="#gegenpartei">{{ t("pipeline.statement.heading") }}</a>
+    <a href="#gegenpartei">{{ t("backend.statement.heading") }}</a>
   </p>
   {% endif %}
 </section>
 
 <section aria-labelledby="a-heading" class="stage">
-  <h2 id="a-heading">{{ t("pipeline.a.heading") }}</h2>
-  <p>{{ t("pipeline.a.body") }}</p>
+  <h2 id="a-heading">{{ t("backend.a.heading") }}</h2>
+  <p>{{ t("backend.a.body") }}</p>
   <dl>
-    <dt>{{ t("pipeline.a.case") }}</dt><dd><code>{{ view.case_id }}</code></dd>
-    <dt>{{ t("pipeline.a.channel") }}</dt><dd>{{ view.channel_label }}</dd>
-    <dt>{{ t("pipeline.a.received") }}</dt>
-    <dd>{{ case.received_at.isoformat() if case.received_at else t("pipeline.d.unknown") }}</dd>
-    <dt>{{ t("pipeline.a.as") }}</dt>
-    <dd>{{ view.persona_label or t("pipeline.a.persona") }}</dd>
-    <dt>{{ t("pipeline.a.events") }}</dt><dd>{{ case.event_count }}</dd>
+    <dt>{{ t("backend.a.case") }}</dt><dd><code>{{ view.case_id }}</code></dd>
+    <dt>{{ t("backend.a.channel") }}</dt><dd>{{ view.channel_label }}</dd>
+    <dt>{{ t("backend.a.received") }}</dt>
+    <dd>{{ case.received_at.isoformat() if case.received_at else t("backend.d.unknown") }}</dd>
+    <dt>{{ t("backend.a.as") }}</dt>
+    <dd>{{ view.persona_label or t("backend.a.persona") }}</dd>
+    <dt>{{ t("backend.a.events") }}</dt><dd>{{ case.event_count }}</dd>
   </dl>
 </section>
 
 <section aria-labelledby="b-heading" class="stage">
-  <h2 id="b-heading">{{ t("pipeline.b.heading") }}</h2>
-  <p>{{ t("pipeline.b.seal_sentence") }}</p>
+  <h2 id="b-heading">{{ t("backend.b.heading") }}</h2>
+  <p>{{ t("backend.b.seal_sentence") }}</p>
   <dl>
-    <dt>{{ t("pipeline.b.sealed") }}</dt>
+    <dt>{{ t("backend.b.sealed") }}</dt>
     <dd>{{ case.sealed_count if case.sealed_count is not none else "-" }}</dd>
-    <dt>{{ t("pipeline.b.verified") }}</dt>
+    <dt>{{ t("backend.b.verified") }}</dt>
     <dd>
       {% if case.redaction_verified %}
-      {{ t("pipeline.b.verified.yes") }}
+      {{ t("backend.b.verified.yes") }}
       {% else %}
-      {{ t("pipeline.b.verified.no") }}
+      {{ t("backend.b.verified.no") }}
       {% endif %}
     </dd>
   </dl>
 
   {% if view.pairings %}
-  <h3>{{ t("pipeline.b.pairs.heading") }}</h3>
-  <p>{{ t("pipeline.b.pairs.body") }}</p>
+  <h3>{{ t("backend.b.pairs.heading") }}</h3>
+  <p>{{ t("backend.b.pairs.body") }}</p>
   <div class="scroll-x">
     <table>
-      <caption>{{ t("pipeline.b.pairs.caption") }}</caption>
+      <caption>{{ t("backend.b.pairs.caption") }}</caption>
       <thead>
         <tr>
-          <th scope="col">{{ t("pipeline.b.pairs.col1") }}</th>
-          <th scope="col">{{ t("pipeline.b.pairs.col2") }}</th>
-          <th scope="col">{{ t("pipeline.b.pairs.col3") }}</th>
+          <th scope="col">{{ t("backend.b.pairs.col1") }}</th>
+          <th scope="col">{{ t("backend.b.pairs.col2") }}</th>
+          <th scope="col">{{ t("backend.b.pairs.col3") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -100,9 +99,9 @@
           <td>
             {% if pair.placeholder %}
             <code class="placeholder">{{ pair.placeholder }}</code>
-            <span class="sr-only">{{ t("pipeline.b.pairs.sr", kind=t("kind." ~ pair.kind)) }}</span>
+            <span class="sr-only">{{ t("backend.b.pairs.sr", kind=t("kind." ~ pair.kind)) }}</span>
             {% else %}
-            <span class="muted">{{ t("pipeline.b.pairs.none") }}</span>
+            <span class="muted">{{ t("backend.b.pairs.none") }}</span>
             {% endif %}
           </td>
         </tr>
@@ -113,27 +112,27 @@
   {% endif %}
 
   {% if view.echo_body %}
-  <h3>{{ t("pipeline.b.letter.heading") }}</h3>
-  <p>{{ t("pipeline.b.letter.body") }}</p>
+  <h3>{{ t("backend.b.letter.heading") }}</h3>
+  <p>{{ t("backend.b.letter.body") }}</p>
   <div class="side-by-side">
     <div>
       {# WHAT THE VISITOR TYPED, AND IT IS NOT COLOURED. This half is a person's
          own letter; the half beside it is the machine's copy of it. Painting
          both would say the two are the same kind of thing, which is the one
          thing this comparison exists to deny. #}
-      <h4>{{ t("pipeline.b.letter.yours") }}</h4>
+      <h4>{{ t("backend.b.letter.yours") }}</h4>
       <pre>{{ view.echo_body }}</pre>
     </div>
     <div>
-      <h4>{{ t("pipeline.b.letter.machine") }}</h4>
+      <h4>{{ t("backend.b.letter.machine") }}</h4>
       {% for part in view.parts %}
       {{ working_copy(part) }}
       {% endfor %}
     </div>
   </div>
   {% elif view.parts %}
-  <h3>{{ t("pipeline.b.copy.heading") }}</h3>
-  <p>{{ t("pipeline.b.copy.body") }}</p>
+  <h3>{{ t("backend.b.copy.heading") }}</h3>
+  <p>{{ t("backend.b.copy.body") }}</p>
   {% for part in view.parts %}
   <p class="muted"><code>{{ part.part_id }}</code></p>
   {{ working_copy(part) }}
@@ -143,11 +142,11 @@
   {% if view.sealed_text_parts %}
   <div class="scroll-x">
     <table>
-      <caption>{{ t("pipeline.b.parts.caption") }}</caption>
+      <caption>{{ t("backend.b.parts.caption") }}</caption>
       <thead>
         <tr>
-          <th scope="col">{{ t("pipeline.b.parts.col1") }}</th>
-          <th scope="col">{{ t("pipeline.b.parts.col2") }}</th>
+          <th scope="col">{{ t("backend.b.parts.col1") }}</th>
+          <th scope="col">{{ t("backend.b.parts.col2") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -161,48 +160,48 @@
 </section>
 
 <section aria-labelledby="c-heading" class="stage">
-  <h2 id="c-heading">{{ t("pipeline.c.heading") }}</h2>
-  <p>{{ t("pipeline.c.body") }}</p>
+  <h2 id="c-heading">{{ t("backend.c.heading") }}</h2>
+  <p>{{ t("backend.c.body") }}</p>
   <dl>
-    <dt>{{ t("pipeline.c.found") }}</dt>
+    <dt>{{ t("backend.c.found") }}</dt>
     <dd>
       {% if case.extracted_fields %}
       {{ case.extracted_fields | join(", ") }}
       {% else %}
-      {{ t("pipeline.c.none") }}
+      {{ t("backend.c.none") }}
       {% endif %}
     </dd>
-    <dt>{{ t("pipeline.c.discarded") }}</dt>
+    <dt>{{ t("backend.c.discarded") }}</dt>
     <dd>
       {{ case.discarded_count if case.discarded_count is not none else 0 }} -
-      {{ t("pipeline.c.discarded.note") }}
+      {{ t("backend.c.discarded.note") }}
     </dd>
   </dl>
   {% if not case.extracted_fields and case.channel == "email" %}
-  <p class="notice">{{ t("pipeline.c.no_extraction") }}</p>
+  <p class="notice">{{ t("backend.c.no_extraction") }}</p>
   {% endif %}
   {% if case.spans %}
   <div class="scroll-x">
     <table>
-      <caption>{{ t("pipeline.c.spans.caption") }}</caption>
+      <caption>{{ t("backend.c.spans.caption") }}</caption>
       <thead>
         <tr>
-          <th scope="col">{{ t("pipeline.c.spans.col1") }}</th>
-          <th scope="col">{{ t("pipeline.c.spans.col2") }}</th>
-          <th scope="col">{{ t("pipeline.c.spans.col3") }}</th>
-          <th scope="col">{{ t("pipeline.c.spans.col4") }}</th>
+          <th scope="col">{{ t("backend.c.spans.col1") }}</th>
+          <th scope="col">{{ t("backend.c.spans.col2") }}</th>
+          <th scope="col">{{ t("backend.c.spans.col3") }}</th>
+          <th scope="col">{{ t("backend.c.spans.col4") }}</th>
         </tr>
       </thead>
       <tbody>
         {% for span in case.spans %}
         <tr>
           <th scope="row">{{ span.get("field") }}</th>
-          <td>{{ span.get("part_id") or t("pipeline.c.spans.structured") }}</td>
+          <td>{{ span.get("part_id") or t("backend.c.spans.structured") }}</td>
           <td>
             {% if span.get("start") is not none %}
-            {{ t("pipeline.c.spans.range", start=span.get("start"), end=span.get("end")) }}
+            {{ t("backend.c.spans.range", start=span.get("start"), end=span.get("end")) }}
             {% else %}
-            <span class="muted">{{ t("pipeline.c.spans.nospan") }}</span>
+            <span class="muted">{{ t("backend.c.spans.nospan") }}</span>
             {% endif %}
           </td>
           <td>{{ span.get("match_mode") }}</td>
@@ -215,33 +214,33 @@
 </section>
 
 <section aria-labelledby="d-heading" class="stage">
-  <h2 id="d-heading">{{ t("pipeline.d.heading") }}</h2>
-  <p>{{ t("pipeline.d.body") }}</p>
+  <h2 id="d-heading">{{ t("backend.d.heading") }}</h2>
+  <p>{{ t("backend.d.body") }}</p>
   <dl>
-    <dt>{{ t("pipeline.d.procedure") }}</dt>
+    <dt>{{ t("backend.d.procedure") }}</dt>
     <dd>
-      {{ case.procedure_id or t("pipeline.d.procedure.none") }}
-      ({{ t("pipeline.d.derived",
-             source=case.derivation.get("source") or t("pipeline.d.unknown"),
-             hint=case.procedure_hint or t("pipeline.d.nohint")) }})
+      {{ case.procedure_id or t("backend.d.procedure.none") }}
+      ({{ t("backend.d.derived",
+             source=case.derivation.get("source") or t("backend.d.unknown"),
+             hint=case.procedure_hint or t("backend.d.nohint")) }})
     </dd>
-    <dt>{{ t("pipeline.d.completeness") }}</dt>
-    <dd>{{ case.completeness_verdict or t("pipeline.d.unknown") }}</dd>
-    <dt>{{ t("pipeline.d.clearcut") }}</dt>
+    <dt>{{ t("backend.d.completeness") }}</dt>
+    <dd>{{ case.completeness_verdict or t("backend.d.unknown") }}</dd>
+    <dt>{{ t("backend.d.clearcut") }}</dt>
     <dd>
-      {% if case.clear_cut %}{{ t("pipeline.d.yes") }}{% elif case.clear_cut is none %}{{ t("pipeline.d.unchecked") }}{% else %}{{ t("pipeline.d.no") }}{% endif %}
+      {% if case.clear_cut %}{{ t("backend.d.yes") }}{% elif case.clear_cut is none %}{{ t("backend.d.unchecked") }}{% else %}{{ t("backend.d.no") }}{% endif %}
     </dd>
   </dl>
   {% if case.gaps %}
-  <h3>{{ t("pipeline.d.gaps.heading") }}</h3>
+  <h3>{{ t("backend.d.gaps.heading") }}</h3>
   <div class="scroll-x">
     <table>
-      <caption>{{ t("pipeline.d.gaps.caption") }}</caption>
+      <caption>{{ t("backend.d.gaps.caption") }}</caption>
       <thead>
         <tr>
-          <th scope="col">{{ t("pipeline.d.gaps.col1") }}</th>
-          <th scope="col">{{ t("pipeline.d.gaps.col2") }}</th>
-          <th scope="col">{{ t("pipeline.d.gaps.col3") }}</th>
+          <th scope="col">{{ t("backend.d.gaps.col1") }}</th>
+          <th scope="col">{{ t("backend.d.gaps.col2") }}</th>
+          <th scope="col">{{ t("backend.d.gaps.col3") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -256,18 +255,18 @@
     </table>
   </div>
   {% endif %}
-  <h3>{{ t("pipeline.d.routing.heading") }}</h3>
-  <p>{{ m("pipeline.d.routing.body", unit=state.machine_unit_id or t("pipeline.d.routing.nounit")) }}</p>
+  <h3>{{ t("backend.d.routing.heading") }}</h3>
+  <p>{{ m("backend.d.routing.body", unit=state.machine_unit_id or t("backend.d.routing.nounit")) }}</p>
   {% if case.routing %}
   <div class="scroll-x">
     <table>
-      <caption>{{ t("pipeline.d.routing.caption") }}</caption>
+      <caption>{{ t("backend.d.routing.caption") }}</caption>
       <thead>
         <tr>
-          <th scope="col">{{ t("pipeline.d.routing.col1") }}</th>
-          <th scope="col">{{ t("pipeline.d.routing.col2") }}</th>
-          <th scope="col">{{ t("pipeline.d.routing.col3") }}</th>
-          <th scope="col">{{ t("pipeline.d.routing.col4") }}</th>
+          <th scope="col">{{ t("backend.d.routing.col1") }}</th>
+          <th scope="col">{{ t("backend.d.routing.col2") }}</th>
+          <th scope="col">{{ t("backend.d.routing.col3") }}</th>
+          <th scope="col">{{ t("backend.d.routing.col4") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -276,7 +275,7 @@
           <th scope="row">
             {{ suggestion.get("unit_id") }}
             {% if suggestion.get("unit_id") == state.machine_unit_id %}
-            <span class="tag">{{ t("pipeline.d.routing.routed") }}</span>
+            <span class="tag">{{ t("backend.d.routing.routed") }}</span>
             {% endif %}
           </th>
           <td>{{ suggestion.get("source") }}</td>
@@ -291,20 +290,20 @@
 </section>
 
 <section aria-labelledby="e-heading" class="stage">
-  <h2 id="e-heading">{{ t("pipeline.e.heading") }}</h2>
-  <p>{{ t("pipeline.e.body") }}</p>
+  <h2 id="e-heading">{{ t("backend.e.heading") }}</h2>
+  <p>{{ t("backend.e.body") }}</p>
   <dl>
-    <dt>{{ t("pipeline.e.result") }}</dt><dd>{{ t("tier." ~ state.tier) if state.tier else "-" }}</dd>
-    <dt>{{ t("pipeline.e.unit") }}</dt><dd>{{ state.unit_id or t("pipeline.e.unit.none") }}</dd>
+    <dt>{{ t("backend.e.result") }}</dt><dd>{{ t("tier." ~ state.tier) if state.tier else "-" }}</dd>
+    <dt>{{ t("backend.e.unit") }}</dt><dd>{{ state.unit_id or t("backend.e.unit.none") }}</dd>
   </dl>
   <div class="scroll-x">
     <table>
-      <caption>{{ t("pipeline.e.reasons.caption") }}</caption>
+      <caption>{{ t("backend.e.reasons.caption") }}</caption>
       <thead>
         <tr>
-          <th scope="col">{{ t("pipeline.e.reasons.col1") }}</th>
-          <th scope="col">{{ t("pipeline.e.reasons.col2") }}</th>
-          <th scope="col">{{ t("pipeline.e.reasons.col3") }}</th>
+          <th scope="col">{{ t("backend.e.reasons.col1") }}</th>
+          <th scope="col">{{ t("backend.e.reasons.col2") }}</th>
+          <th scope="col">{{ t("backend.e.reasons.col3") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -315,34 +314,34 @@
           <td>{{ reason.get("detail") }}</td>
         </tr>
         {% else %}
-        <tr><td colspan="3">{{ t("pipeline.e.reasons.none") }}</td></tr>
+        <tr><td colspan="3">{{ t("backend.e.reasons.none") }}</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
   {% if view.downgraded %}
   <p class="notice alarm-note">
-    {{ t("pipeline.e.valve", before=case.pre_downgrade_tier, after=case.tier) }}
+    {{ t("backend.e.valve", before=case.pre_downgrade_tier, after=case.tier) }}
   </p>
   {% endif %}
-  <h3>{{ t("pipeline.e.anomaly.heading") }}</h3>
+  <h3>{{ t("backend.e.anomaly.heading") }}</h3>
   {% if case.anomaly %}
   <dl>
-    <dt>{{ t("pipeline.e.anomaly.score") }}</dt>
+    <dt>{{ t("backend.e.anomaly.score") }}</dt>
     <dd>{{ "%.3f"|format(case.anomaly.get("score")) if case.anomaly.get("score") is not none else "-" }}</dd>
-    <dt>{{ t("pipeline.e.anomaly.flagged") }}</dt>
-    <dd>{% if case.anomaly.get("flagged") %}{{ t("pipeline.d.yes") }}{% else %}{{ t("pipeline.d.no") }}{% endif %}</dd>
-    <dt>{{ t("pipeline.e.anomaly.mode") }}</dt><dd>{{ case.anomaly.get("mode") or "-" }}</dd>
+    <dt>{{ t("backend.e.anomaly.flagged") }}</dt>
+    <dd>{% if case.anomaly.get("flagged") %}{{ t("backend.d.yes") }}{% else %}{{ t("backend.d.no") }}{% endif %}</dd>
+    <dt>{{ t("backend.e.anomaly.mode") }}</dt><dd>{{ case.anomaly.get("mode") or "-" }}</dd>
   </dl>
   {% if view.anomaly_reasons %}
-  <p>{{ t("pipeline.e.anomaly.body") }}</p>
+  <p>{{ t("backend.e.anomaly.body") }}</p>
   <ul class="flags">
     {% for reason in view.anomaly_reasons %}
     <li class="flag">{{ reason.text }}</li>
     {% endfor %}
   </ul>
   {% if view.flagged_but_log_only %}
-  <p class="notice">{{ t("pipeline.e.log_only") }}</p>
+  <p class="notice">{{ t("backend.e.log_only") }}</p>
   {# PART 22: the second half of the same sentence, said rather than implied.
      `would_be_tier` is READ from the decision table's downgrade rows
      (api/demo.py::armed_scorer_tier); the schema fixes every downgrade at tier
@@ -350,30 +349,30 @@
      about what tier this case is. #}
   {% if view.would_be_tier %}
   <p class="notice">
-    {{ t("pipeline.e.would_be_tier", tier=t("tier." ~ view.would_be_tier)) }}
+    {{ t("backend.e.would_be_tier", tier=t("tier." ~ view.would_be_tier)) }}
   </p>
   {% endif %}
   {% endif %}
   {% else %}
-  <p class="muted">{{ t("pipeline.e.anomaly.noreasons") }}</p>
+  <p class="muted">{{ t("backend.e.anomaly.noreasons") }}</p>
   {% endif %}
   {% else %}
-  <p class="muted">{{ t("pipeline.e.anomaly.none") }}</p>
+  <p class="muted">{{ t("backend.e.anomaly.none") }}</p>
   {% endif %}
 </section>
 
 <section aria-labelledby="f-heading" class="stage">
-  <h2 id="f-heading">{{ t("pipeline.f.heading") }}</h2>
-  <p>{{ t("pipeline.f.body") }}</p>
+  <h2 id="f-heading">{{ t("backend.f.heading") }}</h2>
+  <p>{{ t("backend.f.body") }}</p>
   {% if view.notifications %}
   <div class="scroll-x">
     <table>
-      <caption>{{ t("pipeline.f.caption") }}</caption>
+      <caption>{{ t("backend.f.caption") }}</caption>
       <thead>
         <tr>
-          <th scope="col">{{ t("pipeline.f.col1") }}</th>
-          <th scope="col">{{ t("pipeline.f.col2") }}</th>
-          <th scope="col">{{ t("pipeline.f.col3") }}</th>
+          <th scope="col">{{ t("backend.f.col1") }}</th>
+          <th scope="col">{{ t("backend.f.col2") }}</th>
+          <th scope="col">{{ t("backend.f.col3") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -388,12 +387,12 @@
     </table>
   </div>
   <p>
-    {{ t("pipeline.f.link") }}
-    <a href="/inbox">{{ t("pipeline.f.link.inbox") }}</a> /
-    <a href="/inbox/{{ view.case_id }}">{{ t("pipeline.f.link.json") }}</a>.
+    {{ t("backend.f.link") }}
+    <a href="/inbox">{{ t("backend.f.link.inbox") }}</a> /
+    <a href="/inbox/{{ view.case_id }}">{{ t("backend.f.link.json") }}</a>.
   </p>
   {% else %}
-  <p class="muted">{{ t("pipeline.f.none") }}</p>
+  <p class="muted">{{ t("backend.f.none") }}</p>
   {% endif %}
 </section>
 
@@ -401,24 +400,24 @@
    inside the a) to g) run: those seven are what the machine did to this case
    and every one of them is readable off the journal. This one is the demo layer
    simulating an Anhoerung, it writes no event, and a heading that said "h)"
-   would claim a pipeline stage that does not exist. It sits between the message
+   would claim a backend stage that does not exist. It sits between the message
    and the hand-off because that is where it happens in the procedure: the
    Clearingstelle hears the other side before a caseworker takes the file. #}
 {% if view.statement %}
 <section aria-labelledby="gegenpartei-heading" id="gegenpartei" class="stage">
   <h2 id="gegenpartei-heading">
     {% if view.statement.asked %}
-    {{ t("pipeline.statement.heading") }}
+    {{ t("backend.statement.heading") }}
     {% else %}
-    {{ t("pipeline.statement.origin.heading") }}
+    {{ t("backend.statement.origin.heading") }}
     {% endif %}
   </h2>
   {% if view.statement.asked %}
-  <p>{{ t("pipeline.statement.body") }}</p>
-  <p class="notice">{{ t("pipeline.statement.demo_note") }}</p>
+  <p>{{ t("backend.statement.body") }}</p>
+  <p class="notice">{{ t("backend.statement.demo_note") }}</p>
 
-  <h3>{{ t("pipeline.statement.letter.heading") }}</h3>
-  <p class="muted" lang="en">{{ t("pipeline.statement.letter.note") }}</p>
+  <h3>{{ t("backend.statement.letter.heading") }}</h3>
+  <p class="muted" lang="en">{{ t("backend.statement.letter.note") }}</p>
   <div class="letter" lang="de">
     {% for paragraph in view.statement.letter %}
     <p>{{ paragraph }}</p>
@@ -426,16 +425,16 @@
   </div>
 
   {% if view.statement.answered %}
-  <h3>{{ t("pipeline.statement.arrived.heading") }}</h3>
-  <p>{{ t("pipeline.statement.arrived.body", at=view.statement.answered_label) }}</p>
+  <h3>{{ t("backend.statement.arrived.heading") }}</h3>
+  <p>{{ t("backend.statement.arrived.body", at=view.statement.answered_label) }}</p>
   {% if view.statement.answers %}
   <div class="scroll-x">
     <table>
-      <caption>{{ t("pipeline.statement.answers.caption") }}</caption>
+      <caption>{{ t("backend.statement.answers.caption") }}</caption>
       <thead>
         <tr>
-          <th scope="col">{{ t("pipeline.statement.answers.col1") }}</th>
-          <th scope="col">{{ t("pipeline.statement.answers.col2") }}</th>
+          <th scope="col">{{ t("backend.statement.answers.col1") }}</th>
+          <th scope="col">{{ t("backend.statement.answers.col2") }}</th>
         </tr>
       </thead>
       <tbody>
@@ -450,28 +449,28 @@
   </div>
   {% endif %}
   <p class="handover">
-    <a href="{{ view.statement.statement_href }}">{{ t("pipeline.statement.arrived.link") }}</a>
+    <a href="{{ view.statement.statement_href }}">{{ t("backend.statement.arrived.link") }}</a>
   </p>
   {% else %}
-  <p class="notice">{{ t("pipeline.statement.waiting") }}</p>
+  <p class="notice">{{ t("backend.statement.waiting") }}</p>
   <p class="handover">
-    <a href="{{ view.statement.answer_href }}">{{ t("pipeline.statement.cta") }}</a>
+    <a href="{{ view.statement.answer_href }}">{{ t("backend.statement.cta") }}</a>
   </p>
   {% endif %}
   {% else %}
-  <p>{{ t("pipeline.statement.origin.body") }}</p>
-  <p class="notice">{{ t("pipeline.statement.minimal") }}</p>
+  <p>{{ t("backend.statement.origin.body") }}</p>
+  <p class="notice">{{ t("backend.statement.minimal") }}</p>
   <p class="handover">
-    <a href="{{ view.statement.origin_href }}">{{ t("pipeline.statement.origin.link") }}</a>
+    <a href="{{ view.statement.origin_href }}">{{ t("backend.statement.origin.link") }}</a>
   </p>
   {% endif %}
 </section>
 {% endif %}
 
 <section aria-labelledby="g-heading" class="stage">
-  <h2 id="g-heading">{{ t("pipeline.g.heading") }}</h2>
-  <p>{{ m("pipeline.g.body", queue=view.queue_label) }}</p>
-  <p class="notice">{{ t("pipeline.g.note") }}</p>
+  <h2 id="g-heading">{{ t("backend.g.heading") }}</h2>
+  <p>{{ m("backend.g.body", queue=view.queue_label) }}</p>
+  <p class="notice">{{ t("backend.g.note") }}</p>
   {# THE ONE FORWARD ACTION ON THIS PAGE IS A BUTTON (part 23). It used to be a
      link inside a tinted panel - the loudest BLOCK on the page, which is not
      the same thing as the clearest control, and a visitor who had just read
@@ -483,11 +482,11 @@
      works with scripting off. The panels stay on the two-party links below,
      where a side road is what they are. #}
   <p>
-    <a class="cta" href="{{ view.queue_href }}">{{ t("pipeline.g.handover") }}</a>
+    <a class="cta" href="{{ view.queue_href }}">{{ t("backend.g.handover") }}</a>
   </p>
   <p>
-    {{ t("pipeline.g.after") }}
-    <a href="/inbox/{{ view.case_id }}">{{ t("pipeline.g.after.link") }}</a>.
+    {{ t("backend.g.after") }}
+    <a href="/inbox/{{ view.case_id }}">{{ t("backend.g.after.link") }}</a>.
   </p>
 </section>
 

@@ -1,70 +1,3 @@
-"""The guided showcase: a citizen submits, watches the machine, becomes the clerk.
-
-Four pages since part 19, all demo-mode-only, all server-rendered like
-everything else here.
-
-``/demo/rundgang``
-    The tour. The whole system told from beginning to end in six steps for a
-    visitor who has never seen it, each step linking to the page where that
-    step actually happens. Since part 16 the page is written in ONE language
-    at a time - the header's toggle switches it - rather than carrying an
-    English aside under every German paragraph. **It derives nothing.** Every
-    sentence is either static prose or a
-    fact read off the same projections the other pages read: whether this
-    deployment accepts submissions at all, and - for the seeded case the tour
-    points at - the unit and tier the journal already recorded. When the state
-    was not seeded from the frozen corpus, the tour says so and links the
-    caseworker surface instead of a case that is not there.
-
-``/demo/antrag``
-    The intake surface. A persona picker over ``config/demo/personas_v4.yaml``,
-    an EDITABLE prefilled form, the prepared documents that persona may enclose,
-    and a panel that suggests what to break. The submission goes
-    through the app's own ``run_ingest`` - the same sealing, the same
-    validation, the same journal as ``POST /ingest`` - with the deployment's
-    ingest token presented server-side. The raw endpoint keeps its 403 posture
-    for direct callers; what changes is who is holding the token, not what the
-    gate does. Since part 20 there is one channel and no chooser
-    (:data:`OFFERED_CHANNELS`) and a ticked document becomes a real attachment;
-    since part 22 a prefilled field is required UNLESS a hint tells the visitor
-    to delete it (:func:`required_for`, :data:`HINT_DELETED_FIELDS`).
-
-``/demo/case/{case_id}/pipeline``
-    The glass pipeline. Seven stages, one plain sentence each in the
-    reader's language, and the REAL data underneath. **It re-derives
-    nothing.** The routing answer is the
-    ROUTED event through ``review_state``; anomaly reasons come from
-    ``api.review.anomaly_reason_lines``, which calls ``engine.score
-    .render_reason`` and no other wording; a sampled case renders as
-    Qualitaetssicherung and never with anomaly styling (ADR-025). The only
-    thing this module holds that the journal does not is the redacted working
-    copy and the visitor's own echo, and both live in the demo-only TTL store
-    with the reasoning in ``engine/demo/store.py``.
-
-``/demo/gegenpartei``
-    The counterparty surface (part 19). Par. 7a Abs. 4 SGB IV hears BOTH sides,
-    so a submitted Statusfeststellung produces a simulated Anhoerung letter to
-    the Auftraggeber - rendered as a letter rather than as the flowchart's
-    popup, because nothing on this site needs JavaScript - and this page is
-    where the VISITOR answers as that Auftraggeber. The statement is a REAL
-    submission through the same ``run_ingest``: sealed, redacted, span-verified,
-    routed and journaled as its own case, which is the demonstration that the
-    seal is a property of the system rather than a courtesy to one party. The
-    two cases are correlated by an opaque token the demo store minted
-    (``engine/demo/store.py``), never by a sealed value and never by anything
-    derived from one. **Nothing gates on the answer**: the case proceeds
-    whether it comes or not, and the page says so in those words.
-
-**Nothing here can send anything to an applicant.** ``/inbox`` is linked and
-never touched (ADR-005, the part-07 line): the tour shows the receipt that was
-produced automatically, and there is no control on any of these pages that
-produces, edits or re-sends one.
-
-**Phase 3 is the existing review UI.** The tour hands over with a link and a
-``highlight`` query parameter, which marks one row and changes nothing else -
-``engine/review`` gains no demo branch and the queue stays oldest-first.
-"""
-
 from __future__ import annotations
 
 import re
@@ -961,6 +894,62 @@ class PipelineView:
         return f"/review/queue/{self.queue_id}{query}"
 
 
+def build_backend_view(
+    journal: JournalStore,
+    *,
+    config: ConfigBundle,
+    case_id: str,
+    outbox: Outbox,
+    store: DemoStore | None,
+    now: datetime | None = None,
+    page: PageContext | None = None,
+) -> PipelineView | None:
+    """The backend view, or None when the journal knows no such case.
+
+    Every fact here is read from the journal through the SAME projections the
+    caseworker UI reads (``review_state``, and through it ``derive_case_state``)
+    or from a store that already exists. Nothing is recomputed: a citizen-facing
+    page that re-derived a routing answer would be a second answer to "who is
+    responsible", and there is exactly one.
+    """
+    context = page or GERMAN
+    events = journal.read(case_id)
+    if not events:
+        return None
+    moment = now or datetime.now(UTC)
+    state = review_state(case_id, events)
+    held = store.get(case_id, now=moment) if store is not None else None
+    unit_id = state.unit_id
+    return PipelineView(
+        case_id=case_id,
+        state=state,
+        now=moment,
+        channel_label=channel_label(state.case.channel, context),
+        persona_label=held.persona_label if held else "",
+        parts=tuple(_part_views(held)),
+        pairings=_pairings(held),
+        echo_body=held.echo_body if held else "",
+        sealed_text_parts=sealed_text_parts(state),
+        anomaly_reasons=anomaly_reason_lines(state),
+        notifications=tuple(outbox.entries(case_id)),
+        queue_id=unit_id or CLEARING_QUEUE,
+        queue_label=(
+            unit_name(config, unit_id) if unit_id else clearing_label(context)
+        ),
+        unit_label=unit_name(config, unit_id),
+        held=held is not None,
+        # ADR-025 through the SAME projection the caseworker UI reads: a
+        # sampled case renders as Qualitaetssicherung and never with anomaly
+        # styling, and two definitions of "sampled" would be one too many.
+        sampled=state.sampled,
+        would_be_tier=armed_scorer_tier(config),
+        statement=build_statement_section(
+            store.link_for_case(case_id, now=moment) if store is not None else None,
+            case_id=case_id,
+            page=context,
+        ),
+    )
+
 def build_pipeline_view(
     journal: JournalStore,
     *,
@@ -1188,6 +1177,9 @@ def render_intake(view: IntakeView, page: PageContext | None = None) -> str:
 
 def render_pipeline(view: PipelineView, page: PageContext | None = None) -> str:
     return render_template("demo_pipeline.html", view, page)
+
+def render_backend(view: PipelineView, page: PageContext | None = None) -> str:
+    return render_template("demo_backend.html", view, page)
 
 
 #: The two shapes ``engine.demo.store`` records a working-copy part in. Only

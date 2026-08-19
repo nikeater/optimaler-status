@@ -1,46 +1,5 @@
-"""Two languages, resolved on the server, carried by a cookie, no JavaScript.
-
-**Why a table and not two template trees.** Every visitor-facing page here is
-one template with one structure; a second tree of `landing.en.html` files would
-be the same markup twice, and the second copy is the one that stops being
-edited. So the markup stays single and every sentence in it is a key into
-:data:`TABLE`, whose values are pairs - German first, English second. A key that
-exists in one language and not the other is not representable, which is a
-stronger guarantee than a test comparing two dictionaries could give.
-
-**Why the server and not the browser.** `?lang=en` sets a cookie and redirects
-back to the same URL without the parameter; the cookie then governs every later
-request. A `<select>` with an `onchange` handler would be one line shorter and
-would exclude everybody browsing with scripting off - on the surface of a
-project whose whole posture is that a public-administration UI must work
-without it. The redirect also keeps the address bar clean, so a visitor who
-copies a URL hands over a page and not a language preference.
-
-**What is translated and what is deliberately not.**
-
-* Visitor-facing pages are translated in full: the landing page, the tour, the
-  intake surface including its hints and its refusals, the pipeline narration,
-  the disclaimer page and the inbox chrome.
-* The caseworker screens (`/review*`, `/metrics`) STAY GERMAN in both settings
-  and carry one English line saying so. They are the working surface of a
-  German agency; a half-translated administrative vocabulary
-  ("Nachforderung", "Bekanntgabefiktion") would be less usable than the German,
-  not more, and a competition judge needs to see the real screen rather than a
-  rendering of it.
-* Message bodies, gap sentences and letter texts are never translated. They
-  come from versioned configuration, they are legal-text artifacts, and a
-  translated Verwaltungsakt draft would be a different document.
-
-The default is German and stays German: an unknown, missing or malformed value
-resolves to it rather than to the browser's `Accept-Language`, because a
-deployment of a German administrative system should not change language because
-somebody's laptop was bought abroad.
-"""
-
 from __future__ import annotations
-
 from dataclasses import dataclass
-
 from markupsafe import Markup
 
 #: The two languages, German first. The order is the order of every pair in
@@ -267,10 +226,10 @@ TABLE: dict[str, tuple[str, str]] = {
         "Streamlined status determination under § 7a SGB IV",
     ),
     "landing.lead": (
-        "In Deutschland arbeiten rund 3,7 Millionen Menschen selbstständig, etwa 1,5 Millionen davon ohne eigene Angestellte — mit sinkender Tendenz. "
+        "In Deutschland arbeiten rund 3,7 Millionen Menschen selbstständig, etwa 1,5 Millionen davon ohne eigene Angestellte, mit sinkender Tendenz. "
         "Ob eine Zusammenarbeit rechtlich als selbstständige Tätigkeit gilt oder als abhängige Beschäftigung, prüft auf Antrag die Clearingstelle der Deutschen Rentenversicherung: "
-        "2024 in 23.052 Fällen, im Schnitt nach 82 Tagen. Das Verfahren selbst ist gebührenfrei. Teuer wird es trotzdem — Antrag, Unterlagen, Rückfragen und Beratung"
-        "binden nach unserer überschlägigen Rechnung rund 1.700 Euro je Fall. Der größere Schaden entsteht dort, wo niemand einen Antrag stellt: Jeder fünfte Selbstständige"
+        "2024 in 23.052 Fällen, im Schnitt nach 82 Tagen. Das Verfahren selbst ist gebührenfrei. Teuer wird es trotzdem — Antrag, Unterlagen, Rückfragen und Beratung "
+        "binden nach unserer überschlägigen Rechnung rund 1.700 Euro je Fall. Der größere Schaden entsteht dort, wo niemand einen Antrag stellt: Jeder fünfte Selbstständige "
         "hat bereits erlebt, dass ein Auftrag nicht zustande kam, weil der Auftraggeber das Risiko scheute. "
         "Wo wir das Problem vermuten: Jeder Fall durchläuft denselben standardisierten Fragebogen — unabhängig davon, "
         "wie unterschiedlich die Situationen sind und worauf es im Einzelnen ankommt. Und weil das Gesetz vorschreibt, "
@@ -1195,7 +1154,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "EingangsLotse - submit an application (phase 1)",
     ),
     "intake.headline": (
-        "Phase 1: Sie stellen einen Antrag",
+        "Phase 1: Antragsstellung",
         "Phase 1: you submit an application",
     ),
     "intake.what.heading": ("Was hier passiert", "What happens here"),
@@ -1228,7 +1187,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "The submission was refused",
     ),
     "intake.persona.heading": (
-        "Erfundene Person wählen",
+        "Beispielszenario wählen",
         "Choose a fictional applicant",
     ),
     "intake.persona.chosen": ("gewählt", "chosen"),
@@ -1355,7 +1314,526 @@ TABLE: dict[str, tuple[str, str]] = {
         "Below is where and which rule - the submitted value deliberately "
         "appears nowhere, not even in an error message.",
     ),
-    # --------------------------------------------------------- the pipeline --
+    # --------------------------------------------------------- the backend --
+    "backend.title": (
+        "EingangsLotse - Was mit Ihrem Antrag passiert ist",
+        "EingangsLotse - what happened to your application",
+    ),
+    "backend.headline": (
+        "Phase 9000: Was mit Ihrem Antrag passiert ist",
+        "Phase 2: what happened to your application",
+    ),
+    "backend.overview.heading": ("Überblick", "Overview"),
+    "backend.overview.body": (
+        "Sieben Schritte, in der Reihenfolge, in der sie gelaufen sind. Jede "
+        "Zahl und jeder Satz auf dieser Seite kommt aus dem Journal Ihres "
+        "Vorgangs oder aus einer Ablage, die es ohnehin gibt. Diese Seite "
+        "rechnet nichts nach: sie kann dem, was tatsächlich passiert ist, "
+        "nicht widersprechen.",
+        "Seven stages, in the order they ran. Every number and every sentence "
+        "on this page comes from your case's journal or from a store the "
+        "system keeps anyway. This page recomputes nothing: it cannot "
+        "contradict what actually happened.",
+    ),
+    "backend.sampled": (
+        "Dieser Vorgang wurde zufällig zur Qualitätssicherung ausgewählt. Das "
+        "ist KEIN Auffälligkeitsbefund: die Ziehung hängt allein an der "
+        "Vorgangskennung und sagt nichts über Sie oder Ihren Antrag aus.",
+        "This case was drawn at random for quality assurance. That is NOT an "
+        "anomaly finding: the draw depends on the case id alone and says "
+        "nothing about you or your application.",
+    ),
+    "backend.expired": (
+        "Die Arbeitskopie zu diesem Vorgang wird nicht mehr vorgehalten. Der "
+        "Zwischenspeicher dieser Demo hält sie nur für kurze Zeit und "
+        "ausschließlich im Arbeitsspeicher; alles Übrige auf dieser Seite "
+        "kommt aus dem Journal und bleibt lesbar.",
+        "The working copy for this case is no longer held. This demo's scratch "
+        "store keeps it for a short time and in memory only; everything else "
+        "on this page comes from the journal and stays readable.",
+    ),
+    "backend.a.heading": ("a) Eingang", "a) Arrival"),
+    "backend.a.body": (
+        "Ihr Antrag ist angekommen und hat eine Vorgangskennung bekommen; ab "
+        "hier ist jeder Schritt einzeln nachlesbar.",
+        "Your application arrived and was given a case id; from here on every "
+        "step can be read individually.",
+    ),
+    "backend.a.case": ("Vorgang", "Case"),
+    "backend.a.channel": ("Weg", "Channel"),
+    "backend.a.received": ("Eingang am", "Received at"),
+    "backend.a.as": ("Eingereicht als", "Submitted as"),
+    "backend.a.persona": ("erfundene Person", "fictional applicant"),
+    "backend.a.events": ("Ereignisse im Journal", "Journal events"),
+    "backend.b.heading": ("b) Versiegelung", "b) Sealing"),
+    "backend.b.seal_sentence": (
+        "Die Maschine hat Ihren Namen nie gesehen. Was Sie eingegeben haben, "
+        "wurde am Eingang versiegelt - bevor die Arbeitskopie entstand, auf "
+        "der alles Weitere rechnet.",
+        "The machine never saw your name. What you entered was sealed at the "
+        "boundary, before the working copy existed - and everything downstream "
+        "computes on that copy alone.",
+    ),
+    "backend.b.sealed": ("Versiegelte Werte", "Values sealed"),
+    "backend.b.verified": ("Nachprüfung", "Verification"),
+    "backend.b.verified.yes": (
+        "bestanden - ein zweiter, unabhängiger Erkennerlauf über die "
+        "Arbeitskopie fand nichts mehr",
+        "passed - a second, independent detector pass over the working copy "
+        "found nothing",
+    ),
+    "backend.b.verified.no": (
+        "nicht bestanden oder nicht protokolliert",
+        "not passed, or not recorded",
+    ),
+    "backend.b.pairs.heading": (
+        "Ihre Eingabe und das, was die Maschine bekommen hat",
+        "What you typed, and what the machine received",
+    ),
+    "backend.b.pairs.body": (
+        "Links steht, was Sie selbst eingetippt haben. Rechts steht, was an "
+        "dieser Stelle in der Arbeitskopie steht. Der Klartext wurde nicht aus "
+        "dem Tresor geholt, um diese Tabelle zu bauen - er stammt aus Ihrer "
+        "eigenen Eingabe von eben und wird nur für kurze Zeit im "
+        "Arbeitsspeicher gehalten.",
+        "On the left is what you typed. On the right is what the working copy "
+        "holds in its place. The plain text was not fetched from the vault to "
+        "build this table - it comes from your own input a moment ago and is "
+        "held in memory for a short time only.",
+    ),
+    "backend.b.pairs.caption": (
+        "Gegenüberstellung: eingegebener Wert und Platzhalter",
+        "Side by side: the value you entered and the placeholder",
+    ),
+    "backend.b.pairs.col1": ("Angabe", "Field"),
+    "backend.b.pairs.col2": ("Von Ihnen eingegeben", "Entered by you"),
+    "backend.b.pairs.col3": ("In der Arbeitskopie", "In the working copy"),
+    "backend.b.pairs.none": (
+        "kein Platzhalter dieser Art in der Arbeitskopie",
+        "no placeholder of that kind in the working copy",
+    ),
+    "backend.b.pairs.sr": (
+        "Platzhalter der Art {kind}",
+        "placeholder of kind {kind}",
+    ),
+    "backend.b.letter.heading": (
+        "Ihr Anschreiben, vorher und nachher",
+        "Your letter, before and after",
+    ),
+    "backend.b.letter.body": (
+        "Dieselben Zeichen, einmal wie Sie sie geschrieben haben und einmal "
+        "wie die Maschine sie bekommen hat. Im Fließtext wird SPANNE FÜR "
+        "SPANNE versiegelt, nicht der ganze Absatz: ein Brief ohne seine "
+        "Verben ließe sich nicht triagieren.",
+        "The same characters, once as you wrote them and once as the machine "
+        "received them. In prose the sealing happens SPAN BY SPAN and not by "
+        "the paragraph: a letter without its verbs could not be triaged.",
+    ),
+    "backend.b.letter.yours": ("Was Sie geschrieben haben", "What you wrote"),
+    "backend.b.letter.machine": (
+        "Was die Maschine gelesen hat",
+        "What the machine read",
+    ),
+    "backend.b.copy.heading": (
+        "Die Arbeitskopie, wie sie weitergereicht wurde",
+        "The working copy, as it was handed on",
+    ),
+    "backend.b.copy.body": (
+        "Jede Stelle, an der ein Platzhalter steht, hat vorher eine Ihrer "
+        "Angaben getragen. Alles danach - Ableitung, Auslesen, Regeln, "
+        "Entscheidung, Scorer - hat ausschließlich diese Fassung gelesen.",
+        "Every placeholder below stands where one of your values used to be. "
+        "Everything after that - derivation, extraction, rules, decision, "
+        "scorer - read this version and nothing else.",
+    ),
+    # Part 20 renamed these three from `backend.b.kinds.*` and dropped a
+    # fourth. The table counts spans PER TEXT PART and always did; calling its
+    # first column "Art" made the citizen page ask for `kind.part-text-0` and
+    # print the key. See `api/review.py::sealed_text_parts`.
+    "backend.b.parts.caption": (
+        "Wie viele Stellen je Textteil versiegelt wurden. Werte erscheinen hier nie.",
+        "How many spans were sealed in each text part. Values never appear here.",
+    ),
+    "backend.b.parts.col1": ("Textteil", "Text part"),
+    "backend.b.parts.col2": ("Versiegelte Stellen", "Sealed spans"),
+    "backend.c.heading": ("c) Extraktion", "c) Extraction"),
+    "backend.c.body": (
+        "Jetzt wird gelesen, was in der Arbeitskopie steht - und jede gefundene "
+        "Angabe muss zweifach belegt sein: das Zitat UND die Zeichenposition, "
+        "unabhängig voneinander gegen dieselbe Textfassung geprüft.",
+        "Now the working copy is read - and every value found must be proven "
+        "twice: the quote AND the character offsets, checked independently "
+        "against the same text.",
+    ),
+    "backend.c.found": ("Gefundene Felder", "Fields found"),
+    "backend.c.none": ("keine", "none"),
+    "backend.c.discarded": ("Verworfen", "Discarded"),
+    "backend.c.discarded.note": (
+        "ein VERWORFENER Vorschlag ist ein Wert, dessen Fundstelle die Prüfung "
+        "nicht bestanden hat. Er wird nicht übernommen und schiebt den Vorgang "
+        "Richtung Tier 3.",
+        "a DISCARDED proposal is a value whose span failed verification. It is "
+        "not adopted, and it pushes the case towards tier 3.",
+    ),
+    "backend.c.no_extraction": (
+        "Aus diesem Anschreiben wurde nichts ausgelesen, und das ist kein "
+        "Fehler dieser Seite. Der Leser für Freitext ist in dieser "
+        "Bereitstellung ein REPLAY aufgezeichneter Modellausgaben (ADR-028): "
+        "zu einem Brief, den Sie gerade selbst geschrieben haben, gibt es "
+        "keine Aufzeichnung. Ein Modell raten zu lassen und das Ergebnis nicht "
+        "belegen zu können, wäre die schlechtere Antwort - der Vorgang geht "
+        "deshalb unvollständig zu einem Menschen.",
+        "Nothing was extracted from this letter, and that is not a fault of "
+        "this page. The reader for free text in this deployment is a REPLAY of "
+        "recorded model output (ADR-028): for a letter you just wrote "
+        "yourself, there is no recording. Letting a model guess and being "
+        "unable to prove the result would be the worse answer - so the case "
+        "goes to a human incomplete.",
+    ),
+    "backend.c.spans.caption": (
+        "Fundstellen: Teil und Zeichenbereich, nie der Wert",
+        "Spans: part and character range, never the value",
+    ),
+    "backend.c.spans.col1": ("Feld", "Field"),
+    "backend.c.spans.col2": ("Textteil", "Text part"),
+    "backend.c.spans.col3": ("Zeichenbereich", "Character range"),
+    "backend.c.spans.col4": ("Prüfart", "Match mode"),
+    "backend.c.spans.structured": ("strukturiertes Feld", "structured field"),
+    "backend.c.spans.range": ("{start} bis {end}", "{start} to {end}"),
+    "backend.c.spans.nospan": ("ohne Textfundstelle", "no text span"),
+    "backend.d.heading": ("d) Evidenz", "d) Evidence"),
+    "backend.d.body": (
+        "Aus den belegten Werten wird die Beweislage: welches Verfahren, was "
+        "fehlt, wer zuständig ist. Alles davon ist nachlesbar begründet - "
+        "nichts davon ist schon eine Entscheidung.",
+        "The proven values become the evidence: which procedure, what is "
+        "missing, who is responsible. All of it is justified in readable form "
+        "- and none of it is a decision yet.",
+    ),
+    "backend.d.procedure": ("Verfahren", "Procedure"),
+    "backend.d.procedure.none": ("nicht abgeleitet", "not derived"),
+    "backend.d.derived": (
+        "abgeleitet aus: {source}; Kanalhinweis: {hint}",
+        "derived from: {source}; channel hint: {hint}",
+    ),
+    "backend.d.unknown": ("unbekannt", "unknown"),
+    "backend.d.nohint": ("keiner", "none"),
+    "backend.d.completeness": ("Vollständigkeit", "Completeness"),
+    "backend.d.clearcut": ("Klarfall", "Clear-cut"),
+    "backend.d.yes": ("ja", "yes"),
+    "backend.d.no": ("nein", "no"),
+    "backend.d.unchecked": ("nicht geprüft", "not evaluated"),
+    "backend.d.gaps.heading": (
+        "Was fehlt, und was Sie dazu gefragt werden",
+        "What is missing, and what you will be asked",
+    ),
+    "backend.d.gaps.caption": (
+        "Gemeldete Lücken mit dem Satz, den die Nachforderung dazu stellt",
+        "Reported gaps with the sentence the request for information uses",
+    ),
+    "backend.d.gaps.col1": ("Angabe", "Field"),
+    "backend.d.gaps.col2": ("Status", "Status"),
+    "backend.d.gaps.col3": ("Formulierung im Schreiben", "Wording in the letter"),
+    "backend.d.routing.heading": ("Zuordnung", "Routing"),
+    "backend.d.routing.body": (
+        "<strong>Zugeordnet wurde: {unit}.</strong> Das ist die Antwort der "
+        "Entscheidungsebene und die einzige, die den Vorgang tatsächlich in "
+        "eine Warteschlange gelegt hat. Die Tabelle darunter zeigt ALLE "
+        "Belege, auch die unterlegenen.",
+        "<strong>Routed to: {unit}.</strong> That is the decision plane's "
+        "answer and the only one that actually put the case into a queue. The "
+        "table below shows ALL the evidence, including the proposals that "
+        "lost.",
+    ),
+    "backend.d.routing.nounit": ("keine Einheit", "no unit"),
+    "backend.d.routing.caption": (
+        "Zuordnungsbelege mit Quelle; die zugeordnete Einheit ist gekennzeichnet",
+        "Routing evidence with its source; the routed unit is marked",
+    ),
+    "backend.d.routing.col1": ("Einheit", "Unit"),
+    "backend.d.routing.col2": ("Quelle", "Source"),
+    "backend.d.routing.col3": ("Regel", "Rule"),
+    "backend.d.routing.col4": ("Konfidenz", "Confidence"),
+    "backend.d.routing.routed": ("zugeordnet", "routed"),
+    "backend.e.heading": ("e) Entscheidung", "e) Decision"),
+    "backend.e.body": (
+        "Die Entscheidungsebene liest nur, was belegt ist, und wertet eine "
+        "versionierte Tabelle Zeile für Zeile aus. Sie entscheidet nichts über "
+        "Sie: sie entscheidet, wie genau ein Mensch hinsehen muss.",
+        "The decision plane reads only what has been proven and evaluates a "
+        "versioned table row by row. It decides nothing about you: it decides "
+        "how closely a human has to look.",
+    ),
+    "backend.e.result": ("Ergebnis", "Result"),
+    "backend.e.unit": ("Zugeordnete Einheit", "Routed unit"),
+    "backend.e.unit.none": (
+        "keine (Zentrale Klärung)",
+        "none (central clearing queue)",
+    ),
+    "backend.e.reasons.caption": (
+        "Begründungen der Entscheidungstabelle, in Auswertungsreihenfolge",
+        "The decision table's reasons, in evaluation order",
+    ),
+    "backend.e.reasons.col1": ("Art", "Kind"),
+    "backend.e.reasons.col2": ("Zeile", "Row"),
+    "backend.e.reasons.col3": ("Begründung", "Reason"),
+    "backend.e.reasons.none": (
+        "Keine Begründung protokolliert.",
+        "No reason was recorded.",
+    ),
+    "backend.e.valve": (
+        "Das Einwegventil hat gegriffen: die Auffälligkeit hat den Vorgang von "
+        "Tier {before} auf Tier {after} geschoben. Umgekehrt geht es nicht - "
+        "keine Regel dieses Systems kann ein Tier senken.",
+        "The one-way valve fired: the anomaly moved the case from tier "
+        "{before} to tier {after}. It does not work the other way - no rule in "
+        "this system can lower a tier.",
+    ),
+    "backend.e.log_only": (
+        "Der Schattenscorer läuft im Modus log_only: er hat den Vorgang "
+        "markiert und seinen Grund genannt, aber KEIN Tier bewegt. Das "
+        "Einwegventil (ADR-004) lässt Unsicherheit ohnehin nur in eine "
+        "Richtung wirken - zu einem Menschen hin, nie von ihm weg.",
+        "The shadow scorer runs in log_only mode: it flagged the case and "
+        "named its reason, but moved NO tier. The one-way valve (ADR-004) lets "
+        "uncertainty act in one direction only anyway - towards a human, never "
+        "away from one.",
+    ),
+    "backend.e.would_be_tier": (
+        "Ein scharfgestellter Scorer hätte den Vorgang auf {tier} gesetzt. Die "
+        "Entscheidung oben ist ohne ihn zustande gekommen - sie steht in der "
+        "Entscheidungstabelle Zeile für Zeile begründet.",
+        "An armed scorer would have set this case to {tier}. The decision above "
+        "was reached without it, and the decision table justifies it row by "
+        "row.",
+    ),
+    "backend.e.anomaly.heading": ("Auffälligkeitsprüfung", "Anomaly check"),
+    "backend.e.anomaly.score": ("Score", "Score"),
+    "backend.e.anomaly.flagged": ("Markiert", "Flagged"),
+    "backend.e.anomaly.mode": ("Betriebsart", "Mode"),
+    "backend.e.anomaly.body": (
+        "Eine Markierung ist eine Beobachtung am VORGANG gegen einen "
+        "Referenzbestand, kein Befund über eine Person. Der Scorer rechnet "
+        "außerdem auf nichts, was Sie identifiziert: Geburtsdatum, "
+        "Versicherungsnummer und Anschrift waren zu diesem Zeitpunkt längst "
+        "versiegelt.",
+        "A flag is an observation about the CASE against a reference "
+        "population, not a finding about a person. The scorer also computes on "
+        "nothing that identifies you: date of birth, insurance number and "
+        "address had long been sealed by then.",
+    ),
+    "backend.e.anomaly.noreasons": (
+        "Keine Merkmalsbegründung protokolliert.",
+        "No feature reason was recorded.",
+    ),
+    "backend.e.anomaly.none": (
+        "Keine Auffälligkeitsprüfung protokolliert.",
+        "No anomaly check was recorded.",
+    ),
+    "backend.f.heading": ("f) Nachricht", "f) Message"),
+    # "nach dieser Einreichung" rather than "als antragstellende Person": this
+    # page also renders for the Auftraggeber's statement, whose sender is not
+    # an antragstellende Person and who would have read a sentence about
+    # somebody else.
+    "backend.f.body": (
+        "Was Sie nach dieser Einreichung erhalten hätten. Diese Nachrichten "
+        "entstehen automatisch aus dem Journal und durchlaufen keine "
+        "menschliche Prüfung - genau deshalb gibt es hier und im Postfach "
+        "keine Bedienung, mit der jemand eine davon auslösen, ändern oder "
+        "erneut senden könnte.",
+        "What you would have received after this submission. These messages "
+        "are produced automatically from the journal and pass no human "
+        "review - which is exactly why neither this page nor the inbox has any "
+        "control with which somebody could trigger, edit or re-send one.",
+    ),
+    "backend.f.caption": (
+        "Zugestellte Nachrichten zu diesem Vorgang",
+        "Messages delivered for this case",
+    ),
+    "backend.f.col1": ("Vorlage", "Template"),
+    "backend.f.col2": ("Betreff", "Subject"),
+    "backend.f.col3": ("Zugestellt", "Delivered"),
+    "backend.f.link": ("Im Postfach nachlesen:", "Read it in the inbox:"),
+    "backend.f.link.inbox": ("Postfach (nur Ansicht)", "Inbox (read-only)"),
+    "backend.f.link.json": (
+        "nur dieser Vorgang als JSON",
+        "this case alone, as JSON",
+    ),
+    "backend.f.none": (
+        "Zu diesem Vorgang wurde keine Nachricht zugestellt.",
+        "No message was delivered for this case.",
+    ),
+    "backend.g.heading": ("g) Warteschlange", "g) Queue"),
+    "backend.g.body": (
+        "Ihr Vorgang liegt jetzt in der Warteschlange von <strong>{queue}"
+        "</strong> und wartet auf einen Menschen. Im nächsten Schritt sind Sie "
+        "dieser Mensch.",
+        "Your case is now in the <strong>{queue}</strong> queue, waiting for a "
+        "human. In the next step, you are that human.",
+    ),
+    "backend.g.note": (
+        "Die Warteschlange ist nach Alter geordnet, ältester Vorgang zuerst. "
+        "Ihr Vorgang wird dort gekennzeichnet, damit Sie ihn finden - die "
+        "Kennzeichnung ist reine Anzeige und verändert die Reihenfolge nicht.",
+        "The queue is ordered by age, oldest case first. Your case is marked "
+        "there so that you can find it - the marker is display only and does "
+        "not change the order.",
+    ),
+    "backend.g.handover": (
+        "Weiter zu Phase 3: Vorgang bearbeiten",
+        "On to phase 3: work the case",
+    ),
+    "backend.g.after": (
+        "Dort können Sie bestätigen, umsteuern oder eskalieren. Jede dieser "
+        "Aktionen schreibt ein neues Journalereignis; keine ändert ein altes. "
+        "Danach schließt sich der Kreis im",
+        "There you can confirm, re-route or escalate. Each of those actions "
+        "appends a new journal event; none edits an old one. After that, the "
+        "loop closes in the",
+    ),
+    "backend.g.after.link": (
+        "Postfach dieses Vorgangs",
+        "inbox for this case",
+    ),
+    # ------------------------------------------ the second party (part 19) --
+    #
+    # NOT a lettered stage, and the naming is the argument. a) to g) are what
+    # the MACHINE did to this case, each one readable off the journal. Asking
+    # the Auftraggeber for a statement is not one of them: no event type
+    # records it, no engine step performs it, and the demo layer simulates it
+    # in RAM. Calling it "h)" would claim a backend stage that does not exist,
+    # so the section carries a name instead of a letter and says in its own
+    # first sentence which of the two it is.
+    "backend.statement.heading": (
+        "Die zweite Seite: der Auftraggeber wird gehört",
+        "The second party: the client is heard",
+    ),
+    "backend.statement.body": (
+        "Über den Erwerbsstatus entscheidet niemand, ohne beide Seiten gehört "
+        "zu haben: par. 7a Abs. 4 SGB IV verlangt die Anhörung des "
+        "Auftraggebers, bevor über den Antrag entschieden wird. Für diesen "
+        "Vorgang ist die Anhörung ausgelöst worden - und Sie können sie in "
+        "dieser Demonstration selbst beantworten.",
+        "Nobody decides an employment status without hearing both sides: par. "
+        "7a Abs. 4 SGB IV requires the client to be heard before the "
+        "application is decided. For this case that hearing has been "
+        "triggered - and in this demonstration you can answer it yourself.",
+    ),
+    "backend.statement.demo_note": (
+        "Dieser Schritt ist der einzige auf dieser Seite, den die Demo-Schicht "
+        'simuliert. Er steht bewusst nicht im Journal: für "Stellungnahme '
+        'angefordert" gibt es keinen Ereignistyp, und einen zu erfinden wäre '
+        "eine Vertragsänderung und keine Vorführung. Was er auslöst, ist "
+        "dagegen echt - die Stellungnahme läuft durch denselben Eingang wie "
+        "jeder andere Vorgang.",
+        "This step is the only one on this page that the demo layer "
+        "simulates. It is deliberately absent from the journal: there is no "
+        'event type for "statement requested", and inventing one would be a '
+        "contract change rather than a demonstration. What it triggers is "
+        "real, though - the statement runs through the same intake as every "
+        "other case.",
+    ),
+    "backend.statement.letter.heading": (
+        "Das Anschreiben an den Auftraggeber",
+        "The letter to the client",
+    ),
+    "backend.statement.letter.note": (
+        "Das Schreiben bleibt deutsch, wie jedes Behördenschreiben auf diesen "
+        "Seiten: es ist ein Dokument und keine Oberflächenbeschriftung.",
+        "The letter stays German, like every official letter on this site: it "
+        "is a document rather than interface text.",
+    ),
+    "backend.statement.waiting": (
+        "Bisher ist keine Stellungnahme eingegangen. Das ist kein Fehler und "
+        "hält nichts auf: eine Antwort ist freiwillig, nichts in der "
+        "Verarbeitung wartet auf sie, und die Warteschlange ordnet deswegen "
+        "keinen Vorgang um. Geht keine ein, wird nach Aktenlage entschieden.",
+        "No statement has arrived yet. That is not an error and it holds "
+        "nothing up: answering is voluntary, nothing in the processing waits "
+        "for it, and no queue is reordered because of it. If none arrives, "
+        "the case is decided on the file as it stands.",
+    ),
+    "backend.statement.cta": (
+        "Jetzt als Auftraggeber antworten",
+        "Answer as the client now",
+    ),
+    "backend.statement.notice": (
+        "Für diesen Vorgang wurde eine <strong>Stellungnahme des "
+        "Auftraggebers</strong> angefordert. Sie können die Gegenseite in "
+        "dieser Demonstration selbst spielen.",
+        "A <strong>statement from the client</strong> has been requested for "
+        "this case. In this demonstration you can play the other party "
+        "yourself.",
+    ),
+    "backend.statement.notice.arrived": (
+        "Die <strong>Stellungnahme des Auftraggebers</strong> ist eingegangen "
+        "und liegt als eigener, versiegelter Vorgang vor.",
+        "The <strong>client's statement</strong> has arrived and exists as its "
+        "own sealed case.",
+    ),
+    "backend.statement.arrived.heading": (
+        "Stellungnahme eingegangen",
+        "Statement received",
+    ),
+    "backend.statement.arrived.body": (
+        "Am {at} ist die Stellungnahme eingegangen. Sie ist kein Anhang zu "
+        "diesem Vorgang, sondern ein eigener Eingang: derselbe Weg, dieselbe "
+        "Versiegelung, dieselbe Vollständigkeitsprüfung, dieselbe "
+        "Warteschlange. Die Clearingstelle hat damit zwei versiegelte "
+        "Aussagen zu einem Auftragsverhältnis vor sich.",
+        "The statement arrived on {at}. It is not an attachment to this case "
+        "but an incoming case of its own: the same route, the same sealing, "
+        "the same completeness check, the same queue. The clearing unit "
+        "therefore has two sealed accounts of one working relationship in "
+        "front of it.",
+    ),
+    "backend.statement.arrived.link": (
+        "Zur Arbeitskopie der Stellungnahme",
+        "To the statement's working copy",
+    ),
+    "backend.statement.answers.caption": (
+        "Was der Auftraggeber geantwortet hat. Die Werte stehen genau so in "
+        "der Arbeitskopie - hier wird nichts übersetzt und nichts geglättet.",
+        "What the client answered. The values are in the working copy exactly "
+        "as they stand here - nothing is translated and nothing is smoothed "
+        "over.",
+    ),
+    "backend.statement.answers.col1": ("Frage", "Question"),
+    "backend.statement.answers.col2": ("Antwort", "Answer"),
+    "backend.statement.origin.heading": (
+        "Dies ist eine Stellungnahme",
+        "This is a statement",
+    ),
+    "backend.statement.origin.body": (
+        "Dieser Vorgang ist die Stellungnahme des Auftraggebers zu einem "
+        "anderen Vorgang. Das macht ihn zu keinem Sonderfall: er wurde "
+        "versiegelt, geprüft und zugeordnet wie jeder andere Eingang, und die "
+        "Verbindung zwischen den beiden ist eine Anzeige - kein Journaleintrag "
+        "und keine Regel, die irgendetwas steuert.",
+        "This case is the client's statement on another case. That does not "
+        "make it a special case: it was sealed, checked and routed like every "
+        "other incoming case, and the link between the two is a display - not "
+        "a journal entry and not a rule that steers anything.",
+    ),
+    "backend.statement.origin.link": (
+        "Zum Vorgang der antragstellenden Person",
+        "To the applicant's case",
+    ),
+    "backend.statement.minimal": (
+        "Diese Stellungnahme trägt Versicherungsnummer und Geburtsdatum der "
+        "auftragnehmenden Person bewusst nicht: eine Stellungnahme braucht "
+        "sie nicht, also bekommt die Gegenseite sie auch nicht zu sehen. Die "
+        "Vollständigkeitsprüfung meldet beide deshalb als Lücke und die "
+        "Clearingstelle fragt nach - genau die Behandlung, die jeder andere "
+        "unvollständige Eingang bekommt.",
+        "This statement deliberately carries neither the contractor's "
+        "insurance number nor their date of birth: a statement does not need "
+        "them, so the other party never gets to see them. The completeness "
+        "check therefore reports both as gaps and the clearing unit asks for "
+        "them - exactly the treatment every other incomplete case gets.",
+    ),
+    
+    # --------------------------------------------------------- the pipeline--
     "pipeline.title": (
         "EingangsLotse - Was mit Ihrem Antrag passiert ist",
         "EingangsLotse - what happened to your application",
@@ -1375,6 +1853,9 @@ TABLE: dict[str, tuple[str, str]] = {
         "on this page comes from your case's journal or from a store the "
         "system keeps anyway. This page recomputes nothing: it cannot "
         "contradict what actually happened.",
+    ),
+    "pipeline.backend.link": (
+        "Bäckend",
     ),
     "pipeline.sampled": (
         "Dieser Vorgang wurde zufällig zur Qualitätssicherung ausgewählt. Das "
