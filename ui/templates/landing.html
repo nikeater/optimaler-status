@@ -1,25 +1,3 @@
-{# The landing page. What this is, what it guarantees, what this instance is
-   not - opening with the pipeline told as a picture (part 16).
-
-   THE HERO IS ONE INLINE SVG AND ZERO JAVASCRIPT. Five stages on a line, a
-   sealed envelope travelling between them, a highlight ring that walks along
-   with it, and five captions in the document that fade with the same keyframes
-   at the same offsets. Every animated property is `opacity` or `transform`, so
-   the browser can composite the whole loop without a layout pass.
-
-   THE CAPTIONS ARE REAL TEXT IN THE DOCUMENT, not glyphs in the drawing.
-   Selectable, searchable, translated by the same table as everything else, and
-   present in the markup whether or not they are the one currently faded in -
-   which is what makes the reduced-motion fallback a matter of one media query
-   rather than a second copy of the content: `prefers-reduced-motion: reduce`
-   stops the loop, shows all five captions stacked under their stage names and
-   lights every stage at once.
-
-   The SVG carries `role="img"` with a title and a description, so assistive
-   technology reads one sentence about the picture instead of walking a
-   drawing. The stage names are drawn in it for a sighted reader AND repeated
-   as the bold prefix of each caption, so nothing is available only inside the
-   image. #}
 {% extends "demo_base.html" %}
 {% block title %}{{ t("landing.title") }}{% endblock %}
 {% block heading %}{{ t("landing.headline") }}{% endblock %}
@@ -34,8 +12,18 @@
     {# <a class="cta cta-secondary" href="/demo/rundgang">{{ t("landing.cta.tour") }}</a> #}
   </p>
   <h2 id="start-heading">{{ t("landing.start.heading") }}</h2>
-  <ul class="card-grid">
-    <li class="card">
+  {# `card-grid-links`: every card in THIS grid is a single destination, so the
+     whole box is the click target (the heading's anchor stretches over the card
+     in CSS), not just the title words. Which is also why the operations card
+     below is out: its heading was not a link, so under this class it would have
+     been the one dead surface in the grid. #}
+  <ul class="card-grid card-grid-links">
+    {# THE FIRST CARD IS THE CALL TO ACTION AND LOOKS LIKE ONE. Everything else
+       here is a place a reader may go; this is the one thing the page wants
+       them to do, so it is painted rather than listed - the same `--grad-cta`
+       fill and `--cta-ink` label the buttons carry. The link is still a link
+       and still the whole title. #}
+    <li class="card card-cta">
       <h3><a href="/demo/antrag">{{ t("landing.card.intake.title") }}</a></h3>
       <p>{{ t("landing.card.intake.body") }}</p>
     </li>
@@ -51,11 +39,18 @@
       <h3><a href="/inbox">{{ t("landing.card.inbox.title") }}</a></h3>
       <p>{{ t("landing.card.inbox.body") }}</p>
     </li>
+    {# THE OPERATIONS-ENDPOINTS CARD, COMMENTED OUT rather than deleted: its two
+       links answer JSON, which made it the one box in this section that led
+       nowhere a visitor could read - and the one card whose heading was not a
+       link, which the stretched-link grid above would have turned into a dead
+       surface. /health and /healthz stay live and documented in the README;
+       restoring the card is an uncomment, and its keys are still in the table.
     <li class="card">
       <h3>{{ t("landing.card.health.title") }}</h3>
       <p>{{ m("landing.card.health.body") }}</p>
       <p><a href="/health">/health</a> &middot; <a href="/healthz">/healthz</a></p>
     </li>
+    #}
   </ul>
 </section>
 {% endblock %}
