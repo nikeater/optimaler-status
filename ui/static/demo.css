@@ -74,7 +74,7 @@
   font-size: var(--text-hero);
   letter-spacing: -0.03em;
   line-height: 1.04;
-  max-width: 22ch;
+  max-width: 80ch;
   /* PART 23, AND THE HEADLINE IS WHY. "Statusfeststellungsverfahren" is
      twenty-seven characters and at 390 px it is wider than the column, so
      `overflow-wrap: break-word` on `body` did what it is there to do and split
@@ -90,7 +90,7 @@
   font-size: var(--text-lg);
   line-height: 1.55;
   color: var(--ink-soft);
-  max-width: 62ch;
+  max-width: 100ch;
 }
 
 .hero-actions {

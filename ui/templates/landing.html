@@ -23,55 +23,46 @@
 {% extends "demo_base.html" %}
 {% block title %}{{ t("landing.title") }}{% endblock %}
 {% block heading %}{{ t("landing.headline") }}{% endblock %}
-
-{# ONE OF THE TWO PAGES THAT CARRY THE RIBBON (part 18). The synthetic-data
-   notice used to render on every page of a demo instance; by the user's
-   direction it renders here and on the page it links, and nowhere else. The
-   partial, its `id`, its keys and its `demo.enabled` gate are unchanged. #}
 {% block ribbon %}{% include "_demo_ribbon.html" %}{% endblock %}
-
-{# The landing page is the only one whose title is display type rather than a
-   page heading: this class is what switches the ramp, so no other page grows
-   a 3.75rem headline by inheriting one. #}
 {% block page_head_class %} page-head-hero{% endblock %}
 
 {% block hero %}
-<div class="hero">
+<section aria-labelledby="start-heading">
   <p class="hero-lead">{{ t("landing.lead") }}</p>
-  {# THE PAINTED BUTTON IS THE ONE THE LEAD ASKS FOR (part 24). Part 23 gave
-     this page a lead that says "stellen Sie testweise einen Antrag" and made
-     the intake the one painted card in the section below; the hero button was
-     the last piece still pointing at the tour, so the page asked for one thing
-     in words and offered a different one in colour. A first-time reader
-     resolves that by doing neither.
-
-     THE TOUR BUTTON IS COMMENTED OUT rather than deleted (a Jinja comment
-     renders zero bytes), on the user's decision of 2026-08-18: the hero offers
-     exactly one action. The tour page stays live; its one remaining door is
-     the menu's "Rundgang" item, which is navigation rather than a call to
-     action. `landing.cta.tour` stays in the table so restoring the button is
-     an uncomment rather than a rewrite. #}
   <p class="hero-actions">
     <a class="cta" href="/demo/antrag">{{ t("landing.cta.intake") }}</a>
     {# <a class="cta cta-secondary" href="/demo/rundgang">{{ t("landing.cta.tour") }}</a> #}
   </p>
-  <figure class="hero-figure">
-    {# WCAG 2.2.2: the loop starts on its own, runs longer than five seconds
-       and sits beside other content, so a reader has to be able to stop it -
-       and an operating-system preference is not a control on this page. This
-       is that control, in CSS alone: `:checked ~` puts the drawing and the
-       captions into exactly the still frame `prefers-reduced-motion`
-       produces. No script.
+  <h2 id="start-heading">{{ t("landing.start.heading") }}</h2>
+  <ul class="card-grid">
+    <li class="card">
+      <h3><a href="/review">{{ t("landing.card.intake.title") }}</a></h3>
+      <p>{{ t("landing.card.intake.body") }}</p>
+    </li>
+    <li class="card">
+      <h3><a href="/review">{{ t("landing.card.review.title") }}</a></h3>
+      <p>{{ t("landing.card.review.body") }}</p>
+    </li>
+    <li class="card">
+      <h3><a href="/metrics">{{ t("landing.card.metrics.title") }}</a></h3>
+      <p>{{ t("landing.card.metrics.body") }}</p>
+    </li>
+    <li class="card">
+      <h3><a href="/inbox">{{ t("landing.card.inbox.title") }}</a></h3>
+      <p>{{ t("landing.card.inbox.body") }}</p>
+    </li>
+    <li class="card">
+      <h3>{{ t("landing.card.health.title") }}</h3>
+      <p>{{ m("landing.card.health.body") }}</p>
+      <p><a href="/health">/health</a> &middot; <a href="/healthz">/healthz</a></p>
+    </li>
+  </ul>
+</section>
+{% endblock %}
 
-       THE INPUT IS A DIRECT CHILD OF THE FIGURE AND THAT IS LOAD-BEARING.
-       `~` is the general SIBLING combinator: it reaches later siblings of the
-       checkbox and nothing else. Part 16 wrapped the checkbox and its label in
-       a row `<div>`, which left the checkbox a cousin of `.hero-svg` and
-       `.hero-captions` rather than their sibling - every pause rule in
-       `demo.css` matched nothing and the control did nothing in every browser,
-       while a test asserting the stylesheet CONTAINED the rules stayed green.
-       The label may live anywhere; only the input's position matters, so the
-       two are kept adjacent here and the layout is done in CSS. #}
+{% block content %}
+<div class="hero">
+  <figure class="hero-figure">
     <input type="checkbox" id="hero-pause" class="hero-pause">
     <label class="hero-pause-label" for="hero-pause">{{ t("landing.hero.pause") }}</label>
     <svg class="hero-svg" viewBox="0 0 960 160" role="img"
@@ -155,91 +146,6 @@
     </figcaption>
   </figure>
 </div>
-{% endblock %}
-
-{% block content %}
-{# FIVE PLACES TO START, UNDER THE HEADING THAT NAMES THEM (part 23).
-   What used to be here: a paragraph retelling the tour, a second "Zum
-   Rundgang" button four hundred pixels below the one in the hero, and a third
-   line announcing the card grid that follows it. All three are gone. The
-   heading stays, because it is what the section IS and what the landmark is
-   named by; the cards were promoted from `h4` to `h3` with the line that used
-   to sit between them, so the document still steps one level at a time.
-
-   THE FIRST CARD IS THE CALL TO ACTION AND LOOKS LIKE ONE. Everything else on
-   this page is a place a reader may go; this is the one thing the page wants
-   them to do, so it is painted rather than listed - the same `--grad-cta` fill
-   and `--cta-ink` label the buttons carry, with the hairline along its top
-   flipped to the ink. The link is still a link and still the whole title. #}
-<section aria-labelledby="start-heading">
-  <h2 id="start-heading">{{ t("landing.start.heading") }}</h2>
-  <ul class="card-grid">
-    <li class="card card-cta">
-      <h3><a href="/demo/antrag">{{ t("landing.card.intake.title") }}</a></h3>
-      <p>{{ t("landing.card.intake.body") }}</p>
-    </li>
-    <li class="card">
-      <h3><a href="/review">{{ t("landing.card.review.title") }}</a></h3>
-      <p>{{ t("landing.card.review.body") }}</p>
-    </li>
-    <li class="card">
-      <h3><a href="/metrics">{{ t("landing.card.metrics.title") }}</a></h3>
-      <p>{{ t("landing.card.metrics.body") }}</p>
-    </li>
-    <li class="card">
-      <h3><a href="/inbox">{{ t("landing.card.inbox.title") }}</a></h3>
-      <p>{{ t("landing.card.inbox.body") }}</p>
-    </li>
-    <li class="card">
-      <h3>{{ t("landing.card.health.title") }}</h3>
-      <p>{{ m("landing.card.health.body") }}</p>
-      <p><a href="/health">/health</a> &middot; <a href="/healthz">/healthz</a></p>
-    </li>
-  </ul>
-</section>
-
-{# The three promises are the product's claim about itself rather than a place
-   to go, so they sit in a tinted zone instead of on a fourth identical white
-   card. Presentation only: the same heading, the same three cards, the same
-   words (part 18). #}
-<section class="section-tinted" aria-labelledby="garantien-heading">
-  <h2 id="garantien-heading">{{ t("landing.promises.heading") }}</h2>
-  <ul class="card-grid card-grid-3">
-    <li class="card">
-      <h3>{{ t("landing.promise.valve.title") }}</h3>
-      <p>{{ t("landing.promise.valve.body") }}</p>
-    </li>
-    <li class="card">
-      <h3>{{ t("landing.promise.model.title") }}</h3>
-      <p>{{ t("landing.promise.model.body") }}</p>
-    </li>
-    <li class="card">
-      <h3>{{ t("landing.promise.seal.title") }}</h3>
-      <p>{{ t("landing.promise.seal.body") }}</p>
-    </li>
-  </ul>
-</section>
-
-{# THE PICKER NOTE IS A BULLET IN THE LIST IT BELONGS TO (part 24). It used to
-   stand as a tinted notice ABOVE the heading's list, which made the first thing
-   this section said an answer about a unit picker the reader has not met yet -
-   there is none on this page. It is the same class of fact as the four bullets
-   under it ("what this instance is not"), it is unchanged word for word, and
-   `api/review.py::PICKER_NOTE` still finds it here. #}
-<section aria-labelledby="demo-heading">
-  <h2 id="demo-heading">{{ t("landing.instance.heading") }}</h2>
-  <ul>
-    <li>{{ m("landing.instance.synthetic", gold_dir=view.gold_dir) }}</li>
-    <li>{{ t(view.ingest_note_key) }}</li>
-    <li>{{ t("landing.instance.reset") }}</li>
-    <li>{{ m("landing.instance.storage") }}</li>
-    <li>{{ t("picker.note") }}</li>
-  </ul>
-  <p>
-    {{ t("landing.instance.more") }}
-    <a href="/hinweise">{{ t("chrome.nav.hinweise") }}</a>
-  </p>
-</section>
 {% endblock %}
 
 {% block footer %}

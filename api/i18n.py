@@ -203,8 +203,7 @@ TABLE: dict[str, tuple[str, str]] = {
     "footer.no_message": (
         "Diese Seiten erzeugen keine Nachricht an antragstellende Personen. "
         "Eingangsbestätigung und Zwischenstand entstehen automatisch aus dem "
-        "Journal und durchlaufen keine Prüfung (ADR-005); <code>/inbox</code> "
-        "ist und bleibt reine Ansicht, auch hier.",
+        "Journal und durchlaufen keine Prüfung (ADR-005)",
         "These pages cannot produce a message to an applicant. The receipt and "
         "the status note are automatic projections of the case journal and "
         "pass no human review (ADR-005); <code>/inbox</code> is and stays "
@@ -212,9 +211,7 @@ TABLE: dict[str, tuple[str, str]] = {
     ),
     "footer.a11y": (
         "Barrierefreiheit: Selbsteinschätzung nach EN 301 549 / WCAG 2.1 AA in "
-        "<code>docs/accessibility-selfcheck.md</code>. Eine externe Prüfung "
-        "nach BITV 2.0 hat nicht stattgefunden und ist Pilotvoraussetzung "
-        "(P-15).",
+        "<code>docs/accessibility-selfcheck.md</code>.",
         "Accessibility: self-assessment against EN 301 549 / WCAG 2.1 AA in "
         "<code>docs/accessibility-selfcheck.md</code>. No external BITV 2.0 "
         "test has been performed; it is a pilot prerequisite (P-15).",
@@ -274,11 +271,18 @@ TABLE: dict[str, tuple[str, str]] = {
         "Ob eine Zusammenarbeit rechtlich als selbstständige Tätigkeit gilt oder als abhängige Beschäftigung, prüft auf Antrag die Clearingstelle der Deutschen Rentenversicherung: "
         "2024 in 23.052 Fällen, im Schnitt nach 82 Tagen. Das Verfahren selbst ist gebührenfrei. Teuer wird es trotzdem — Antrag, Unterlagen, Rückfragen und Beratung"
         "binden nach unserer überschlägigen Rechnung rund 1.700 Euro je Fall. Der größere Schaden entsteht dort, wo niemand einen Antrag stellt: Jeder fünfte Selbstständige"
-        "hat bereits erlebt, dass ein Auftrag nicht zustande kam, weil der Auftraggeber das Risiko scheute."
-        
+        "hat bereits erlebt, dass ein Auftrag nicht zustande kam, weil der Auftraggeber das Risiko scheute. "
         "Wo wir das Problem vermuten: Jeder Fall durchläuft denselben standardisierten Fragebogen — unabhängig davon, "
         "wie unterschiedlich die Situationen sind und worauf es im Einzelnen ankommt. Und weil das Gesetz vorschreibt, "
-        "beide Vertragsparteien zu hören, wartet jedes Verfahren mindestens einmal darauf, dass die andere Seite antwortet.",
+        "beide Vertragsparteien zu hören, wartet jedes Verfahren mindestens einmal darauf, dass die andere Seite antwortet."
+        " "
+        "Wir haben einen Prozess entworfen, der § 7a SBG IV vollständig digital umsetzt, und Machine-Learning genau dort "
+        "einsetzt, wo es politisch, juristisch und technologisch sinnvoll ist. Notwendige Nachweise werden mit ausreichender "
+        "Konfidenz predicted, sodass genau so wenig Nachweise gefordert werden wie möglich, aber so viele wie nötig. "
+        "Ein zweiter Algorithmus wird eingesetzt, um dem Sachbearbeitenden immer den Vorgang zuzuweisen, der zu diesem "
+        "Zeitpunkt optimal zur Bearbeitung ist, abhängig von Zeit seit Antragsstellung, Komplexität und Wahrscheinlichkeit "
+        "einer Mitwirkung durch den beteiligten Vertragspartner."
+        ,
         "Submit a test application using one of the example scenarios",
     ),
     # The tour button carries its price. Two buttons side by side ask a first
@@ -286,7 +290,7 @@ TABLE: dict[str, tuple[str, str]] = {
     # decides it; the tour's own lead has said so since part 13, four hundred
     # pixels further down a page nobody has scrolled yet.
     "landing.cta.tour": ("Zum Rundgang (10 Minuten)", "Take the tour (10 minutes)"),
-    "landing.cta.intake": ("So geht's", "Submit an application"),
+    "landing.cta.intake": ("Starten", "Submit an application"),
     "landing.hero.label": (
         "Der Weg eines Eingangs durch die Anlage, in fünf Schritten",
         "The path of an incoming case through the system, in five steps",
@@ -356,21 +360,18 @@ TABLE: dict[str, tuple[str, str]] = {
     # and five named cards do not need a sentence saying that they are five
     # named cards. The two keys those lines used are gone with them rather
     # than kept as translations nobody can check against a page.
-    "landing.start.heading": ("Fangen Sie hier an", "Start here"),
-    "landing.card.intake.title": ("Antrag stellen", "Submit an application"),
+    "landing.start.heading": ("Die einzelnen Schritte", "Start here"),
+    "landing.card.intake.title": ("Antrag", "Submit an application"),
     "landing.card.intake.body": (
-        "Sie stellen als erfundene Person einen Antrag und sehen danach "
-        "Schritt für Schritt, was die Anlage damit macht. Es ist derselbe Weg, "
-        "den jeder andere Eingang nimmt.",
+        "Erstellen Sie ein Szenario zur Antragsstellung um zu sehen, "
+        "wie unserer Prozess funktioniert.",
         "You submit an application as an openly fictional applicant and then "
         "watch, step by step, what the system does with it. It is the same "
         "path every other incoming case takes.",
     ),
     "landing.card.review.title": ("Sachbearbeitung", "Caseworker screens"),
     "landing.card.review.body": (
-        "Warteschlangen je Einheit, die Vorgangsansicht mit allen Belegen und "
-        "die drei Aktionen (bestätigen, umsteuern, eskalieren). Jede Aktion "
-        "schreibt ein Ereignis ins Journal; nichts wird überschrieben.",
+        "Sehen Sie hier, was der Sachbearbeiter sieht",
         "Queues per organisational unit, the case view with every piece of "
         "evidence, and the three actions (confirm, re-route, escalate). Each "
         "action appends a journal event; nothing is ever overwritten.",

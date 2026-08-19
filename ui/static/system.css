@@ -1253,7 +1253,13 @@ main > div:not(.page-head) > *:last-child {
 .card-grid > .card h3 a {
   text-decoration: none;
 }
-
+/* The whole card is the link. The anchor stays in the heading, so its
+   accessible name is the card title rather than the title plus the body. */
+.card-grid > .card h3 a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
 .card-grid > .card h4 a:hover,
 .card-grid > .card h3 a:hover {
   text-decoration: underline;
