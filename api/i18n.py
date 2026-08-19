@@ -270,7 +270,15 @@ TABLE: dict[str, tuple[str, str]] = {
         "Streamlined status determination under § 7a SGB IV",
     ),
     "landing.lead": (
-        "Stellen Sie testweise einen Antrag mit Beispielszenarien",
+        "In Deutschland arbeiten rund 3,7 Millionen Menschen selbstständig, etwa 1,5 Millionen davon ohne eigene Angestellte — mit sinkender Tendenz. "
+        "Ob eine Zusammenarbeit rechtlich als selbstständige Tätigkeit gilt oder als abhängige Beschäftigung, prüft auf Antrag die Clearingstelle der Deutschen Rentenversicherung: "
+        "2024 in 23.052 Fällen, im Schnitt nach 82 Tagen. Das Verfahren selbst ist gebührenfrei. Teuer wird es trotzdem — Antrag, Unterlagen, Rückfragen und Beratung"
+        "binden nach unserer überschlägigen Rechnung rund 1.700 Euro je Fall. Der größere Schaden entsteht dort, wo niemand einen Antrag stellt: Jeder fünfte Selbstständige"
+        "hat bereits erlebt, dass ein Auftrag nicht zustande kam, weil der Auftraggeber das Risiko scheute."
+        
+        "Wo wir das Problem vermuten: Jeder Fall durchläuft denselben standardisierten Fragebogen — unabhängig davon, "
+        "wie unterschiedlich die Situationen sind und worauf es im Einzelnen ankommt. Und weil das Gesetz vorschreibt, "
+        "beide Vertragsparteien zu hören, wartet jedes Verfahren mindestens einmal darauf, dass die andere Seite antwortet.",
         "Submit a test application using one of the example scenarios",
     ),
     # The tour button carries its price. Two buttons side by side ask a first
@@ -278,7 +286,7 @@ TABLE: dict[str, tuple[str, str]] = {
     # decides it; the tour's own lead has said so since part 13, four hundred
     # pixels further down a page nobody has scrolled yet.
     "landing.cta.tour": ("Zum Rundgang (10 Minuten)", "Take the tour (10 minutes)"),
-    "landing.cta.intake": ("Antrag stellen", "Submit an application"),
+    "landing.cta.intake": ("So geht's", "Submit an application"),
     "landing.hero.label": (
         "Der Weg eines Eingangs durch die Anlage, in fünf Schritten",
         "The path of an incoming case through the system, in five steps",
