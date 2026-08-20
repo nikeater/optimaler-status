@@ -55,12 +55,8 @@ services:
       # operator reading only this file can see what the instance is.
       - key: EINGANGSLOTSE_DEMO_MODE
         value: "1"
-      # NO EINGANGSLOTSE_INGEST_TOKEN. Its absence is the setting: POST /ingest
-      # is refused outright, and this instance cannot receive a submission from
-      # anybody. Add it in the Render dashboard ONLY if you have a reason to
-      # keep ingest open, and then treat it as a secret and rotate it. If you
-      # ever do add it here rather than in the dashboard, use `sync: false` so
-      # the value never lands in git.
+      - key: EINGANGSLOTSE_INGEST_TOKEN
+        sync: false
       - key: EINGANGSLOTSE_TEXT_NER
         value: "0"
       # <-- EDIT: your repository URL, for the landing page's link.
