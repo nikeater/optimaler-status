@@ -1320,7 +1320,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "EingangsLotse - what happened to your application",
     ),
     "backend.headline": (
-        "Phase 9000: Was mit Ihrem Antrag passiert ist",
+        "Deepdive in das Backend",
         "Phase 2: what happened to your application",
     ),
     "backend.overview.heading": ("Überblick", "Overview"),
