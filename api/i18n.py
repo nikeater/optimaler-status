@@ -1839,23 +1839,19 @@ TABLE: dict[str, tuple[str, str]] = {
         "EingangsLotse - what happened to your application",
     ),
     "pipeline.headline": (
-        "Phase 2: Was mit Ihrem Antrag passiert ist",
+        "Phase 2: Die Verarbeitung des Antrags",
         "Phase 2: what happened to your application",
     ),
-    "pipeline.overview.heading": ("Überblick", "Overview"),
+    "pipeline.overview.heading": ("Digitale Erstbearbeitung", "Overview"),
     "pipeline.overview.body": (
-        "Sieben Schritte, in der Reihenfolge, in der sie gelaufen sind. Jede "
-        "Zahl und jeder Satz auf dieser Seite kommt aus dem Journal Ihres "
-        "Vorgangs oder aus einer Ablage, die es ohnehin gibt. Diese Seite "
-        "rechnet nichts nach: sie kann dem, was tatsächlich passiert ist, "
-        "nicht widersprechen.",
+        "Zunächst werden die Daten aus dem Formular im Backend versiegelt und ",
         "Seven stages, in the order they ran. Every number and every sentence "
         "on this page comes from your case's journal or from a store the "
         "system keeps anyway. This page recomputes nothing: it cannot "
         "contradict what actually happened.",
     ),
     "pipeline.backend.link": (
-        "Bäckend",
+        "Deepdive ins Backend",
     ),
     "pipeline.sampled": (
         "Dieser Vorgang wurde zufällig zur Qualitätssicherung ausgewählt. Das "
@@ -1874,209 +1870,6 @@ TABLE: dict[str, tuple[str, str]] = {
         "store keeps it for a short time and in memory only; everything else "
         "on this page comes from the journal and stays readable.",
     ),
-    "pipeline.a.heading": ("a) Eingang", "a) Arrival"),
-    "pipeline.a.body": (
-        "Ihr Antrag ist angekommen und hat eine Vorgangskennung bekommen; ab "
-        "hier ist jeder Schritt einzeln nachlesbar.",
-        "Your application arrived and was given a case id; from here on every "
-        "step can be read individually.",
-    ),
-    "pipeline.a.case": ("Vorgang", "Case"),
-    "pipeline.a.channel": ("Weg", "Channel"),
-    "pipeline.a.received": ("Eingang am", "Received at"),
-    "pipeline.a.as": ("Eingereicht als", "Submitted as"),
-    "pipeline.a.persona": ("erfundene Person", "fictional applicant"),
-    "pipeline.a.events": ("Ereignisse im Journal", "Journal events"),
-    "pipeline.b.heading": ("b) Versiegelung", "b) Sealing"),
-    "pipeline.b.seal_sentence": (
-        "Die Maschine hat Ihren Namen nie gesehen. Was Sie eingegeben haben, "
-        "wurde am Eingang versiegelt - bevor die Arbeitskopie entstand, auf "
-        "der alles Weitere rechnet.",
-        "The machine never saw your name. What you entered was sealed at the "
-        "boundary, before the working copy existed - and everything downstream "
-        "computes on that copy alone.",
-    ),
-    "pipeline.b.sealed": ("Versiegelte Werte", "Values sealed"),
-    "pipeline.b.verified": ("Nachprüfung", "Verification"),
-    "pipeline.b.verified.yes": (
-        "bestanden - ein zweiter, unabhängiger Erkennerlauf über die "
-        "Arbeitskopie fand nichts mehr",
-        "passed - a second, independent detector pass over the working copy "
-        "found nothing",
-    ),
-    "pipeline.b.verified.no": (
-        "nicht bestanden oder nicht protokolliert",
-        "not passed, or not recorded",
-    ),
-    "pipeline.b.pairs.heading": (
-        "Ihre Eingabe und das, was die Maschine bekommen hat",
-        "What you typed, and what the machine received",
-    ),
-    "pipeline.b.pairs.body": (
-        "Links steht, was Sie selbst eingetippt haben. Rechts steht, was an "
-        "dieser Stelle in der Arbeitskopie steht. Der Klartext wurde nicht aus "
-        "dem Tresor geholt, um diese Tabelle zu bauen - er stammt aus Ihrer "
-        "eigenen Eingabe von eben und wird nur für kurze Zeit im "
-        "Arbeitsspeicher gehalten.",
-        "On the left is what you typed. On the right is what the working copy "
-        "holds in its place. The plain text was not fetched from the vault to "
-        "build this table - it comes from your own input a moment ago and is "
-        "held in memory for a short time only.",
-    ),
-    "pipeline.b.pairs.caption": (
-        "Gegenüberstellung: eingegebener Wert und Platzhalter",
-        "Side by side: the value you entered and the placeholder",
-    ),
-    "pipeline.b.pairs.col1": ("Angabe", "Field"),
-    "pipeline.b.pairs.col2": ("Von Ihnen eingegeben", "Entered by you"),
-    "pipeline.b.pairs.col3": ("In der Arbeitskopie", "In the working copy"),
-    "pipeline.b.pairs.none": (
-        "kein Platzhalter dieser Art in der Arbeitskopie",
-        "no placeholder of that kind in the working copy",
-    ),
-    "pipeline.b.pairs.sr": (
-        "Platzhalter der Art {kind}",
-        "placeholder of kind {kind}",
-    ),
-    "pipeline.b.letter.heading": (
-        "Ihr Anschreiben, vorher und nachher",
-        "Your letter, before and after",
-    ),
-    "pipeline.b.letter.body": (
-        "Dieselben Zeichen, einmal wie Sie sie geschrieben haben und einmal "
-        "wie die Maschine sie bekommen hat. Im Fließtext wird SPANNE FÜR "
-        "SPANNE versiegelt, nicht der ganze Absatz: ein Brief ohne seine "
-        "Verben ließe sich nicht triagieren.",
-        "The same characters, once as you wrote them and once as the machine "
-        "received them. In prose the sealing happens SPAN BY SPAN and not by "
-        "the paragraph: a letter without its verbs could not be triaged.",
-    ),
-    "pipeline.b.letter.yours": ("Was Sie geschrieben haben", "What you wrote"),
-    "pipeline.b.letter.machine": (
-        "Was die Maschine gelesen hat",
-        "What the machine read",
-    ),
-    "pipeline.b.copy.heading": (
-        "Die Arbeitskopie, wie sie weitergereicht wurde",
-        "The working copy, as it was handed on",
-    ),
-    "pipeline.b.copy.body": (
-        "Jede Stelle, an der ein Platzhalter steht, hat vorher eine Ihrer "
-        "Angaben getragen. Alles danach - Ableitung, Auslesen, Regeln, "
-        "Entscheidung, Scorer - hat ausschließlich diese Fassung gelesen.",
-        "Every placeholder below stands where one of your values used to be. "
-        "Everything after that - derivation, extraction, rules, decision, "
-        "scorer - read this version and nothing else.",
-    ),
-    # Part 20 renamed these three from `pipeline.b.kinds.*` and dropped a
-    # fourth. The table counts spans PER TEXT PART and always did; calling its
-    # first column "Art" made the citizen page ask for `kind.part-text-0` and
-    # print the key. See `api/review.py::sealed_text_parts`.
-    "pipeline.b.parts.caption": (
-        "Wie viele Stellen je Textteil versiegelt wurden. Werte erscheinen hier nie.",
-        "How many spans were sealed in each text part. Values never appear here.",
-    ),
-    "pipeline.b.parts.col1": ("Textteil", "Text part"),
-    "pipeline.b.parts.col2": ("Versiegelte Stellen", "Sealed spans"),
-    "pipeline.c.heading": ("c) Extraktion", "c) Extraction"),
-    "pipeline.c.body": (
-        "Jetzt wird gelesen, was in der Arbeitskopie steht - und jede gefundene "
-        "Angabe muss zweifach belegt sein: das Zitat UND die Zeichenposition, "
-        "unabhängig voneinander gegen dieselbe Textfassung geprüft.",
-        "Now the working copy is read - and every value found must be proven "
-        "twice: the quote AND the character offsets, checked independently "
-        "against the same text.",
-    ),
-    "pipeline.c.found": ("Gefundene Felder", "Fields found"),
-    "pipeline.c.none": ("keine", "none"),
-    "pipeline.c.discarded": ("Verworfen", "Discarded"),
-    "pipeline.c.discarded.note": (
-        "ein VERWORFENER Vorschlag ist ein Wert, dessen Fundstelle die Prüfung "
-        "nicht bestanden hat. Er wird nicht übernommen und schiebt den Vorgang "
-        "Richtung Tier 3.",
-        "a DISCARDED proposal is a value whose span failed verification. It is "
-        "not adopted, and it pushes the case towards tier 3.",
-    ),
-    "pipeline.c.no_extraction": (
-        "Aus diesem Anschreiben wurde nichts ausgelesen, und das ist kein "
-        "Fehler dieser Seite. Der Leser für Freitext ist in dieser "
-        "Bereitstellung ein REPLAY aufgezeichneter Modellausgaben (ADR-028): "
-        "zu einem Brief, den Sie gerade selbst geschrieben haben, gibt es "
-        "keine Aufzeichnung. Ein Modell raten zu lassen und das Ergebnis nicht "
-        "belegen zu können, wäre die schlechtere Antwort - der Vorgang geht "
-        "deshalb unvollständig zu einem Menschen.",
-        "Nothing was extracted from this letter, and that is not a fault of "
-        "this page. The reader for free text in this deployment is a REPLAY of "
-        "recorded model output (ADR-028): for a letter you just wrote "
-        "yourself, there is no recording. Letting a model guess and being "
-        "unable to prove the result would be the worse answer - so the case "
-        "goes to a human incomplete.",
-    ),
-    "pipeline.c.spans.caption": (
-        "Fundstellen: Teil und Zeichenbereich, nie der Wert",
-        "Spans: part and character range, never the value",
-    ),
-    "pipeline.c.spans.col1": ("Feld", "Field"),
-    "pipeline.c.spans.col2": ("Textteil", "Text part"),
-    "pipeline.c.spans.col3": ("Zeichenbereich", "Character range"),
-    "pipeline.c.spans.col4": ("Prüfart", "Match mode"),
-    "pipeline.c.spans.structured": ("strukturiertes Feld", "structured field"),
-    "pipeline.c.spans.range": ("{start} bis {end}", "{start} to {end}"),
-    "pipeline.c.spans.nospan": ("ohne Textfundstelle", "no text span"),
-    "pipeline.d.heading": ("d) Evidenz", "d) Evidence"),
-    "pipeline.d.body": (
-        "Aus den belegten Werten wird die Beweislage: welches Verfahren, was "
-        "fehlt, wer zuständig ist. Alles davon ist nachlesbar begründet - "
-        "nichts davon ist schon eine Entscheidung.",
-        "The proven values become the evidence: which procedure, what is "
-        "missing, who is responsible. All of it is justified in readable form "
-        "- and none of it is a decision yet.",
-    ),
-    "pipeline.d.procedure": ("Verfahren", "Procedure"),
-    "pipeline.d.procedure.none": ("nicht abgeleitet", "not derived"),
-    "pipeline.d.derived": (
-        "abgeleitet aus: {source}; Kanalhinweis: {hint}",
-        "derived from: {source}; channel hint: {hint}",
-    ),
-    "pipeline.d.unknown": ("unbekannt", "unknown"),
-    "pipeline.d.nohint": ("keiner", "none"),
-    "pipeline.d.completeness": ("Vollständigkeit", "Completeness"),
-    "pipeline.d.clearcut": ("Klarfall", "Clear-cut"),
-    "pipeline.d.yes": ("ja", "yes"),
-    "pipeline.d.no": ("nein", "no"),
-    "pipeline.d.unchecked": ("nicht geprüft", "not evaluated"),
-    "pipeline.d.gaps.heading": (
-        "Was fehlt, und was Sie dazu gefragt werden",
-        "What is missing, and what you will be asked",
-    ),
-    "pipeline.d.gaps.caption": (
-        "Gemeldete Lücken mit dem Satz, den die Nachforderung dazu stellt",
-        "Reported gaps with the sentence the request for information uses",
-    ),
-    "pipeline.d.gaps.col1": ("Angabe", "Field"),
-    "pipeline.d.gaps.col2": ("Status", "Status"),
-    "pipeline.d.gaps.col3": ("Formulierung im Schreiben", "Wording in the letter"),
-    "pipeline.d.routing.heading": ("Zuordnung", "Routing"),
-    "pipeline.d.routing.body": (
-        "<strong>Zugeordnet wurde: {unit}.</strong> Das ist die Antwort der "
-        "Entscheidungsebene und die einzige, die den Vorgang tatsächlich in "
-        "eine Warteschlange gelegt hat. Die Tabelle darunter zeigt ALLE "
-        "Belege, auch die unterlegenen.",
-        "<strong>Routed to: {unit}.</strong> That is the decision plane's "
-        "answer and the only one that actually put the case into a queue. The "
-        "table below shows ALL the evidence, including the proposals that "
-        "lost.",
-    ),
-    "pipeline.d.routing.nounit": ("keine Einheit", "no unit"),
-    "pipeline.d.routing.caption": (
-        "Zuordnungsbelege mit Quelle; die zugeordnete Einheit ist gekennzeichnet",
-        "Routing evidence with its source; the routed unit is marked",
-    ),
-    "pipeline.d.routing.col1": ("Einheit", "Unit"),
-    "pipeline.d.routing.col2": ("Quelle", "Source"),
-    "pipeline.d.routing.col3": ("Regel", "Rule"),
-    "pipeline.d.routing.col4": ("Konfidenz", "Confidence"),
-    "pipeline.d.routing.routed": ("zugeordnet", "routed"),
     "pipeline.e.heading": ("e) Entscheidung", "e) Decision"),
     "pipeline.e.body": (
         "Die Entscheidungsebene liest nur, was belegt ist, und wertet eine "

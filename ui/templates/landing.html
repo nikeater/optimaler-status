@@ -12,17 +12,7 @@
     {# <a class="cta cta-secondary" href="/demo/rundgang">{{ t("landing.cta.tour") }}</a> #}
   </p>
   <h2 id="start-heading">{{ t("landing.start.heading") }}</h2>
-  {# `card-grid-links`: every card in THIS grid is a single destination, so the
-     whole box is the click target (the heading's anchor stretches over the card
-     in CSS), not just the title words. Which is also why the operations card
-     below is out: its heading was not a link, so under this class it would have
-     been the one dead surface in the grid. #}
   <ul class="card-grid card-grid-links">
-    {# THE FIRST CARD IS THE CALL TO ACTION AND LOOKS LIKE ONE. Everything else
-       here is a place a reader may go; this is the one thing the page wants
-       them to do, so it is painted rather than listed - the same `--grad-cta`
-       fill and `--cta-ink` label the buttons carry. The link is still a link
-       and still the whole title. #}
     <li class="card card-cta">
       <h3><a href="/demo/antrag">{{ t("landing.card.intake.title") }}</a></h3>
       <p>{{ t("landing.card.intake.body") }}</p>
