@@ -61,7 +61,7 @@ services:
         value: "0"
       # <-- EDIT: your repository URL, for the landing page's link.
       - key: EINGANGSLOTSE_REPO_URL
-        value: https://github.com/OWNER/eingangslotse
+        value: https://github.com/nikeater/optimaler-status
       # The five state directories, on the container's ephemeral filesystem.
       # Deliberately NOT a disk: see the note above.
       - key: EINGANGSLOTSE_JOURNAL_DIR
