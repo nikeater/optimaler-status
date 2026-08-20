@@ -30,103 +30,11 @@
   {% endif %}
 </section>
 
-
-<section aria-labelledby="e-heading" class="stage">
-  <h2 id="e-heading">{{ t("pipeline.e.heading") }}</h2>
-  <p>{{ t("pipeline.e.body") }}</p>
-  <dl>
-    <dt>{{ t("pipeline.e.result") }}</dt><dd>{{ t("tier." ~ state.tier) if state.tier else "-" }}</dd>
-    <dt>{{ t("pipeline.e.unit") }}</dt><dd>{{ state.unit_id or t("pipeline.e.unit.none") }}</dd>
-  </dl>
-  <div class="scroll-x">
-    <table>
-      <caption>{{ t("pipeline.e.reasons.caption") }}</caption>
-      <thead>
-        <tr>
-          <th scope="col">{{ t("pipeline.e.reasons.col1") }}</th>
-          <th scope="col">{{ t("pipeline.e.reasons.col2") }}</th>
-          <th scope="col">{{ t("pipeline.e.reasons.col3") }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for reason in case.reasons %}
-        <tr {% if reason.get("kind") == "sampled" %}class="sample-row"{% endif %}>
-          <th scope="row">{{ reason.get("kind") }}</th>
-          <td><code>{{ reason.get("rule_id") }}</code></td>
-          <td>{{ reason.get("detail") }}</td>
-        </tr>
-        {% else %}
-        <tr><td colspan="3">{{ t("pipeline.e.reasons.none") }}</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% if view.downgraded %}
-  <p class="notice alarm-note">
-    {{ t("pipeline.e.valve", before=case.pre_downgrade_tier, after=case.tier) }}
-  </p>
-  {% endif %}
-  <h3>{{ t("pipeline.e.anomaly.heading") }}</h3>
-  {% if case.anomaly %}
-  <dl>
-    <dt>{{ t("pipeline.e.anomaly.score") }}</dt>
-    <dd>{{ "%.3f"|format(case.anomaly.get("score")) if case.anomaly.get("score") is not none else "-" }}</dd>
-    <dt>{{ t("pipeline.e.anomaly.flagged") }}</dt>
-    <dd>{% if case.anomaly.get("flagged") %}{{ t("pipeline.d.yes") }}{% else %}{{ t("pipeline.d.no") }}{% endif %}</dd>
-    <dt>{{ t("pipeline.e.anomaly.mode") }}</dt><dd>{{ case.anomaly.get("mode") or "-" }}</dd>
-  </dl>
-  {% if view.anomaly_reasons %}
-  <p>{{ t("pipeline.e.anomaly.body") }}</p>
-  <ul class="flags">
-    {% for reason in view.anomaly_reasons %}
-    <li class="flag">{{ reason.text }}</li>
-    {% endfor %}
-  </ul>
-  {% if view.flagged_but_log_only %}
-  <p class="notice">{{ t("pipeline.e.log_only") }}</p>
-  {# PART 22: the second half of the same sentence, said rather than implied.
-     `would_be_tier` is READ from the decision table's downgrade rows
-     (api/demo.py::armed_scorer_tier); the schema fixes every downgrade at tier
-     3, so this is one number out of the configuration and not a second opinion
-     about what tier this case is. #}
-  {% if view.would_be_tier %}
-  <p class="notice">
-    {{ t("pipeline.e.would_be_tier", tier=t("tier." ~ view.would_be_tier)) }}
-  </p>
-  {% endif %}
-  {% endif %}
-  {% else %}
-  <p class="muted">{{ t("pipeline.e.anomaly.noreasons") }}</p>
-  {% endif %}
-  {% else %}
-  <p class="muted">{{ t("pipeline.e.anomaly.none") }}</p>
-  {% endif %}
-</section>
-
 <section aria-labelledby="f-heading" class="stage">
   <h2 id="f-heading">{{ t("pipeline.f.heading") }}</h2>
   <p>{{ t("pipeline.f.body") }}</p>
   {% if view.notifications %}
   <div class="scroll-x">
-    <table>
-      <caption>{{ t("pipeline.f.caption") }}</caption>
-      <thead>
-        <tr>
-          <th scope="col">{{ t("pipeline.f.col1") }}</th>
-          <th scope="col">{{ t("pipeline.f.col2") }}</th>
-          <th scope="col">{{ t("pipeline.f.col3") }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for entry in view.notifications %}
-        <tr>
-          <th scope="row"><code>{{ entry.template_id }}</code></th>
-          <td>{{ entry.subject }}</td>
-          <td>{{ entry.created_at.isoformat() }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
   </div>
   <p>
     {{ t("pipeline.f.link") }}
@@ -212,18 +120,6 @@
 <section aria-labelledby="g-heading" class="stage">
   <h2 id="g-heading">{{ t("pipeline.g.heading") }}</h2>
   <p>{{ m("pipeline.g.body", queue=view.queue_label) }}</p>
-  <p class="notice">{{ t("pipeline.g.note") }}</p>
-  {# THE ONE FORWARD ACTION ON THIS PAGE IS A BUTTON (part 23). It used to be a
-     link inside a tinted panel - the loudest BLOCK on the page, which is not
-     the same thing as the clearest control, and a visitor who had just read
-     seven stages of machine work had to recognise a paragraph as the way out.
-     It is now the same primary control the intake submits with: `.cta`, the
-     `--grad-cta` fill and the `--cta-ink` label, which invert together on this
-     ground so a light fill carries a dark label rather than a dark button
-     disappearing into a dark card. Still a link, still one tab stop, still
-     works with scripting off. The panels stay on the two-party links below,
-     where a side road is what they are. #}
-  <p>
     <a class="cta" href="{{ view.queue_href }}">{{ t("pipeline.g.handover") }}</a>
   </p>
   <p>

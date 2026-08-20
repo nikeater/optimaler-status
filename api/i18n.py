@@ -1844,7 +1844,7 @@ TABLE: dict[str, tuple[str, str]] = {
     ),
     "pipeline.overview.heading": ("Digitale Erstbearbeitung", "Overview"),
     "pipeline.overview.body": (
-        "Zunächst werden die Daten aus dem Formular im Backend versiegelt und ",
+        "Zunächst werden die Daten aus dem Formular im Backend versiegelt und auf Inkonsistenzen überprüft.",
         "Seven stages, in the order they ran. Every number and every sentence "
         "on this page comes from your case's journal or from a store the "
         "system keeps anyway. This page recomputes nothing: it cannot "
@@ -1870,7 +1870,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "store keeps it for a short time and in memory only; everything else "
         "on this page comes from the journal and stays readable.",
     ),
-    "pipeline.e.heading": ("e) Entscheidung", "e) Decision"),
+    "pipeline.e.heading": ("Benachrichtigung des beteiligten Vertragspartners", "e) Decision"),
     "pipeline.e.body": (
         "Die Entscheidungsebene liest nur, was belegt ist, und wertet eine "
         "versionierte Tabelle Zeile für Zeile aus. Sie entscheidet nichts über "
@@ -1945,7 +1945,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "Keine Auffälligkeitsprüfung protokolliert.",
         "No anomaly check was recorded.",
     ),
-    "pipeline.f.heading": ("f) Nachricht", "f) Message"),
+    "pipeline.f.heading": ("Benachrichtigung über Eingang des Antrags", "f) Message"),
     # "nach dieser Einreichung" rather than "als antragstellende Person": this
     # page also renders for the Auftraggeber's statement, whose sender is not
     # an antragstellende Person and who would have read a sentence about
@@ -1978,11 +1978,17 @@ TABLE: dict[str, tuple[str, str]] = {
         "Zu diesem Vorgang wurde keine Nachricht zugestellt.",
         "No message was delivered for this case.",
     ),
-    "pipeline.g.heading": ("g) Warteschlange", "g) Queue"),
+    "pipeline.g.heading": ("Gepoolter Backlog", "g) Queue"),
     "pipeline.g.body": (
-        "Ihr Vorgang liegt jetzt in der Warteschlange von <strong>{queue}"
-        "</strong> und wartet auf einen Menschen. Im nächsten Schritt sind Sie "
-        "dieser Mensch.",
+        "Ihr Vorgang ist nun Teil des gemeinsamen Backlogs der verarbeitenden Behörde. "
+        "Dies ermöglicht ein Zuweisen des optimalen Antrags an den nächsten freien Sachbearbeitenden. "
+        "Dazu wägt ein Machine-Learning Algorithmus verschiedene Faktoren ab. "
+        "So sinkt beispielsweise mit Voranschreiten der Zeit die Wahrscheinlichkeit, "
+        "dass der beteiligte Vertragspartner Stellung bezieht. So kann bei einer vorgegebenen "
+        "Konfidenz darüber, dass eine Stellungnahme ausbleibt, bereits entschieden werden. "
+        "Darüber hinaus lässt sich auch ein Verteilen der Vorgänge nach Expertise in der Sachbearbeitung vornehmen. "
+        "Dies ermöglicht die wirklich schnellstmögliche Bearbeitung von Anträgen, ohne dass Vorgänge in individuellen "
+        "Backlogs hängenbleiben.",
         "Your case is now in the <strong>{queue}</strong> queue, waiting for a "
         "human. In the next step, you are that human.",
     ),
