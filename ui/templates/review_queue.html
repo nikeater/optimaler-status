@@ -14,7 +14,7 @@
 {% endblock %}
 {% block content %}
 <nav class="backlink" aria-label="Zurück">
-  <a href="/review{% if view.unit_id %}?unit={{ view.unit_id }}{% endif %}">Zurück zur Warteschlangen-Übersicht</a>
+  <a href="/review{% if view.unit_id %}?unit={{ view.unit_id }}{% endif %}">Zur Warteschlangen-Ansicht</a>
 </nav>
 <section aria-labelledby="queue-heading">
   <h2 id="queue-heading">Offene Vorgänge ({{ view.queue.count }})</h2>
@@ -26,34 +26,19 @@
     zur unverzüglichen Weiterleitung. {{ view.queue.note }}
   </p>
   {% endif %}
-  <p>
-    Ältester Vorgang zuerst. Stand {{ view.now.isoformat() }}; die Uhr wird
-    dieser Seite übergeben und nicht abgelesen. Kein Merkmal auf dieser Seite
-    verändert die Reihenfolge der Bearbeitung oder blendet etwas aus.
-  </p>
   {% if view.highlight %}
   <p class="notice" id="queue-highlight-note">
     <strong>Ihr Vorgang aus dem Rundgang:</strong> {{ view.highlight }}
     {% if view.highlighted %}
-    ist in der Liste mit "Ihr Vorgang" gekennzeichnet. Die Markierung ist reine
-    Anzeige: sie sortiert nichts um und blendet nichts aus - die Warteschlange
-    bleibt nach Alter geordnet, wie für jede andere bearbeitende Person auch.
+    ist in der Liste mit "Ihr Vorgang" gekennzeichnet.
     {% else %}
     steht nicht (mehr) in dieser Warteschlange. Das ist ein normaler Zustand:
     er ist bestätigt oder umgesteuert worden.
     {% endif %}
     Wenn Sie ihn bearbeitet haben, schließt sich der Kreis im
-    <a href="/inbox">Postfach</a> der antragstellenden Person - dort steht, was
-    sie erhalten hat.
+    <a href="/inbox">Postfach</a> der antragstellenden Person - dort geht der simulierte Bescheid ein.
   </p>
   {% endif %}
-  {# THE LONGEST TABLE IN THE PROJECT KEEPS ITS HEAD (part 18). This queue is
-     41 rows on the seeded demo; by row twelve the column names are off screen
-     and "Tier" is a bare number in a column of bare numbers. `.is-tall` gives
-     the scroll box a maximum height so its own sticky head has something to
-     stick to - and it applies only from 64rem up, because on a phone taking
-     the reader's page scroll away and replacing it with an inner one would be
-     worse than the problem. #}
   <div class="scroll-x is-tall">
     <table>
       <caption>Warteschlange {{ view.queue.label }}</caption>

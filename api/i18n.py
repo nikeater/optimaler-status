@@ -2020,7 +2020,7 @@ TABLE: dict[str, tuple[str, str]] = {
     # so the section carries a name instead of a letter and says in its own
     # first sentence which of the two it is.
     "pipeline.statement.heading": (
-        "Die zweite Seite: der Auftraggeber wird gehört",
+        "Anhörung des Vertragspartners",
         "The second party: the client is heard",
     ),
     "pipeline.statement.body": (
@@ -2059,10 +2059,9 @@ TABLE: dict[str, tuple[str, str]] = {
         "is a document rather than interface text.",
     ),
     "pipeline.statement.waiting": (
-        "Bisher ist keine Stellungnahme eingegangen. Das ist kein Fehler und "
-        "hält nichts auf: eine Antwort ist freiwillig, nichts in der "
-        "Verarbeitung wartet auf sie, und die Warteschlange ordnet deswegen "
-        "keinen Vorgang um. Geht keine ein, wird nach Aktenlage entschieden.",
+        "Bisher ist keine Stellungnahme eingegangen. Eine Antwort ist freiwillig. "
+        "Geht keine ein, wird nach Aktenlage entschieden. Bis dahin wartet der "
+        "Vorgang im gepoolten Backlog.",
         "No statement has arrived yet. That is not an error and it holds "
         "nothing up: answering is voluntary, nothing in the processing waits "
         "for it, and no queue is reordered because of it. If none arrives, "
