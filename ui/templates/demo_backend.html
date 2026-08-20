@@ -24,27 +24,12 @@
 <section aria-labelledby="ueberblick-heading">
   <h2 id="ueberblick-heading">{{ t("backend.overview.heading") }}</h2>
   <p>{{ t("backend.overview.body") }}</p>
+  <a href="/demo/case/{{ view.case_id }}/pipeline">{{ t("backend.pipeline.link") }}</a>
   {% if not view.held %}
   <p class="notice">{{ t("backend.expired") }}</p>
   {% endif %}
   {% if view.sampled %}
   <p class="notice sample-note">{{ t("backend.sampled") }}</p>
-  {% endif %}
-  {# PART 19, and the position is the whole of the reasoning: the two-party
-     section itself sits where it belongs in the story (between the message and
-     the hand-off), which is a long way down a page with seven stages on it. A
-     visitor who just submitted has to be TOLD there is a second party, at the
-     top, or the loop is discoverable only by scrolling. Two lines and a link,
-     with the letter and the detail left where they belong. #}
-  {% if view.statement and view.statement.asked %}
-  <p class="notice">
-    {% if view.statement.answered %}
-    {{ m("backend.statement.notice.arrived") }}
-    {% else %}
-    {{ m("backend.statement.notice") }}
-    {% endif %}
-    <a href="#gegenpartei">{{ t("backend.statement.heading") }}</a>
-  </p>
   {% endif %}
 </section>
 

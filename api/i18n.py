@@ -320,7 +320,7 @@ TABLE: dict[str, tuple[str, str]] = {
     # named cards. The two keys those lines used are gone with them rather
     # than kept as translations nobody can check against a page.
     "landing.start.heading": ("Die einzelnen Schritte", "Start here"),
-    "landing.card.intake.title": ("Antrag", "Submit an application"),
+    "landing.card.intake.title": ("Antrag (hier starten)", "Submit an application"),
     "landing.card.intake.body": (
         "Erstellen Sie ein Szenario zur Antragsstellung um zu sehen, "
         "wie unserer Prozess funktioniert.",
@@ -336,12 +336,11 @@ TABLE: dict[str, tuple[str, str]] = {
         "action appends a journal event; nothing is ever overwritten.",
     ),
     "landing.card.metrics.title": ("Eval-Metriken", "Evaluation metrics"),
-    "landing.card.metrics.body": (
-        "Die Zahlen des letzten Eval-Laufs über dem eingefrorenen Goldsatz, "
-        "inklusive der vier Gates. Die Seite rechnet nichts selbst.",
-        "The numbers from the last evaluation run over the frozen gold corpus, "
-        "including the four gates. The page computes nothing itself.",
-    ),
+"landing.card.metrics.body": (
+    "Ergebnisse von internen Testläufen.",
+    "The numbers from the last evaluation run over the frozen gold corpus, "
+    "including the four gates. The page computes nothing itself.",
+),
     "landing.card.inbox.title": ("Postfach", "Applicant inbox"),
     "landing.card.inbox.body": (
         "Was eine antragstellende Person erhalten hätte. Nur Ansicht, ohne "
@@ -1230,13 +1229,8 @@ TABLE: dict[str, tuple[str, str]] = {
         "the field exactly as typing would.",
     ),
     "intake.required.note": (
-        "Jedes Feld, das hier schon ausgefüllt ist, ist ein Pflichtfeld: leeren "
-        "Sie eines und schicken Sie ab, markiert Ihr Browser es rot und sendet "
-        "nichts. Ausgenommen sind die drei Felder, deren Löschung die Hinweise "
-        "über dem Formular vorschlagen - Versicherungsnummer, Auftraggeber und "
-        "Vorname -, denn sonst würde diese Seite empfehlen, was sie selbst "
-        "blockiert. Diese Prüfung läuft im Browser und ohne JavaScript; die "
-        "Vollständigkeitsprüfung der Anlage läuft danach und unabhängig davon.",
+        "Sie können die Beispielangaben beliebig verändern. Dies hat Einfluss auf die weiteren Nachweise, "
+        "die Sie einreichen müssen. Darüber hinaus gibt es eine Vollständigkeitsprüfung.",
         "Every field already filled in here is required: empty one and hit "
         "submit, and your browser marks it red and sends nothing. The "
         "exceptions are the three fields the suggestions above the form ask "
@@ -1250,17 +1244,12 @@ TABLE: dict[str, tuple[str, str]] = {
         "This answer is missing. The application will not be sent without it.",
     ),
     "intake.attachments.legend": (
-        "Anlagen (PDF, simuliert)",
+        "Situationsspezifische Nachweise",
         "Enclosures (PDF, simulated)",
     ),
     "intake.attachments.note": (
-        "Wählen Sie aus, was die antragstellende Person beilegt. Die Dokumente "
-        "sind vorbereitet und synthetisch; ihre Namen sind die, unter denen die "
-        "Rentenversicherung diese Unterlagen tatsächlich anfordert. Ein "
-        "angehaktes Dokument wird zu einer echten Anlage der Einreichung: es "
-        "wird versiegelt, bekommt eine Textebene und läuft durch dieselbe "
-        "Verarbeitung wie das Formular. Im nächsten Schritt sehen Sie die "
-        "Arbeitskopie jedes Dokuments.",
+        "Dies sind die erforderlichen Dokumente, zugeschnitten auf die spezifische Situation "
+        "des Antragsstellers. Haken Sie die Dokumente an, um eine Einreichung zu simulieren.",
         "Choose what the applicant encloses. The documents are prepared and "
         "synthetic; their names are the ones the German pension insurance "
         "really asks for these papers under. A ticked document becomes a real "
@@ -1334,6 +1323,10 @@ TABLE: dict[str, tuple[str, str]] = {
         "on this page comes from your case's journal or from a store the "
         "system keeps anyway. This page recomputes nothing: it cannot "
         "contradict what actually happened.",
+    ),
+    "backend.pipeline.link": (
+        "Zurück zum Antrag",
+        "Bäck to se Antrag",
     ),
     "backend.sampled": (
         "Dieser Vorgang wurde zufällig zur Qualitätssicherung ausgewählt. Das "
@@ -1705,7 +1698,7 @@ TABLE: dict[str, tuple[str, str]] = {
     # so the section carries a name instead of a letter and says in its own
     # first sentence which of the two it is.
     "backend.statement.heading": (
-        "Die zweite Seite: der Auftraggeber wird gehört",
+        "Anhörung des Vertragspartners",
         "The second party: the client is heard",
     ),
     "backend.statement.body": (
@@ -1744,10 +1737,9 @@ TABLE: dict[str, tuple[str, str]] = {
         "is a document rather than interface text.",
     ),
     "backend.statement.waiting": (
-        "Bisher ist keine Stellungnahme eingegangen. Das ist kein Fehler und "
-        "hält nichts auf: eine Antwort ist freiwillig, nichts in der "
-        "Verarbeitung wartet auf sie, und die Warteschlange ordnet deswegen "
-        "keinen Vorgang um. Geht keine ein, wird nach Aktenlage entschieden.",
+        "Bisher ist keine Stellungnahme eingegangen. Eine Antwort ist freiwillig. "
+        "Geht keine ein, wird nach Aktenlage entschieden. Bis dahin wartet der "
+        "Vorgang im gepoolten Backlog.",
         "No statement has arrived yet. That is not an error and it holds "
         "nothing up: answering is voluntary, nothing in the processing waits "
         "for it, and no queue is reordered because of it. If none arrives, "
@@ -1844,7 +1836,10 @@ TABLE: dict[str, tuple[str, str]] = {
     ),
     "pipeline.overview.heading": ("Digitale Erstbearbeitung", "Overview"),
     "pipeline.overview.body": (
-        "Zunächst werden die Daten aus dem Formular im Backend versiegelt und auf Inkonsistenzen überprüft.",
+        "Zunächst werden die identitätsbezogenen Daten aus dem Formular "
+        "im Backend versiegelt und durch Platzhalter ersetzt "
+        "und auf Inkonsistenzen überprüft. Nach Einreichen eines "
+        "konsistenten Antrags werden Sie benachrichtigt.",
         "Seven stages, in the order they ran. Every number and every sentence "
         "on this page comes from your case's journal or from a store the "
         "system keeps anyway. This page recomputes nothing: it cannot "
@@ -2005,8 +2000,7 @@ TABLE: dict[str, tuple[str, str]] = {
         "On to phase 3: work the case",
     ),
     "pipeline.g.after": (
-        "Dort können Sie bestätigen, umsteuern oder eskalieren. Jede dieser "
-        "Aktionen schreibt ein neues Journalereignis; keine ändert ein altes. "
+        "Dort können Sie bestätigen, umsteuern oder eskalieren. "
         "Danach schließt sich der Kreis im",
         "There you can confirm, re-route or escalate. Each of those actions "
         "appends a new journal event; none edits an old one. After that, the "
@@ -2031,10 +2025,10 @@ TABLE: dict[str, tuple[str, str]] = {
     ),
     "pipeline.statement.body": (
         "Über den Erwerbsstatus entscheidet niemand, ohne beide Seiten gehört "
-        "zu haben: par. 7a Abs. 4 SGB IV verlangt die Anhörung des "
-        "Auftraggebers, bevor über den Antrag entschieden wird. Für diesen "
+        "zu haben: § 7a Abs. 4 SGB IV verlangt die Anhörung des "
+        "Vertragspartners, bevor über den Antrag entschieden wird. Für diesen "
         "Vorgang ist die Anhörung ausgelöst worden - und Sie können sie in "
-        "dieser Demonstration selbst beantworten.",
+        "dieser Demonstration ebenfalls beantworten.",
         "Nobody decides an employment status without hearing both sides: par. "
         "7a Abs. 4 SGB IV requires the client to be heard before the "
         "application is decided. For this case that hearing has been "

@@ -1,29 +1,3 @@
-{# Phase 1: the intake surface.
-
-   PART 16 REWORKED THE CONTROLS AND NOTHING ELSE. What a visitor submits is
-   byte for byte what they submitted before: the two name inputs are joined
-   server-side into the one string the envelope always carried, a date input
-   submits the ISO value a text input used to be typed into, and a select fills
-   its field exactly as typing filled it. The proof is the persona-arc suite,
-   which pins procedure, tier, unit and flag per persona through the REAL
-   pipeline and did not move.
-
-   The controls are grouped in rows: fields that share a group in the persona
-   file (the name, the address) sit side by side on a wide screen and stack
-   below 40rem like everything else. The "will be sealed" tag is shown once per
-   row rather than once per input, because four identical tags next to four
-   address inputs teach nothing and crowd the label they belong to.
-
-   PART 20: THIS PAGE IS THE FORM. The "Weg waehlen" chooser below is COMMENTED
-   OUT rather than deleted (a Jinja comment renders zero bytes), on the user's
-   decision of 2026-08-18 reversing the part-13 "simulated and labelled" fork.
-   `api/demo.py::resolve_channel` offers exactly one channel from now on, so
-   `?kanal=email` lands on the form and a judge with an old link sees a page
-   rather than a 404. Everything the e-mail variant needed is still here and
-   still tested - the `view.is_email` branches below, `IntakeView.body`,
-   `engine/demo/personas.py::build_letter_submission` - and uncommenting the
-   block plus restoring `OFFERED_CHANNELS` brings the tab back exactly as it
-   was. #}
 {% extends "demo_base.html" %}
 {% import "_field.html" as fields with context %}
 {% block title %}{{ t("intake.title") }}{% endblock %}
@@ -142,7 +116,6 @@
         </span>
       </div>
       {% endfor %}
-      <p class="notice">{{ t("intake.attachments.no_upload") }}</p>
     </fieldset>
     {% endif %}
     {% endif %}

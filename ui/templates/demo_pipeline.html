@@ -24,35 +24,13 @@
 <section aria-labelledby="ueberblick-heading">
   <h2 id="ueberblick-heading">{{ t("pipeline.overview.heading") }}</h2>
   <p>{{ t("pipeline.overview.body") }}</p>
-  <a href="/demo/case/{{ view.case_id }}/backend">{{ t("pipeline.backend.link") }}</a>
+  <a href="/demo/case/{{ view.case_id }}/backend">{{ t("pipeline.backend.link") }}</a> /
+  <a href="/inbox">{{ t("pipeline.f.link.inbox") }}</a> 
   {% if not view.held %}
   <p class="notice">{{ t("pipeline.expired") }}</p>
   {% endif %}
 </section>
 
-<section aria-labelledby="f-heading" class="stage">
-  <h2 id="f-heading">{{ t("pipeline.f.heading") }}</h2>
-  <p>{{ t("pipeline.f.body") }}</p>
-  {% if view.notifications %}
-  <div class="scroll-x">
-  </div>
-  <p>
-    {{ t("pipeline.f.link") }}
-    <a href="/inbox">{{ t("pipeline.f.link.inbox") }}</a> /
-    <a href="/inbox/{{ view.case_id }}">{{ t("pipeline.f.link.json") }}</a>.
-  </p>
-  {% else %}
-  <p class="muted">{{ t("pipeline.f.none") }}</p>
-  {% endif %}
-</section>
-
-{# THE SECOND PARTY (part 19). Deliberately NOT lettered, and deliberately not
-   inside the a) to g) run: those seven are what the machine did to this case
-   and every one of them is readable off the journal. This one is the demo layer
-   simulating an Anhoerung, it writes no event, and a heading that said "h)"
-   would claim a pipeline stage that does not exist. It sits between the message
-   and the hand-off because that is where it happens in the procedure: the
-   Clearingstelle hears the other side before a caseworker takes the file. #}
 {% if view.statement %}
 <section aria-labelledby="gegenpartei-heading" id="gegenpartei" class="stage">
   <h2 id="gegenpartei-heading">
@@ -64,15 +42,10 @@
   </h2>
   {% if view.statement.asked %}
   <p>{{ t("pipeline.statement.body") }}</p>
-  <p class="notice">{{ t("pipeline.statement.demo_note") }}</p>
 
-  <h3>{{ t("pipeline.statement.letter.heading") }}</h3>
-  <p class="muted" lang="en">{{ t("pipeline.statement.letter.note") }}</p>
-  <div class="letter" lang="de">
-    {% for paragraph in view.statement.letter %}
-    <p>{{ paragraph }}</p>
-    {% endfor %}
-  </div>
+  <p class="handover">
+    <a href="{{ view.statement.answer_href }}">{{ t("pipeline.statement.cta") }}</a>
+  </p>
 
   {% if view.statement.answered %}
   <h3>{{ t("pipeline.statement.arrived.heading") }}</h3>
@@ -103,9 +76,6 @@
   </p>
   {% else %}
   <p class="notice">{{ t("pipeline.statement.waiting") }}</p>
-  <p class="handover">
-    <a href="{{ view.statement.answer_href }}">{{ t("pipeline.statement.cta") }}</a>
-  </p>
   {% endif %}
   {% else %}
   <p>{{ t("pipeline.statement.origin.body") }}</p>

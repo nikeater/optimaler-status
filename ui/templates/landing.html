@@ -8,8 +8,8 @@
 <section aria-labelledby="start-heading">
   <p class="hero-lead">{{ t("landing.lead") }}</p>
   <p class="hero-actions">
-    <a class="cta" href="/demo/antrag">{{ t("landing.cta.intake") }}</a>
-    {# <a class="cta cta-secondary" href="/demo/rundgang">{{ t("landing.cta.tour") }}</a> #}
+    {#<a class="cta" href="/demo/antrag">{{ t("landing.cta.intake") }}</a>
+     <a class="cta cta-secondary" href="/demo/rundgang">{{ t("landing.cta.tour") }}</a> #}
   </p>
   <h2 id="start-heading">{{ t("landing.start.heading") }}</h2>
   <ul class="card-grid card-grid-links">
@@ -22,12 +22,12 @@
       <p>{{ t("landing.card.review.body") }}</p>
     </li>
     <li class="card">
-      <h3><a href="/metrics">{{ t("landing.card.metrics.title") }}</a></h3>
-      <p>{{ t("landing.card.metrics.body") }}</p>
-    </li>
-    <li class="card">
       <h3><a href="/inbox">{{ t("landing.card.inbox.title") }}</a></h3>
       <p>{{ t("landing.card.inbox.body") }}</p>
+    </li>
+    <li class="card">
+      <h3><a href="/metrics">{{ t("landing.card.metrics.title") }}</a></h3>
+      <p>{{ t("landing.card.metrics.body") }}</p>
     </li>
     {# THE OPERATIONS-ENDPOINTS CARD, COMMENTED OUT rather than deleted: its two
        links answer JSON, which made it the one box in this section that led
