@@ -1,7 +1,10 @@
 # Render Blueprint for the public demonstration instance.
 #
-# The primary hosting target (part 11, ruling 5). Deploy path and the exact
-# click sequence: docs/PUBLISHING.md.
+# Deploy: commit this at the repo root, then in the Render dashboard choose
+# New -> Blueprint (NOT New -> Web Service) and select this repository.
+#
+# ONLY TWO VALUES NEED CHANGING FOR A NEW REPO. Both marked <-- EDIT below.
+# Everything else already matches the Dockerfile and does not need touching.
 #
 # HONEST NOTES ABOUT THE FREE PLAN, checked against Render's own docs on
 # 2026-08-13. Free-tier terms change; re-read https://render.com/docs/free
@@ -16,25 +19,35 @@
 #     here, it is the design: the entrypoint rebuilds the whole state from the
 #     frozen gold corpus on every boot, so an ephemeral filesystem and a
 #     scheduled restart produce exactly the same thing - a clean demo. Every
-#     spin-down is a reset for free.
+#     spin-down is a reset for free. This replaces the named volume that
+#     docker-compose.yml uses locally; no volume is declared or needed.
 #   * Free instance hours are capped per workspace per calendar month (750 at
 #     the time of writing) and outbound bandwidth and build minutes count
 #     against the workspace's included amounts.
 #   * The image builds in about a minute of CPU work plus the dependency
 #     install, and the build RUNS THE EVAL GATE - a build that would produce a
 #     demo failing its own gate fails instead.
+#   * A free instance has 512 MB of RAM. The image deliberately omits the
+#     [redact] and [classify] extras, which is what keeps it under that. Do not
+#     add them to a free deployment.
 
 services:
   - type: web
+    # <-- EDIT: becomes https://<name>.onrender.com, must be globally unique
+    # across all of Render, so a taken name is rejected at create time.
     name: eingangslotse-demo
     runtime: docker
     plan: free
     # Frankfurt: the audience is German public administration and the data,
     # though synthetic, is shaped like personal data. Keeping it inside the EU
     # is the posture a real deployment would have to have anyway.
+    # Cannot be changed after the service is created.
     region: frankfurt
     dockerfilePath: ./Dockerfile
     dockerContext: .
+    # The Dockerfile defines /healthz as a constant for exactly this purpose.
+    # Render's own start-up grace is generous, but note the image's boot-time
+    # seed is why the local HEALTHCHECK uses a 90s start period.
     healthCheckPath: /healthz
     autoDeployTrigger: commit
     envVars:
@@ -45,10 +58,12 @@ services:
       # NO EINGANGSLOTSE_INGEST_TOKEN. Its absence is the setting: POST /ingest
       # is refused outright, and this instance cannot receive a submission from
       # anybody. Add it in the Render dashboard ONLY if you have a reason to
-      # keep ingest open, and then treat it as a secret and rotate it.
+      # keep ingest open, and then treat it as a secret and rotate it. If you
+      # ever do add it here rather than in the dashboard, use `sync: false` so
+      # the value never lands in git.
       - key: EINGANGSLOTSE_TEXT_NER
         value: "0"
-      # Replace OWNER once the repository exists (docs/PUBLISHING.md).
+      # <-- EDIT: your repository URL, for the landing page's link.
       - key: EINGANGSLOTSE_REPO_URL
         value: https://github.com/OWNER/eingangslotse
       # The five state directories, on the container's ephemeral filesystem.
